@@ -1,5 +1,4 @@
 "use client";
-import Sidebar from "../../../components/dashboard/Sidebar";
 import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -41,7 +40,6 @@ export default function LaporanPage() {
 
   return (
     <>
-      <Sidebar />
       <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-20 pb-10 lg:ml-64" id="print-area">
         <div className="px-4 sm:px-6">
           <div className="mb-6">

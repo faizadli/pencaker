@@ -1,7 +1,9 @@
 "use client";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function Navbar() {
+  const [openRegister, setOpenRegister] = useState(false);
   return (
     <div>
       <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
@@ -31,7 +33,19 @@ export default function Navbar() {
 
             <div className="hidden md:flex items-center gap-4">
               <Link href="/login" className="text-[#2a436c] hover:text-[#355485] font-medium transition-colors">Masuk</Link>
-              <Link href="/register" className="bg-[#355485] hover:bg-[#2a436c] text-white px-4 py-2 rounded-lg transition-colors">Daftar</Link>
+              <div className="relative">
+                <button onClick={() => setOpenRegister(!openRegister)} className="bg-[#355485] hover:bg-[#2a436c] text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                  <i className="ri-user-add-line"></i>
+                  Daftar
+                  <i className={`ri-arrow-down-s-line text-sm transition-transform ${openRegister ? "rotate-180" : ""}`}></i>
+                </button>
+                {openRegister && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg py-2">
+                    <Link href="/register/candidate" className="block px-4 py-2 text-sm text-[#2a436c] hover:bg-gray-50">Daftar Pencaker</Link>
+                    <Link href="/register/company" className="block px-4 py-2 text-sm text-[#2a436c] hover:bg-gray-50">Daftar Perusahaan</Link>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="md:hidden">

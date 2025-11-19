@@ -1,31 +1,39 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "../../components/shared/field";
+import { login, startSession } from "../../services/auth";
 
 export default function Login() {
-  const [form, setForm] = useState({ username: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("sessionToken") : null;
+    const last = typeof window !== "undefined" ? Number(localStorage.getItem("lastActivity") || 0) : 0;
+    const expired = Date.now() - last > 30 * 60 * 1000;
+    if (token && !expired && typeof window !== "undefined") {
+      window.location.replace("/dashboard");
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-
-    setTimeout(() => {
-      if (form.username === "admin" && form.password === "admin123") {
-        setLoading(false);
-        localStorage.setItem("adminToken", "dummy-jwt-token");
-        window.location.href = "/dashboard";
-      } else {
-        setLoading(false);
-        setError("Username atau password salah.");
-      }
-    }, 800);
+    try {
+      const result = await login(form.email, form.password);
+      startSession(result.role, result.user_id);
+      window.location.replace("/dashboard");
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      setError("Username atau password salah.");
+    }
   };
 
   return (
@@ -42,16 +50,16 @@ export default function Login() {
           )}
 
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-[#6b7280] mb-2">Username</label>
+            <label htmlFor="email" className="block text-sm font-medium text-[#6b7280] mb-2">Email</label>
             <Input
-              icon="ri-user-line"
+              icon="ri-mail-line"
               type="text"
-              id="username"
-              name="username"
-              value={form.username}
+              id="email"
+              name="email"
+              value={form.email}
               onChange={handleChange}
               className="w-full rounded-lg"
-              placeholder="admin"
+              placeholder="email@example.com"
               required
             />
           </div>

@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import Sidebar from "../../../components/dashboard/Sidebar";
 import { Input, SearchableSelect, Textarea, SegmentedToggle } from "../../../components/shared/field";
 
 export default function LowonganPage() {
@@ -172,7 +171,6 @@ export default function LowonganPage() {
 
   return (
     <>
-      <Sidebar />
       <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-20 pb-10 lg:ml-64">
         <div className="px-4 sm:px-6">
           <div className="mb-6">
@@ -201,7 +199,7 @@ export default function LowonganPage() {
                   options={[{ value: "grid", icon: "ri-grid-line" }, { value: "table", icon: "ri-list-check" }]}
                 />
 
-                <button onClick={() => setShowForm(!showForm)} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center gap-2">
+                <button onClick={() => setShowForm(!showForm)} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center gap-2">
                   <i className="ri-add-line"></i>
                   Tambah
                 </button>

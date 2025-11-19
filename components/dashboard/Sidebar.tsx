@@ -1,17 +1,33 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Input } from "../shared/field";
 import { usePathname } from "next/navigation";
+import { logout } from "../../services/auth";
 
-export default function Sidebar() {
+export default function Sidebar({ roleProp }: { roleProp?: string }) {
   const [isMinimized] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const role: string | null = roleProp || null;
 
   const pathname = usePathname();
 
-  const menuItems = [
+  
+
+  useEffect(() => {
+    const touch = () => localStorage.setItem("lastActivity", String(Date.now()));
+    document.addEventListener("mousedown", touch);
+    document.addEventListener("keydown", touch);
+    return () => {
+      document.removeEventListener("mousedown", touch);
+      document.removeEventListener("keydown", touch);
+    };
+  }, []);
+
+  // No client-side redirection here; avoids content flashes
+
+  const allItems = [
     { name: "Dashboard", icon: "ri-dashboard-line", path: "/dashboard" },
     { name: "Pencari Kerja", icon: "ri-user-line", path: "/dashboard/pencaker" },
     { name: "Perusahaan", icon: "ri-building-line", path: "/dashboard/perusahaan" },
@@ -22,7 +38,16 @@ export default function Sidebar() {
     { name: "Konten Website", icon: "ri-pages-line", path: "/dashboard/konten" },
     { name: "User Management", icon: "ri-shield-user-line", path: "/dashboard/users" },
     { name: "Pengaturan", icon: "ri-settings-2-line", path: "/dashboard/pengaturan" },
+    { name: "Profil", icon: "ri-user-settings-line", path: "/dashboard/profile" },
   ];
+
+  const filteredItems = (() => {
+    if (role === "company") return allItems.filter((i) => ["/dashboard", "/dashboard/lowongan", "/dashboard/perusahaan", "/dashboard/profile"].includes(i.path));
+    if (role === "candidate") return allItems.filter((i) => ["/dashboard", "/dashboard/profile"].includes(i.path));
+    // When role is unknown on first SSR, render no items to avoid hydration mismatch
+    if (!role) return [];
+    return allItems;
+  })();
 
   return (
     <>
@@ -49,7 +74,7 @@ export default function Sidebar() {
 
         <nav className="mt-4 px-2 flex-1 overflow-y-auto">
           <ul className="space-y-1">
-            {menuItems.map((item) => {
+            {filteredItems.map((item) => {
               const isActive = pathname === item.path;
               return (
                 <li key={item.name}>
@@ -107,9 +132,9 @@ export default function Sidebar() {
                 </li>
                 <hr className="my-1 border-[#e5e7eb]" />
                 <li>
-                  <Link href="/logout" className="flex items-center gap-3 px-4 py-2 hover:bg-red-50 text-red-600 text-sm">
+                  <button onClick={() => logout()} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-red-50 text-red-600 text-sm">
                     <i className="ri-logout-box-r-line"></i> Keluar
-                  </Link>
+                  </button>
                 </li>
               </ul>
             )}

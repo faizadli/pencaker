@@ -64,10 +64,10 @@ export default function HomePage() {
             <a href="/jobs" className="px-8 py-4 bg-white text-[#355485] font-semibold rounded-xl hover:bg-gray-100 transition-all shadow-lg flex items-center justify-center gap-2">
               <i className="ri-search-line"></i> Cari Lowongan
             </a>
-            <a href="/register/pencaker" className="px-8 py-4 border-2 border-white text-white font-semibold rounded-xl hover:bg-white/10 transition-all flex items-center justify-center gap-2">
+            <a href="/register/candidate" className="px-8 py-4 border-2 border-white text-white font-semibold rounded-xl hover:bg-white/10 transition-all flex items-center justify-center gap-2">
               <i className="ri-user-add-line"></i> Daftar Pencaker
             </a>
-            <a href="/register/perusahaan" className="px-8 py-4 border-2 border-white text-white font-semibold rounded-xl hover:bg-white/10 transition-all flex items-center justify-center gap-2">
+            <a href="/register/company" className="px-8 py-4 border-2 border-white text-white font-semibold rounded-xl hover:bg-white/10 transition-all flex items-center justify-center gap-2">
               <i className="ri-building-line"></i> Daftar Perusahaan
             </a>
           </div>
@@ -82,7 +82,7 @@ export default function HomePage() {
               <div className="flex-1">
                 <Input icon="ri-search-line" type="text" placeholder="Kata kunci (misal: IT, guru, teknisi)" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full py-3 rounded-xl border-gray-300 transition-all" />
               </div>
-              <div className="flex gap-2 items-stretch">
+              <div className="flex flex-col sm:flex-row gap-2 items-stretch">
                 <SearchableSelect
                   value={locationFilter}
                   onChange={(v) => setLocationFilter(v)}
@@ -94,7 +94,7 @@ export default function HomePage() {
                     { value: "Temanggung", label: "Temanggung" },
                   ]}
                 />
-                <button className="px-6 py-3 bg-[#355485] hover:bg-[#2a436c] text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2">
+                <button className="px-6 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] hover:bg-[#2a436c] text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2">
                   <i className="ri-search-line"></i> Cari
                 </button>
               </div>
@@ -296,11 +296,11 @@ export default function HomePage() {
             <h2 className="text-2xl md:text-3xl font-bold text-[#2a436c] mb-4">Siap Mendapatkan Pekerjaan Impian?</h2>
             <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">Bergabunglah dengan ribuan pencari kerja yang telah menemukan pekerjaan melalui platform kami</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="/register/pencaker" className="px-8 py-4 bg-[#355485] hover:bg-[#2a436c] text-white font-semibold rounded-xl transition-all shadow-lg flex items-center justify-center gap-3">
+              <a href="/register/candidate" className="px-8 py-4 bg-[#355485] hover:bg-[#2a436c] text-white font-semibold rounded-xl transition-all shadow-lg flex items-center justify-center gap-3">
                 <i className="ri-user-add-line"></i>
                 Daftar Pencari Kerja
               </a>
-              <a href="/register/perusahaan" className="px-8 py-4 border-2 border-[#355485] text-[#355485] font-semibold rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-3">
+              <a href="/register/company" className="px-8 py-4 border-2 border-[#355485] text-[#355485] font-semibold rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-3">
                 <i className="ri-building-line"></i>
                 Daftar Perusahaan
               </a>

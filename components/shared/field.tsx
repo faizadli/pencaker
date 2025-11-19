@@ -1,5 +1,5 @@
 "use client";
-import { forwardRef, useMemo, useState } from "react";
+import { forwardRef, useMemo, useState, useEffect, useRef } from "react";
 
 type InputProps = React.InputHTMLAttributes<HTMLInputElement> & { icon?: string };
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(props, ref) {
@@ -54,9 +54,34 @@ export function SearchableSelect({ options, value, onChange, placeholder = "Pili
   const [query, setQuery] = useState("");
   const selected = useMemo(() => options.find((o) => o.value === value), [options, value]);
   const filtered = useMemo(() => options.filter((o) => (o.label + o.value).toLowerCase().includes(query.toLowerCase())), [options, query]);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (!open) return;
+      const el = containerRef.current;
+      if (el && !el.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (!open) return;
+      if (e.key === "Escape") {
+        setOpen(false);
+        setQuery("");
+      }
+    };
+    document.addEventListener("mousedown", handleOutside);
+    window.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleOutside);
+      window.removeEventListener("keydown", handleKey);
+    };
+  }, [open]);
 
   return (
-    <div className={`relative w-full sm:min-w-[12rem] ${className || ""}`}>
+    <div ref={containerRef} className={`relative w-full sm:min-w-[12rem] ${className || ""}`}>
       <button type="button" disabled={disabled} onClick={() => setOpen((v) => !v)} className={`w-full pl-3 pr-9 py-3 border border-[#e5e7eb] rounded-xl bg-white text-left text-[#111827] focus:ring-2 focus:ring-[#4f90c6] focus:border-transparent ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}>
         {selected ? selected.label : <span className="text-[#4b5563]">{placeholder}</span>}
       </button>

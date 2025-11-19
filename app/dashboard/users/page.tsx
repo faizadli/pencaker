@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import Sidebar from "../../../components/dashboard/Sidebar";
 import { Input, SearchableSelect } from "../../../components/shared/field";
 
 export default function UsersPage() {
@@ -88,7 +87,6 @@ export default function UsersPage() {
 
   return (
     <>
-      <Sidebar />
       <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-20 pb-10 lg:ml-64">
         <div className="px-4 sm:px-6">
           <div className="mb-6">
@@ -111,7 +109,7 @@ export default function UsersPage() {
               <div className="flex flex-col sm:flex-row gap-2 items-stretch">
                 <SearchableSelect value={roleFilter} onChange={(v) => setRoleFilter(v)} options={[{ value: "all", label: "Semua Role" }, ...roles.map((r) => ({ value: r, label: r }))]} />
                 <SearchableSelect value={statusFilter} onChange={(v) => setStatusFilter(v)} options={[{ value: "all", label: "Semua Status" }, { value: "Aktif", label: "Aktif" }, { value: "Nonaktif", label: "Nonaktif" }]} />
-                <button onClick={handleAdd} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center gap-2">
+                <button onClick={handleAdd} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center gap-2">
                   <i className="ri-add-line"></i>
                   Tambah
                 </button>

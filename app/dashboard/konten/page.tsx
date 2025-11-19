@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import Sidebar from "../../../components/dashboard/Sidebar";
 import { Input, Textarea, Select } from "../../../components/shared/field";
 
 export default function KontenPage() {
@@ -85,7 +84,6 @@ export default function KontenPage() {
 
   return (
     <>
-      <Sidebar />
       <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-20 pb-10 lg:ml-64">
         <div className="px-4 sm:px-6">
           <div className="mb-6">
