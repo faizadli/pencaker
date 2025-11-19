@@ -4,37 +4,61 @@ import { forwardRef, useMemo, useState, useEffect, useRef } from "react";
 type InputProps = React.InputHTMLAttributes<HTMLInputElement> & { icon?: string };
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(props, ref) {
   const { icon, className, ...rest } = props;
+  
+  // For file inputs, remove value entirely
+  if (rest.type === "file") {
+    return (
+      <div className="relative w-full">
+        {icon && <i className={`${icon} absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]`}></i>}
+        <input
+          ref={ref}
+          {...{ ...rest, value: undefined }}
+          className={`${icon ? "pl-10" : "pl-3"} pr-4 py-2 border border-[#e5e7eb] rounded-lg focus:ring-2 focus:ring-[#4f90c6] focus:border-transparent placeholder:text-[#4b5563] placeholder:opacity-100 bg-white text-[#111827] ${className || ""}`}
+        />
+      </div>
+    );
+  }
+  
+  // For non-file inputs, ensure value is always defined
+  const inputValue = rest.value !== undefined ? rest.value : "";
+  const hasOnChange = rest.onChange !== undefined;
+  
+  // If no onChange, use defaultValue to make it uncontrolled
+  const inputProps = hasOnChange 
+    ? { ...rest, value: inputValue }
+    : { ...rest, defaultValue: inputValue, value: undefined };
+  
   return (
     <div className="relative w-full">
       {icon && <i className={`${icon} absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]`}></i>}
       <input
         ref={ref}
-        {...rest}
+        {...inputProps}
         className={`${icon ? "pl-10" : "pl-3"} pr-4 py-2 border border-[#e5e7eb] rounded-lg focus:ring-2 focus:ring-[#4f90c6] focus:border-transparent placeholder:text-[#4b5563] placeholder:opacity-100 bg-white text-[#111827] ${className || ""}`}
       />
     </div>
   );
 });
 
-type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement>;
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(props, ref) {
-  const { className, ...rest } = props;
-  return (
-    <select
-      ref={ref}
-      {...rest}
-      className={`px-3 py-2 border border-[#e5e7eb] rounded-lg focus:ring-2 focus:ring-[#4f90c6] focus:border-transparent bg-white text-[#374151] ${className || ""}`}
-    />
-  );
-});
+export const Select = undefined as unknown as never;
 
 type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>;
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(props, ref) {
   const { className, ...rest } = props;
+  
+  // Ensure value is always defined
+  const textareaValue = rest.value !== undefined ? rest.value : "";
+  const hasOnChange = rest.onChange !== undefined;
+  
+  // If no onChange, use defaultValue to make it uncontrolled
+  const textareaProps = hasOnChange 
+    ? { ...rest, value: textareaValue }
+    : { ...rest, defaultValue: textareaValue, value: undefined };
+  
   return (
     <textarea
       ref={ref}
-      {...rest}
+      {...textareaProps}
       className={`w-full px-3 py-2 border border-[#e5e7eb] rounded-lg focus:ring-2 focus:ring-[#4f90c6] focus:border-transparent placeholder:text-[#4b5563] placeholder:opacity-100 bg-white text-[#111827] ${className || ""}`}
     />
   );

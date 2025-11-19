@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Input, Textarea, Select } from "../../../components/shared/field";
+import { Input, Textarea, SearchableSelect } from "../../../components/shared/field";
 
 export default function KontenPage() {
   type Berita = { id: number; judul: string; tanggal: string; kategori: string; isi: string; status: "Publikasi" | "Draft" };
@@ -131,10 +131,15 @@ export default function KontenPage() {
                       <Input type="text" value={editBerita?.judul || ""} onChange={(e) => setEditBerita({ ...(editBerita as Berita), judul: e.target.value })} placeholder="Judul berita" className="w-full" />
                       <Textarea value={editBerita?.isi || ""} onChange={(e) => setEditBerita({ ...(editBerita as Berita), isi: e.target.value })} rows={3} placeholder="Isi berita" className="w-full" />
                       <div className="flex flex-col sm:flex-row gap-3">
-                        <Select value={editBerita?.status || "Draft"} onChange={(e) => setEditBerita({ ...(editBerita as Berita), status: e.target.value as Berita["status"] })} className="rounded-lg">
-                          <option value="Draft">Draft</option>
-                          <option value="Publikasi">Publikasi</option>
-                        </Select>
+                        <SearchableSelect
+                          value={editBerita?.status || "Draft"}
+                          onChange={(v) => setEditBerita({ ...(editBerita as Berita), status: v as Berita["status"] })}
+                          className="rounded-lg"
+                          options={[
+                            { value: "Draft", label: "Draft" },
+                            { value: "Publikasi", label: "Publikasi" },
+                          ]}
+                        />
                         <div className="flex gap-2">
                           <button onClick={() => handleSave("berita", berita.id)} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
                             <i className="ri-check-line"></i>
@@ -298,10 +303,15 @@ export default function KontenPage() {
                       <Input type="text" value={editFaq?.pertanyaan || ""} onChange={(e) => setEditFaq({ ...(editFaq as Faq), pertanyaan: e.target.value })} placeholder="Pertanyaan" className="w-full" />
                       <Textarea value={editFaq?.jawaban || ""} onChange={(e) => setEditFaq({ ...(editFaq as Faq), jawaban: e.target.value })} rows={3} placeholder="Jawaban" className="w-full" />
                       <div className="flex flex-col sm:flex-row gap-3">
-                        <Select value={editFaq?.status || "Draft"} onChange={(e) => setEditFaq({ ...(editFaq as Faq), status: e.target.value as Faq["status"] })} className="rounded-lg">
-                          <option value="Draft">Draft</option>
-                          <option value="Publikasi">Publikasi</option>
-                        </Select>
+                        <SearchableSelect
+                          value={editFaq?.status || "Draft"}
+                          onChange={(v) => setEditFaq({ ...(editFaq as Faq), status: v as Faq["status"] })}
+                          className="rounded-lg"
+                          options={[
+                            { value: "Draft", label: "Draft" },
+                            { value: "Publikasi", label: "Publikasi" },
+                          ]}
+                        />
                         <div className="flex gap-2">
                           <button onClick={() => handleSave("faq", f.id)} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
                             <i className="ri-check-line"></i>

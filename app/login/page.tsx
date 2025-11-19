@@ -30,7 +30,7 @@ export default function Login() {
       startSession(result.role, result.user_id);
       window.location.replace("/dashboard");
       setLoading(false);
-    } catch (err) {
+    } catch {
       setLoading(false);
       setError("Username atau password salah.");
     }

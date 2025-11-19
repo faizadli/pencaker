@@ -24,7 +24,7 @@ export default function RegisterCompany() {
       const uid = String(regData.user_id);
       startSession("company", uid);
       window.location.href = "/dashboard/perusahaan";
-    } catch (err) {
+    } catch {
       setError("Gagal mendaftar. Periksa isian Anda.");
     } finally {
       setLoading(false);
@@ -41,15 +41,22 @@ export default function RegisterCompany() {
         <form onSubmit={submit} className="p-8 space-y-6">
           {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{error}</div>}
           <div>
-            <label className="block text-sm font-medium text-[#6b7280] mb-2">Email</label>
-            <Input icon="ri-mail-line" type="email" name="email" value={form.email} onChange={change} required />
+            <label htmlFor="email" className="block text-sm font-medium text-[#6b7280] mb-2">Email</label>
+            <Input icon="ri-mail-line" type="email" id="email" name="email" value={form.email} onChange={change} className="w-full rounded-lg" placeholder="email@example.com" required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#6b7280] mb-2">Password</label>
-            <Input icon="ri-lock-2-line" type="password" name="password" value={form.password} onChange={change} required />
+            <label htmlFor="password" className="block text-sm font-medium text-[#6b7280] mb-2">Password</label>
+            <Input icon="ri-lock-2-line" type="password" id="password" name="password" value={form.password} onChange={change} className="w-full rounded-lg" placeholder="admin123" required />
           </div>
-          <button type="submit" disabled={loading} className="w-full bg-[#355485] hover:bg-[#2a436c] text-white font-medium py-2.5 px-4 rounded-lg transition duration-200">
-            {loading ? "Memproses..." : "Daftar"}
+          <button type="submit" disabled={loading} className="w-full bg-[#355485] hover:bg-[#2a436c] text-white font-medium py-2.5 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Memproses...
+              </>
+            ) : (
+              "Daftar"
+            )}
           </button>
         </form>
         <div className="bg-[#f9fafb] px-8 py-4 text-center border-t border-[#e5e7eb]">

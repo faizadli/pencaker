@@ -4,16 +4,33 @@ import Link from "next/link";
 import { Input } from "../shared/field";
 import { usePathname } from "next/navigation";
 import { logout } from "../../services/auth";
+import { getCompanyProfile } from "../../services/profile";
 
 export default function Sidebar({ roleProp }: { roleProp?: string }) {
   const [isMinimized] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const role: string | null = roleProp || null;
+  const [companyApproved, setCompanyApproved] = useState(false);
 
   const pathname = usePathname();
 
-  
+  useEffect(() => {
+    const init = async () => {
+      if (role !== "company") return;
+      const uid = typeof window !== "undefined" ? localStorage.getItem("user_id") || "" : "";
+      if (!uid) return;
+      try {
+        const res = await getCompanyProfile(uid);
+        const d = res?.data || {};
+        const raw = String(d.status || "").toLowerCase();
+        const approved = Boolean(d.disnaker_id) || ["approved", "terverifikasi", "disetujui"].includes(raw);
+        setCompanyApproved(approved);
+      } catch {
+      }
+    };
+    init();
+  }, [role]);
 
   useEffect(() => {
     const touch = () => localStorage.setItem("lastActivity", String(Date.now()));
@@ -42,7 +59,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
   ];
 
   const filteredItems = (() => {
-    if (role === "company") return allItems.filter((i) => ["/dashboard", "/dashboard/lowongan", "/dashboard/perusahaan", "/dashboard/profile"].includes(i.path));
+    if (role === "company") return allItems.filter((i) => ["/dashboard", "/dashboard/profile", companyApproved ? "/dashboard/lowongan" : null].filter(Boolean).includes(i.path));
     if (role === "candidate") return allItems.filter((i) => ["/dashboard", "/dashboard/profile"].includes(i.path));
     // When role is unknown on first SSR, render no items to avoid hydration mismatch
     if (!role) return [];
