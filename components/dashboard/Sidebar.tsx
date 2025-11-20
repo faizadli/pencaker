@@ -5,6 +5,7 @@ import { Input } from "../shared/field";
 import { usePathname } from "next/navigation";
 import { logout } from "../../services/auth";
 import { getCompanyProfile } from "../../services/profile";
+import { listRoles, getRolePermissions } from "../../services/rbac";
 
 export default function Sidebar({ roleProp }: { roleProp?: string }) {
   const [isMinimized] = useState(false);
@@ -12,13 +13,14 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const role: string | null = roleProp || null;
   const [companyApproved, setCompanyApproved] = useState(false);
+  const [canLowongan, setCanLowongan] = useState(false);
 
   const pathname = usePathname();
 
   useEffect(() => {
     const init = async () => {
       if (role !== "company") return;
-      const uid = typeof window !== "undefined" ? localStorage.getItem("user_id") || "" : "";
+      const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
       if (!uid) return;
       try {
         const res = await getCompanyProfile(uid);
@@ -26,11 +28,23 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
         const raw = String(d.status || "").toLowerCase();
         const approved = Boolean(d.disnaker_id) || ["approved", "terverifikasi", "disetujui"].includes(raw);
         setCompanyApproved(approved);
+        if (typeof document !== "undefined") {
+          document.cookie = `companyApproved=${approved ? "true" : "false"}; path=/; max-age=1800`;
+        }
+        const rolesResp = await listRoles();
+        const roleItems = (rolesResp.data || rolesResp) as { id: number; name: string }[];
+        const target = roleItems.find((x) => String(x.name).toLowerCase() === "company");
+        if (target) {
+          const perms = await getRolePermissions(target.id);
+          const rows = (perms.data || perms) as { code: string; label: string }[];
+          const codes = rows.map((r) => r.code);
+          setCanLowongan(codes.includes("lowongan.read"));
+        }
       } catch {
       }
     };
     init();
-  }, [role]);
+  }, [role, pathname]);
 
   useEffect(() => {
     const touch = () => localStorage.setItem("lastActivity", String(Date.now()));
@@ -55,11 +69,12 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
     { name: "Konten Website", icon: "ri-pages-line", path: "/dashboard/konten" },
     { name: "User Management", icon: "ri-shield-user-line", path: "/dashboard/users" },
     { name: "Pengaturan", icon: "ri-settings-2-line", path: "/dashboard/pengaturan" },
+    { name: "Manajemen Akses", icon: "ri-key-2-line", path: "/dashboard/akses" },
     { name: "Profil", icon: "ri-user-settings-line", path: "/dashboard/profile" },
   ];
 
   const filteredItems = (() => {
-    if (role === "company") return allItems.filter((i) => ["/dashboard", "/dashboard/profile", companyApproved ? "/dashboard/lowongan" : null].filter(Boolean).includes(i.path));
+    if (role === "company") return allItems.filter((i) => ["/dashboard", "/dashboard/profile", companyApproved && canLowongan ? "/dashboard/lowongan" : null].filter(Boolean).includes(i.path));
     if (role === "candidate") return allItems.filter((i) => ["/dashboard", "/dashboard/profile"].includes(i.path));
     // When role is unknown on first SSR, render no items to avoid hydration mismatch
     if (!role) return [];

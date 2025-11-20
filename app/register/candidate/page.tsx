@@ -21,7 +21,7 @@ export default function RegisterCandidate() {
     setLoading(true);
     try {
       const regData = await registerUser("candidate", form.email, form.password);
-      const uid = String(regData.user_id);
+      const uid = String(regData.id || regData.user_id || "");
       startSession("candidate", uid);
       window.location.href = "/dashboard/profile";
     } catch {

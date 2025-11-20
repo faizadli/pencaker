@@ -21,7 +21,7 @@ export default function RegisterCompany() {
     setLoading(true);
     try {
       const regData = await registerUser("company", form.email, form.password);
-      const uid = String(regData.user_id);
+      const uid = String(regData.id || regData.user_id || "");
       startSession("company", uid);
       window.location.href = "/dashboard/perusahaan";
     } catch {

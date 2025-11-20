@@ -152,7 +152,7 @@ export default function ProfilePage() {
         }
       }
       const localRole = typeof window !== "undefined" ? localStorage.getItem("role") || "" : "";
-      const uid = typeof window !== "undefined" ? localStorage.getItem("user_id") || "" : "";
+      const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
       setRole(cookieRole || localRole || "");
       setUserId(uid);
     };
@@ -294,23 +294,49 @@ export default function ProfilePage() {
                             </div>
                             <div>
                               <label className="block text-sm font-medium text-[#6b7280] mb-2">Provinsi</label>
-                              <Input type="text" value={companyForm.province} onChange={(e) => setCompanyForm({ ...companyForm, province: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                              <SearchableSelect
+                                value={companyForm.province}
+                                onChange={(v) => setCompanyForm({ ...companyForm, province: v })}
+                                options={[
+                                  { value: "", label: "Pilih..." },
+                                  { value: "Kalimantan Timur", label: "Kalimantan Timur" },
+                                  { value: "Kalimantan Selatan", label: "Kalimantan Selatan" },
+                                  { value: "Kalimantan Tengah", label: "Kalimantan Tengah" },
+                                  { value: "DKI Jakarta", label: "DKI Jakarta" },
+                                  { value: "Jawa Barat", label: "Jawa Barat" },
+                                  { value: "Jawa Timur", label: "Jawa Timur" },
+                                ]}
+                                className="w-full"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Website</label>
+                              <Input type="url" value={companyForm.website} onChange={(e) => setCompanyForm({ ...companyForm, website: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
                             </div>
                             <div>
                               <label className="block text-sm font-medium text-[#6b7280] mb-2">Kota/Kabupaten</label>
-                              <Input type="text" value={companyForm.city} onChange={(e) => setCompanyForm({ ...companyForm, city: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                              <SearchableSelect
+                                value={companyForm.city}
+                                onChange={(v) => setCompanyForm({ ...companyForm, city: v })}
+                                options={[
+                                  { value: "", label: "Pilih..." },
+                                  { value: "Kab. Paser", label: "Kab. Paser" },
+                                  { value: "Samarinda", label: "Samarinda" },
+                                  { value: "Balikpapan", label: "Balikpapan" },
+                                  { value: "Jakarta", label: "Jakarta" },
+                                  { value: "Bandung", label: "Bandung" },
+                                  { value: "Surabaya", label: "Surabaya" },
+                                ]}
+                                className="w-full"
+                              />
                             </div>
                             <div className="md:col-span-2">
                               <label className="block text-sm font-medium text-[#6b7280] mb-2">Alamat</label>
                               <Textarea value={companyForm.address} onChange={(e) => setCompanyForm({ ...companyForm, address: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
                             </div>
-                            <div>
+                            <div className="md:col-span-2">
                               <label className="block text-sm font-medium text-[#6b7280] mb-2">Tentang Perusahaan</label>
                               <Textarea value={companyForm.about_company} onChange={(e) => setCompanyForm({ ...companyForm, about_company: e.target.value })} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Website</label>
-                              <Input type="url" value={companyForm.website} onChange={(e) => setCompanyForm({ ...companyForm, website: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
                             </div>
                           </>
                         ) : role === "candidate" ? (

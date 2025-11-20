@@ -1,21 +1,23 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "../../components/shared/field";
 import { login, startSession } from "../../services/auth";
 
 export default function Login() {
+  const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("sessionToken") : null;
+    const token = typeof document !== "undefined" ? document.cookie.split(";").map((s) => s.trim()).find((c) => c.startsWith("sessionToken=")) : undefined;
     const last = typeof window !== "undefined" ? Number(localStorage.getItem("lastActivity") || 0) : 0;
     const expired = Date.now() - last > 30 * 60 * 1000;
-    if (token && !expired && typeof window !== "undefined") {
-      window.location.replace("/dashboard");
+    if (token && !expired) {
+      router.replace("/dashboard");
     }
-  }, []);
+  }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -27,8 +29,8 @@ export default function Login() {
     setLoading(true);
     try {
       const result = await login(form.email, form.password);
-      startSession(result.role, result.user_id);
-      window.location.replace("/dashboard");
+      startSession(result.role, result.id || null);
+      router.replace("/dashboard");
       setLoading(false);
     } catch {
       setLoading(false);
