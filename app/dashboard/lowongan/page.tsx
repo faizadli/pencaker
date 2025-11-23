@@ -1,10 +1,9 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Input, SearchableSelect, SegmentedToggle } from "../../../components/shared/field";
+import { Input, SearchableSelect, SegmentedToggle, TextEditor } from "../../../components/shared/field";
 import Modal from "../../../components/shared/Modal";
-import TextEditor from "../../../components/shared/TextEditor";
-import { listJobs, createJob, applyJob, approveJob, closeJob, listApplications, updateJob } from "../../../services/jobs";
+import { listJobs, createJob, applyJob, approveJob, rejectJob, listApplications, updateJob } from "../../../services/jobs";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { getCompanyProfile, getCandidateProfile, getDisnakerProfile } from "../../../services/profile";
 
@@ -20,12 +19,14 @@ export default function LowonganPage() {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [permsLoaded, setPermsLoaded] = useState(false);
   const [companyId, setCompanyId] = useState<string>("");
+  const [companyName, setCompanyName] = useState<string>("");
   const [candidateId, setCandidateId] = useState<string>("");
   const [disnakerId, setDisnakerId] = useState<string>("");
 
   type Job = {
     id: string;
     company_id: string;
+    company_name?: string;
     job_title: string;
     job_type: "full_time" | "part_time" | "internship" | "contract" | "freelance";
     job_description: string;
@@ -43,6 +44,8 @@ export default function LowonganPage() {
 
   type UITipe = "Full-time" | "Part-time" | "Remote" | "Shift" | "Kontrak";
   type UIStatus = "Aktif" | "Menunggu Verifikasi" | "Kadaluarsa";
+  // include rejected status in UI
+  type UIStatusExtended = UIStatus | "Ditolak";
 
   const jobTypeMap: Record<UITipe, "full-time" | "part-time" | "internship" | "contract" | "freelance"> = {
     "Full-time": "full-time",
@@ -63,8 +66,9 @@ export default function LowonganPage() {
   const apiToUIStatus = useMemo(() => ({
     approved: "Aktif",
     pending: "Menunggu Verifikasi",
+    rejected: "Ditolak",
     closed: "Kadaluarsa",
-  }) as Record<Job["status"], UIStatus>, []);
+  }) as Record<Job["status"], UIStatusExtended>, []);
 
   type NewJob = {
     posisi: string;
@@ -84,12 +88,13 @@ export default function LowonganPage() {
     id: string;
     posisi: string;
     perusahaan: string;
+    companyId: string;
     sektor: string;
     lokasi: string;
     tipe: UITipe;
     tanggalTayang: string;
     batasAkhir: string;
-    status: UIStatus;
+    status: UIStatusExtended;
     pelamar: number;
     diterima: number;
     diproses: number;
@@ -122,7 +127,9 @@ export default function LowonganPage() {
         // resolve profile ids
         if (role === "company" && userId) {
           const cp = await getCompanyProfile(userId);
-          setCompanyId(String((cp.data || cp).id));
+          const data = cp.data || cp;
+          setCompanyId(String(data.id));
+          setCompanyName(String(data.company_name || ""));
         } else if (role === "candidate" && userId) {
           const cd = await getCandidateProfile(userId);
           setCandidateId(String((cd.data || cd).id));
@@ -185,7 +192,8 @@ export default function LowonganPage() {
     const toView: ViewJob[] = lowonganList.map((j) => ({
       id: j.id,
       posisi: j.job_title,
-      perusahaan: j.company_id,
+      perusahaan: role === "company" ? (companyName || j.company_id) : (j.company_name || j.company_id),
+      companyId: j.company_id,
       sektor: j.category,
       lokasi: j.work_setup,
       tipe: apiToUITipe[j.job_type],
@@ -206,7 +214,7 @@ export default function LowonganPage() {
       const matchesStatus = statusFilter === "all" || lowongan.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [lowonganList, searchTerm, statusFilter, apiToUITipe, apiToUIStatus]);
+  }, [lowonganList, searchTerm, statusFilter, apiToUITipe, apiToUIStatus, role, companyName]);
 
   const handleAddJob = async () => {
     if (!companyId) { alert("Perusahaan belum teridentifikasi"); return; }
@@ -248,8 +256,8 @@ export default function LowonganPage() {
   };
 
   const handleReject = async (id: string) => {
-    if (!confirm("Yakin ingin menutup lowongan?")) return;
-    try { await closeJob(id); const resp = await listJobs(); setLowonganList((resp.data || resp) as Job[]); } catch { alert("Gagal menutup lowongan"); }
+    if (!confirm("Yakin ingin menolak lowongan?")) return;
+    try { await rejectJob(id); const resp = await listJobs(); setLowonganList((resp.data || resp) as Job[]); } catch { alert("Gagal menolak lowongan"); }
   };
 
   const getStatusColor = (status: string) => {
@@ -285,12 +293,13 @@ export default function LowonganPage() {
   };
 
   const canCreate = permissions.includes("lowongan.create");
-  const canApprove = role === "super_admin" || permissions.includes("lowongan.update");
+  const canEdit = permissions.includes("lowongan.update") || role === "super_admin";
+  const canVerify = role === "super_admin" || permissions.includes("lowongan.verify");
   const canApply = role === "candidate";
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-20 pb-10 lg:ml-64">
+      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-20 pb-10 lg:ml-64" dir="ltr">
         <div className="px-4 sm:px-6">
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Lowongan Pekerjaan</h1>
@@ -345,11 +354,10 @@ export default function LowonganPage() {
               <Input label="Pengalaman" type="text" placeholder="Contoh: 2 tahun di bidang terkait" value={newJob.experience_required} onChange={(e) => setNewJob({ ...newJob, experience_required: e.target.value })} />
               <Input label="Pendidikan" type="text" placeholder="Contoh: S1 Informatika" value={newJob.education_required} onChange={(e) => setNewJob({ ...newJob, education_required: e.target.value })} />
               <div className="md:col-span-2">
-                <Input label="Keahlian" type="text" placeholder="Contoh: React, Node.js, SQL" value={newJob.skills_required} onChange={(e) => setNewJob({ ...newJob, skills_required: e.target.value })} />
+                <TextEditor label="Deskripsi" value={newJob.deskripsi} onChange={(v) => setNewJob({ ...newJob, deskripsi: v })} placeholder="Detail tugas, tanggung jawab, dan kualifikasi" />
               </div>
               <div className="md:col-span-2">
-                <label className="block mb-1 text-sm font-medium text-[#2a436c]">Deskripsi</label>
-                <TextEditor value={newJob.deskripsi} onChange={(html) => setNewJob({ ...newJob, deskripsi: html })} />
+                <Input label="Keahlian" type="text" placeholder="Contoh: React, Node.js, SQL" value={newJob.skills_required} onChange={(e) => setNewJob({ ...newJob, skills_required: e.target.value })} />
               </div>
             </div>
           </Modal>
@@ -407,12 +415,12 @@ export default function LowonganPage() {
                         <i className="ri-eye-line mr-1"></i>
                         Detail
                       </button>
-                      {canApprove && (
+                      {canEdit && (
                         <button onClick={() => { setEditingId(String(job.id)); setNewJob({ posisi: job.posisi, sektor: job.sektor, tipe: job.tipe as UITipe, batasAkhir: job.batasAkhir, deskripsi: job.deskripsi, experience_required: job.experience_required, education_required: job.education_required, skills_required: job.skills_required, min_salary: 0, max_salary: 0, work_setup: job.lokasi }); setShowForm(true); }} className="px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition" title="Edit">
                           <i className="ri-edit-line"></i>
                         </button>
                       )}
-                      {job.status === "Menunggu Verifikasi" && canApprove && (
+                      {job.status === "Menunggu Verifikasi" && canVerify && (
                         <>
                           <button onClick={() => handleApprove(String(job.id))} className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition" title="Setujui">
                             <i className="ri-check-line"></i>
@@ -423,7 +431,7 @@ export default function LowonganPage() {
                         </>
                       )}
                       {canApply && (
-                        <button onClick={async () => { try { await applyJob({ candidate_id: candidateId, company_id: String(job.perusahaan), job_id: String(job.id) }); alert("Lamaran dikirim"); } catch { alert("Gagal melamar"); } }} className="px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">
+                        <button onClick={async () => { try { await applyJob({ candidate_id: candidateId, company_id: String(job.companyId), job_id: String(job.id) }); alert("Lamaran dikirim"); } catch { alert("Gagal melamar"); } }} className="px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">
                           <i className="ri-send-plane-line mr-1"></i>
                           Lamar
                         </button>
@@ -471,7 +479,7 @@ export default function LowonganPage() {
                         <td className="py-3 px-4">
                           <div className="flex gap-2">
                             <button className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Detail</button>
-                            {job.status === "Menunggu Verifikasi" && (
+                            {job.status === "Menunggu Verifikasi" && canVerify && (
                               <>
                                 <button onClick={() => handleApprove(job.id)} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition">✓</button>
                                 <button onClick={() => handleReject(job.id)} className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition">✕</button>

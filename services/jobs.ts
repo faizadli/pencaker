@@ -66,6 +66,13 @@ export async function closeJob(id: string) {
   return resp.json();
 }
 
+export async function rejectJob(id: string) {
+  const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
+  const resp = await fetch(`${BASE}/api/jobs/${id}/reject`, { method: "POST", headers: { "X-User-Id": uid } });
+  if (!resp.ok) throw new Error("Gagal menolak job");
+  return resp.json();
+}
+
 export async function deleteJob(id: string) {
   const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
   const resp = await fetch(`${BASE}/api/jobs/${id}`, { method: "DELETE", headers: { "X-User-Id": uid } });

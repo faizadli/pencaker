@@ -1,28 +1,33 @@
 "use client";
 import { forwardRef, useMemo, useState, useEffect, useRef } from "react";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import Placeholder from "@tiptap/extension-placeholder";
+import OrderedList from "@tiptap/extension-ordered-list";
 
- type InputProps = React.InputHTMLAttributes<HTMLInputElement> & { icon?: string; label?: string; hint?: string; error?: string };
- export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(props, ref) {
-   const { icon, className, label, hint, error, ...rest } = props;
+type InputProps = React.InputHTMLAttributes<HTMLInputElement> & { icon?: string; label?: string; hint?: string; error?: string };
+export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(props, ref) {
+  const { icon, className, label, hint, error, ...rest } = props;
   
   // For file inputs, remove value entirely
-   if (rest.type === "file") {
-     return (
-       <div className="w-full">
-         {label && <label className="block mb-1 text-sm font-medium text-[#2a436c]">{label}</label>}
-         <div className="relative w-full">
-           {icon && <i className={`${icon} absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]`}></i>}
+  if (rest.type === "file") {
+    return (
+      <div className="w-full">
+        {label && <label className="block mb-1 text-sm font-medium text-[#2a436c]">{label}</label>}
+        <div className="relative w-full">
+          {icon && <i className={`${icon} absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]`}></i>}
           <input
             ref={ref}
             {...{ ...rest, value: undefined }}
             className={`w-full ${icon ? "pl-10" : "pl-3"} pr-4 py-2 border ${error ? "border-red-400" : "border-[#d1d5db]"} rounded-lg focus:ring-2 focus:ring-[#355485] focus:border-transparent placeholder:text-[#6b7280] bg-white text-[#111827] ${className || ""}`}
           />
-         </div>
-         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-         {hint && !error && <p className="mt-1 text-xs text-[#6b7280]">{hint}</p>}
-       </div>
-     );
-   }
+        </div>
+        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        {hint && !error && <p className="mt-1 text-xs text-[#6b7280]">{hint}</p>}
+      </div>
+    );
+  }
   
   // For non-file inputs, ensure value is always defined
   const inputValue = rest.value !== undefined ? rest.value : "";
@@ -208,6 +213,157 @@ export function SegmentedToggle({ options, value, onChange, className, disabled 
           {opt.label && <span>{opt.label}</span>}
         </button>
       ))}
+    </div>
+  );
+}
+
+type TextEditorProps = {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+  disabled?: boolean;
+  label?: string;
+  hint?: string;
+  error?: string;
+};
+
+// Custom OrderedList extension with listStyleType attribute
+const CustomOrderedList = OrderedList.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      listStyleType: {
+        default: 'decimal',
+        parseHTML: element => element.style.listStyleType || 'decimal',
+        renderHTML: attributes => {
+          return {
+            style: `list-style-type: ${attributes.listStyleType}`
+          };
+        },
+      },
+    };
+  },
+});
+
+export function TextEditor({ value, onChange, placeholder = "Tulis deskripsi...", className, disabled, label, hint, error }: TextEditorProps) {
+  const [isFocused, setIsFocused] = useState(false);
+  
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        orderedList: false, // Disable default
+      }),
+      CustomOrderedList,
+      Underline,
+      Placeholder.configure({ placeholder }),
+    ],
+    content: value || "",
+    editable: !disabled,
+    immediatelyRender: false,
+    onUpdate: ({ editor }) => {
+      onChange(editor.getHTML());
+    },
+    onFocus: () => {
+      setIsFocused(true);
+    },
+    onBlur: () => {
+      setIsFocused(false);
+    },
+  });
+
+  useEffect(() => {
+    if (!editor) return;
+    const html = value || "";
+    if (editor.getHTML() !== html) editor.commands.setContent(html, { emitUpdate: false });
+  }, [value, editor]);
+
+  const btn = (active: boolean) => `${active ? "bg-[#e5eef7] text-[#2a436c]" : "bg-white text-[#374151]"} border border-[#e5e7eb] px-2 py-1 rounded-lg text-sm hover:bg-[#f3f4f6] transition-colors`;
+
+  const handleBold = (e: React.MouseEvent) => {
+    e.preventDefault();
+    editor?.chain().focus().toggleBold().run();
+  };
+
+  const handleItalic = (e: React.MouseEvent) => {
+    e.preventDefault();
+    editor?.chain().focus().toggleItalic().run();
+  };
+
+  const handleUnderline = (e: React.MouseEvent) => {
+    e.preventDefault();
+    editor?.chain().focus().toggleUnderline().run();
+  };
+
+  const handleBulletList = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (editor) {
+      editor.chain().focus().toggleBulletList().run();
+    }
+  };
+
+  const handleOrderedListNumber = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (editor) {
+      const chain = editor.chain().focus();
+      if (editor.isActive('orderedList')) {
+        // Isolate current selection into a new ordered list node, then apply style
+        chain.toggleOrderedList().toggleOrderedList().updateAttributes('orderedList', { listStyleType: 'decimal' }).run();
+      } else {
+        // Create new list with decimal style
+        chain.toggleOrderedList().updateAttributes('orderedList', { listStyleType: 'decimal' }).run();
+      }
+    }
+  };
+
+  const handleOrderedListAlpha = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (editor) {
+      const chain = editor.chain().focus();
+      if (editor.isActive('orderedList')) {
+        // Isolate current selection into a new ordered list node, then apply style
+        chain.toggleOrderedList().toggleOrderedList().updateAttributes('orderedList', { listStyleType: 'lower-alpha' }).run();
+      } else {
+        // Create new list with alpha style
+        chain.toggleOrderedList().updateAttributes('orderedList', { listStyleType: 'lower-alpha' }).run();
+      }
+    }
+  };
+
+  return (
+    <div className={`w-full ${className || ""}`}>
+      {label && <label className="block mb-1 text-sm font-medium text-[#2a436c]">{label}</label>}
+      <div className={`border ${error ? "border-red-400" : isFocused ? "border-[#355485]" : "border-[#d1d5db]"} rounded-xl bg-white overflow-hidden transition-colors ${isFocused ? "ring-2 ring-[#355485]" : ""}`}>
+        <div className="flex flex-wrap gap-2 p-2 border-b border-[#e5e7eb]">
+          <button type="button" disabled={!editor || disabled} onMouseDown={handleBold} className={btn(editor?.isActive("bold") || false)} title="Bold">
+            <i className="ri-bold"></i>
+          </button>
+          <button type="button" disabled={!editor || disabled} onMouseDown={handleItalic} className={btn(editor?.isActive("italic") || false)} title="Italic">
+            <i className="ri-italic"></i>
+          </button>
+          <button type="button" disabled={!editor || disabled} onMouseDown={handleUnderline} className={btn(editor?.isActive("underline") || false)} title="Underline">
+            <i className="ri-underline"></i>
+          </button>
+          <div className="w-px bg-[#e5e7eb]"></div>
+          <button type="button" disabled={!editor || disabled} onMouseDown={handleBulletList} className={btn(editor?.isActive("bulletList") || false)} title="Bullet List (Dots)">
+            <i className="ri-list-unordered"></i>
+          </button>
+          <button type="button" disabled={!editor || disabled} onMouseDown={handleOrderedListNumber} className={btn(editor?.isActive("orderedList", { listStyleType: 'decimal' }) || false)} title="Numbered List">
+            <i className="ri-list-ordered-2"></i>
+          </button>
+          <button type="button" disabled={!editor || disabled} onMouseDown={handleOrderedListAlpha} className={btn(editor?.isActive("orderedList", { listStyleType: 'lower-alpha' }) || false)} title="Alphabetical List">
+            <i className="ri-text"></i>
+          </button>
+        </div>
+        <div className={`${disabled ? "opacity-60" : ""}`}>
+          <EditorContent
+            editor={editor}
+            className="min-h-40 p-3 text-sm text-[#111827] [&_.ProseMirror]:outline-none [&_.ProseMirror]:border-none [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:ml-6 [&_.ProseMirror_ol]:ml-6"
+          />
+        </div>
+      </div>
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {hint && !error && <p className="mt-1 text-xs text-[#6b7280]">{hint}</p>}
     </div>
   );
 }
