@@ -27,6 +27,12 @@ export async function getCompanyProfile(user_id: string) {
   return resp.json();
 }
 
+export async function getCompanyProfileById(id: string) {
+  const resp = await fetch(`${BASE}/api/profile/company?id=${encodeURIComponent(id)}`);
+  if (!resp.ok) throw new Error("Gagal mengambil profil perusahaan");
+  return resp.json();
+}
+
 export async function upsertCandidateProfile(payload: {
   user_id: string;
   full_name: string;

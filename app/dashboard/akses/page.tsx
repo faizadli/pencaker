@@ -89,7 +89,7 @@ export default function AksesPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                 {perms.map((p) => (
-                  <label key={p.code} className="flex items-center gap-2 text-sm">
+                  <label key={p.code} className="flex items-center gap-2 text-sm text-[#111827]">
                     <input type="checkbox" checked={selectedPerms.includes(p.code)} onChange={() => togglePerm(p.code)} />
                     <span>{p.label}</span>
                   </label>

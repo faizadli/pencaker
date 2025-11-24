@@ -15,7 +15,7 @@ export type JobPayload = {
   application_deadline: string;
 };
 
-export async function listJobs(params?: { company_id?: string; status?: "pending" | "approved" | "closed"; category?: string }) {
+export async function listJobs(params?: { company_id?: string; status?: "pending" | "approved" | "rejected" | "closed"; category?: string }) {
   const q = new URLSearchParams();
   if (params?.company_id) q.set("company_id", params.company_id);
   if (params?.status) q.set("status", params.status);
@@ -37,7 +37,7 @@ export async function createJob(payload: JobPayload) {
   return resp.json();
 }
 
-export async function updateJob(id: string, payload: Partial<JobPayload> & { status?: "pending" | "approved" | "closed"; disnaker_id?: string }) {
+export async function updateJob(id: string, payload: Partial<JobPayload> & { status?: "pending" | "approved" | "rejected" | "closed"; disnaker_id?: string }) {
   const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
   const resp = await fetch(`${BASE}/api/jobs/${id}`, {
     method: "PUT",
@@ -66,9 +66,13 @@ export async function closeJob(id: string) {
   return resp.json();
 }
 
-export async function rejectJob(id: string) {
+export async function rejectJob(id: string, disnaker_id: string) {
   const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
-  const resp = await fetch(`${BASE}/api/jobs/${id}/reject`, { method: "POST", headers: { "X-User-Id": uid } });
+  const resp = await fetch(`${BASE}/api/jobs/${id}/reject`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-User-Id": uid },
+    body: JSON.stringify({ disnaker_id }),
+  });
   if (!resp.ok) throw new Error("Gagal menolak job");
   return resp.json();
 }

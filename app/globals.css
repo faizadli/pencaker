@@ -33,3 +33,33 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+.content-rich {
+  max-width: none;
+  color: #1f2937;
+  line-height: 1.625;
+  white-space: pre-line;
+}
+.content-rich h1,
+.content-rich h2,
+.content-rich h3 {
+  color: #2a436c;
+}
+.content-rich strong {
+  font-weight: 600;
+}
+.content-rich em {
+  font-style: italic;
+}
+.content-rich ul {
+  list-style: disc;
+  margin-left: 1rem;
+}
+.content-rich ol {
+  list-style: decimal;
+  margin-left: 1rem;
+}
+.content-rich a {
+  color: #355485;
+  text-decoration: underline;
+}

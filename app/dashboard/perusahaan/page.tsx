@@ -1,82 +1,126 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Input, SearchableSelect, SegmentedToggle } from "../../../components/shared/field";
+import Modal from "../../../components/shared/Modal";
+import { useRouter } from "next/navigation";
+import { listRoles, getRolePermissions } from "../../../services/rbac";
+import { getDisnakerProfile } from "../../../services/profile";
+import { listCompanies, approveCompany, rejectCompany } from "../../../services/company";
 
 export default function PerusahaanPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [role] = useState<string>(() => (typeof window !== "undefined" ? localStorage.getItem("role") || "" : ""));
+  const [userId] = useState<string>(() => (typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : ""));
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [permsLoaded, setPermsLoaded] = useState(false);
+  const [disnakerId, setDisnakerId] = useState<string>("");
+  type CompanyStatus = "APPROVED" | "PENDING" | "REJECTED";
+  type Company = {
+    id: string;
+    user_id: string;
+    company_name: string;
+    company_logo?: string;
+    no_handphone: string;
+    province: string;
+    city: string;
+    address: string;
+    website?: string;
+    about_company: string;
+    status: CompanyStatus;
+    disnaker_id?: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  const [perusahaanList, setPerusahaanList] = useState<Company[]>([]);
+  const canVerify = permissions.includes("perusahaan.verify");
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewCompany, setReviewCompany] = useState<Company | null>(null);
 
-  const perusahaanList = [
-    {
-      id: 1,
-      nama: "PT Solusi Digital",
-      sektor: "Teknologi Informasi",
-      alamat: "Jl. Sudirman No. 89, Jakarta Pusat",
-      telepon: "021-55566677",
-      email: "hr@solusidigital.com",
-      website: "www.solusidigital.com",
-      logo: "https://picsum.photos/200",
-      statusVerifikasi: "Terverifikasi",
-      tanggalDaftar: "12 Jan 2025",
-      totalLowongan: 5,
-      pelamarTotal: 128,
-      diterima: 12,
-      diproses: 45,
-      rating: 4.5,
-    },
-    {
-      id: 2,
-      nama: "CV Makmur Abadi",
-      sektor: "Manufaktur",
-      alamat: "Jl. Raya Industri No. 45, Bekasi",
-      telepon: "021-77788899",
-      email: "recruit@makmurabadi.co.id",
-      website: "www.makmurabadi.co.id",
-      logo: "https://picsum.photos/200",
-      statusVerifikasi: "Menunggu Verifikasi",
-      tanggalDaftar: "18 Okt 2024",
-      totalLowongan: 3,
-      pelamarTotal: 89,
-      diterima: 8,
-      diproses: 34,
-      rating: 4.2,
-    },
-    {
-      id: 3,
-      nama: "UD Tani Maju",
-      sektor: "Pertanian",
-      alamat: "Desa Sumbermulyo, Kec. Ngadirejo, Temanggung",
-      telepon: "081234445555",
-      email: "udtanimaju@gmail.com",
-      website: "-",
-      logo: "https://picsum.photos/200",
-      statusVerifikasi: "Ditolak",
-      tanggalDaftar: "5 Nov 2024",
-      totalLowongan: 1,
-      pelamarTotal: 15,
-      diterima: 0,
-      diproses: 8,
-      rating: 3.8,
-    },
-  ];
+  const apiToUIStatus = useMemo(() => ({
+    APPROVED: "Terverifikasi",
+    PENDING: "Menunggu Verifikasi",
+    REJECTED: "Ditolak",
+  }) as Record<CompanyStatus, string>, []);
 
-  const filteredPerusahaan = perusahaanList.filter((perusahaan) => {
-    const matchesSearch =
-      perusahaan.nama.toLowerCase().includes(searchTerm.toLowerCase()) || perusahaan.sektor.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || perusahaan.statusVerifikasi === statusFilter;
+  const uiToApiStatus = useMemo(() => ({
+    Terverifikasi: "APPROVED",
+    "Menunggu Verifikasi": "PENDING",
+    Ditolak: "REJECTED",
+  }) as Record<string, CompanyStatus>, []);
+
+  useEffect(() => {
+    async function boot() {
+      try {
+        const rolesResp = await listRoles();
+        const roleItems = (rolesResp.data || rolesResp) as { id: number; name: string }[];
+        const target = roleItems.find((x) => String(x.name).toLowerCase() === role.toLowerCase());
+        if (target) {
+          const perms = await getRolePermissions(target.id);
+          const rows = (perms.data || perms) as { code: string; label: string }[];
+          setPermissions(rows.map((r) => r.code));
+        }
+        if ((role === "super_admin" || role === "disnaker") && userId) {
+          const dz = await getDisnakerProfile(userId);
+          setDisnakerId(String((dz.data || dz).id));
+        }
+      } catch {}
+      setPermsLoaded(true);
+    }
+    if (role) boot();
+  }, [role, userId]);
+
+  useEffect(() => {
+    if (!permsLoaded) return;
+    const allowed = permissions.includes("perusahaan.read");
+    if (!allowed) router.replace("/dashboard");
+  }, [permissions, permsLoaded, router, role]);
+
+  useEffect(() => {
+    async function loadCompanies() {
+      try {
+        if (!permsLoaded) return;
+        const statusParam = statusFilter !== "all" ? uiToApiStatus[statusFilter] : undefined;
+        const resp = await listCompanies({ status: statusParam, search: searchTerm || undefined });
+        const rows = (resp.data || resp) as Company[];
+        setPerusahaanList(rows);
+      } catch {
+        setPerusahaanList([]);
+      }
+    }
+    loadCompanies();
+  }, [statusFilter, searchTerm, permsLoaded, uiToApiStatus]);
+
+  const filteredPerusahaan = perusahaanList.filter((p: Company) => {
+    const nama = String(p.company_name || "");
+    const sektor = String(p.city || "");
+    const matchesSearch = nama.toLowerCase().includes(searchTerm.toLowerCase()) || sektor.toLowerCase().includes(searchTerm.toLowerCase());
+    const uiStatus = apiToUIStatus[p.status];
+    const matchesStatus = statusFilter === "all" || uiStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const handleVerify = (id: number) => {
-    alert(`Perusahaan ID ${id} berhasil diverifikasi!`);
+  const handleVerify = async (id: string) => {
+    if (!disnakerId) { alert("Profil disnaker tidak ditemukan"); return; }
+    try {
+      await approveCompany(id, disnakerId);
+      const statusParam = statusFilter !== "all" ? uiToApiStatus[statusFilter] : undefined;
+      const resp = await listCompanies({ status: statusParam, search: searchTerm || undefined });
+      setPerusahaanList((resp.data || resp) as Company[]);
+    } catch { alert("Gagal verifikasi perusahaan"); }
   };
 
-  const handleReject = (id: number) => {
-    if (confirm(`Yakin ingin menolak verifikasi perusahaan ID ${id}?`)) {
-      alert(`Permohonan verifikasi perusahaan ID ${id} ditolak.`);
-    }
+  const handleReject = async (id: string) => {
+    if (!confirm("Yakin ingin menolak verifikasi perusahaan ini?")) return;
+    try {
+      await rejectCompany(id, disnakerId);
+      const statusParam = statusFilter !== "all" ? uiToApiStatus[statusFilter] : undefined;
+      const resp = await listCompanies({ status: statusParam, search: searchTerm || undefined });
+      setPerusahaanList((resp.data || resp) as Company[]);
+    } catch { alert("Gagal menolak verifikasi perusahaan"); }
   };
 
   const getStatusColor = (status: string) => {
@@ -105,24 +149,24 @@ export default function PerusahaanPage() {
             <StatCard title="Total Perusahaan" value={perusahaanList.length} change="+8%" color="#4f90c6" icon="ri-building-line" />
             <StatCard
               title="Terverifikasi"
-              value={perusahaanList.filter((p) => p.statusVerifikasi === "Terverifikasi").length}
+              value={perusahaanList.filter((p) => apiToUIStatus[p.status] === "Terverifikasi").length}
               change="+3"
               color="#355485"
               icon="ri-checkbox-circle-line"
             />
             <StatCard
               title="Menunggu"
-              value={perusahaanList.filter((p) => p.statusVerifikasi === "Menunggu Verifikasi").length}
+              value={perusahaanList.filter((p) => apiToUIStatus[p.status] === "Menunggu Verifikasi").length}
               change="Perlu tinjauan"
               color="#90b6d5"
               icon="ri-time-line"
             />
             <StatCard
-              title="Lowongan Aktif"
-              value={perusahaanList.reduce((total, p) => total + p.totalLowongan, 0)}
-              change="+12"
+              title="Perusahaan Ditolak"
+              value={perusahaanList.filter((p) => apiToUIStatus[p.status] === "Ditolak").length}
+              change="Total ditolak"
               color="#2a436c"
-              icon="ri-briefcase-line"
+              icon="ri-close-circle-line"
             />
           </div>
 
@@ -157,64 +201,37 @@ export default function PerusahaanPage() {
                   <div className="p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <Image src={p.logo} alt={p.nama} width={48} height={48} className="w-12 h-12 rounded-lg object-cover" />
+                        <Image src={p.company_logo || "https://picsum.photos/200"} alt={p.company_name} width={48} height={48} className="w-12 h-12 rounded-lg object-cover" />
                         <div>
-                          <h3 className="font-bold text-[#2a436c] text-sm leading-tight">{p.nama}</h3>
-                          <p className="text-xs text-[#6b7280]">{p.sektor}</p>
+                          <h3 className="font-bold text-[#2a436c] text-sm leading-tight">{p.company_name}</h3>
+                          <p className="text-xs text-[#6b7280]">{p.city}</p>
                         </div>
                       </div>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(p.statusVerifikasi)}`}>{p.statusVerifikasi}</span>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(apiToUIStatus[p.status])}`}>{apiToUIStatus[p.status]}</span>
                     </div>
                   </div>
 
                   <div className="p-4 space-y-3">
                     <div className="flex items-center gap-2 text-sm">
                       <i className="ri-map-pin-line text-[#6b7280]"></i>
-                      <span className="text-[#6b7280] truncate">{p.alamat}</span>
+                      <span className="text-[#6b7280] truncate">{p.address}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <i className="ri-phone-line text-[#6b7280]"></i>
-                      <span className="text-[#6b7280]">{p.telepon}</span>
+                      <span className="text-[#6b7280]">{p.no_handphone}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <i className="ri-mail-line text-[#6b7280]"></i>
-                      <span className="text-[#6b7280] truncate">{p.email}</span>
-                    </div>
-                  </div>
-
-                  <div className="p-4 border-t border-[#e5e7eb] bg-[#f9fafb]">
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div>
-                        <p className="text-lg font-bold text-[#2a436c]">{p.totalLowongan}</p>
-                        <p className="text-xs text-[#6b7280]">Lowongan</p>
-                      </div>
-                      <div>
-                        <p className="text-lg font-bold text-[#2a436c]">{p.pelamarTotal}</p>
-                        <p className="text-xs text-[#6b7280]">Pelamar</p>
-                      </div>
-                      <div>
-                        <p className="text-lg font-bold text-[#2a436c]">{p.diterima}</p>
-                        <p className="text-xs text-[#6b7280]">Diterima</p>
-                      </div>
+                      <span className="text-[#6b7280] truncate">{p.website || "-"}</span>
                     </div>
                   </div>
 
                   <div className="p-4 border-t border-[#e5e7eb]">
                     <div className="flex gap-2">
-                      <button className="flex-1 px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition">
+                      <button onClick={() => { setReviewCompany(p); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition">
                         <i className="ri-eye-line mr-1"></i>
                         Detail
                       </button>
-                      {p.statusVerifikasi === "Menunggu Verifikasi" && (
-                        <>
-                          <button onClick={() => handleVerify(p.id)} className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                            <i className="ri-check-line"></i>
-                          </button>
-                          <button onClick={() => handleReject(p.id)} className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                            <i className="ri-close-line"></i>
-                          </button>
-                        </>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -239,36 +256,30 @@ export default function PerusahaanPage() {
                       <tr key={p.id} className="border-b border-[#e5e7eb] hover:bg-[#f9fafb]">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
-                            <Image src={p.logo} alt={p.nama} width={40} height={40} className="w-10 h-10 rounded-lg object-cover" />
+                            <Image src={p.company_logo || "https://picsum.photos/200"} alt={p.company_name} width={40} height={40} className="w-10 h-10 rounded-lg object-cover" />
                             <div>
-                              <p className="font-medium text-[#111827]">{p.nama}</p>
-                              <p className="text-xs text-[#4b5563]">{p.email}</p>
+                              <p className="font-medium text-[#111827]">{p.company_name}</p>
+                              <p className="text-xs text-[#4b5563]">{p.website || "-"}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-[#111827]">{p.sektor}</td>
+                        <td className="py-3 px-4 text-[#111827]">{p.city}</td>
                         <td className="py-3 px-4">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(p.statusVerifikasi)}`}>{p.statusVerifikasi}</span>
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(apiToUIStatus[p.status])}`}>{apiToUIStatus[p.status]}</span>
                         </td>
                         <td className="py-3 px-4">
                           <div className="text-center">
-                            <p className="font-bold text-[#2a436c]">{p.totalLowongan}</p>
+                            <p className="font-bold text-[#2a436c]">-</p>
                           </div>
                         </td>
                         <td className="py-3 px-4">
                           <div className="text-center">
-                            <p className="font-bold text-[#2a436c]">{p.pelamarTotal}</p>
+                            <p className="font-bold text-[#2a436c]">-</p>
                           </div>
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex gap-2">
-                            <button className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Detail</button>
-                            {p.statusVerifikasi === "Menunggu Verifikasi" && (
-                              <>
-                                <button onClick={() => handleVerify(p.id)} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition">✓</button>
-                                <button onClick={() => handleReject(p.id)} className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition">✕</button>
-                              </>
-                            )}
+                            <button onClick={() => { setReviewCompany(p); setShowReviewModal(true); }} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Detail</button>
                           </div>
                         </td>
                       </tr>
@@ -278,6 +289,73 @@ export default function PerusahaanPage() {
               </div>
             </div>
           )}
+
+          <Modal
+            open={showReviewModal}
+            title="Review Perusahaan"
+            onClose={() => { setShowReviewModal(false); setReviewCompany(null); }}
+            size="lg"
+            actions={
+              <>
+                <button onClick={() => { setShowReviewModal(false); setReviewCompany(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>
+                {reviewCompany && apiToUIStatus[reviewCompany.status] === "Menunggu Verifikasi" && canVerify && (
+                  <>
+                    <button onClick={() => { if (reviewCompany) { handleVerify(String(reviewCompany.id)); setShowReviewModal(false); setReviewCompany(null); } }} className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">Setujui</button>
+                    <button onClick={() => { if (reviewCompany) { handleReject(String(reviewCompany.id)); setShowReviewModal(false); setReviewCompany(null); } }} className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Tolak</button>
+                  </>
+                )}
+              </>
+            }
+          >
+            {reviewCompany && (
+              <div className="grid grid-cols-1 gap-3">
+                <div className="bg-white rounded-lg p-4 border grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                  <div className="md:col-span-1 flex items-center justify-center">
+                    <img src={reviewCompany.company_logo || "https://picsum.photos/200"} alt={reviewCompany.company_name} className="w-24 h-24 rounded-lg object-cover" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-[#6b7280]">Nama Perusahaan</div>
+                    <div className="font-semibold text-[#2a436c]">{reviewCompany.company_name}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-[#6b7280]">Status</div>
+                    <div className="font-medium text-[#111827]">{apiToUIStatus[reviewCompany.status]}</div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-4 border grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <div className="text-sm text-[#6b7280]">Provinsi</div>
+                    <div className="font-medium text-[#111827]">{reviewCompany.province || "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-[#6b7280]">Kota</div>
+                    <div className="font-medium text-[#111827]">{reviewCompany.city || "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-[#6b7280]">Telepon</div>
+                    <div className="font-medium text-[#111827]">{reviewCompany.no_handphone || "-"}</div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-4 border grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-[#6b7280]">Alamat</div>
+                    <div className="font-medium text-[#111827]">{reviewCompany.address || "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-[#6b7280]">Website</div>
+                    <div className="font-medium text-[#111827]">{reviewCompany.website || "-"}</div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-4 border">
+                  <div className="text-sm text-[#6b7280] mb-1">Tentang Perusahaan</div>
+                  <div className="font-medium text-[#111827] whitespace-pre-wrap">{reviewCompany.about_company || "-"}</div>
+                </div>
+              </div>
+            )}
+          </Modal>
 
           {filteredPerusahaan.length === 0 && (
             <div className="text-center py-8 bg-white rounded-xl shadow-md border border-[#e5e7eb]">

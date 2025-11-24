@@ -1,11 +1,11 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Input, SearchableSelect, SegmentedToggle, TextEditor } from "../../../components/shared/field";
 import Modal from "../../../components/shared/Modal";
-import { listJobs, createJob, applyJob, approveJob, rejectJob, listApplications, updateJob } from "../../../services/jobs";
+import { listJobs, createJob, approveJob, rejectJob, updateJob } from "../../../services/jobs";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
-import { getCompanyProfile, getCandidateProfile, getDisnakerProfile } from "../../../services/profile";
+import { getCompanyProfile, getCompanyProfileById, getDisnakerProfile } from "../../../services/profile";
 
 export default function LowonganPage() {
   const router = useRouter();
@@ -20,13 +20,14 @@ export default function LowonganPage() {
   const [permsLoaded, setPermsLoaded] = useState(false);
   const [companyId, setCompanyId] = useState<string>("");
   const [companyName, setCompanyName] = useState<string>("");
-  const [candidateId, setCandidateId] = useState<string>("");
   const [disnakerId, setDisnakerId] = useState<string>("");
 
   type Job = {
     id: string;
     company_id: string;
     company_name?: string;
+    companyName?: string;
+    company?: string;
     job_title: string;
     job_type: "full_time" | "part_time" | "internship" | "contract" | "freelance";
     job_description: string;
@@ -38,7 +39,7 @@ export default function LowonganPage() {
     skills_required: string;
     work_setup: string;
     application_deadline: string;
-    status: "pending" | "approved" | "closed";
+    status: "pending" | "approved" | "rejected" | "closed";
     createdAt: string;
   };
 
@@ -69,6 +70,13 @@ export default function LowonganPage() {
     rejected: "Ditolak",
     closed: "Kadaluarsa",
   }) as Record<Job["status"], UIStatusExtended>, []);
+
+  const uiToApiStatus = useMemo(() => ({
+    Aktif: "approved",
+    "Menunggu Verifikasi": "pending",
+    Ditolak: "rejected",
+    Kadaluarsa: "closed",
+  }) as Record<UIStatusExtended, "pending" | "approved" | "rejected" | "closed">, []);
 
   type NewJob = {
     posisi: string;
@@ -105,12 +113,35 @@ export default function LowonganPage() {
   };
 
   const [lowonganList, setLowonganList] = useState<Job[]>([]);
+  const [companyNames, setCompanyNames] = useState<Record<string, string>>({});
+  const [reviewJob, setReviewJob] = useState<ViewJob | null>(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   const EMPTY_NEW_JOB: NewJob = { posisi: "", sektor: "", tipe: "Full-time", batasAkhir: "", deskripsi: "", experience_required: "", education_required: "", skills_required: "", min_salary: 0, max_salary: 0, work_setup: "WFO" };
   const [newJob, setNewJob] = useState<NewJob>(EMPTY_NEW_JOB);
-  const [totalPelamar, setTotalPelamar] = useState<number>(0);
 
   // initial role and userId read via useState initializer above
+
+  const enrichJobsWithCompanyName = useCallback(async (rows: Job[]) => {
+    try {
+      const ids = Array.from(new Set(rows.map((r) => r.company_id))).filter(Boolean);
+      const nameMap: Record<string, string> = {};
+      await Promise.all(
+        ids.map(async (id) => {
+          try {
+            const cp = await getCompanyProfileById(String(id));
+            const data = cp.data || cp;
+            if (data && data.company_name) {
+              nameMap[String(id)] = String(data.company_name);
+            }
+          } catch {}
+        })
+      );
+      return rows.map((r) => ({ ...r, company_name: nameMap[String(r.company_id)] || r.company_name }));
+    } catch {
+      return rows;
+    }
+  }, []);
 
   useEffect(() => {
     async function boot() {
@@ -128,12 +159,9 @@ export default function LowonganPage() {
         if (role === "company" && userId) {
           const cp = await getCompanyProfile(userId);
           const data = cp.data || cp;
-          setCompanyId(String(data.id));
-          setCompanyName(String(data.company_name || ""));
-        } else if (role === "candidate" && userId) {
-          const cd = await getCandidateProfile(userId);
-          setCandidateId(String((cd.data || cd).id));
-        } else if (role === "super_admin" && userId) {
+          setCompanyId(String(data?.id || ""));
+          setCompanyName(String(data?.company_name || ""));
+        } else if ((role === "super_admin" || role === "disnaker") && userId) {
           const dz = await getDisnakerProfile(userId);
           setDisnakerId(String((dz.data || dz).id));
         }
@@ -146,53 +174,81 @@ export default function LowonganPage() {
   }, [role, userId]);
 
   useEffect(() => {
-    if (!permsLoaded) return;
-    const allowedCompany = permissions.includes("lowongan.read");
-    if (role === "company" && !allowedCompany) {
+    if (!permsLoaded) return
+    const allowed = permissions.includes("lowongan.read");
+    if (!allowed) {
       router.replace("/dashboard");
     }
-  }, [role, permissions, permsLoaded, router]);
+  }, [permissions, permsLoaded, router, role]);
 
   useEffect(() => {
     async function loadJobs() {
       try {
+        if (!permsLoaded) return;
         if (role === "company" && companyId) {
           if (permissions.includes("lowongan.read")) {
-            const resp = await listJobs({ company_id: companyId });
+            const statusParam = statusFilter !== "all" ? uiToApiStatus[statusFilter as UIStatusExtended] : undefined;
+            const query: { company_id: string; status?: "pending" | "approved" | "rejected" | "closed" } = { company_id: companyId };
+            if (statusParam) query.status = statusParam;
+            const resp = await listJobs(query);
             setLowonganList((resp.data || resp) as Job[]);
-            try {
-              const apps = await listApplications({ company_id: companyId });
-              const rows = (apps.data || apps) as { id: string }[];
-              setTotalPelamar(rows.length || 0);
-            } catch {
-              setTotalPelamar(0);
-            }
           } else {
             setLowonganList([]);
-            setTotalPelamar(0);
           }
-        } else if (role === "candidate") {
-          const resp = await listJobs({ status: "approved" });
-          setLowonganList((resp.data || resp) as Job[]);
-          setTotalPelamar(0);
         } else {
           const resp = await listJobs();
-          setLowonganList((resp.data || resp) as Job[]);
-          setTotalPelamar(0);
+          const rows = (resp.data || resp) as Job[];
+          const enriched = await enrichJobsWithCompanyName(rows);
+          setLowonganList(enriched);
         }
       } catch {
         setLowonganList([]);
-        setTotalPelamar(0);
       }
     }
     loadJobs();
-  }, [role, companyId, permissions]);
+  }, [role, companyId, permissions, enrichJobsWithCompanyName, statusFilter, permsLoaded, uiToApiStatus]);
+
+  useEffect(() => {
+    async function fillCompanyNames() {
+      try {
+        const ids = Array.from(new Set(lowonganList.map((j) => j.company_id))).filter(Boolean);
+        const missing = ids.filter((id) => !companyNames[String(id)]);
+        if (missing.length === 0) return;
+        const updates: Record<string, string> = {};
+        await Promise.all(
+          missing.map(async (id) => {
+            try {
+              const cp = await getCompanyProfileById(String(id));
+              const data = cp.data || cp;
+              if (data?.company_name) {
+                updates[String(id)] = String(data.company_name);
+              }
+            } catch {}
+          })
+        );
+        if (Object.keys(updates).length > 0) {
+          setCompanyNames((prev) => ({ ...prev, ...updates }));
+        }
+      } catch {}
+    }
+    if (lowonganList.length > 0) fillCompanyNames();
+  }, [lowonganList, companyNames]);
+
+  
 
   const filteredLowongan: ViewJob[] = useMemo(() => {
     const toView: ViewJob[] = lowonganList.map((j) => ({
       id: j.id,
       posisi: j.job_title,
-      perusahaan: role === "company" ? (companyName || j.company_id) : (j.company_name || j.company_id),
+      perusahaan: role === "company"
+        ? (companyName || j.company_id)
+        : (
+            companyNames[String(j.company_id)] ||
+            j.company_name ||
+            j.companyName ||
+            j.company ||
+            j.company_id
+          ),
       companyId: j.company_id,
       sektor: j.category,
       lokasi: j.work_setup,
@@ -214,7 +270,7 @@ export default function LowonganPage() {
       const matchesStatus = statusFilter === "all" || lowongan.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [lowonganList, searchTerm, statusFilter, apiToUITipe, apiToUIStatus, role, companyName]);
+  }, [lowonganList, searchTerm, statusFilter, apiToUITipe, apiToUIStatus, role, companyName, companyNames]);
 
   const handleAddJob = async () => {
     if (!companyId) { alert("Perusahaan belum teridentifikasi"); return; }
@@ -252,12 +308,44 @@ export default function LowonganPage() {
 
   const handleApprove = async (id: string) => {
     if (!disnakerId) { alert("Profil disnaker tidak ditemukan"); return; }
-    try { await approveJob(id, disnakerId); const resp = await listJobs(); setLowonganList((resp.data || resp) as Job[]); } catch { alert("Gagal menyetujui lowongan"); }
+    try {
+      await approveJob(id, disnakerId);
+      let rows: Job[] = [];
+      if (role === "company" && companyId) {
+        const statusParam = statusFilter !== "all" ? uiToApiStatus[statusFilter as UIStatusExtended] : undefined;
+        const query: { company_id: string; status?: "pending" | "approved" | "rejected" | "closed" } = { company_id: companyId };
+        if (statusParam) query.status = statusParam;
+        const resp = await listJobs(query);
+        rows = (resp.data || resp) as Job[];
+      } else {
+        const resp = await listJobs();
+        rows = (resp.data || resp) as Job[];
+      }
+      setLowonganList(rows);
+    } catch {
+      alert("Gagal menyetujui lowongan");
+    }
   };
 
   const handleReject = async (id: string) => {
     if (!confirm("Yakin ingin menolak lowongan?")) return;
-    try { await rejectJob(id); const resp = await listJobs(); setLowonganList((resp.data || resp) as Job[]); } catch { alert("Gagal menolak lowongan"); }
+    try {
+      await rejectJob(id, disnakerId);
+      let rows: Job[] = [];
+      if (role === "company" && companyId) {
+        const statusParam = statusFilter !== "all" ? uiToApiStatus[statusFilter as UIStatusExtended] : undefined;
+        const query: { company_id: string; status?: "pending" | "approved" | "rejected" | "closed" } = { company_id: companyId };
+        if (statusParam) query.status = statusParam;
+        const resp = await listJobs(query);
+        rows = (resp.data || resp) as Job[];
+      } else {
+        const resp = await listJobs();
+        rows = (resp.data || resp) as Job[];
+      }
+      setLowonganList(rows);
+    } catch {
+      alert("Gagal menolak lowongan");
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -293,9 +381,8 @@ export default function LowonganPage() {
   };
 
   const canCreate = permissions.includes("lowongan.create");
-  const canEdit = permissions.includes("lowongan.update") || role === "super_admin";
-  const canVerify = role === "super_admin" || permissions.includes("lowongan.verify");
-  const canApply = role === "candidate";
+  const canEdit = permissions.includes("lowongan.update");
+  const canVerify = permissions.includes("lowongan.verify");
 
   return (
     <>
@@ -310,7 +397,7 @@ export default function LowonganPage() {
             <StatCard title="Total Lowongan" value={lowonganList.length} change="+8%" color="#4f90c6" icon="ri-briefcase-line" />
             <StatCard title="Aktif" value={filteredLowongan.filter((j) => j.status === "Aktif").length} change="+3" color="#355485" icon="ri-checkbox-circle-line" />
             <StatCard title="Menunggu" value={filteredLowongan.filter((j) => j.status === "Menunggu Verifikasi").length} change="Perlu tinjauan" color="#90b6d5" icon="ri-time-line" />
-            <StatCard title="Total Pelamar" value={totalPelamar} change="+45" color="#2a436c" icon="ri-user-line" />
+            <StatCard title="Ditolak" value={filteredLowongan.filter((j) => j.status === "Ditolak").length} change="Total ditolak" color="#2a436c" icon="ri-close-circle-line" />
           </div>
 
           <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] mb-6">
@@ -362,6 +449,75 @@ export default function LowonganPage() {
             </div>
           </Modal>
 
+          <Modal
+            open={showReviewModal}
+            title="Review Lowongan"
+            onClose={() => { setShowReviewModal(false); setReviewJob(null); }}
+            size="lg"
+            actions={
+              <>
+                <button onClick={() => { setShowReviewModal(false); setReviewJob(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>
+                {reviewJob && reviewJob.status === "Menunggu Verifikasi" && canVerify && (
+                  <>
+                    <button onClick={() => { if (reviewJob) { handleApprove(reviewJob.id); setShowReviewModal(false); setReviewJob(null); } }} className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">Setujui</button>
+                    <button onClick={() => { if (reviewJob) { handleReject(reviewJob.id); setShowReviewModal(false); setReviewJob(null); } }} className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Tolak</button>
+                  </>
+                )}
+              </>
+            }
+          >
+            {reviewJob && (
+              <div className="grid grid-cols-1 gap-3">
+                <div className="bg-white rounded-lg p-4 border">
+                  <div className="text-sm text-[#6b7280]">Posisi</div>
+                  <div className="font-semibold text-[#2a436c]">{reviewJob.posisi}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 border">
+                  <div className="text-sm text-[#6b7280]">Perusahaan</div>
+                  <div className="font-semibold text-[#2a436c]">{reviewJob.perusahaan}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 border grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-[#6b7280]">Lokasi</div>
+                    <div className="font-medium text-[#111827]">{reviewJob.lokasi || "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-[#6b7280]">Tipe</div>
+                    <div className="font-medium text-[#111827]">{reviewJob.tipe || "-"}</div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 border grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-[#6b7280]">Tayang</div>
+                    <div className="font-medium text-[#111827]">{reviewJob.tanggalTayang || "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-[#6b7280]">Batas Akhir</div>
+                    <div className="font-medium text-[#111827]">{reviewJob.batasAkhir || "-"}</div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 border">
+                  <div className="text-sm text-[#6b7280] mb-1">Deskripsi</div>
+                  <div className="content-rich" dangerouslySetInnerHTML={{ __html: reviewJob.deskripsi }} />
+                </div>
+                <div className="bg-white rounded-lg p-4 border grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <div className="text-sm text-[#6b7280]">Pengalaman</div>
+                    <div className="font-medium text-[#111827]">{reviewJob.experience_required || "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-[#6b7280]">Pendidikan</div>
+                    <div className="font-medium text-[#111827]">{reviewJob.education_required || "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-[#6b7280]">Keahlian</div>
+                    <div className="font-medium text-[#111827]">{reviewJob.skills_required || "-"}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </Modal>
+
 
           {viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -411,31 +567,17 @@ export default function LowonganPage() {
 
                   <div className="p-4 border-t border-[#e5e7eb]">
                     <div className="flex gap-2">
-                      <button className="flex-1 px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition">
+                      <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition">
                         <i className="ri-eye-line mr-1"></i>
-                        Detail
+                        {job.status === "Menunggu Verifikasi" && canVerify ? "Review & Konfirmasi" : "Detail"}
                       </button>
                       {canEdit && (
                         <button onClick={() => { setEditingId(String(job.id)); setNewJob({ posisi: job.posisi, sektor: job.sektor, tipe: job.tipe as UITipe, batasAkhir: job.batasAkhir, deskripsi: job.deskripsi, experience_required: job.experience_required, education_required: job.education_required, skills_required: job.skills_required, min_salary: 0, max_salary: 0, work_setup: job.lokasi }); setShowForm(true); }} className="px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition" title="Edit">
                           <i className="ri-edit-line"></i>
                         </button>
                       )}
-                      {job.status === "Menunggu Verifikasi" && canVerify && (
-                        <>
-                          <button onClick={() => handleApprove(String(job.id))} className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition" title="Setujui">
-                            <i className="ri-check-line"></i>
-                          </button>
-                          <button onClick={() => handleReject(String(job.id))} className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition" title="Tolak">
-                            <i className="ri-close-line"></i>
-                          </button>
-                        </>
-                      )}
-                      {canApply && (
-                        <button onClick={async () => { try { await applyJob({ candidate_id: candidateId, company_id: String(job.companyId), job_id: String(job.id) }); alert("Lamaran dikirim"); } catch { alert("Gagal melamar"); } }} className="px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">
-                          <i className="ri-send-plane-line mr-1"></i>
-                          Lamar
-                        </button>
-                      )}
+                      
+                      
                     </div>
                   </div>
                 </div>
@@ -477,15 +619,11 @@ export default function LowonganPage() {
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="flex gap-2">
-                            <button className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Detail</button>
-                            {job.status === "Menunggu Verifikasi" && canVerify && (
-                              <>
-                                <button onClick={() => handleApprove(job.id)} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition">✓</button>
-                                <button onClick={() => handleReject(job.id)} className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition">✕</button>
-                              </>
-                            )}
-                          </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">
+                          {job.status === "Menunggu Verifikasi" && canVerify ? "Review & Konfirmasi" : "Detail"}
+                        </button>
+                      </div>
                         </td>
                       </tr>
                     ))}
