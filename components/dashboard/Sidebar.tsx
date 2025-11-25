@@ -11,37 +11,37 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
   const [isMinimized] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const role: string | null = roleProp || null;
+  const role: string = roleProp || (typeof window !== "undefined" ? (localStorage.getItem("role") || "") : "");
   const [companyApproved, setCompanyApproved] = useState(false);
-  const [canLowongan, setCanLowongan] = useState(false);
+  const [permissionCodes, setPermissionCodes] = useState<string[]>([]);
 
   const pathname = usePathname();
 
   useEffect(() => {
     const init = async () => {
-      if (role !== "company") return;
-      const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
-      if (!uid) return;
       try {
-        const res = await getCompanyProfile(uid);
-        const d = res?.data || {};
-        const raw = String(d.status || "").toLowerCase();
-        const approved = Boolean(d.disnaker_id) || ["approved", "terverifikasi", "disetujui"].includes(raw);
-        setCompanyApproved(approved);
-        if (typeof document !== "undefined") {
-          document.cookie = `companyApproved=${approved ? "true" : "false"}; path=/; max-age=1800`;
-        }
         const rolesResp = await listRoles();
         const roleItems = (rolesResp.data || rolesResp) as { id: number; name: string }[];
-        const target = roleItems.find((x) => String(x.name).toLowerCase() === "company");
+        const target = roleItems.find((x) => String(x.name).toLowerCase() === String(role).toLowerCase());
         if (target) {
           const perms = await getRolePermissions(target.id);
           const rows = (perms.data || perms) as { code: string; label: string }[];
-          const codes = rows.map((r) => r.code);
-          setCanLowongan(codes.includes("lowongan.read"));
+          setPermissionCodes(rows.map((r) => r.code));
         }
-      } catch {
-      }
+        if (role === "company") {
+          const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
+          if (uid) {
+            const res = await getCompanyProfile(uid);
+            const d = res?.data || {};
+            const raw = String(d.status || "").toLowerCase();
+            const approved = Boolean(d.disnaker_id) || ["approved", "terverifikasi", "disetujui"].includes(raw);
+            setCompanyApproved(approved);
+            if (typeof document !== "undefined") {
+              document.cookie = `companyApproved=${approved ? "true" : "false"}; path=/; max-age=1800`;
+            }
+          }
+        }
+      } catch {}
     };
     init();
   }, [role, pathname]);
@@ -74,11 +74,23 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
   ];
 
   const filteredItems = (() => {
-    if (role === "company") return allItems.filter((i) => ["/dashboard", "/dashboard/profile", companyApproved && canLowongan ? "/dashboard/lowongan" : null].filter(Boolean).includes(i.path));
+    const canPerusahaan = permissionCodes.includes("perusahaan.read");
+    const canLowongan = permissionCodes.includes("lowongan.read");
+    const canPencaker = permissionCodes.includes("pencaker.read");
+    if (role === "company") {
+      const allowed = ["/dashboard", "/dashboard/profile"] as (string | null)[];
+      if (companyApproved && canLowongan) allowed.push("/dashboard/lowongan");
+      return allItems.filter((i) => allowed.filter(Boolean).includes(i.path));
+    }
     if (role === "candidate") return allItems.filter((i) => ["/dashboard", "/dashboard/profile"].includes(i.path));
-    // When role is unknown on first SSR, render no items to avoid hydration mismatch
     if (!role) return [];
-    return allItems;
+    return allItems.filter((i) => {
+      if (i.path === "/dashboard/perusahaan") return canPerusahaan;
+      if (i.path === "/dashboard/lowongan") return canLowongan;
+      if (i.path === "/dashboard/pencaker") return canPencaker;
+      if (i.path === "/dashboard/users") return permissionCodes.includes("users.read");
+      return true;
+    });
   })();
 
   return (

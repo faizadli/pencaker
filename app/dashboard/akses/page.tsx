@@ -10,6 +10,16 @@ export default function AksesPage() {
   const [selectedPerms, setSelectedPerms] = useState<string[]>([]);
   const [newRole, setNewRole] = useState({ name: "", description: "" });
   const [loadingAssign, setLoadingAssign] = useState(false);
+  const groupLabels: Record<string, string> = { pencaker: "Pencari Kerja", perusahaan: "Perusahaan", lowongan: "Lowongan" };
+  const groupedPerms = (() => {
+    const buckets: Record<string, { code: string; label: string }[]> = {};
+    perms.forEach((p) => {
+      const key = String(p.code || "").split(".")[0] || "Lainnya";
+      if (!buckets[key]) buckets[key] = [];
+      buckets[key].push(p);
+    });
+    return Object.entries(buckets).sort((a, b) => a[0].localeCompare(b[0]));
+  })();
 
   useEffect(() => {
     const init = async () => {
@@ -87,12 +97,21 @@ export default function AksesPage() {
                   className="w-full"
                 />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-                {perms.map((p) => (
-                  <label key={p.code} className="flex items-center gap-2 text-sm text-[#111827]">
-                    <input type="checkbox" checked={selectedPerms.includes(p.code)} onChange={() => togglePerm(p.code)} />
-                    <span>{p.label}</span>
-                  </label>
+              <div className="space-y-4 mt-2">
+                {groupedPerms.map(([group, items]) => (
+                  <div key={group} className="border border-[#e5e7eb] rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-semibold text-[#2a436c]">{groupLabels[group] || group.charAt(0).toUpperCase() + group.slice(1)}</h4>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {items.map((p) => (
+                        <label key={p.code} className="flex items-center gap-2 text-sm text-[#111827]">
+                          <input type="checkbox" checked={selectedPerms.includes(p.code)} onChange={() => togglePerm(p.code)} />
+                          <span>{p.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
               <button onClick={handleAssign} disabled={!selectedRole || loadingAssign} className="px-6 py-3 bg-[#355485] hover:bg-[#2a436c] text-white rounded-xl text-sm transition-all">

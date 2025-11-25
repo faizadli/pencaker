@@ -6,7 +6,7 @@ import Modal from "../../../components/shared/Modal";
 import { useRouter } from "next/navigation";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { getDisnakerProfile } from "../../../services/profile";
-import { listCompanies, approveCompany, rejectCompany } from "../../../services/company";
+import { listCompanies, approveCompany, rejectCompany, createCompanyProfile, updateCompanyProfile } from "../../../services/company";
 
 export default function PerusahaanPage() {
   const router = useRouter();
@@ -37,8 +37,16 @@ export default function PerusahaanPage() {
   };
   const [perusahaanList, setPerusahaanList] = useState<Company[]>([]);
   const canVerify = permissions.includes("perusahaan.verify");
+  const canCreate = permissions.includes("perusahaan.create");
+  const canUpdate = permissions.includes("perusahaan.update");
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewCompany, setReviewCompany] = useState<Company | null>(null);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
+  const [editingCompanyUserId, setEditingCompanyUserId] = useState<string | null>(null);
+  const [userEmailCompany, setUserEmailCompany] = useState("");
+  const [userPasswordCompany, setUserPasswordCompany] = useState("");
+  const [formCompany, setFormCompany] = useState<{ user_id?: string; company_name: string; company_logo?: string; no_handphone: string; province: string; city: string; address: string; website?: string; about_company: string }>({ company_name: "", company_logo: "", no_handphone: "", province: "", city: "", address: "", website: "", about_company: "" });
 
   const apiToUIStatus = useMemo(() => ({
     APPROVED: "Terverifikasi",
@@ -189,7 +197,9 @@ export default function PerusahaanPage() {
                   options={[{ value: "grid", icon: "ri-grid-line" }, { value: "table", icon: "ri-list-check" }]}
                 />
 
-                <button className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center">+ Tambah</button>
+                {canCreate && (
+                  <button onClick={() => { setEditingCompanyId(null); setEditingCompanyUserId(null); setUserEmailCompany(""); setUserPasswordCompany(""); setFormCompany({ company_name: "", company_logo: "", no_handphone: "", province: "", city: "", address: "", website: "", about_company: "" }); setShowFormModal(true); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center">+ Tambah</button>
+                )}
               </div>
             </div>
           </div>
@@ -232,6 +242,12 @@ export default function PerusahaanPage() {
                         <i className="ri-eye-line mr-1"></i>
                         Detail
                       </button>
+                      {canUpdate && (
+                        <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", province: p.province || "", city: p.city || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">
+                          <i className="ri-pencil-line mr-1"></i>
+                          Edit
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -280,6 +296,9 @@ export default function PerusahaanPage() {
                         <td className="py-3 px-4">
                           <div className="flex gap-2">
                             <button onClick={() => { setReviewCompany(p); setShowReviewModal(true); }} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Detail</button>
+                            {canUpdate && (
+                              <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", province: p.province || "", city: p.city || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="px-3 py-1 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition">Edit</button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -311,7 +330,7 @@ export default function PerusahaanPage() {
               <div className="grid grid-cols-1 gap-3">
                 <div className="bg-white rounded-lg p-4 border grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                   <div className="md:col-span-1 flex items-center justify-center">
-                    <img src={reviewCompany.company_logo || "https://picsum.photos/200"} alt={reviewCompany.company_name} className="w-24 h-24 rounded-lg object-cover" />
+                    <Image src={reviewCompany.company_logo || "https://picsum.photos/200"} alt={reviewCompany.company_name} width={96} height={96} className="w-24 h-24 rounded-lg object-cover" />
                   </div>
                   <div>
                     <div className="text-sm text-[#6b7280]">Nama Perusahaan</div>
@@ -355,6 +374,57 @@ export default function PerusahaanPage() {
                 </div>
               </div>
             )}
+          </Modal>
+
+          <Modal
+            open={showFormModal}
+            title={editingCompanyId ? "Edit Perusahaan" : "Tambah Perusahaan"}
+            onClose={() => { setShowFormModal(false); setEditingCompanyId(null); }}
+            size="lg"
+            actions={
+              <>
+                <button onClick={() => { setShowFormModal(false); setEditingCompanyId(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Batal</button>
+                <button
+                  onClick={async () => {
+                    try {
+                      if (editingCompanyId) {
+                        await updateCompanyProfile(editingCompanyId, { ...formCompany, user_id: editingCompanyUserId || userId });
+                      } else {
+                        await createCompanyProfile({ ...formCompany, user_email: userEmailCompany, user_password: userPasswordCompany });
+                      }
+                      const statusParam = statusFilter !== "all" ? uiToApiStatus[statusFilter] : undefined;
+                      const resp = await listCompanies({ status: statusParam, search: searchTerm || undefined });
+                      setPerusahaanList((resp.data || resp) as Company[]);
+                      setShowFormModal(false);
+                      setEditingCompanyId(null);
+                      setEditingCompanyUserId(null);
+                    } catch {
+                      alert("Gagal menyimpan data perusahaan");
+                    }
+                  }}
+                  className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]"
+                >Simpan</button>
+              </>
+            }
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {!editingCompanyId && (
+                <>
+                  <Input label="Email" type="email" value={userEmailCompany} onChange={(e) => setUserEmailCompany(e.target.value)} />
+                  <Input label="Password" type="password" value={userPasswordCompany} onChange={(e) => setUserPasswordCompany(e.target.value)} />
+                </>
+              )}
+              <Input label="Nama Perusahaan" value={formCompany.company_name} onChange={(e) => setFormCompany({ ...formCompany, company_name: e.target.value })} />
+              <Input label="Logo" type="file" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setFormCompany({ ...formCompany, company_logo: "" }); return; } const r = new FileReader(); r.onload = () => setFormCompany({ ...formCompany, company_logo: String(r.result || "") }); r.readAsDataURL(f); }} />
+              <Input label="Telepon" value={formCompany.no_handphone} onChange={(e) => setFormCompany({ ...formCompany, no_handphone: e.target.value })} />
+              <Input label="Provinsi" value={formCompany.province} onChange={(e) => setFormCompany({ ...formCompany, province: e.target.value })} />
+              <Input label="Kota" value={formCompany.city} onChange={(e) => setFormCompany({ ...formCompany, city: e.target.value })} />
+              <Input label="Alamat" value={formCompany.address} onChange={(e) => setFormCompany({ ...formCompany, address: e.target.value })} />
+              <Input label="Website" value={formCompany.website || ""} onChange={(e) => setFormCompany({ ...formCompany, website: e.target.value })} />
+              <div className="md:col-span-2">
+                <Input label="Tentang Perusahaan" value={formCompany.about_company} onChange={(e) => setFormCompany({ ...formCompany, about_company: e.target.value })} />
+              </div>
+            </div>
           </Modal>
 
           {filteredPerusahaan.length === 0 && (

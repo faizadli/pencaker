@@ -159,11 +159,11 @@ export function SearchableSelect({ options, value, onChange, placeholder = "Pili
   }, [open]);
 
   return (
-    <div className={`w-full ${className || ""}`}>
+    <div className={`w-full sm:w-auto sm:min-w-[9rem] shrink-0 ${className || ""}`}>
       {label && <label className="block mb-1 text-sm font-medium text-[#2a436c]">{label}</label>}
       <div ref={containerRef} className="relative w-full">
-        <button type="button" disabled={disabled} onClick={() => setOpen((v) => { const nv = !v; return nv; })} className={`w-full pl-3 pr-9 py-3 h-11 border ${error ? "border-red-400" : "border-[#d1d5db]"} rounded-xl bg-white text-left text-[#111827] text-sm focus:ring-2 focus:ring-[#355485] focus:border-transparent ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}>
-          {selected ? selected.label : <span className="text-[#6b7280]">{placeholder}</span>}
+        <button type="button" disabled={disabled} onClick={() => setOpen((v) => { const nv = !v; return nv; })} className={`w-full pl-3 pr-9 py-3 h-11 border ${error ? "border-red-400" : "border-[#d1d5db]"} rounded-xl bg-white text-left text-[#111827] text-sm focus:ring-2 focus:ring-[#355485] focus:border-transparent ${disabled ? "opacity-60 cursor-not-allowed" : ""} whitespace-nowrap overflow-hidden`}>
+          {selected ? <span className="block truncate max-w-full">{selected.label}</span> : <span className="text-[#6b7280] block truncate max-w-full">{placeholder}</span>}
         </button>
         <i className={`ri-arrow-down-s-line absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] ${open ? "rotate-180" : ""}`}></i>
         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}

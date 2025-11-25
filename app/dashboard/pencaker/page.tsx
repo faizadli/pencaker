@@ -1,62 +1,120 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Input, SearchableSelect } from "../../../components/shared/field";
+import Modal from "../../../components/shared/Modal";
+import { listRoles, getRolePermissions } from "../../../services/rbac";
+import { listCandidates, createCandidateProfile, updateCandidateProfile } from "../../../services/profile";
+import { useRouter } from "next/navigation";
 
 export default function PencakerPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [role] = useState<string>(() => (typeof window !== "undefined" ? localStorage.getItem("role") || "" : ""));
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [permsLoaded, setPermsLoaded] = useState(false);
+  type CandidateApi = {
+    id: string;
+    user_id: string;
+    full_name: string;
+    birthdate: string;
+    place_of_birth: string;
+    nik: string;
+    province: string;
+    address: string;
+    postal_code: string;
+    gender: string;
+    no_handphone: string;
+    photo_profile?: string;
+    last_education: string;
+    graduation_year: number;
+    status_perkawinan: string;
+    email?: string | null;
+    ak1_status?: "APPROVED" | "REJECTED" | "PENDING";
+  };
+  type Pencaker = {
+    id: string;
+    nama: string;
+    nik: string;
+    ttl: string;
+    jenisKelamin: string;
+    pendidikan: string;
+    telepon: string;
+    email: string;
+    alamat: string;
+    status: string;
+    foto: string;
+    ak1Status: "Terverifikasi" | "Menunggu Verifikasi" | "Ditolak" | "-";
+    pelatihan: { id: number; nama: string; status: string; tanggal: string }[];
+  };
+  const [pencakers, setPencakers] = useState<Pencaker[]>([]);
+  const [rawCandidates, setRawCandidates] = useState<CandidateApi[]>([]);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [editingCandidateId, setEditingCandidateId] = useState<string | null>(null);
+  const [formCandidate, setFormCandidate] = useState<{ user_id?: string; full_name: string; birthdate: string; place_of_birth: string; nik: string; province: string; address: string; postal_code: string; gender: string; no_handphone: string; photo_profile?: string; last_education: string; graduation_year: number; status_perkawinan: string; cv_file?: string; ak1_file?: string }>({ full_name: "", birthdate: "", place_of_birth: "", nik: "", province: "", address: "", postal_code: "", gender: "", no_handphone: "", photo_profile: "", last_education: "", graduation_year: 0, status_perkawinan: "", cv_file: "", ak1_file: "" });
+  const [userEmail, setUserEmail] = useState("");
+  const [userPassword, setUserPassword] = useState("");
 
-  const pencakers = [
-    {
-      id: 1,
-      nama: "Budi Santoso",
-      nik: "3204121234567890",
-      ttl: "Bandung, 15 Maret 1995",
-      jenisKelamin: "Laki-laki",
-      pendidikan: "S1 Teknik Informatika",
-      telepon: "081234567890",
-      email: "budi@example.com",
-      alamat: "Jl. Merdeka No. 123, Bandung",
-      status: "Belum Bekerja",
-      foto: "https://picsum.photos/200",
-      ak1Status: "Menunggu Verifikasi",
-      pelatihan: [
-        { id: 1, nama: "Pelatihan Web Development", status: "Selesai", tanggal: "10-15 Apr 2025" },
-        { id: 2, nama: "Pelatihan UI/UX", status: "Diterima", tanggal: "20-25 Mei 2025" },
-      ],
-    },
-    {
-      id: 2,
-      nama: "Ani Wijaya",
-      nik: "3204130987654321",
-      ttl: "Surabaya, 22 Agustus 1998",
-      jenisKelamin: "Perempuan",
-      pendidikan: "D3 Akuntansi",
-      telepon: "082211223344",
-      email: "ani@example.com",
-      alamat: "Jl. Sudirman No. 45, Surabaya",
-      status: "Magang",
-      foto: "https://picsum.photos/200",
-      ak1Status: "Terverifikasi",
-      pelatihan: [{ id: 1, nama: "Pelatihan Digital Marketing", status: "Berlangsung", tanggal: "05-10 Mei 2025" }],
-    },
-    {
-      id: 3,
-      nama: "Dedi Kusuma",
-      nik: "3204141122334455",
-      ttl: "Malang, 5 November 1990",
-      jenisKelamin: "Laki-laki",
-      pendidikan: "SMA",
-      telepon: "081344556677",
-      email: "dedi@example.com",
-      alamat: "Jl. Pahlawan No. 8, Malang",
-      status: "Belum Bekerja",
-      foto: "https://picsum.photos/200",
-      ak1Status: "Ditolak",
-      pelatihan: [],
-    },
-  ];
+  const uiToApiStatus = useMemo(() => ({
+    Terverifikasi: "APPROVED",
+    "Menunggu Verifikasi": "PENDING",
+    Ditolak: "REJECTED",
+  }) as Record<string, "APPROVED" | "REJECTED" | "PENDING">, []);
+
+  useEffect(() => {
+    async function boot() {
+      try {
+        const rolesResp = await listRoles();
+        const roleItems = (rolesResp.data || rolesResp) as { id: number; name: string }[];
+        const target = roleItems.find((x) => String(x.name).toLowerCase() === role.toLowerCase());
+        if (target) {
+          const perms = await getRolePermissions(target.id);
+          const rows = (perms.data || perms) as { code: string; label: string }[];
+          setPermissions(rows.map((r) => r.code));
+        }
+      } catch {}
+      setPermsLoaded(true);
+    }
+    if (role) boot();
+  }, [role]);
+
+  useEffect(() => {
+    if (!permsLoaded) return;
+    const allowed = permissions.includes("pencaker.read");
+    if (!allowed) router.replace("/dashboard");
+  }, [permissions, permsLoaded, router]);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        if (!permsLoaded) return;
+        const statusParam = statusFilter !== "all" ? uiToApiStatus[statusFilter] : undefined;
+        const resp = await listCandidates({ search: searchTerm || undefined, status: statusParam });
+        const rows = (resp.data || resp) as CandidateApi[];
+        const mapped = rows.map((c) => ({
+          id: c.id,
+          nama: c.full_name,
+          nik: c.nik,
+          ttl: `${c.place_of_birth || "-"}, ${c.birthdate ? new Date(c.birthdate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "-"}`,
+          jenisKelamin: c.gender || "-",
+          pendidikan: c.last_education || "-",
+          telepon: c.no_handphone || "-",
+          email: c.email || "-",
+          alamat: c.address || "-",
+          status: "-",
+          foto: c.photo_profile || "https://picsum.photos/200",
+          ak1Status: c.ak1_status === "APPROVED" ? "Terverifikasi" : c.ak1_status === "REJECTED" ? "Ditolak" : c.ak1_status === "PENDING" ? "Menunggu Verifikasi" : "-",
+          pelatihan: [],
+        })) as Pencaker[];
+        setPencakers(mapped);
+        setRawCandidates(rows);
+      } catch {
+        setPencakers([]);
+      }
+    }
+    load();
+  }, [searchTerm, statusFilter, permsLoaded, uiToApiStatus]);
 
   const filteredPencakers = pencakers.filter((pencaker) => {
     const matchesSearch = pencaker.nama.toLowerCase().includes(searchTerm.toLowerCase()) || pencaker.nik.includes(searchTerm);
@@ -64,11 +122,11 @@ export default function PencakerPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleVerify = (id: number) => {
+  const handleVerify = (id: string) => {
     alert(`Pencari kerja ID ${id} berhasil diverifikasi!`);
   };
 
-  const handleReject = (id: number) => {
+  const handleReject = (id: string) => {
     if (confirm(`Yakin ingin menolak verifikasi pencaker ID ${id}?`)) {
       alert(`Permohonan AK1 ID ${id} ditolak.`);
     }
@@ -115,7 +173,9 @@ export default function PencakerPage() {
               </div>
               <div className="flex flex-col sm:flex-row gap-2 items-stretch">
                 <SearchableSelect value={statusFilter} onChange={(v) => setStatusFilter(v)} options={[{ value: "all", label: "Semua Status" }, { value: "Terverifikasi", label: "Terverifikasi" }, { value: "Menunggu Verifikasi", label: "Menunggu" }, { value: "Ditolak", label: "Ditolak" }]} />
-                <button className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center">+ Tambah</button>
+                {permissions.includes("pencaker.create") && (
+                  <button onClick={() => { setEditingCandidateId(null); setFormCandidate({ full_name: "", birthdate: "", place_of_birth: "", nik: "", province: "", address: "", postal_code: "", gender: "", no_handphone: "", photo_profile: "", last_education: "", graduation_year: 0, status_perkawinan: "", cv_file: "", ak1_file: "" }); setUserEmail(""); setUserPassword(""); setShowFormModal(true); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center">+ Tambah</button>
+                )}
               </div>
             </div>
           </div>
@@ -128,8 +188,11 @@ export default function PencakerPage() {
                     <Image src={p.foto} alt={p.nama} width={64} height={64} className="w-16 h-16 rounded-full object-cover flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                        <div>
+                        <div className="flex items-center gap-2">
                           <h3 className="text-lg font-bold text-[#2a436c]">{p.nama}</h3>
+                          {permissions.includes("pencaker.update") && (
+                            <button onClick={() => { setEditingCandidateId(p.id); const src = rawCandidates.find((c) => c.id === p.id); if (src) setFormCandidate({ user_id: src.user_id, full_name: src.full_name || "", birthdate: src.birthdate || "", place_of_birth: src.place_of_birth || "", nik: src.nik || "", province: src.province || "", address: src.address || "", postal_code: src.postal_code || "", gender: src.gender || "", no_handphone: src.no_handphone || "", photo_profile: src.photo_profile || "", last_education: src.last_education || "", graduation_year: Number(src.graduation_year || 0), status_perkawinan: src.status_perkawinan || "", cv_file: undefined, ak1_file: undefined }); setShowFormModal(true); }} className="px-2 py-1 text-xs bg-[#355485] text-white rounded-lg hover:bg-[#2a436c]">Edit</button>
+                          )}
                           <p className="text-sm text-[#6b7280] mt-1">NIK: {p.nik} | {p.ttl} | {p.jenisKelamin}</p>
                         </div>
                         <span
@@ -243,6 +306,103 @@ export default function PencakerPage() {
               </button>
             </div>
           )}
+
+          <Modal
+            open={showFormModal}
+            title={editingCandidateId ? "Edit Pencaker" : "Tambah Pencaker"}
+            onClose={() => { setShowFormModal(false); setEditingCandidateId(null); }}
+            size="lg"
+            actions={
+              <>
+                <button onClick={() => { setShowFormModal(false); setEditingCandidateId(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Batal</button>
+                <button
+                  onClick={async () => {
+                    try {
+                      if (editingCandidateId) {
+                        const src = rawCandidates.find((c) => c.id === editingCandidateId);
+                        const updatePayload = {
+                          user_id: src?.user_id || "",
+                          full_name: formCandidate.full_name,
+                          birthdate: formCandidate.birthdate,
+                          place_of_birth: formCandidate.place_of_birth,
+                          nik: formCandidate.nik,
+                          province: formCandidate.province,
+                          address: formCandidate.address,
+                          postal_code: formCandidate.postal_code,
+                          gender: formCandidate.gender,
+                          no_handphone: formCandidate.no_handphone,
+                          photo_profile: formCandidate.photo_profile,
+                          last_education: formCandidate.last_education,
+                          graduation_year: formCandidate.graduation_year,
+                          status_perkawinan: formCandidate.status_perkawinan,
+                          cv_file: formCandidate.cv_file,
+                          ak1_file: formCandidate.ak1_file,
+                        };
+                        await updateCandidateProfile(editingCandidateId, updatePayload);
+                      } else {
+                        const createPayload = {
+                          full_name: formCandidate.full_name,
+                          birthdate: formCandidate.birthdate,
+                          place_of_birth: formCandidate.place_of_birth,
+                          nik: formCandidate.nik,
+                          province: formCandidate.province,
+                          address: formCandidate.address,
+                          postal_code: formCandidate.postal_code,
+                          gender: formCandidate.gender,
+                          no_handphone: formCandidate.no_handphone,
+                          photo_profile: formCandidate.photo_profile,
+                          last_education: formCandidate.last_education,
+                          graduation_year: formCandidate.graduation_year,
+                          status_perkawinan: formCandidate.status_perkawinan,
+                          cv_file: formCandidate.cv_file,
+                          ak1_file: formCandidate.ak1_file,
+                          user_email: userEmail,
+                          user_password: userPassword,
+                        };
+                        await createCandidateProfile(createPayload);
+                      }
+                      const statusParam = statusFilter !== "all" ? uiToApiStatus[statusFilter] : undefined;
+                      const resp = await listCandidates({ search: searchTerm || undefined, status: statusParam });
+                      const rows = (resp.data || resp) as CandidateApi[];
+                      const mapped = rows.map((c) => ({ id: c.id, nama: c.full_name, nik: c.nik, ttl: `${c.place_of_birth || "-"}, ${c.birthdate ? new Date(c.birthdate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "-"}`, jenisKelamin: c.gender || "-", pendidikan: c.last_education || "-", telepon: c.no_handphone || "-", email: c.email || "-", alamat: c.address || "-", status: "-", foto: c.photo_profile || "https://picsum.photos/200", ak1Status: c.ak1_status === "APPROVED" ? "Terverifikasi" : c.ak1_status === "REJECTED" ? "Ditolak" : c.ak1_status === "PENDING" ? "Menunggu Verifikasi" : "-", pelatihan: [] })) as Pencaker[];
+                      setPencakers(mapped);
+                      setRawCandidates(rows);
+                      setShowFormModal(false);
+                      setEditingCandidateId(null);
+                    } catch {
+                      alert("Gagal menyimpan data pencaker");
+                    }
+                  }}
+                  className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]"
+                >Simpan</button>
+              </>
+            }
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {!editingCandidateId && (
+                <>
+                  <Input label="Email" type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} />
+                  <Input label="Password" type="password" value={userPassword} onChange={(e) => setUserPassword(e.target.value)} />
+                </>
+              )}
+              <Input label="Nama Lengkap" value={formCandidate.full_name} onChange={(e) => setFormCandidate({ ...formCandidate, full_name: e.target.value })} />
+              <Input label="Tanggal Lahir" type="date" value={formCandidate.birthdate} onChange={(e) => setFormCandidate({ ...formCandidate, birthdate: e.target.value })} />
+              <Input label="Tempat Lahir" value={formCandidate.place_of_birth} onChange={(e) => setFormCandidate({ ...formCandidate, place_of_birth: e.target.value })} />
+              <Input label="NIK" value={formCandidate.nik} onChange={(e) => setFormCandidate({ ...formCandidate, nik: e.target.value })} />
+              <Input label="Provinsi" value={formCandidate.province} onChange={(e) => setFormCandidate({ ...formCandidate, province: e.target.value })} />
+              <Input label="Alamat" value={formCandidate.address} onChange={(e) => setFormCandidate({ ...formCandidate, address: e.target.value })} />
+              <Input label="Kode Pos" value={formCandidate.postal_code} onChange={(e) => setFormCandidate({ ...formCandidate, postal_code: e.target.value })} />
+              <Input label="Jenis Kelamin" value={formCandidate.gender} onChange={(e) => setFormCandidate({ ...formCandidate, gender: e.target.value })} />
+              <Input label="Telepon" value={formCandidate.no_handphone} onChange={(e) => setFormCandidate({ ...formCandidate, no_handphone: e.target.value })} />
+              <Input label="Foto" type="file" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setFormCandidate({ ...formCandidate, photo_profile: "" }); return; } const r = new FileReader(); r.onload = () => setFormCandidate({ ...formCandidate, photo_profile: String(r.result || "") }); r.readAsDataURL(f); }} />
+              <Input label="Pendidikan Terakhir" value={formCandidate.last_education} onChange={(e) => setFormCandidate({ ...formCandidate, last_education: e.target.value })} />
+              <Input label="Tahun Lulus" type="number" value={String(formCandidate.graduation_year)} onChange={(e) => setFormCandidate({ ...formCandidate, graduation_year: Number(e.target.value || 0) })} />
+              <Input label="Status Perkawinan" value={formCandidate.status_perkawinan} onChange={(e) => setFormCandidate({ ...formCandidate, status_perkawinan: e.target.value })} />
+              <Input label="CV" type="file" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setFormCandidate({ ...formCandidate, cv_file: "" }); return; } const r = new FileReader(); r.onload = () => setFormCandidate({ ...formCandidate, cv_file: String(r.result || "") }); r.readAsDataURL(f); }} />
+              <Input label="AK1" type="file" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setFormCandidate({ ...formCandidate, ak1_file: "" }); return; } const r = new FileReader(); r.onload = () => setFormCandidate({ ...formCandidate, ak1_file: String(r.result || "") }); r.readAsDataURL(f); }} />
+            </div>
+          </Modal>
+
         </div>
       </main>
     </>
