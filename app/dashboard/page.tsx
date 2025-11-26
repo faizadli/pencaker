@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -12,6 +12,10 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { listRoles, getRolePermissions } from "../../services/rbac";
+import { listCandidates } from "../../services/profile";
+import { listJobs } from "../../services/jobs";
+import { listCompanies } from "../../services/company";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
@@ -25,51 +29,159 @@ function DashboardPageComponent() {
     return null;
   })() : null;
   const [role] = useState<string | null>(initialRole);
+  const [permissions, setPermissions] = useState<string[]>([]);
+
+  useEffect(() => {
+    const loadPerms = async () => {
+      try {
+        const rolesResp = await listRoles();
+        const roleItems = (rolesResp.data || rolesResp) as { id: number; name: string }[];
+        const target = roleItems.find((x) => String(x.name).toLowerCase() === String(role || "").toLowerCase());
+        if (target) {
+          const perms = await getRolePermissions(target.id);
+          const rows = (perms.data || perms) as { code: string; label: string }[];
+          setPermissions(rows.map((r) => r.code));
+        }
+      } catch {}
+    };
+    if (role) loadPerms();
+  }, [role]);
 
   const isDisnaker = role === "disnaker";
   const isCompany = role === "company";
   const isCandidate = role === "candidate";
-  const stats = {
-    jobSeekers: 12345,
-    activeJobs: 876,
-    companies: 321,
-    placements: "87%",
-    newApplications: 23,
+  const isSuperAdmin = role === "super_admin";
+  const canReadPencaker = permissions.includes("pencaker.read");
+  const canReadLowongan = permissions.includes("lowongan.read");
+  const canReadPerusahaan = permissions.includes("perusahaan.read");
+  const canSeeOverview = isDisnaker || isSuperAdmin || canReadPencaker || canReadLowongan || canReadPerusahaan;
+  const [stats, setStats] = useState({ jobSeekers: 0, activeJobs: 0, companies: 0 });
+  const [candRows, setCandRows] = useState<Array<{ birthdate?: string; gender?: string }>>([]);
+  const [jobRows, setJobRows] = useState<Array<{ createdAt?: string; category?: string; status?: string; application_deadline?: string; company_name?: string; job_title?: string }>>([]);
+  const ensureArray = (v: unknown): unknown[] => {
+    const d = (v as { data?: unknown }).data;
+    if (Array.isArray(d)) return d as unknown[];
+    return Array.isArray(v) ? (v as unknown[]) : [];
   };
 
-  const monthlyData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-    data: [120, 190, 140, 220, 280, 250, 300, 350, 320, 380, 400, 420],
-  };
+  useEffect(() => {
+    const loadStats = async () => {
+      const next = { ...stats };
+      const candP = canReadPencaker ? listCandidates() : Promise.resolve(null);
+      const jobsP = canReadLowongan ? listJobs() : Promise.resolve(null);
+      const compsP = canReadPerusahaan ? listCompanies() : Promise.resolve(null);
+
+      const [candR, jobsR, compsR] = await Promise.allSettled([candP, jobsP, compsP]);
+
+      if (candR.status === "fulfilled" && candR.value) {
+        const rows = ensureArray(candR.value) as Array<{ birthdate?: string; gender?: string }>;
+        next.jobSeekers = rows.length;
+        setCandRows(rows);
+      } else {
+        setCandRows([]);
+      }
+      if (jobsR.status === "fulfilled" && jobsR.value) {
+        const jobs = ensureArray(jobsR.value) as Array<{ createdAt?: string; category?: string; status?: string }>;
+        const approved = jobs.filter((j) => String(j.status || "").toLowerCase() === "approved");
+        next.activeJobs = approved.length;
+        setJobRows(approved);
+      } else {
+        setJobRows([]);
+      }
+      if (compsR.status === "fulfilled" && compsR.value) {
+        const comps = ensureArray(compsR.value);
+        next.companies = comps.length;
+      }
+
+      setStats(next);
+    };
+    if (canSeeOverview) loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canReadPencaker, canReadLowongan, canReadPerusahaan, canSeeOverview]);
+
+  const monthLabels = useMemo(() => ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], []);
+  const jobsPerMonth = useMemo(() => {
+    const counts = Array(12).fill(0);
+    jobRows.forEach((j) => {
+      const d = j.createdAt ? new Date(j.createdAt) : null;
+      if (d && !Number.isNaN(d.getTime()) && d.getFullYear() === new Date().getFullYear()) counts[d.getMonth()] += 1;
+    });
+    return counts;
+  }, [jobRows]);
 
   const barData = {
-    labels: monthlyData.labels,
+    labels: monthLabels,
     datasets: [
-      { label: "Pencari Kerja Baru", data: monthlyData.data, backgroundColor: "#4f90c6", borderColor: "#355485", borderWidth: 1 },
+      { label: "Lowongan Disetujui", data: jobsPerMonth, backgroundColor: "#4f90c6", borderColor: "#355485", borderWidth: 1 },
     ],
   };
 
   const barOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false }, title: { display: true, text: "Jumlah Pendaftar Pencari Kerja (2025)", font: { size: 14, weight: "bold" }, color: "#2a436c" } },
+    plugins: { legend: { display: false }, title: { display: true, text: "Lowongan Disetujui per Bulan (2025)", font: { size: 14, weight: "bold" }, color: "#2a436c" } },
     scales: { y: { beginAtZero: true, grid: { color: "#e5e7eb" }, ticks: { color: "#6b7280" } }, x: { grid: { display: false }, ticks: { color: "#6b7280" } } },
   } as const;
 
-  const sectorData = {
-    labels: ["IT & Digital", "Manufaktur", "Pertanian", "Jasa", "Konstruksi"],
-    datasets: [{ data: [35, 25, 15, 15, 10], backgroundColor: ["#4f90c6", "#90b6d5", "#cbdde9", "#355485", "#2a436c"] }],
-  };
+  const sectorData = useMemo(() => {
+    const byCat: Record<string, number> = {};
+    jobRows.forEach((j) => {
+      const c = String(j.category || "Tidak Diketahui");
+      byCat[c] = (byCat[c] || 0) + 1;
+    });
+    const labels = Object.keys(byCat);
+    const data = labels.map((l) => byCat[l]);
+    const colors = ["#4f90c6", "#90b6d5", "#cbdde9", "#355485", "#2a436c", "#6b7280", "#111827"]; 
+    const bg = labels.map((_, i) => colors[i % colors.length]);
+    return { labels, datasets: [{ data, backgroundColor: bg }] };
+  }, [jobRows]);
 
-  const pieOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { color: "#6b7280" } }, title: { display: true, text: "Distribusi Penempatan Kerja per Sektor", font: { size: 14, weight: "bold" }, color: "#2a436c" } } } as const;
+  const pieOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { color: "#6b7280" } }, title: { display: true, text: "Distribusi Lowongan per Kategori", font: { size: 14, weight: "bold" }, color: "#2a436c" } } } as const;
 
-  const demographicsData = {
-    labels: ["18-25", "26-35", "36-45", "46+"],
-    datasets: [
-      { label: "Laki-laki", data: [220, 180, 90, 40], backgroundColor: "#4f90c6" },
-      { label: "Perempuan", data: [180, 160, 100, 50], backgroundColor: "#90b6d5" },
-    ],
-  };
+  const demographicsData = useMemo(() => {
+    const labels = ["18-25", "26-35", "36-45", "46+"];
+    const male = [0, 0, 0, 0];
+    const female = [0, 0, 0, 0];
+    const now = new Date();
+    const getAge = (bd?: string) => {
+      if (!bd) return null;
+      const d = new Date(bd);
+      if (Number.isNaN(d.getTime())) return null;
+      let age = now.getFullYear() - d.getFullYear();
+      const m = now.getMonth() - d.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+      return age;
+    };
+    candRows.forEach((c) => {
+      const age = getAge(c.birthdate);
+      const g = (c.gender || "").toLowerCase();
+      if (age == null) return;
+      const idx = age <= 25 ? 0 : age <= 35 ? 1 : age <= 45 ? 2 : 3;
+      if (g === "laki-laki" || g === "male" || g === "l") male[idx]++;
+      else if (g === "perempuan" || g === "female" || g === "p") female[idx]++;
+    });
+    return { labels, datasets: [
+      { label: "Laki-laki", data: male, backgroundColor: "#4f90c6" },
+      { label: "Perempuan", data: female, backgroundColor: "#90b6d5" },
+    ] };
+  }, [candRows]);
+
+  const expiringJobs = useMemo(() => {
+    const now = new Date();
+    const items = jobRows
+      .filter((j) => j.application_deadline)
+      .map((j) => {
+        const d = new Date(String(j.application_deadline));
+        const ms = d.getTime() - now.getTime();
+        const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
+        return { title: String(j.job_title || "-"), company: String(j.company_name || "-"), days };
+      })
+      .filter((j) => j.days > 0 && j.days <= 7)
+      .sort((a, b) => a.days - b.days)
+      .slice(0, 5)
+      .map((j) => ({ ...j, badge: `${j.days} hari lagi` }));
+    return items;
+  }, [jobRows]);
 
   const demographicOptions = {
     responsive: true,
@@ -78,16 +190,7 @@ function DashboardPageComponent() {
     scales: { y: { beginAtZero: true, grid: { color: "#e5e7eb" }, ticks: { color: "#6b7280" } }, x: { grid: { display: false }, ticks: { color: "#6b7280" } } },
   } as const;
 
-  const expiringJobs = [
-    { id: 1, company: "PT Solusi Digital", role: "UI/UX Designer", deadline: "2 hari lagi", applicants: 38 },
-    { id: 2, company: "CV Bangun Jaya", role: "Supervisor Lapangan", deadline: "3 hari lagi", applicants: 29 },
-  ];
-
-  const recentTrainings = [
-    { id: 1, name: "Pelatihan Web Development", peserta: 25, status: "Berlangsung" },
-    { id: 2, name: "Pelatihan Otomotif Dasar", peserta: 30, status: "Pendaftaran" },
-    { id: 3, name: "Pelatihan Pertanian Organik", peserta: 20, status: "Selesai" },
-  ];
+  
 
   return (
     <>
@@ -138,96 +241,80 @@ function DashboardPageComponent() {
             </div>
           )}
 
-          {isDisnaker && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-              <StatCard title="Pencari Kerja" value={stats.jobSeekers} change="+12%" color="#4f90c6" icon="ri-user-line" />
-              <StatCard title="Lowongan Aktif" value={stats.activeJobs} change="+5" color="#355485" icon="ri-briefcase-line" />
-              <StatCard title="Perusahaan" value={stats.companies} change="+3" color="#90b6d5" icon="ri-building-line" />
-              <StatCard title="Penempatan" value={stats.placements} change="↑ 5%" color="#2a436c" icon="ri-hand-heart-line" />
-              <StatCard title="Permohonan Baru" value={stats.newApplications} change="Hari ini" color="#cbdde9" icon="ri-file-list-line" />
+          {canSeeOverview && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              {canReadPencaker && <StatCard title="Pencari Kerja" value={stats.jobSeekers} change="Total terdata" color="#4f90c6" icon="ri-user-line" />}
+              {canReadLowongan && <StatCard title="Lowongan Aktif" value={stats.activeJobs} change="Status approved" color="#355485" icon="ri-briefcase-line" />}
+              {canReadPerusahaan && <StatCard title="Perusahaan" value={stats.companies} change="Total terdata" color="#90b6d5" icon="ri-building-line" />}
             </div>
           )}
 
-          {isDisnaker && (
+          {canReadLowongan && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
             <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-              <div className="h-80">
+              <div className="h-64 sm:h-80">
                 <Bar data={barData} options={barOptions} />
               </div>
             </div>
+            {(canReadLowongan || canReadPerusahaan) && (
+              <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
+                <div className="h-64 sm:h-80">
+                  <Pie data={sectorData} options={pieOptions} />
+                </div>
+              </div>
+            )}
+          </div>
+          )}
+
+          {(canReadPencaker || canReadLowongan) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {canReadPencaker && (
             <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-              <div className="h-80">
-                <Pie data={sectorData} options={pieOptions} />
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-[#2a436c]">Distribusi Pencari Kerja</h2>
+              </div>
+              <div className="h-64 sm:h-80">
+                <Bar data={demographicsData} options={demographicOptions} />
               </div>
             </div>
-          </div>
-          )}
-
-          {isDisnaker && (
-          <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6 mb-8">
-            <div className="h-80">
-              <Bar data={demographicsData} options={demographicOptions} />
-            </div>
-          </div>
-          )}
-
-          {isDisnaker && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            )}
+            {canReadLowongan && (
             <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-[#2a436c]">Lowongan Hampir Tutup</h2>
                 <span className="text-xs text-[#6b7280] bg-[#f9fafb] px-2 py-1 rounded">{expiringJobs.length} lowongan</span>
               </div>
               <div className="space-y-3">
-                {expiringJobs.map((job) => (
-                  <div key={job.id} className="flex items-center justify-between p-3 border border-[#e5e7eb] rounded-lg hover:bg-[#f9fafb] transition-colors">
+                {expiringJobs.length === 0 && (
+                  <p className="text-sm text-[#6b7280]">Belum ada lowongan yang mendekati batas waktu.</p>
+                )}
+                {expiringJobs.map((job, idx) => (
+                  <div key={`${job.title}-${idx}`} className="flex items-center justify-between p-3 border border-[#e5e7eb] rounded-lg hover:bg-[#f9fafb] transition-colors">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-[#2a436c] truncate">{job.role}</p>
+                      <p className="font-medium text-[#2a436c] truncate">{job.title}</p>
                       <p className="text-sm text-[#6b7280] truncate">{job.company}</p>
                     </div>
-                    <div className="flex items-center gap-4 text-right">
-                      <div>
-                        <p className="text-sm font-medium text-[#2a436c]">{job.applicants}</p>
-                        <p className="text-xs text-[#6b7280]">pelamar</p>
-                      </div>
-                      <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full whitespace-nowrap">{job.deadline}</span>
-                    </div>
+                    <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full whitespace-nowrap">{job.badge}</span>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-[#2a436c]">Pelatihan Terdaftar</h2>
-                <span className="text-xs text-[#6b7280] bg-[#f9fafb] px-2 py-1 rounded">{recentTrainings.length} pelatihan</span>
-              </div>
-              <div className="space-y-3">
-                {recentTrainings.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between p-3 border border-[#e5e7eb] rounded-lg hover:bg-[#f9fafb] transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-[#2a436c] truncate">{t.name}</p>
-                      <p className="text-sm text-[#6b7280]">Peserta: {t.peserta} orang</p>
-                    </div>
-                    <span className={`px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${t.status === "Berlangsung" ? "bg-blue-100 text-blue-800" : t.status === "Pendaftaran" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>{t.status}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
           )}
 
-          {isDisnaker && (
+          {canSeeOverview && (
           <div className="bg-gradient-to-r from-[#355485] to-[#4f90c6] text-white p-6 rounded-xl shadow-md">
             <div className="flex items-start gap-3">
               <div className="p-2 bg-white/20 rounded-lg">
                 <i className="ri-lightbulb-line text-lg"></i>
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-2">Insight Minggu Ini</h3>
+                <h3 className="text-lg font-semibold mb-2">Insight Sesuai Akses</h3>
                 <ul className="text-sm space-y-1 opacity-90">
-                  <li className="flex items-center gap-2"><div className="w-1 h-1 bg-white rounded-full"></div><span>Pelamar IT naik 18% — butuh lebih banyak pelatihan coding.</span></li>
-                  <li className="flex items-center gap-2"><div className="w-1 h-1 bg-white rounded-full"></div><span>7 lowongan besar akan tutup dalam 5 hari — dorong promosi.</span></li>
-                  <li className="flex items-center gap-2"><div className="w-1 h-1 bg-white rounded-full"></div><span>Partisipasi perempuan di pelatihan meningkat 12%.</span></li>
+                  {canReadPencaker && (<li className="flex items-center gap-2"><div className="w-1 h-1 bg-white rounded-full"></div><span>Trend pendaftar naik 18% — fokus program pencaker.</span></li>)}
+                  {canReadLowongan && (<li className="flex items-center gap-2"><div className="w-1 h-1 bg-white rounded-full"></div><span>7 lowongan akan tutup dalam 5 hari — tingkatkan promosi.</span></li>)}
+                  {canReadPerusahaan && (<li className="flex items-center gap-2"><div className="w-1 h-1 bg-white rounded-full"></div><span>Verifikasi perusahaan aktif meningkat 12%.</span></li>)}
                 </ul>
               </div>
             </div>

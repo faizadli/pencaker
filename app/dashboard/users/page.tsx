@@ -184,7 +184,7 @@ export default function UsersPage() {
           </div>
 
           <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden mb-8">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto hidden sm:block">
               <table className="w-full text-sm">
                 <thead className="bg-[#cbdde9] text-[#2a436c]">
                   <tr>
@@ -233,6 +233,38 @@ export default function UsersPage() {
                 </tbody>
               </table>
             </div>
+            <div className="sm:hidden">
+              <div className="p-3 space-y-3">
+                {filteredUsers.map((user) => (
+                  <div key={`m-${user.id}`} className="border border-[#e5e7eb] rounded-lg p-3">
+                    <div className="flex items-start justify-between">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-[#2a436c] truncate">{user.nama}</p>
+                        <p className="text-xs text-[#6b7280] truncate">{user.username}</p>
+                        <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
+                      </div>
+                      <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getRoleColor(user.role)}`}>{user.role}</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(user.status)}`}>{user.status}</span>
+                      <span className="text-[11px] text-[#6b7280]">{user.terakhirLogin}</span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      {permissionCodes.includes("users.update") && (
+                        <button onClick={() => handleEdit(user)} className="px-3 py-2 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">
+                          Edit
+                        </button>
+                      )}
+                      {permissionCodes.includes("users.delete") && (
+                        <button onClick={() => handleDelete(user.id)} className="px-3 py-2 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition">
+                          Hapus
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {filteredUsers.length === 0 && (
@@ -259,10 +291,10 @@ export default function UsersPage() {
             )}
           >
             <div className="grid grid-cols-1 gap-4">
-              <Input type="text" placeholder="Username" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
-              <Input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-              <SearchableSelect value={form.role} onChange={(v) => setForm({ ...form, role: v })} options={roles.map((r) => ({ value: r, label: r }))} />
-              <Input type="password" placeholder={editUser ? "Password (opsional)" : "Password"} value={form.password || ""} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+              <Input type="text" label="Username" placeholder="Masukkan username" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
+              <Input type="email" label="Email" placeholder="Masukkan email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <SearchableSelect label="Role" value={form.role} onChange={(v) => setForm({ ...form, role: v })} options={roles.map((r) => ({ value: r, label: r }))} />
+              <Input type="password" label="Password" placeholder={editUser ? "Opsional, isi jika ingin ubah" : "Masukkan password"} value={form.password || ""} onChange={(e) => setForm({ ...form, password: e.target.value })} />
             </div>
           </Modal>
         </div>

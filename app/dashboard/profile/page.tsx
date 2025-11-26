@@ -431,12 +431,12 @@ export default function ProfilePage() {
                         )}
                       </>
                   </div>
-                  <div className="mt-6 flex items-center gap-3">
-                    <button onClick={handleSaveProfile} className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm transition-all flex items-center gap-2">
+                  <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <button onClick={handleSaveProfile} className="w-full sm:w-auto px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm transition-all flex items-center justify-center gap-2">
                       <i className="ri-save-line"></i>
                       Simpan Perubahan
                     </button>
-                    <button onClick={handleLogout} className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm transition-all flex items-center gap-2">
+                    <button onClick={handleLogout} className="w-full sm:w-auto px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm transition-all flex items-center justify-center gap-2">
                       <i className="ri-logout-box-r-line"></i>
                       Logout
                     </button>

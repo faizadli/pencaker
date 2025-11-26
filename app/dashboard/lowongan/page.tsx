@@ -524,12 +524,12 @@ export default function LowonganPage() {
               {filteredLowongan.map((job) => (
                 <div key={job.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="min-w-0">
                         <h3 className="font-bold text-[#2a436c] text-sm leading-tight">{job.posisi}</h3>
                         <p className="text-xs text-[#6b7280]">{job.perusahaan}</p>
                       </div>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(job.status)}`}>{job.status}</span>
+                      <span className={`px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0 ${getStatusColor(job.status)}`}>{job.status}</span>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className={`px-2 py-1 text-xs rounded-full ${getTipeColor(job.tipe as UITipe)}`}>{job.tipe}</span>
@@ -585,7 +585,7 @@ export default function LowonganPage() {
             </div>
           ) : (
             <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto hidden sm:block">
                 <table className="w-full text-sm">
                   <thead className="bg-[#cbdde9] text-[#2a436c]">
                     <tr>
@@ -629,6 +629,33 @@ export default function LowonganPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+              <div className="sm:hidden p-3 space-y-3">
+                {filteredLowongan.map((job) => (
+                  <div key={`m-${job.id}`} className="border border-[#e5e7eb] rounded-lg p-3">
+                    <div className="flex items-start justify-between">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-[#2a436c] truncate">{job.posisi}</p>
+                        <p className="text-xs text-[#6b7280] truncate">{job.perusahaan}</p>
+                      </div>
+                      <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(job.status)}`}>{job.status}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <span className="text-[11px] text-[#6b7280] bg-gray-100 px-2 py-1 rounded">{job.lokasi}</span>
+                      <span className={`text-[11px] px-2 py-1 rounded ${getTipeColor(job.tipe as UITipe)}`}>{job.tipe}</span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="px-3 py-2 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">
+                        {job.status === "Menunggu Verifikasi" && canVerify ? "Review" : "Detail"}
+                      </button>
+                      {canEdit && (
+                        <button onClick={() => { setEditingId(String(job.id)); setNewJob({ posisi: job.posisi, sektor: job.sektor, tipe: job.tipe as UITipe, batasAkhir: job.batasAkhir, deskripsi: job.deskripsi, experience_required: job.experience_required, education_required: job.education_required, skills_required: job.skills_required, min_salary: 0, max_salary: 0, work_setup: job.lokasi }); setShowForm(true); }} className="px-3 py-2 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition">
+                          Edit
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

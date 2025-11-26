@@ -185,6 +185,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
           </div>
         </div>
       </header>
+      <div className="h-5"></div>
     </>
   );
 }

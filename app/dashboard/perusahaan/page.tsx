@@ -209,15 +209,15 @@ export default function PerusahaanPage() {
               {filteredPerusahaan.map((p) => (
                 <div key={p.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3 min-w-0">
                         <Image src={p.company_logo || "https://picsum.photos/200"} alt={p.company_name} width={48} height={48} className="w-12 h-12 rounded-lg object-cover" />
-                        <div>
-                          <h3 className="font-bold text-[#2a436c] text-sm leading-tight">{p.company_name}</h3>
-                          <p className="text-xs text-[#6b7280]">{p.city}</p>
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-[#2a436c] text-sm leading-tight truncate">{p.company_name}</h3>
+                          <p className="text-xs text-[#6b7280] truncate">{p.city}</p>
                         </div>
                       </div>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(apiToUIStatus[p.status])}`}>{apiToUIStatus[p.status]}</span>
+                      <span className={`px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0 ${getStatusColor(apiToUIStatus[p.status])}`}>{apiToUIStatus[p.status]}</span>
                     </div>
                   </div>
 
@@ -255,7 +255,7 @@ export default function PerusahaanPage() {
             </div>
           ) : (
             <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto hidden sm:block">
                 <table className="w-full text-sm">
                   <thead className="bg-[#cbdde9] text-[#2a436c]">
                     <tr>
@@ -305,6 +305,32 @@ export default function PerusahaanPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+              <div className="sm:hidden p-3 space-y-3">
+                {filteredPerusahaan.map((p) => (
+                  <div key={`m-${p.id}`} className="border border-[#e5e7eb] rounded-lg p-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Image src={p.company_logo || "https://picsum.photos/200"} alt={p.company_name} width={32} height={32} className="w-8 h-8 rounded object-cover" />
+                        <div className="min-w-0">
+                          <p className="font-semibold text-[#2a436c] truncate">{p.company_name}</p>
+                          <p className="text-xs text-[#6b7280] truncate">{p.city}</p>
+                        </div>
+                      </div>
+                      <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(apiToUIStatus[p.status])}`}>{apiToUIStatus[p.status]}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 text-[11px] text-[#6b7280]">
+                      <i className="ri-map-pin-line"></i>
+                      <span className="truncate">{p.address}</span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button onClick={() => { setReviewCompany(p); setShowReviewModal(true); }} className="px-3 py-2 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Detail</button>
+                      {canUpdate && (
+                        <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", province: p.province || "", city: p.city || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="px-3 py-2 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition">Edit</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
