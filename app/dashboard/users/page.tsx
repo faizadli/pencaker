@@ -5,6 +5,7 @@ import Modal from "../../../components/shared/Modal";
 import { listUsers, updateUser, deleteUser, createUser, type UserListItem } from "../../../services/users";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { useRouter } from "next/navigation";
+import Pagination from "../../../components/shared/Pagination";
 
 const ROLE_MAP_TO_API: Record<string, "super_admin" | "company" | "candidate"> = { Superadmin: "super_admin", Perusahaan: "company", Pencaker: "candidate" };
 const ROLE_MAP_FROM_API: Record<"super_admin" | "company" | "candidate" | "disnaker", string> = { super_admin: "Superadmin", company: "Perusahaan", candidate: "Pencaker", disnaker: "Superadmin" };
@@ -37,6 +38,9 @@ export default function UsersPage() {
   };
 
   const [users, setUsers] = useState<User[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editUser, setEditUser] = useState<string | null>(null);
@@ -61,17 +65,19 @@ export default function UsersPage() {
             return;
           }
         }
-        const resp = await listUsers();
+        const resp = await listUsers({ page, limit: pageSize });
         const rows = resp.data as UserListItem[];
         const mapped: User[] = rows.map((u, idx) => ({ id: idx + 1, nama: u.username || u.email, username: u.username, email: u.email, role: ROLE_MAP_FROM_API[u.role], unit: "-", telepon: "-", status: "Aktif", terakhirLogin: u.updatedAt ? new Date(u.updatedAt).toLocaleString("id-ID") : "-" }));
         setUsers(mapped);
         window.__usersIds = rows.map((u) => u.id);
+        const p = resp.pagination;
+        if (p) setTotal(p.total);
       } catch {
         setUsers([]);
       }
     }
     load();
-  }, [router]);
+  }, [router, page, pageSize]);
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch = user.nama.toLowerCase().includes(searchTerm.toLowerCase()) || user.username.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -106,7 +112,7 @@ export default function UsersPage() {
         if (!form.password) { alert("Password wajib diisi!"); return; }
         await createUser(form.email, form.password, ROLE_MAP_TO_API[form.role]);
       }
-      const resp = await listUsers();
+      const resp = await listUsers({ page, limit: pageSize });
       const rows = resp.data as UserListItem[];
       const mapped: User[] = rows.map((u, idx) => ({ id: idx + 1, nama: u.username || u.email, username: u.username, email: u.email, role: ROLE_MAP_FROM_API[u.role], unit: "-", telepon: "-", status: "Aktif", terakhirLogin: u.updatedAt ? new Date(u.updatedAt).toLocaleString("id-ID") : "-" }));
       setUsers(mapped);
@@ -125,7 +131,7 @@ export default function UsersPage() {
     const idStr = window.__usersIds?.[idx];
     if (!idStr) throw new Error("id not found");
     await deleteUser(idStr);
-    const resp = await listUsers();
+    const resp = await listUsers({ page, limit: pageSize });
     const rows = resp.data as UserListItem[];
     const mapped: User[] = rows.map((u, idx2) => ({ id: idx2 + 1, nama: u.username || u.email, username: u.username, email: u.email, role: ROLE_MAP_FROM_API[u.role], unit: "-", telepon: "-", status: "Aktif", terakhirLogin: u.updatedAt ? new Date(u.updatedAt).toLocaleString("id-ID") : "-" }));
     setUsers(mapped);
@@ -264,6 +270,9 @@ export default function UsersPage() {
                   </div>
                 ))}
               </div>
+            </div>
+            <div className="border-t border-[#e5e7eb]">
+              <Pagination page={page} pageSize={pageSize} total={total || filteredUsers.length} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
             </div>
           </div>
 

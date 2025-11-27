@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Input, Textarea, SearchableSelect } from "../../../components/shared/field";
+import Pagination from "../../../components/shared/Pagination";
 
 export default function KontenPage() {
   type Berita = { id: number; judul: string; tanggal: string; kategori: string; isi: string; status: "Publikasi" | "Draft" };
@@ -10,6 +11,8 @@ export default function KontenPage() {
 
   const [activeTab, setActiveTab] = useState<"berita" | "agenda" | "dokumen" | "faq">("berita");
   const [editId, setEditId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [editBerita, setEditBerita] = useState<Berita | null>(null);
   const [editAgenda, setEditAgenda] = useState<Agenda | null>(null);
   const [editFaq, setEditFaq] = useState<Faq | null>(null);
@@ -100,13 +103,13 @@ export default function KontenPage() {
 
           <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] mb-6 overflow-hidden">
             <div className="flex overflow-x-auto">
-                {[
+                {[ 
                 { id: "berita", label: "📰 Berita & Artikel", icon: "ri-article-line" },
                 { id: "agenda", label: "📅 Agenda & Event", icon: "ri-calendar-line" },
                 { id: "dokumen", label: "📎 Dokumen Publik", icon: "ri-file-text-line" },
                 { id: "faq", label: "❓ FAQ", icon: "ri-question-line" },
               ].map((tab) => (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id as "berita" | "agenda" | "dokumen" | "faq")} className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id ? "text-[#355485] border-b-2 border-[#355485]" : "text-[#6b7280] hover:text-[#2a436c]"}`}>
+                <button key={tab.id} onClick={() => { setActiveTab(tab.id as "berita" | "agenda" | "dokumen" | "faq"); setPage(1); }} className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id ? "text-[#355485] border-b-2 border-[#355485]" : "text-[#6b7280] hover:text-[#2a436c]"}`}>
                   <i className={tab.icon}></i>
                   {tab.label}
                 </button>
@@ -123,8 +126,8 @@ export default function KontenPage() {
                   Tambah Baru
                 </button>
               </div>
-
-              {beritaList.map((berita) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {beritaList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((berita) => (
                 <div key={berita.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
                   {editId === `berita-${berita.id}` ? (
                     <div className="p-6 space-y-4">
@@ -172,6 +175,7 @@ export default function KontenPage() {
                   )}
                 </div>
               ))}
+              </div>
             </div>
           )}
 
@@ -184,8 +188,8 @@ export default function KontenPage() {
                   Tambah Agenda
                 </button>
               </div>
-
-              {agendaList.map((ag) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {agendaList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((ag) => (
                 <div key={ag.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
                   {editId === `agenda-${ag.id}` ? (
                     <div className="p-6 space-y-4">
@@ -228,6 +232,7 @@ export default function KontenPage() {
                   )}
                 </div>
               ))}
+              </div>
             </div>
           )}
 
@@ -254,7 +259,7 @@ export default function KontenPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#e5e7eb]">
-                      {dokumenList.map((doc) => (
+                      {dokumenList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((doc) => (
                         <tr key={doc.id} className="hover:bg-[#f9fafb]">
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-3">
@@ -295,8 +300,8 @@ export default function KontenPage() {
                   Tambah FAQ
                 </button>
               </div>
-
-              {faqList.map((f) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {faqList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((f) => (
                 <div key={f.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
                   {editId === `faq-${f.id}` ? (
                     <div className="p-6 space-y-4">
@@ -341,8 +346,13 @@ export default function KontenPage() {
                   )}
                 </div>
               ))}
+              </div>
             </div>
           )}
+
+          <div className="mt-4 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
+            <Pagination page={page} pageSize={pageSize} total={(activeTab === "berita" ? beritaList.length : activeTab === "agenda" ? agendaList.length : activeTab === "dokumen" ? dokumenList.length : faqList.length)} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
+          </div>
         </div>
       </main>
     </>

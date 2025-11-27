@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Input } from "../../../components/shared/field";
+import Pagination from "../../../components/shared/Pagination";
 import Modal from "../../../components/shared/Modal";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { listCandidates, createCandidateProfile, updateCandidateProfile } from "../../../services/profile";
@@ -50,6 +51,8 @@ export default function PencakerPage() {
   };
   const [pencakers, setPencakers] = useState<Pencaker[]>([]);
   const [rawCandidates, setRawCandidates] = useState<CandidateApi[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingCandidateId, setEditingCandidateId] = useState<string | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -121,6 +124,7 @@ export default function PencakerPage() {
     return matchesSearch;
   });
 
+  const paginatedPencakers = filteredPencakers.slice((page - 1) * pageSize, page * pageSize);
   
 
   return (
@@ -147,8 +151,8 @@ export default function PencakerPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredPencakers.map((p) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {paginatedPencakers.map((p) => (
               <div key={p.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
                 <div className="p-4 sm:p-6 border-b border-[#e5e7eb] bg-[#f9fafb]">
                   <div className="flex flex-col gap-4">
@@ -224,6 +228,10 @@ export default function PencakerPage() {
             </div>
           ))}
         </div>
+
+          <div className="mt-4 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
+            <Pagination page={page} pageSize={pageSize} total={filteredPencakers.length} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
+          </div>
 
           {filteredPencakers.length === 0 && (
             <div className="text-center py-8 bg-white rounded-xl shadow-md border border-[#e5e7eb]">

@@ -15,11 +15,13 @@ export type JobPayload = {
   application_deadline: string;
 };
 
-export async function listJobs(params?: { company_id?: string; status?: "pending" | "approved" | "rejected" | "closed"; category?: string }) {
+export async function listJobs(params?: { company_id?: string; status?: "pending" | "approved" | "rejected" | "closed"; category?: string; page?: number; limit?: number }) {
   const q = new URLSearchParams();
   if (params?.company_id) q.set("company_id", params.company_id);
   if (params?.status) q.set("status", params.status);
   if (params?.category) q.set("category", params.category);
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.limit) q.set("limit", String(params.limit));
   const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
   const resp = await fetch(`${BASE}/api/jobs${q.toString() ? `?${q.toString()}` : ""}`, { headers: { "X-User-Id": uid } });
   if (!resp.ok) throw new Error("Gagal mengambil jobs");

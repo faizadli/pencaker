@@ -90,10 +90,12 @@ export async function getCandidateProfile(user_id: string) {
   return resp.json();
 }
 
-export async function listCandidates(params?: { search?: string; status?: "APPROVED" | "REJECTED" | "PENDING" }) {
+export async function listCandidates(params?: { search?: string; status?: "APPROVED" | "REJECTED" | "PENDING"; page?: number; limit?: number }) {
   const q = new URLSearchParams();
   if (params?.search) q.set("search", params.search);
   if (params?.status) q.set("status", params.status);
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.limit) q.set("limit", String(params.limit));
   const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
   const resp = await fetch(`${BASE}/api/candidates${q.toString() ? `?${q.toString()}` : ""}`, { headers: { "X-User-Id": uid } });
   if (!resp.ok) throw new Error("Gagal mengambil data pencaker");

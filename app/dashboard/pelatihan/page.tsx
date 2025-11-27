@@ -1,11 +1,14 @@
 "use client";
 import { useState } from "react";
 import { Input, SearchableSelect, SegmentedToggle } from "../../../components/shared/field";
+import Pagination from "../../../components/shared/Pagination";
 
 export default function PelatihanPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const programs = [
     { id: 1, nama: "Pelatihan Web Development", bidang: "Teknologi", penyelenggara: "BLK Kota Bandung", jadwal: "10 - 15 Juni 2025", durasi: "6 hari (08.00 - 15.00)", lokasi: "Jl. Cikutra No. 85, Bandung", fasilitas: "Modul, Sertifikat, Makan Siang", kuota: 30, terdaftar: 28, status: "Pendaftaran", peserta: [{ id: 101, nama: "Budi Santoso" }, { id: 102, nama: "Ani Wijaya" }, { id: 103, nama: "Dedi Kusuma" }, { id: 104, nama: "Siti Rahayu" }] },
@@ -18,6 +21,8 @@ export default function PelatihanPage() {
     const matchesStatus = statusFilter === "all" || program.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const paginatedPrograms = filteredPrograms.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -73,8 +78,8 @@ export default function PelatihanPage() {
           </div>
 
           {viewMode === "grid" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredPrograms.map((prog) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {paginatedPrograms.map((prog) => (
                 <div key={prog.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
                     <div className="flex items-start justify-between mb-2">
@@ -132,7 +137,7 @@ export default function PelatihanPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredPrograms.map((prog) => (
+                    {paginatedPrograms.map((prog) => (
                       <tr key={prog.id} className="border-b border-[#e5e7eb] hover:bg-[#f9fafb]">
                         <td className="py-3 px-4">
                           <div>
@@ -157,6 +162,10 @@ export default function PelatihanPage() {
               </div>
             </div>
           )}
+
+          <div className="mt-4 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
+            <Pagination page={page} pageSize={pageSize} total={filteredPrograms.length} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
+          </div>
 
           {filteredPrograms.length === 0 && (
             <div className="text-center py-8 bg-white rounded-xl shadow-md border border-[#e5e7eb]">

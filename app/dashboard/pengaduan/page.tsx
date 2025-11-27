@@ -1,11 +1,14 @@
 "use client";
 import { useState } from "react";
+import Pagination from "../../../components/shared/Pagination";
 import { Input, SearchableSelect, Textarea, SegmentedToggle } from "../../../components/shared/field";
 
 export default function PengaduanPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [pengaduanList, setPengaduanList] = useState([
     { id: 1, tanggal: "10 Nov 2025", pelapor: "Budi Santoso", nik: "3204121234567890", jenis: "Upah Tidak Dibayar", perusahaan: "CV Jaya Makmur", lokasi: "Bandung", deskripsi: "Sudah bekerja 3 bulan tanpa upah. Majikan mengabaikan permintaan pembayaran.", status: "Proses", tindakLanjut: "Sedang dilakukan pemanggilan terhadap pihak perusahaan.", bukti: true },
@@ -20,6 +23,8 @@ export default function PengaduanPage() {
     const matchesStatus = statusFilter === "all" || p.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const paginatedPengaduan = filteredPengaduan.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
 
   const handleUpdateStatus = (id: number, newStatus: string) => setPengaduanList(pengaduanList.map((p) => (p.id === id ? { ...p, status: newStatus } : p)));
   const handleEditNote = (id: number) => { const item = pengaduanList.find((p) => p.id === id)!; setEditNote({ id, value: item.tindakLanjut }); };
@@ -87,8 +92,8 @@ export default function PengaduanPage() {
           </div>
 
           {viewMode === "grid" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredPengaduan.map((p) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {paginatedPengaduan.map((p) => (
                 <div key={p.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
                     <div className="flex items-start justify-between mb-2">
@@ -130,7 +135,7 @@ export default function PengaduanPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-[#cbdde9] text-[#2a436c]"><tr><th className="py-3 px-4 text-left">ID</th><th className="py-3 px-4 text-left">Pelapor</th><th className="py-3 px-4 text-left">Jenis</th><th className="py-3 px-4 text-left">Perusahaan</th><th className="py-3 px-4 text-left">Status</th><th className="py-3 px-4 text-left">Aksi</th></tr></thead>
                   <tbody>
-                    {filteredPengaduan.map((p) => (
+                    {paginatedPengaduan.map((p) => (
                       <tr key={p.id} className="border-b border-[#e5e7eb] hover:bg-[#f9fafb]">
                         <td className="py-3 px-4"><span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-[#111827]">#{p.id}</span></td>
                         <td className="py-3 px-4"><div><p className="font-medium text-[#111827]">{p.pelapor}</p><p className="text-xs text-[#4b5563]">{p.tanggal}</p></div></td>
@@ -145,6 +150,10 @@ export default function PengaduanPage() {
               </div>
             </div>
           )}
+
+          <div className="mt-4 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
+            <Pagination page={page} pageSize={pageSize} total={filteredPengaduan.length} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
+          </div>
 
           {editNote.id && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

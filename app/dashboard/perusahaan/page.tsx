@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Input, SearchableSelect, SegmentedToggle } from "../../../components/shared/field";
+import Pagination from "../../../components/shared/Pagination";
 import Modal from "../../../components/shared/Modal";
 import { useRouter } from "next/navigation";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
@@ -36,6 +37,9 @@ export default function PerusahaanPage() {
     updatedAt: string;
   };
   const [perusahaanList, setPerusahaanList] = useState<Company[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
   const canVerify = permissions.includes("perusahaan.verify");
   const canCreate = permissions.includes("perusahaan.create");
   const canUpdate = permissions.includes("perusahaan.update");
@@ -92,15 +96,17 @@ export default function PerusahaanPage() {
       try {
         if (!permsLoaded) return;
         const statusParam = statusFilter !== "all" ? uiToApiStatus[statusFilter] : undefined;
-        const resp = await listCompanies({ status: statusParam, search: searchTerm || undefined });
+        const resp = await listCompanies({ status: statusParam, search: searchTerm || undefined, page, limit: pageSize });
         const rows = (resp.data || resp) as Company[];
         setPerusahaanList(rows);
+        const p = (resp as { pagination?: { page: number; limit: number; total: number } }).pagination;
+        if (p) setTotal(p.total);
       } catch {
         setPerusahaanList([]);
       }
     }
     loadCompanies();
-  }, [statusFilter, searchTerm, permsLoaded, uiToApiStatus]);
+  }, [statusFilter, searchTerm, permsLoaded, uiToApiStatus, page, pageSize]);
 
   const filteredPerusahaan = perusahaanList.filter((p: Company) => {
     const nama = String(p.company_name || "");
@@ -205,7 +211,7 @@ export default function PerusahaanPage() {
           </div>
 
           {viewMode === "grid" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {filteredPerusahaan.map((p) => (
                 <div key={p.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
@@ -334,6 +340,10 @@ export default function PerusahaanPage() {
               </div>
             </div>
           )}
+
+          <div className="mt-4 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
+            <Pagination page={page} pageSize={pageSize} total={total || filteredPerusahaan.length} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
+          </div>
 
           <Modal
             open={showReviewModal}

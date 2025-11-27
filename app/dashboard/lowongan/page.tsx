@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Input, SearchableSelect, SegmentedToggle, TextEditor } from "../../../components/shared/field";
+import Pagination from "../../../components/shared/Pagination";
 import Modal from "../../../components/shared/Modal";
 import { listJobs, createJob, approveJob, rejectJob, updateJob } from "../../../services/jobs";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
@@ -116,6 +117,8 @@ export default function LowonganPage() {
   const [companyNames, setCompanyNames] = useState<Record<string, string>>({});
   const [reviewJob, setReviewJob] = useState<ViewJob | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const EMPTY_NEW_JOB: NewJob = { posisi: "", sektor: "", tipe: "Full-time", batasAkhir: "", deskripsi: "", experience_required: "", education_required: "", skills_required: "", min_salary: 0, max_salary: 0, work_setup: "WFO" };
   const [newJob, setNewJob] = useState<NewJob>(EMPTY_NEW_JOB);
@@ -271,6 +274,8 @@ export default function LowonganPage() {
       return matchesSearch && matchesStatus;
     });
   }, [lowonganList, searchTerm, statusFilter, apiToUITipe, apiToUIStatus, role, companyName, companyNames]);
+
+  const paginatedLowongan = useMemo(() => filteredLowongan.slice((page - 1) * pageSize, page * pageSize), [filteredLowongan, page, pageSize]);
 
   const handleAddJob = async () => {
     if (!companyId) { alert("Perusahaan belum teridentifikasi"); return; }
@@ -520,8 +525,8 @@ export default function LowonganPage() {
 
 
           {viewMode === "grid" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredLowongan.map((job) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {paginatedLowongan.map((job) => (
                 <div key={job.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -598,7 +603,7 @@ export default function LowonganPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredLowongan.map((job) => (
+                    {paginatedLowongan.map((job) => (
                       <tr key={job.id} className="border-b border-[#e5e7eb] hover:bg-[#f9fafb]">
                         <td className="py-3 px-4">
                           <div>
@@ -631,7 +636,7 @@ export default function LowonganPage() {
                 </table>
               </div>
               <div className="sm:hidden p-3 space-y-3">
-                {filteredLowongan.map((job) => (
+                {paginatedLowongan.map((job) => (
                   <div key={`m-${job.id}`} className="border border-[#e5e7eb] rounded-lg p-3">
                     <div className="flex items-start justify-between">
                       <div className="min-w-0">
@@ -659,6 +664,10 @@ export default function LowonganPage() {
               </div>
             </div>
           )}
+
+          <div className="mt-4 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
+            <Pagination page={page} pageSize={pageSize} total={filteredLowongan.length} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
+          </div>
 
           {filteredLowongan.length === 0 && (
             <div className="text-center py-8 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
