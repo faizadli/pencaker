@@ -74,21 +74,14 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
   ];
 
   const filteredItems = (() => {
-    const canPerusahaan = permissionCodes.includes("perusahaan.read");
-    const canLowongan = permissionCodes.includes("lowongan.read");
-    const canPencaker = permissionCodes.includes("pencaker.read");
-    if (role === "company") {
-      const allowed = ["/dashboard", "/dashboard/profile"] as (string | null)[];
-      if (companyApproved && canLowongan) allowed.push("/dashboard/lowongan");
-      return allItems.filter((i) => allowed.filter(Boolean).includes(i.path));
-    }
-    if (role === "candidate") return allItems.filter((i) => ["/dashboard", "/dashboard/profile"].includes(i.path));
-    if (!role) return [];
-    return allItems.filter((i) => {
-      if (i.path === "/dashboard/perusahaan") return canPerusahaan;
-      if (i.path === "/dashboard/lowongan") return canLowongan;
-      if (i.path === "/dashboard/pencaker") return canPencaker;
+    const withAk1 = permissionCodes.includes("ak1.read") ? allItems.concat([{ name: "Kartu Kuning (AK1)", icon: "ri-profile-line", path: "/dashboard/ak1" }]) : allItems;
+    return withAk1.filter((i) => {
+      if (i.path === "/dashboard/perusahaan") return permissionCodes.includes("perusahaan.read");
+      if (i.path === "/dashboard/lowongan") return permissionCodes.includes("lowongan.read") && (role !== "company" || companyApproved);
+      if (i.path === "/dashboard/pencaker") return permissionCodes.includes("pencaker.read");
       if (i.path === "/dashboard/users") return permissionCodes.includes("users.read");
+      if (i.path === "/dashboard/ak1") return permissionCodes.includes("ak1.read");
+      // Dashboard, Profil, and others remain accessible
       return true;
     });
   })();
@@ -127,7 +120,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
                     className={`flex items-center gap-3 w-full p-3 rounded-lg transition-colors ${isActive ? "bg-[#4f90c6] font-semibold" : "hover:bg-[#4f90c6]"}`}
                     onClick={() => setIsMobileOpen(false)}
                   >
-                    <i className={`${item.icon} text-lg`}></i>
+                    <i className={`${item.icon || 'ri-id-card-line'} text-lg`}></i>
                     {!isMinimized && <span>{item.name}</span>}
                   </Link>
                 </li>

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
  
 import { Input, SearchableSelect, Textarea } from "../../../components/shared/field";
-import { upsertCompanyProfile, upsertCandidateProfile, upsertDisnakerProfile, getCompanyProfile, getCandidateProfile, getDisnakerProfile, getUserById } from "../../../services/profile";
+import { upsertCompanyProfile, upsertCandidateProfile, upsertDisnakerProfile, getCompanyProfile, getCandidateProfile, getDisnakerProfile, getUserById, presignCompanyProfileUpload, presignCandidateProfileUpload } from "../../../services/profile";
 
 export default function ProfilePage() {
   const [role, setRole] = useState("");
@@ -277,7 +277,7 @@ export default function ProfilePage() {
                           <>
                             <div>
                               <label className="block text-sm font-medium text-[#6b7280] mb-2">Logo Perusahaan</label>
-                              <Input icon="ri-file-3-line" type="file" onChange={(e) => { const f = e.target.files?.[0]; setCompanyForm({ ...companyForm, company_logo: f ? f.name : "" }); setCompanyLogoPreview(f ? URL.createObjectURL(f) : companyLogoPreview); }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
+                              <Input icon="ri-file-3-line" type="file" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) { setCompanyForm({ ...companyForm, company_logo: "" }); setCompanyLogoPreview(""); return; } try { const presign = await presignCompanyProfileUpload("logo", f.name, f.type || "application/octet-stream"); const resp = await fetch(presign.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); throw new Error(`Upload gagal (${resp.status}): ${txt}`); } const objectUrl = presign.url.includes("?") ? presign.url.slice(0, presign.url.indexOf("?")) : presign.url; setCompanyForm({ ...companyForm, company_logo: objectUrl }); setCompanyLogoPreview(URL.createObjectURL(f)); } catch (err) { const msg = err instanceof Error ? err.message : "Gagal upload logo perusahaan"; alert(msg); } }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
                               {companyLogoPreview && (
                                 <div className="mt-2">
                                   <Image src={companyLogoPreview} alt="Logo Preview" width={96} height={96} className="w-24 h-24 rounded object-cover border" unoptimized />
@@ -343,7 +343,7 @@ export default function ProfilePage() {
                           <>
                             <div>
                               <label className="block text-sm font-medium text-[#6b7280] mb-2">Foto Profil</label>
-                              <Input icon="ri-file-3-line" type="file" onChange={(e) => { const f = e.target.files?.[0]; setCandidateForm({ ...candidateForm, photo_profile: f ? f.name : "" }); setCandidatePhotoPreview(f ? URL.createObjectURL(f) : candidatePhotoPreview); }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
+                              <Input icon="ri-file-3-line" type="file" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) { setCandidateForm({ ...candidateForm, photo_profile: "" }); setCandidatePhotoPreview(""); return; } try { const presign = await presignCandidateProfileUpload("photo", f.name, f.type || "application/octet-stream"); const resp = await fetch(presign.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); throw new Error(`Upload gagal (${resp.status}): ${txt}`); } const objectUrl = presign.url.includes("?") ? presign.url.slice(0, presign.url.indexOf("?")) : presign.url; setCandidateForm({ ...candidateForm, photo_profile: objectUrl }); setCandidatePhotoPreview(URL.createObjectURL(f)); } catch (err) { const msg = err instanceof Error ? err.message : "Gagal upload foto profil"; alert(msg); } }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
                               {candidatePhotoPreview && (
                                 <div className="mt-2">
                                   <Image src={candidatePhotoPreview} alt="Foto Preview" width={96} height={96} className="w-24 h-24 rounded object-cover border" unoptimized />
@@ -400,11 +400,11 @@ export default function ProfilePage() {
                             </div>
                             <div>
                               <label className="block text-sm font-medium text-[#6b7280] mb-2">CV</label>
-                              <Input icon="ri-file-3-line" type="file" onChange={(e) => { const f = e.target.files?.[0]; setCandidateForm({ ...candidateForm, cv_file: f ? f.name : "" }); }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
+                              <Input icon="ri-file-3-line" type="file" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) { setCandidateForm({ ...candidateForm, cv_file: "" }); return; } try { const presign = await presignCandidateProfileUpload("cv", f.name, f.type || "application/octet-stream"); const resp = await fetch(presign.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); throw new Error(`Upload gagal (${resp.status}): ${txt}`); } const objectUrl = presign.url.includes("?") ? presign.url.slice(0, presign.url.indexOf("?")) : presign.url; setCandidateForm({ ...candidateForm, cv_file: objectUrl }); } catch (err) { const msg = err instanceof Error ? err.message : "Gagal upload CV"; alert(msg); } }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
                             </div>
                             <div>
                               <label className="block text-sm font-medium text-[#6b7280] mb-2">AK1</label>
-                              <Input icon="ri-file-3-line" type="file" onChange={(e) => { const f = e.target.files?.[0]; setCandidateForm({ ...candidateForm, ak1_file: f ? f.name : "" }); }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
+                              <Input icon="ri-file-3-line" type="file" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) { setCandidateForm({ ...candidateForm, ak1_file: "" }); return; } try { const presign = await presignCandidateProfileUpload("ak1", f.name, f.type || "application/octet-stream"); const resp = await fetch(presign.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); throw new Error(`Upload gagal (${resp.status}): ${txt}`); } const objectUrl = presign.url.includes("?") ? presign.url.slice(0, presign.url.indexOf("?")) : presign.url; setCandidateForm({ ...candidateForm, ak1_file: objectUrl }); } catch (err) { const msg = err instanceof Error ? err.message : "Gagal upload AK1"; alert(msg); } }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
                             </div>
                           </>
                         ) : (

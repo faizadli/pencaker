@@ -150,3 +150,24 @@ export async function getUserById(user_id: string) {
   if (!resp.ok) throw new Error("Gagal mengambil data user");
   return resp.json();
 }
+
+export async function presignCandidateProfileUpload(folder: string, filename: string, content_type: string) {
+  const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
+  const resp = await fetch(`${BASE}/api/uploads/presign/candidate`, { method: "POST", headers: { "Content-Type": "application/json", "X-User-Id": uid }, body: JSON.stringify({ action: "put", folder, filename, content_type, user_id: uid }) });
+  if (!resp.ok) throw new Error("Gagal presign upload candidate");
+  return (await resp.json()).data as { url: string; key: string };
+}
+
+export async function presignCompanyProfileUpload(folder: string, filename: string, content_type: string) {
+  const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
+  const resp = await fetch(`${BASE}/api/uploads/presign/company`, { method: "POST", headers: { "Content-Type": "application/json", "X-User-Id": uid }, body: JSON.stringify({ action: "put", folder, filename, content_type, user_id: uid }) });
+  if (!resp.ok) throw new Error("Gagal presign upload company");
+  return (await resp.json()).data as { url: string; key: string };
+}
+
+export async function presignDisnakerProfileUpload(folder: string, filename: string, content_type: string) {
+  const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
+  const resp = await fetch(`${BASE}/api/uploads/presign/disnaker`, { method: "POST", headers: { "Content-Type": "application/json", "X-User-Id": uid }, body: JSON.stringify({ action: "put", folder, filename, content_type, user_id: uid }) });
+  if (!resp.ok) throw new Error("Gagal presign upload disnaker");
+  return (await resp.json()).data as { url: string; key: string };
+}
