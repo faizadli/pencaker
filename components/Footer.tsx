@@ -1,6 +1,10 @@
 "use client";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+  const isDashboard = (pathname || "").startsWith("/dashboard");
+  if (isDashboard) return null;
   return (
     <div>
       <footer className="bg-[#2a436c] text-white pt-12 pb-8">

@@ -1,0 +1,289 @@
+"use client";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { getJobById, listPublicJobs } from "../../../services/jobs";
+
+type Job = {
+  id?: string;
+  company_id: string;
+  company_name?: string;
+  company_kecamatan?: string;
+  company_kelurahan?: string;
+  company_address?: string;
+  job_title: string;
+  job_type: string;
+  job_description: string;
+  category: string;
+  min_salary?: number;
+  max_salary?: number;
+  experience_required?: string;
+  education_required?: string;
+  skills_required?: string;
+  work_setup?: string;
+  application_deadline: string;
+  status?: string;
+};
+
+export default function JobDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const id = String(params?.id || "");
+  const [job, setJob] = useState<Job | null>(null);
+  const [similar, setSimilar] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function boot() {
+      setLoading(true);
+      setError("");
+      if (!id) { router.replace("/jobs"); return; }
+      let hadCached = false;
+      try {
+        if (typeof window !== "undefined") {
+          const cached = sessionStorage.getItem("last_job");
+          if (cached) {
+            const obj = JSON.parse(cached);
+            if (String(obj?.id || "") === id) {
+              setJob(obj as Job);
+              hadCached = true;
+            }
+          }
+        }
+      } catch {}
+      try {
+        const resp = await getJobById(id);
+        const raw = (resp.data || resp) as unknown;
+        const obj = raw as Record<string, unknown>;
+        const curr = typeof obj["id"] === "string" ? (obj["id"] as string) : undefined;
+        const jobsId = typeof obj["jobs_id"] === "string" ? (obj["jobs_id"] as string) : undefined;
+        const jobId = typeof obj["job_id"] === "string" ? (obj["job_id"] as string) : undefined;
+        const nid = (curr || jobsId || jobId) || "";
+        const normalized = nid ? ({ ...(raw as Job), id: nid } as Job) : (raw as Job);
+        setJob(normalized);
+        try {
+          const cat = String(normalized?.category || "");
+          const list = await listPublicJobs({ category: cat || undefined, limit: 5 });
+          const rawList = (list.data || list) as unknown;
+          const arr = Array.isArray(rawList) ? (rawList as Job[]) : [];
+          const mapped = arr.map((r) => {
+            const obj2 = r as Record<string, unknown>;
+            const curr2 = typeof obj2["id"] === "string" ? (obj2["id"] as string) : undefined;
+            const jobsId2 = typeof obj2["jobs_id"] === "string" ? (obj2["jobs_id"] as string) : undefined;
+            const jobId2 = typeof obj2["job_id"] === "string" ? (obj2["job_id"] as string) : undefined;
+            const jid = (curr2 || jobsId2 || jobId2) || "";
+            return jid ? { ...r, id: jid } : r;
+          });
+          setSimilar(mapped.filter(j => String(j.id) !== id).slice(0, 3));
+        } catch {}
+      } catch {
+        if (!hadCached) setError("Gagal memuat detail lowongan");
+      } finally {
+        setLoading(false);
+      }
+    }
+    boot();
+  }, [id, router]);
+
+  const salary = useMemo(() => {
+    if (!job) return "-";
+    const min = job.min_salary ? job.min_salary.toLocaleString("id-ID") : "-";
+    const max = job.max_salary ? job.max_salary.toLocaleString("id-ID") : "-";
+    return job.min_salary && job.max_salary ? `Rp ${min} - ${max}` : job.min_salary ? `Rp ${min}` : job.max_salary ? `Rp ${max}` : "-";
+  }, [job]);
+
+  const deadlineLabel = useMemo(() => {
+    const d = job?.application_deadline ? new Date(job.application_deadline) : null;
+    return d ? d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "-";
+  }, [job]);
+
+  const daysLeft = useMemo(() => {
+    const d = job?.application_deadline ? new Date(job.application_deadline).getTime() : NaN;
+    const now = Date.now();
+    const diff = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
+    return Number.isFinite(diff) ? diff : null;
+  }, [job]);
+
+  const statusLabel = useMemo(() => {
+    const s = String(job?.status || "").toLowerCase();
+    return s === "closed" ? "TUTUP" : s ? s.toUpperCase() : "DIBUKA";
+  }, [job]);
+
+  if (loading) return (
+    <main className="min-h-screen bg-white">
+      <div className="px-4 sm:px-6 flex items-center justify-center h-[60vh]">
+        <div className="flex items-center gap-3 text-[#355485]">
+          <div className="w-5 h-5 border-2 border-[#355485] border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-sm font-medium">Memuat detail lowongan...</span>
+        </div>
+      </div>
+    </main>
+  );
+
+  if (error || !job) return (
+    <main className="min-h-screen bg-white">
+      <div className="px-4 sm:px-6 max-w-4xl mx-auto">
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl">{error || "Lowongan tidak ditemukan"}</div>
+        <div className="mt-4">
+          <Link href="/jobs" className="px-4 py-2 bg-[#355485] text-white rounded-lg">Kembali ke Lowongan</Link>
+        </div>
+      </div>
+    </main>
+  );
+
+  const company = job.company_name || job.company_id;
+
+  return (
+    <main className="min-h-screen bg-white">
+      <section className="bg-[#2a436c] text-white py-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="flex items-start gap-4">
+            <Image src={`https://picsum.photos/96?random=${encodeURIComponent(job.id || job.job_title || "default")}`} alt={company || "Perusahaan"} width={72} height={72} className="w-18 h-18 rounded-xl object-cover" />
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl md:text-3xl font-bold">{job.job_title}</h1>
+              <p className="text-sm opacity-90">{company} • {job.work_setup || "Lokasi tidak tersedia"}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {job.job_type && <span className="px-2 py-1 text-xs bg-white/10 rounded">{job.job_type}</span>}
+                {job.experience_required && <span className="px-2 py-1 text-xs bg-white/10 rounded">{job.experience_required}</span>}
+                {job.education_required && <span className="px-2 py-1 text-xs bg-white/10 rounded">{job.education_required}</span>}
+                {job.category && <span className="px-2 py-1 text-xs bg-white/10 rounded">{job.category}</span>}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-10 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-white rounded-lg border border-[#e5e7eb] p-3">
+                <div className="text-[11px] text-[#6b7280]">Hari Lagi</div>
+                <div className="text-sm font-semibold text-[#2a436c]">{typeof daysLeft === "number" && daysLeft > 0 ? `${daysLeft}` : "-"}</div>
+              </div>
+              <div className="bg-white rounded-lg border border-[#e5e7eb] p-3">
+                <div className="text-[11px] text-[#6b7280]">Tipe Kerja</div>
+                <div className="text-sm font-semibold text-[#2a436c]">{job.job_type || "-"}</div>
+              </div>
+              <div className="bg-white rounded-lg border border-[#e5e7eb] p-3">
+                <div className="text-[11px] text-[#6b7280]">Pengalaman</div>
+                <div className="text-sm font-semibold text-[#2a436c]">{job.experience_required || "-"}</div>
+              </div>
+              <div className="bg-white rounded-lg border border-[#e5e7eb] p-3">
+                <div className="text-[11px] text-[#6b7280]">Status</div>
+                <div className="text-sm font-semibold text-[#2a436c]">{statusLabel}</div>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
+              <h2 className="text-lg font-semibold text-[#2a436c] mb-3">Detail Pekerjaan</h2>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center gap-2 text-[#355485] text-sm font-medium">
+                    <i className="ri-information-line"></i>
+                    <span>Deskripsi Pekerjaan</span>
+                  </div>
+                  <p className="mt-2 text-sm text-[#374151] leading-relaxed whitespace-pre-line">{job.job_description}</p>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 text-[#355485] text-sm font-medium">
+                    <i className="ri-check-double-line"></i>
+                    <span>Tanggung Jawab</span>
+                  </div>
+                  <ul className="mt-2 space-y-2">
+                    {(job.job_description ? job.job_description.split(/\n|\r/).filter((x) => x.trim()).slice(0, 6) : []).map((line, i) => (
+                      <li key={`resp-${i}`} className="flex items-start gap-2">
+                        <i className="ri-check-line text-[#355485] mt-0.5"></i>
+                        <span className="text-sm text-[#374151]">{line.trim()}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 text-[#355485] text-sm font-medium">
+                    <i className="ri-list-check"></i>
+                    <span>Kriteria</span>
+                  </div>
+                  <ul className="mt-2 space-y-2">
+                    {[
+                      job.education_required || "",
+                      job.experience_required || "",
+                      job.work_setup || "",
+                      job.category || "",
+                    ].filter((x) => x && x.trim()).map((x, i) => (
+                      <li key={`crit-${i}`} className="flex items-start gap-2">
+                        <i className="ri-checkbox-circle-line text-[#355485] mt-0.5"></i>
+                        <span className="text-sm text-[#374151]">{x}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+            {job.skills_required && (
+              <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
+                <h2 className="text-lg font-semibold text-[#2a436c] mb-3">Kualifikasi & Keahlian</h2>
+                <div className="flex flex-wrap gap-2">
+                  {job.skills_required.split(",").map((sk, i) => (
+                    <span key={`${i}-${sk.trim()}`} className="px-2 py-1 text-xs bg-[#f3f4f6] text-[#355485] rounded-full">{sk.trim()}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <aside className="space-y-6">
+            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-4">
+              <div className="text-sm text-[#2a436c]">Gaji Per Bulan</div>
+              <div className="text-xl font-bold text-[#2a436c]">{salary}</div>
+              <div className="text-xs text-[#6b7280] mt-1">Tutup pada {deadlineLabel}</div>
+              <button className="mt-3 w-full px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c]">Lamar Sekarang</button>
+            </div>
+            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
+              <h3 className="text-base font-semibold text-[#2a436c] mb-3">Tentang Perusahaan</h3>
+              <p className="text-sm text-[#374151]">{company}</p>
+              <div className="mt-2 space-y-1">
+                {job.company_address && (
+                  <p className="text-xs text-[#6b7280]">{job.company_address}</p>
+                )}
+                {(job.company_kecamatan || job.company_kelurahan) && (
+                  <p className="text-xs text-[#6b7280]">{[job.company_kelurahan, job.company_kecamatan].filter(Boolean).join(", ")}</p>
+                )}
+              </div>
+            </div>
+            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
+              <h3 className="text-base font-semibold text-[#2a436c] mb-3">Fasilitas</h3>
+              <div className="space-y-2">
+                {["WFH/Hybrid", "Asuransi Kesehatan", "Training Skill", "Bonus Tahunan", "Perlengkapan Kerja"].map((f, i) => (
+                  <div key={`fac-${i}`} className="px-2 py-1 text-sm bg-[#f3f4f6] text-[#355485] rounded-lg">{f}</div>
+                ))}
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      {similar.length > 0 && (
+        <section className="py-10 bg-white">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <h2 className="text-lg font-semibold text-[#2a436c] mb-4">Lowongan Serupa</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {similar.map((sj, i) => (
+                <Link key={sj.id || `${sj.job_title}-${i}`} href={`/jobs/${encodeURIComponent(String(sj.id || ""))}`} className="block">
+                  <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] p-4 hover:shadow-md transition-shadow">
+                    <h3 className="font-semibold text-[#2a436c] text-sm truncate">{sj.job_title}</h3>
+                    <p className="text-xs text-[#6b7280] truncate">{sj.company_name || sj.company_id}</p>
+                    <div className="mt-2 flex gap-2 flex-wrap">
+                      {sj.job_type && <span className="px-2 py-1 text-[11px] bg-[#f3f4f6] text-[#355485] rounded-full">{sj.job_type}</span>}
+                      {sj.education_required && <span className="px-2 py-1 text-[11px] bg-[#f3f4f6] text-[#355485] rounded-full">{sj.education_required}</span>}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+    </main>
+  );
+}

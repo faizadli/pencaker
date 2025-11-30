@@ -1,39 +1,40 @@
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
-export async function registerUser(role: "company" | "candidate", email: string, password: string) {
+export function getToken() {
+  if (typeof window === "undefined") return "";
+  return localStorage.getItem("token") || "";
+}
+
+type AuthEnvelope = { message?: string; id?: string; role?: string; token?: string };
+
+export async function registerUser(role: "company" | "candidate", email: string, password: string): Promise<AuthEnvelope> {
   const resp = await fetch(`${BASE}/api/user/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password, role }),
   });
-  if (!resp.ok) throw new Error("Register gagal");
-  return resp.json();
+  let data: AuthEnvelope | undefined;
+  try {
+    data = (await resp.json()) as AuthEnvelope;
+  } catch {}
+  if (!resp.ok) throw new Error(String((data && data.message) || "Register gagal"));
+  return (data || {}) as AuthEnvelope;
 }
 
-export async function login(usernameOrEmail: string, password: string) {
-  const isEmail = usernameOrEmail.includes("@");
-  if (isEmail) {
-    const resp = await fetch(`${BASE}/api/user/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: usernameOrEmail, password }),
-    });
-    if (!resp.ok) throw new Error("Login gagal");
-    const data = await resp.json();
-    return { role: String(data.role), id: String(data.id) };
-  }
-  const resp = await fetch(`${BASE}/api/admin/login`, {
+export async function login(email: string, password: string) {
+  const resp = await fetch(`${BASE}/api/user/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: usernameOrEmail, password }),
+    body: JSON.stringify({ email, password }),
   });
   if (!resp.ok) throw new Error("Login gagal");
-  return { role: "disnaker", id: null };
+  const data = await resp.json();
+  return { role: String(data.role), id: String(data.id), token: String(data.token || "") };
 }
 
-export function startSession(role: string, userId: string | null) {
-  const token = crypto.randomUUID();
-  localStorage.setItem("sessionToken", token);
+export function startSession(role: string, userId: string | null, token?: string) {
+  const t = token || "";
+  localStorage.setItem("token", t);
   localStorage.setItem("lastActivity", String(Date.now()));
   localStorage.setItem("role", role);
   if (userId) {
@@ -41,13 +42,13 @@ export function startSession(role: string, userId: string | null) {
     localStorage.setItem("user_id", String(userId));
   }
   if (typeof document !== "undefined") {
-    document.cookie = `sessionToken=${token}; path=/; max-age=1800`;
-    document.cookie = `role=${role}; path=/; max-age=1800`;
+    document.cookie = `sessionToken=${t}; path=/; max-age=604800`;
+    document.cookie = `role=${role}; path=/; max-age=604800`;
   }
 }
 
 export function logout(redirect: string = "/login") {
-  localStorage.removeItem("sessionToken");
+  localStorage.removeItem("token");
   localStorage.removeItem("lastActivity");
   localStorage.removeItem("role");
   localStorage.removeItem("user_id");

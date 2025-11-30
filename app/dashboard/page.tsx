@@ -1,5 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Bar, Pie } from "react-chartjs-2";
 import {
@@ -208,8 +209,8 @@ function DashboardPageComponent() {
               <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6 mt-8">
                 <h2 className="text-lg font-semibold text-[#2a436c] mb-4">Rekomendasi Lowongan</h2>
                 <ul className="space-y-3 text-sm text-[#2a436c]">
-                  <li className="flex justify-between"><span>Frontend Developer - PT Solusi Digital</span><a href="/jobs" className="text-[#355485]">Lihat</a></li>
-                  <li className="flex justify-between"><span>Teknisi Jaringan - CV Makmur Abadi</span><a href="/jobs" className="text-[#355485]">Lihat</a></li>
+                  <li className="flex justify-between"><span>Frontend Developer - PT Solusi Digital</span><Link href="/jobs" className="text-[#355485]">Lihat</Link></li>
+                  <li className="flex justify-between"><span>Teknisi Jaringan - CV Makmur Abadi</span><Link href="/jobs" className="text-[#355485]">Lihat</Link></li>
                 </ul>
               </div>
             </div>

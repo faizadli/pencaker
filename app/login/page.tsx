@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "../../components/shared/field";
 import { login, startSession } from "../../services/auth";
+import { getUserById } from "../../services/profile";
 
 export default function Login() {
   const router = useRouter();
@@ -11,12 +12,18 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const token = typeof document !== "undefined" ? document.cookie.split(";").map((s) => s.trim()).find((c) => c.startsWith("sessionToken=")) : undefined;
-    const last = typeof window !== "undefined" ? Number(localStorage.getItem("lastActivity") || 0) : 0;
-    const expired = Date.now() - last > 30 * 60 * 1000;
-    if (token && !expired) {
-      router.replace("/dashboard");
-    }
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") || "" : "";
+    const uid = typeof window !== "undefined" ? localStorage.getItem("id") || localStorage.getItem("user_id") || "" : "";
+    (async () => {
+      if (token && uid) {
+        try {
+          await getUserById(uid);
+          router.replace("/dashboard");
+        } catch {
+          localStorage.removeItem("token");
+        }
+      }
+    })();
   }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,12 +36,12 @@ export default function Login() {
     setLoading(true);
     try {
       const result = await login(form.email, form.password);
-      startSession(result.role, result.id || null);
+      startSession(result.role, result.id || null, result.token);
       router.replace("/dashboard");
       setLoading(false);
     } catch {
       setLoading(false);
-      setError("Username atau password salah.");
+      setError("Email atau password salah.");
     }
   };
 

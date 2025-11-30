@@ -27,8 +27,8 @@ export default function ProfilePage() {
     company_name: "", 
     company_logo: "", 
     no_handphone: "", 
-    province: "", 
-    city: "", 
+    kecamatan: "", 
+    kelurahan: "", 
     address: "", 
     website: "", 
     about_company: "" 
@@ -40,7 +40,8 @@ export default function ProfilePage() {
     birthdate: "", 
     place_of_birth: "", 
     nik: "", 
-    province: "", 
+    kecamatan: "", 
+    kelurahan: "", 
     address: "", 
     postal_code: "", 
     gender: "", 
@@ -53,6 +54,11 @@ export default function ProfilePage() {
     ak1_file: "" 
   });
   const [candidatePhotoPreview, setCandidatePhotoPreview] = useState<string>("");
+  const [districts, setDistricts] = useState<{ id: string; name: string }[]>([]);
+  const [districtOptions, setDistrictOptions] = useState<{ value: string; label: string }[]>([]);
+  const [villageOptionsCompany, setVillageOptionsCompany] = useState<{ value: string; label: string }[]>([]);
+  const [villageOptionsCandidate, setVillageOptionsCandidate] = useState<{ value: string; label: string }[]>([]);
+  type EmsifaItem = { id: number | string; name: string };
   
   const [disnakerForm, setDisnakerForm] = useState<{ full_name: string; divisi: "superadmin" | "adminlayanan" | "adminpelatihan" | "adminpkwt" | "" }>({ 
     full_name: "", 
@@ -100,8 +106,8 @@ export default function ProfilePage() {
           company_name: companyForm.company_name,
           company_logo: companyForm.company_logo || undefined,
           no_handphone: companyForm.no_handphone,
-          province: companyForm.province,
-          city: companyForm.city,
+          kecamatan: companyForm.kecamatan,
+          kelurahan: companyForm.kelurahan,
           address: companyForm.address,
           website: companyForm.website || undefined,
           about_company: companyForm.about_company,
@@ -114,7 +120,8 @@ export default function ProfilePage() {
           birthdate: candidateForm.birthdate ? new Date(`${candidateForm.birthdate}T00:00:00.000Z`).toISOString() : "",
           place_of_birth: candidateForm.place_of_birth,
           nik: candidateForm.nik,
-          province: candidateForm.province,
+          kecamatan: candidateForm.kecamatan,
+          kelurahan: candidateForm.kelurahan,
           address: candidateForm.address,
           postal_code: candidateForm.postal_code,
           gender: candidateForm.gender,
@@ -160,6 +167,56 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
+    const loadDistricts = async () => {
+      try {
+        const resp = await fetch("/api/wilayah/districts");
+        const rows = await resp.json();
+        const ds = ((rows as EmsifaItem[]) || []).map((r) => ({ id: String(r.id), name: String(r.name) }));
+        setDistricts(ds);
+        setDistrictOptions(ds.map((d) => ({ value: d.name, label: d.name })));
+      } catch {
+        setDistricts([]);
+        setDistrictOptions([]);
+      }
+    };
+    loadDistricts();
+  }, []);
+
+  useEffect(() => {
+    const name = companyForm.kecamatan;
+    const d = districts.find((x) => x.name === name);
+    const loadVillages = async () => {
+      if (!d) { setVillageOptionsCompany([]); return; }
+      try {
+        const resp = await fetch(`/api/wilayah/villages/${encodeURIComponent(d.id)}`);
+        const rows = await resp.json();
+        const vs = ((rows as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
+        setVillageOptionsCompany(vs);
+      } catch {
+        setVillageOptionsCompany([]);
+      }
+    };
+    loadVillages();
+  }, [companyForm.kecamatan, districts]);
+
+  useEffect(() => {
+    const name = candidateForm.kecamatan;
+    const d = districts.find((x) => x.name === name);
+    const loadVillages = async () => {
+      if (!d) { setVillageOptionsCandidate([]); return; }
+      try {
+        const resp = await fetch(`/api/wilayah/villages/${encodeURIComponent(d.id)}`);
+        const rows = await resp.json();
+        const vs = ((rows as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
+        setVillageOptionsCandidate(vs);
+      } catch {
+        setVillageOptionsCandidate([]);
+      }
+    };
+    loadVillages();
+  }, [candidateForm.kecamatan, districts]);
+
+  useEffect(() => {
     const fetchProfile = async () => {
       try {
         if (!userId || !role) return;
@@ -174,8 +231,8 @@ export default function ProfilePage() {
               company_name: res.data.company_name || "",
               company_logo: res.data.company_logo || "",
               no_handphone: res.data.no_handphone || "",
-              province: res.data.province || "",
-              city: res.data.city || "",
+              kecamatan: res.data.kecamatan || "",
+              kelurahan: res.data.kelurahan || "",
               address: res.data.address || "",
               website: res.data.website || "",
               about_company: res.data.about_company || "",
@@ -205,7 +262,8 @@ export default function ProfilePage() {
               birthdate: birth,
               place_of_birth: res.data.place_of_birth || "",
               nik: res.data.nik || "",
-              province: res.data.province || "",
+              kecamatan: res.data.kecamatan || "",
+              kelurahan: res.data.kelurahan || "",
               address: res.data.address || "",
               postal_code: res.data.postal_code || "",
               gender: res.data.gender || "",
@@ -293,42 +351,16 @@ export default function ProfilePage() {
                               <Input type="text" value={companyForm.no_handphone} onChange={(e) => setCompanyForm({ ...companyForm, no_handphone: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Provinsi</label>
-                              <SearchableSelect
-                                value={companyForm.province}
-                                onChange={(v) => setCompanyForm({ ...companyForm, province: v })}
-                                options={[
-                                  { value: "", label: "Pilih..." },
-                                  { value: "Kalimantan Timur", label: "Kalimantan Timur" },
-                                  { value: "Kalimantan Selatan", label: "Kalimantan Selatan" },
-                                  { value: "Kalimantan Tengah", label: "Kalimantan Tengah" },
-                                  { value: "DKI Jakarta", label: "DKI Jakarta" },
-                                  { value: "Jawa Barat", label: "Jawa Barat" },
-                                  { value: "Jawa Timur", label: "Jawa Timur" },
-                                ]}
-                                className="w-full"
-                              />
+                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Kecamatan</label>
+                              <SearchableSelect value={companyForm.kecamatan} onChange={(v) => setCompanyForm({ ...companyForm, kecamatan: v, kelurahan: "" })} options={[{ value: "", label: "Pilih..." }, ...districtOptions]} className="w-full" />
                             </div>
                             <div>
                               <label className="block text-sm font-medium text-[#6b7280] mb-2">Website</label>
                               <Input type="url" value={companyForm.website} onChange={(e) => setCompanyForm({ ...companyForm, website: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Kota/Kabupaten</label>
-                              <SearchableSelect
-                                value={companyForm.city}
-                                onChange={(v) => setCompanyForm({ ...companyForm, city: v })}
-                                options={[
-                                  { value: "", label: "Pilih..." },
-                                  { value: "Kab. Paser", label: "Kab. Paser" },
-                                  { value: "Samarinda", label: "Samarinda" },
-                                  { value: "Balikpapan", label: "Balikpapan" },
-                                  { value: "Jakarta", label: "Jakarta" },
-                                  { value: "Bandung", label: "Bandung" },
-                                  { value: "Surabaya", label: "Surabaya" },
-                                ]}
-                                className="w-full"
-                              />
+                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Kelurahan</label>
+                              <SearchableSelect value={companyForm.kelurahan} onChange={(v) => setCompanyForm({ ...companyForm, kelurahan: v })} options={[{ value: "", label: "Pilih..." }, ...villageOptionsCompany]} className="w-full" />
                             </div>
                             <div className="md:col-span-2">
                               <label className="block text-sm font-medium text-[#6b7280] mb-2">Alamat</label>
@@ -367,8 +399,12 @@ export default function ProfilePage() {
                               <Input type="text" value={candidateForm.nik} onChange={(e) => setCandidateForm({ ...candidateForm, nik: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Provinsi</label>
-                              <Input type="text" value={candidateForm.province} onChange={(e) => setCandidateForm({ ...candidateForm, province: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Kecamatan</label>
+                              <SearchableSelect value={candidateForm.kecamatan} onChange={(v) => setCandidateForm({ ...candidateForm, kecamatan: v, kelurahan: "" })} options={[{ value: "", label: "Pilih..." }, ...districtOptions]} className="w-full" />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Kelurahan</label>
+                              <SearchableSelect value={candidateForm.kelurahan} onChange={(v) => setCandidateForm({ ...candidateForm, kelurahan: v })} options={[{ value: "", label: "Pilih..." }, ...villageOptionsCandidate]} className="w-full" />
                             </div>
                             <div className="md:col-span-2">
                               <label className="block text-sm font-medium text-[#6b7280] mb-2">Alamat</label>

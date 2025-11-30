@@ -1,12 +1,29 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
-  const [openRegister, setOpenRegister] = useState(false);
+  const pathname = usePathname();
+  const isDashboard = (pathname || "").startsWith("/dashboard");
+  const subscribe = (cb: () => void) => {
+    if (typeof window === "undefined") return () => {};
+    window.addEventListener("storage", cb);
+    return () => window.removeEventListener("storage", cb);
+  };
+  const getSnapshot = () => {
+    if (typeof window === "undefined") return "|";
+    const token = localStorage.getItem("token") || "";
+    const uid = localStorage.getItem("id") || localStorage.getItem("user_id") || "";
+    return `${token}|${uid}`;
+  };
+  const getServerSnapshot = () => "|";
+  const snap = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const isLoggedIn = (() => { const [t, u] = snap.split("|"); return Boolean(t && u); })();
+  if (isDashboard) return null;
   return (
     <div>
-      <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
+      <nav className="bg-white shadow-lg border-b border-gray-200 fixed top-0 left-0 right-0 z-50 w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -23,30 +40,31 @@ export default function Navbar() {
 
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-8">
-                <Link href="#" className="text-[#2a436c] hover:text-[#355485] font-medium transition-colors">Beranda</Link>
-                <Link href="#" className="text-gray-600 hover:text-[#2a436c] transition-colors">Lowongan</Link>
+                <Link href="/" className="text-[#2a436c] hover:text-[#355485] font-medium transition-colors">Beranda</Link>
+                <Link href="/about" className="text-gray-600 hover:text-[#2a436c] transition-colors">Tentang Kami</Link>
+                <Link href="/jobs" className="text-gray-600 hover:text-[#2a436c] transition-colors">Lowongan</Link>
                 <Link href="#" className="text-gray-600 hover:text-[#2a436c] transition-colors">Pelatihan</Link>
                 <Link href="#" className="text-gray-600 hover:text-[#2a436c] transition-colors">Informasi</Link>
                 <Link href="#" className="text-gray-600 hover:text-[#2a436c] transition-colors">Pengaduan</Link>
               </div>
             </div>
 
-            <div className="hidden md:flex items-center gap-4">
-              <Link href="/login" className="text-[#2a436c] hover:text-[#355485] font-medium transition-colors">Masuk</Link>
-              <div className="relative">
-                <button onClick={() => setOpenRegister(!openRegister)} className="bg-[#355485] hover:bg-[#2a436c] text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+            {isLoggedIn ? (
+              <div className="hidden md:flex items-center gap-4">
+                <Link href="/dashboard" className="bg-[#355485] hover:bg-[#2a436c] text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                  <i className="ri-dashboard-line"></i>
+                  Dashboard
+                </Link>
+              </div>
+            ) : (
+              <div className="hidden md:flex items-center gap-4">
+                <Link href="/login" className="text-[#2a436c] hover:text-[#355485] font-medium transition-colors">Masuk</Link>
+                <Link href="/register" className="bg-[#355485] hover:bg-[#2a436c] text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
                   <i className="ri-user-add-line"></i>
                   Daftar
-                  <i className={`ri-arrow-down-s-line text-sm transition-transform ${openRegister ? "rotate-180" : ""}`}></i>
-                </button>
-                {openRegister && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg py-2">
-                    <Link href="/register/candidate" className="block px-4 py-2 text-sm text-[#2a436c] hover:bg-gray-50">Daftar Pencaker</Link>
-                    <Link href="/register/company" className="block px-4 py-2 text-sm text-[#2a436c] hover:bg-gray-50">Daftar Perusahaan</Link>
-                  </div>
-                )}
+                </Link>
               </div>
-            </div>
+            )}
 
             <div className="md:hidden">
               <button className="text-[#2a436c] p-2">

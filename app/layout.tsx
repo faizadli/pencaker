@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Footer from "../components/Footer";
+import Navbar from "../components/Navbar";
+import AutoToTop from "../components/AutoToTop";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,8 +30,13 @@ export default function RootLayout({
       <head>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.6.0/fonts/remixicon.css" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-dvh flex flex-col bg-white`}>
+        <AutoToTop />
+        <Navbar />
+        <main className="flex-1 bg-white pt-16">
+          {children}
+        </main>
+        <Footer />
       </body>
     </html>
   );

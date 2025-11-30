@@ -28,7 +28,6 @@ export default function UsersPage() {
   type User = {
     id: number;
     nama: string;
-    username: string;
     email: string;
     role: string;
     unit: string;
@@ -44,7 +43,7 @@ export default function UsersPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editUser, setEditUser] = useState<string | null>(null);
-  const [form, setForm] = useState<{ nama: string; username: string; email: string; role: string; unit: string; telepon: string; status: "Aktif" | "Nonaktif"; password?: string }>({ nama: "", username: "", email: "", role: "Superadmin", unit: "", telepon: "", status: "Aktif" });
+  const [form, setForm] = useState<{ nama: string; email: string; role: string; unit: string; telepon: string; status: "Aktif" | "Nonaktif"; password?: string }>({ nama: "", email: "", role: "Superadmin", unit: "", telepon: "", status: "Aktif" });
 
   
 
@@ -67,7 +66,7 @@ export default function UsersPage() {
         }
         const resp = await listUsers({ page, limit: pageSize });
         const rows = resp.data as UserListItem[];
-        const mapped: User[] = rows.map((u, idx) => ({ id: idx + 1, nama: u.username || u.email, username: u.username, email: u.email, role: ROLE_MAP_FROM_API[u.role], unit: "-", telepon: "-", status: "Aktif", terakhirLogin: u.updatedAt ? new Date(u.updatedAt).toLocaleString("id-ID") : "-" }));
+        const mapped: User[] = rows.map((u, idx) => ({ id: idx + 1, nama: u.email, email: u.email, role: ROLE_MAP_FROM_API[u.role], unit: "-", telepon: "-", status: "Aktif", terakhirLogin: u.updatedAt ? new Date(u.updatedAt).toLocaleString("id-ID") : "-" }));
         setUsers(mapped);
         window.__usersIds = rows.map((u) => u.id);
         const p = resp.pagination;
@@ -80,14 +79,14 @@ export default function UsersPage() {
   }, [router, page, pageSize]);
 
   const filteredUsers = users.filter((user) => {
-    const matchesSearch = user.nama.toLowerCase().includes(searchTerm.toLowerCase()) || user.username.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = user.nama.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
     const matchesStatus = statusFilter === "all" || user.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
   });
 
   const handleAdd = () => {
-    setForm({ nama: "", username: "", email: "", role: "Superadmin", unit: "", telepon: "", status: "Aktif", password: "" });
+    setForm({ nama: "", email: "", role: "Superadmin", unit: "", telepon: "", status: "Aktif", password: "" });
     setEditUser(null);
     setIsModalOpen(true);
   };
@@ -101,20 +100,20 @@ export default function UsersPage() {
   };
 
   const handleSave = async () => {
-    if (!form.username || !form.email) {
-      alert("Username dan email wajib diisi!");
+    if (!form.email) {
+      alert("Email wajib diisi!");
       return;
     }
     try {
       if (editUser) {
-        await updateUser(editUser, { email: form.email, username: form.username, role: ROLE_MAP_TO_API[form.role], ...(form.password ? { password: form.password } : {}) });
+        await updateUser(editUser, { email: form.email, role: ROLE_MAP_TO_API[form.role], ...(form.password ? { password: form.password } : {}) });
       } else {
         if (!form.password) { alert("Password wajib diisi!"); return; }
         await createUser(form.email, form.password, ROLE_MAP_TO_API[form.role]);
       }
       const resp = await listUsers({ page, limit: pageSize });
       const rows = resp.data as UserListItem[];
-      const mapped: User[] = rows.map((u, idx) => ({ id: idx + 1, nama: u.username || u.email, username: u.username, email: u.email, role: ROLE_MAP_FROM_API[u.role], unit: "-", telepon: "-", status: "Aktif", terakhirLogin: u.updatedAt ? new Date(u.updatedAt).toLocaleString("id-ID") : "-" }));
+      const mapped: User[] = rows.map((u, idx) => ({ id: idx + 1, nama: u.email, email: u.email, role: ROLE_MAP_FROM_API[u.role], unit: "-", telepon: "-", status: "Aktif", terakhirLogin: u.updatedAt ? new Date(u.updatedAt).toLocaleString("id-ID") : "-" }));
       setUsers(mapped);
       window.__usersIds = rows.map((u) => u.id);
       setIsModalOpen(false);
@@ -133,7 +132,7 @@ export default function UsersPage() {
     await deleteUser(idStr);
     const resp = await listUsers({ page, limit: pageSize });
     const rows = resp.data as UserListItem[];
-    const mapped: User[] = rows.map((u, idx2) => ({ id: idx2 + 1, nama: u.username || u.email, username: u.username, email: u.email, role: ROLE_MAP_FROM_API[u.role], unit: "-", telepon: "-", status: "Aktif", terakhirLogin: u.updatedAt ? new Date(u.updatedAt).toLocaleString("id-ID") : "-" }));
+    const mapped: User[] = rows.map((u, idx2) => ({ id: idx2 + 1, nama: u.email, email: u.email, role: ROLE_MAP_FROM_API[u.role], unit: "-", telepon: "-", status: "Aktif", terakhirLogin: u.updatedAt ? new Date(u.updatedAt).toLocaleString("id-ID") : "-" }));
     setUsers(mapped);
     window.__usersIds = rows.map((u) => u.id);
     } catch {
@@ -174,7 +173,7 @@ export default function UsersPage() {
           <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] mb-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <Input icon="ri-search-line" type="text" placeholder="Cari nama, username, atau email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full py-3" />
+                <Input icon="ri-search-line" type="text" placeholder="Cari nama atau email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full py-3" />
               </div>
               <div className="flex flex-col sm:flex-row gap-2 items-stretch">
                 <SearchableSelect value={roleFilter} onChange={(v) => setRoleFilter(v)} options={[{ value: "all", label: "Semua Role" }, ...roles.map((r) => ({ value: r, label: r }))]} />
@@ -207,7 +206,7 @@ export default function UsersPage() {
                       <td className="py-3 px-4">
                         <div>
                           <p className="font-medium text-[#111827]">{user.nama}</p>
-                          <p className="text-xs text-[#6b7280]">{user.username}</p>
+                          
                           <p className="text-xs text-[#9ca3af]">{user.email}</p>
                         </div>
                       </td>
@@ -246,7 +245,7 @@ export default function UsersPage() {
                     <div className="flex items-start justify-between">
                       <div className="min-w-0">
                         <p className="font-semibold text-[#2a436c] truncate">{user.nama}</p>
-                        <p className="text-xs text-[#6b7280] truncate">{user.username}</p>
+                        
                         <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
                       </div>
                       <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getRoleColor(user.role)}`}>{user.role}</span>
@@ -300,7 +299,6 @@ export default function UsersPage() {
             )}
           >
             <div className="grid grid-cols-1 gap-4">
-              <Input type="text" label="Username" placeholder="Masukkan username" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
               <Input type="email" label="Email" placeholder="Masukkan email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               <SearchableSelect label="Role" value={form.role} onChange={(v) => setForm({ ...form, role: v })} options={roles.map((r) => ({ value: r, label: r }))} />
               <Input type="password" label="Password" placeholder={editUser ? "Opsional, isi jika ingin ubah" : "Masukkan password"} value={form.password || ""} onChange={(e) => setForm({ ...form, password: e.target.value })} />

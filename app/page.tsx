@@ -1,10 +1,8 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
-import Navbar from "../components/Navbar";
+import Link from "next/link";
 import { Input, SearchableSelect } from "../components/shared/field";
-import Footer from "../components/Footer";
-import AutoToTop from "../components/AutoToTop";
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,8 +44,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <AutoToTop />
-      <Navbar />
 
       <section className="relative bg-gradient-to-r from-[#355485] to-[#4f90c6] text-white py-20 px-4 sm:px-6 overflow-hidden">
         <div className="absolute inset-0 bg-black/20"></div>
@@ -61,9 +57,9 @@ export default function HomePage() {
             Temukan lowongan kerja terbaru, ikuti pelatihan gratis, dan dapatkan dukungan karier dari pemerintah.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/jobs" className="px-8 py-4 bg-white text-[#355485] font-semibold rounded-xl hover:bg-gray-100 transition-all shadow-lg flex items-center justify-center gap-2">
+            <Link href="/jobs" className="px-8 py-4 bg-white text-[#355485] font-semibold rounded-xl hover:bg-gray-100 transition-all shadow-lg flex items-center justify-center gap-2">
               <i className="ri-search-line"></i> Cari Lowongan
-            </a>
+            </Link>
             <a href="/register/candidate" className="px-8 py-4 border-2 border-white text-white font-semibold rounded-xl hover:bg-white/10 transition-all flex items-center justify-center gap-2">
               <i className="ri-user-add-line"></i> Daftar Pencaker
             </a>
@@ -103,7 +99,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 bg-gray-100">
+      <section id="cta-register" className="py-16 bg-gray-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-[#2a436c] mb-12">Statistik Layanan Disnaker</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
@@ -127,10 +123,10 @@ export default function HomePage() {
               <h2 className="text-2xl md:text-3xl font-bold text-[#2a436c]">Lowongan Terbaru</h2>
               <p className="text-gray-600 mt-2">Temukan pekerjaan yang sesuai dengan keahlian Anda</p>
             </div>
-            <a href="/jobs" className="text-[#355485] hover:text-[#2a436c] font-medium flex items-center gap-2 transition-colors">
+            <Link href="/jobs" className="text-[#355485] hover:text-[#2a436c] font-medium flex items-center gap-2 transition-colors">
               Lihat Semua
               <i className="ri-arrow-right-line"></i>
-            </a>
+            </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {latestJobs.map((job) => (
@@ -359,7 +355,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <Footer />
+      
     </div>
   );
 }

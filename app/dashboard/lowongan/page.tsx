@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Input, SearchableSelect, SegmentedToggle, TextEditor } from "../../../components/shared/field";
 import Pagination from "../../../components/shared/Pagination";
 import Modal from "../../../components/shared/Modal";
@@ -528,7 +529,7 @@ export default function LowonganPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {paginatedLowongan.map((job) => (
                 <div key={job.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
+                  <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="block p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="min-w-0">
                         <h3 className="font-bold text-[#2a436c] text-sm leading-tight">{job.posisi}</h3>
@@ -540,9 +541,9 @@ export default function LowonganPage() {
                       <span className={`px-2 py-1 text-xs rounded-full ${getTipeColor(job.tipe as UITipe)}`}>{job.tipe}</span>
                       <span className="text-xs text-[#6b7280] bg-gray-100 px-2 py-1 rounded">{job.lokasi}</span>
                     </div>
-                  </div>
+                  </Link>
 
-                  <div className="p-4 space-y-3">
+                  <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="block p-4 space-y-3">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-[#374151]">Tayang</span>
                       <span className="font-medium text-[#111827]">{job.tanggalTayang}</span>
@@ -551,9 +552,9 @@ export default function LowonganPage() {
                       <span className="text-[#374151]">Batas Akhir</span>
                       <span className="font-medium text-[#111827]">{job.batasAkhir}</span>
                     </div>
-                  </div>
+                  </Link>
 
-                  <div className="p-4 border-t border-[#e5e7eb] bg-[#f9fafb]">
+                  <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="block p-4 border-t border-[#e5e7eb] bg-[#f9fafb]">
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div>
                         <p className="text-lg font-bold text-[#2a436c]">{job.pelamar}</p>
@@ -568,7 +569,7 @@ export default function LowonganPage() {
                         <p className="text-xs text-[#6b7280]">Diterima</p>
                       </div>
                     </div>
-                  </div>
+                  </Link>
 
                   <div className="p-4 border-t border-[#e5e7eb]">
                     <div className="flex gap-2">
@@ -607,7 +608,7 @@ export default function LowonganPage() {
                       <tr key={job.id} className="border-b border-[#e5e7eb] hover:bg-[#f9fafb]">
                         <td className="py-3 px-4">
                           <div>
-                            <p className="font-medium text-[#111827]">{job.posisi}</p>
+                            <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="font-medium text-[#111827] hover:text-[#355485]">{job.posisi}</Link>
                             <p className="text-xs text-[#4b5563]">{job.tipe}</p>
                           </div>
                         </td>
@@ -638,17 +639,19 @@ export default function LowonganPage() {
               <div className="sm:hidden p-3 space-y-3">
                 {paginatedLowongan.map((job) => (
                   <div key={`m-${job.id}`} className="border border-[#e5e7eb] rounded-lg p-3">
-                    <div className="flex items-start justify-between">
-                      <div className="min-w-0">
-                        <p className="font-semibold text-[#2a436c] truncate">{job.posisi}</p>
-                        <p className="text-xs text-[#6b7280] truncate">{job.perusahaan}</p>
+                    <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="block">
+                      <div className="flex items-start justify-between">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-[#2a436c] truncate">{job.posisi}</p>
+                          <p className="text-xs text-[#6b7280] truncate">{job.perusahaan}</p>
+                        </div>
+                        <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(job.status)}`}>{job.status}</span>
                       </div>
-                      <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(job.status)}`}>{job.status}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-2 flex-wrap">
-                      <span className="text-[11px] text-[#6b7280] bg-gray-100 px-2 py-1 rounded">{job.lokasi}</span>
-                      <span className={`text-[11px] px-2 py-1 rounded ${getTipeColor(job.tipe as UITipe)}`}>{job.tipe}</span>
-                    </div>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <span className="text-[11px] text-[#6b7280] bg-gray-100 px-2 py-1 rounded">{job.lokasi}</span>
+                        <span className={`text-[11px] px-2 py-1 rounded ${getTipeColor(job.tipe as UITipe)}`}>{job.tipe}</span>
+                      </div>
+                    </Link>
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="px-3 py-2 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">
                         {job.status === "Menunggu Verifikasi" && canVerify ? "Review" : "Detail"}

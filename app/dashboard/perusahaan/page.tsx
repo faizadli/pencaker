@@ -26,8 +26,8 @@ export default function PerusahaanPage() {
     company_name: string;
     company_logo?: string;
     no_handphone: string;
-    province: string;
-    city: string;
+    kecamatan: string;
+    kelurahan: string;
     address: string;
     website?: string;
     about_company: string;
@@ -50,7 +50,11 @@ export default function PerusahaanPage() {
   const [editingCompanyUserId, setEditingCompanyUserId] = useState<string | null>(null);
   const [userEmailCompany, setUserEmailCompany] = useState("");
   const [userPasswordCompany, setUserPasswordCompany] = useState("");
-  const [formCompany, setFormCompany] = useState<{ user_id?: string; company_name: string; company_logo?: string; no_handphone: string; province: string; city: string; address: string; website?: string; about_company: string }>({ company_name: "", company_logo: "", no_handphone: "", province: "", city: "", address: "", website: "", about_company: "" });
+  const [formCompany, setFormCompany] = useState<{ user_id?: string; company_name: string; company_logo?: string; no_handphone: string; kecamatan: string; kelurahan: string; address: string; website?: string; about_company: string }>({ company_name: "", company_logo: "", no_handphone: "", kecamatan: "", kelurahan: "", address: "", website: "", about_company: "" });
+  const [districts, setDistricts] = useState<{ id: string; name: string }[]>([]);
+  const [districtOptions, setDistrictOptions] = useState<{ value: string; label: string }[]>([]);
+  const [villageOptions, setVillageOptions] = useState<{ value: string; label: string }[]>([]);
+  type EmsifaItem = { id: number | string; name: string };
 
   const apiToUIStatus = useMemo(() => ({
     APPROVED: "Terverifikasi",
@@ -86,6 +90,38 @@ export default function PerusahaanPage() {
   }, [role, userId]);
 
   useEffect(() => {
+    const loadDistricts = async () => {
+      try {
+        const resp = await fetch("/api/wilayah/districts");
+        const rows = await resp.json();
+        const ds = ((rows as EmsifaItem[]) || []).map((r) => ({ id: String(r.id), name: String(r.name) }));
+        setDistricts(ds);
+        setDistrictOptions(ds.map((d) => ({ value: d.name, label: d.name })));
+      } catch {
+        setDistricts([]);
+        setDistrictOptions([]);
+      }
+    };
+    loadDistricts();
+  }, []);
+
+  useEffect(() => {
+    const d = districts.find((x) => x.name === formCompany.kecamatan);
+    const loadVillages = async () => {
+      if (!d) { setVillageOptions([]); return; }
+      try {
+        const resp = await fetch(`/api/wilayah/villages/${encodeURIComponent(d.id)}`);
+        const rows = await resp.json();
+        const vs = ((rows as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
+        setVillageOptions(vs);
+      } catch {
+        setVillageOptions([]);
+      }
+    };
+    loadVillages();
+  }, [formCompany.kecamatan, districts]);
+
+  useEffect(() => {
     if (!permsLoaded) return;
     const allowed = permissions.includes("perusahaan.read");
     if (!allowed) router.replace("/dashboard");
@@ -110,7 +146,7 @@ export default function PerusahaanPage() {
 
   const filteredPerusahaan = perusahaanList.filter((p: Company) => {
     const nama = String(p.company_name || "");
-    const sektor = String(p.city || "");
+    const sektor = String(p.kelurahan || p.kecamatan || "");
     const matchesSearch = nama.toLowerCase().includes(searchTerm.toLowerCase()) || sektor.toLowerCase().includes(searchTerm.toLowerCase());
     const uiStatus = apiToUIStatus[p.status];
     const matchesStatus = statusFilter === "all" || uiStatus === statusFilter;
@@ -204,7 +240,7 @@ export default function PerusahaanPage() {
                 />
 
                 {canCreate && (
-                  <button onClick={() => { setEditingCompanyId(null); setEditingCompanyUserId(null); setUserEmailCompany(""); setUserPasswordCompany(""); setFormCompany({ company_name: "", company_logo: "", no_handphone: "", province: "", city: "", address: "", website: "", about_company: "" }); setShowFormModal(true); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center">+ Tambah</button>
+                  <button onClick={() => { setEditingCompanyId(null); setEditingCompanyUserId(null); setUserEmailCompany(""); setUserPasswordCompany(""); setFormCompany({ company_name: "", company_logo: "", no_handphone: "", kecamatan: "", kelurahan: "", address: "", website: "", about_company: "" }); setShowFormModal(true); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center">+ Tambah</button>
                 )}
               </div>
             </div>
@@ -220,7 +256,7 @@ export default function PerusahaanPage() {
                         <Image src={p.company_logo || "https://picsum.photos/200"} alt={p.company_name} width={48} height={48} className="w-12 h-12 rounded-lg object-cover" />
                         <div className="min-w-0">
                           <h3 className="font-bold text-[#2a436c] text-sm leading-tight truncate">{p.company_name}</h3>
-                          <p className="text-xs text-[#6b7280] truncate">{p.city}</p>
+                          <p className="text-xs text-[#6b7280] truncate">{p.kelurahan || p.kecamatan || "-"}</p>
                         </div>
                       </div>
                       <span className={`px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0 ${getStatusColor(apiToUIStatus[p.status])}`}>{apiToUIStatus[p.status]}</span>
@@ -249,7 +285,7 @@ export default function PerusahaanPage() {
                         Detail
                       </button>
                       {canUpdate && (
-                        <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", province: p.province || "", city: p.city || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">
+                        <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", kecamatan: p.kecamatan || "", kelurahan: p.kelurahan || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">
                           <i className="ri-pencil-line mr-1"></i>
                           Edit
                         </button>
@@ -285,7 +321,7 @@ export default function PerusahaanPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-[#111827]">{p.city}</td>
+                        <td className="py-3 px-4 text-[#111827]">{p.kelurahan || p.kecamatan || "-"}</td>
                         <td className="py-3 px-4">
                           <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(apiToUIStatus[p.status])}`}>{apiToUIStatus[p.status]}</span>
                         </td>
@@ -303,7 +339,7 @@ export default function PerusahaanPage() {
                           <div className="flex gap-2">
                             <button onClick={() => { setReviewCompany(p); setShowReviewModal(true); }} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Detail</button>
                             {canUpdate && (
-                              <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", province: p.province || "", city: p.city || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="px-3 py-1 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition">Edit</button>
+                              <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", kecamatan: p.kecamatan || "", kelurahan: p.kelurahan || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="px-3 py-1 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition">Edit</button>
                             )}
                           </div>
                         </td>
@@ -320,7 +356,7 @@ export default function PerusahaanPage() {
                         <Image src={p.company_logo || "https://picsum.photos/200"} alt={p.company_name} width={32} height={32} className="w-8 h-8 rounded object-cover" />
                         <div className="min-w-0">
                           <p className="font-semibold text-[#2a436c] truncate">{p.company_name}</p>
-                          <p className="text-xs text-[#6b7280] truncate">{p.city}</p>
+                          <p className="text-xs text-[#6b7280] truncate">{p.kelurahan || p.kecamatan || "-"}</p>
                         </div>
                       </div>
                       <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(apiToUIStatus[p.status])}`}>{apiToUIStatus[p.status]}</span>
@@ -332,7 +368,7 @@ export default function PerusahaanPage() {
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <button onClick={() => { setReviewCompany(p); setShowReviewModal(true); }} className="px-3 py-2 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Detail</button>
                       {canUpdate && (
-                        <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", province: p.province || "", city: p.city || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="px-3 py-2 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition">Edit</button>
+                        <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", kecamatan: p.kecamatan || "", kelurahan: p.kelurahan || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="px-3 py-2 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition">Edit</button>
                       )}
                     </div>
                   </div>
@@ -380,12 +416,12 @@ export default function PerusahaanPage() {
 
                 <div className="bg-white rounded-lg p-4 border grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <div className="text-sm text-[#6b7280]">Provinsi</div>
-                    <div className="font-medium text-[#111827]">{reviewCompany.province || "-"}</div>
+                    <div className="text-sm text-[#6b7280]">Kecamatan</div>
+                    <div className="font-medium text-[#111827]">{reviewCompany.kecamatan || "-"}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-[#6b7280]">Kota</div>
-                    <div className="font-medium text-[#111827]">{reviewCompany.city || "-"}</div>
+                    <div className="text-sm text-[#6b7280]">Kelurahan</div>
+                    <div className="font-medium text-[#111827]">{reviewCompany.kelurahan || "-"}</div>
                   </div>
                   <div>
                     <div className="text-sm text-[#6b7280]">Telepon</div>
@@ -453,8 +489,8 @@ export default function PerusahaanPage() {
               <Input label="Nama Perusahaan" value={formCompany.company_name} onChange={(e) => setFormCompany({ ...formCompany, company_name: e.target.value })} />
               <Input label="Logo" type="file" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setFormCompany({ ...formCompany, company_logo: "" }); return; } const r = new FileReader(); r.onload = () => setFormCompany({ ...formCompany, company_logo: String(r.result || "") }); r.readAsDataURL(f); }} />
               <Input label="Telepon" value={formCompany.no_handphone} onChange={(e) => setFormCompany({ ...formCompany, no_handphone: e.target.value })} />
-              <Input label="Provinsi" value={formCompany.province} onChange={(e) => setFormCompany({ ...formCompany, province: e.target.value })} />
-              <Input label="Kota" value={formCompany.city} onChange={(e) => setFormCompany({ ...formCompany, city: e.target.value })} />
+              <SearchableSelect label="Kecamatan" value={formCompany.kecamatan} onChange={(v) => setFormCompany({ ...formCompany, kecamatan: v, kelurahan: "" })} options={[{ value: "", label: "Pilih..." }, ...districtOptions]} />
+              <SearchableSelect label="Kelurahan" value={formCompany.kelurahan} onChange={(v) => setFormCompany({ ...formCompany, kelurahan: v })} options={[{ value: "", label: "Pilih..." }, ...villageOptions]} />
               <Input label="Alamat" value={formCompany.address} onChange={(e) => setFormCompany({ ...formCompany, address: e.target.value })} />
               <Input label="Website" value={formCompany.website || ""} onChange={(e) => setFormCompany({ ...formCompany, website: e.target.value })} />
               <div className="md:col-span-2">
