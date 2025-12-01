@@ -158,13 +158,13 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-white">
 
-      <section className="relative bg-[#2a436c] text-white py-16 px-4 sm:px-6">
+      <section className="relative bg-[#2a436c] text-white py-12 sm:py-16 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">Temukan Lowongan Kerja</h1>
-          <p className="text-base md:text-lg opacity-95 leading-relaxed">Jelajahi berbagai peluang karir dari perusahaan terpercaya</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3">Temukan Lowongan Kerja</h1>
+          <p className="text-sm sm:text-base md:text-lg opacity-95 leading-relaxed">Jelajahi berbagai peluang karir dari perusahaan terpercaya</p>
           <div className="mt-6 max-w-2xl mx-auto flex gap-3">
-            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari posisi, perusahaan, atau kata kunci..." className="flex-1" />
-            <button className="px-5 py-3 bg-white text-[#2a436c] rounded-xl font-medium hover:bg-blue-50">Cari</button>
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari posisi, perusahaan, atau kata kunci..." className="flex-1 min-w-0" />
+            <button className="px-4 sm:px-5 py-3 bg-white text-[#2a436c] rounded-xl font-medium hover:bg-blue-50 w-auto">Cari</button>
           </div>
         </div>
       </section>
@@ -246,15 +246,15 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
   const company = job.company_name || job.company_id;
   const href = job.id ? `/jobs/${encodeURIComponent(job.id)}` : undefined;
   const card = (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-start justify-between hover:shadow-md transition-shadow cursor-pointer">
-      <div className="flex items-start gap-3 min-w-0">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 hover:shadow-md transition-shadow cursor-pointer overflow-hidden">
+      <div className="flex items-start gap-3 min-w-0 w-full">
         <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
           <Image src={logo || `https://picsum.photos/64?random=${encodeURIComponent(job.id || job.job_title || "default")}`} alt={company || "Perusahaan"} width={48} height={48} className="w-12 h-12 object-cover" />
         </div>
         <div className="min-w-0">
-          <h3 className="text-base md:text-lg font-semibold text-[#2a436c] truncate">{job.job_title}</h3>
-          <p className="text-sm text-[#6b7280] mt-0.5">{company} • {job.work_setup || "Lokasi tidak tersedia"}</p>
-          <div className="mt-2 text-xs text-[#6b7280] flex flex-wrap items-center gap-3">
+          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-[#2a436c] truncate">{job.job_title}</h3>
+          <p className="text-xs sm:text-sm text-[#6b7280] mt-0.5 break-words">{company} • {job.work_setup || "Lokasi tidak tersedia"}</p>
+          <div className="mt-2 text-[11px] sm:text-xs text-[#6b7280] flex flex-wrap items-center gap-2 sm:gap-3">
             {job.category && (
               <span className="flex items-center gap-1"><i className="ri-briefcase-line"></i>{job.category}</span>
             )}
@@ -268,11 +268,11 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
               <span className="flex items-center gap-1"><i className="ri-award-line"></i>{job.experience_required}</span>
             )}
             {(job.company_kelurahan || job.company_kecamatan) && (
-              <span className="flex items-center gap-1"><i className="ri-map-pin-line"></i>{[job.company_kelurahan, job.company_kecamatan].filter(Boolean).join(", ")}</span>
+              <span className="flex items-center gap-1 break-words"><i className="ri-map-pin-line"></i>{[job.company_kelurahan, job.company_kecamatan].filter(Boolean).join(", ")}</span>
             )}
           </div>
           {skills.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap gap-2 max-h-20 overflow-y-auto">
               {skills.map((s, i) => (
                 <span key={`${s}-${i}`} className="px-2 py-1 text-xs bg-[#f3f4f6] text-[#355485] rounded-full">{s}</span>
               ))}
@@ -280,9 +280,9 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
           )}
         </div>
       </div>
-      <div className="flex flex-col items-end gap-2 shrink-0">
+      <div className="flex flex-col items-start sm:items-end gap-2 shrink-0 mt-1 sm:mt-0 w-full sm:w-auto">
         {featured && <span className="px-2 py-1 text-xs bg-[#e5eef7] text-[#355485] rounded-full">Unggulan</span>}
-        <span className={`px-2 py-1 text-xs rounded-full ${closed ? "bg-red-50 text-red-600" : "bg-[#f3f4f6] text-[#6b7280]"}`}>{closed ? "Tutup" : "Tutup pada"} {dateLabel}</span>
+        <span className={`px-2 py-1 text-[11px] sm:text-xs rounded-full ${closed ? "bg-red-50 text-red-600" : "bg-[#f3f4f6] text-[#6b7280]"}`}>{closed ? "Tutup" : "Tutup pada"} {dateLabel}</span>
       </div>
     </div>
   );

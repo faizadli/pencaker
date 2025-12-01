@@ -266,14 +266,14 @@ export default function AboutPage() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {statistics.map((stat, index) => (
-              <div key={index} className="bg-white/10 backdrop-blur-sm p-5 rounded-lg text-center">
+              <div key={index} className="bg-white/10 backdrop-blur-sm p-5 rounded-lg text-center overflow-hidden">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
                   <i className={`${stat.icon} text-2xl text-white`}></i>
                 </div>
                 {stat.title && <p className="text-xs text-blue-100 mb-1">{stat.title}</p>}
-                <h3 className="text-xl font-bold mb-1">{stat.value}</h3>
-                {stat.label && <p className="text-sm text-blue-100 mb-0.5">{stat.label}</p>}
-                <p className="text-xs text-blue-200">{stat.sublabel}</p>
+                <h3 className="text-base sm:text-lg md:text-xl font-bold mb-1 break-words leading-tight">{stat.value}</h3>
+                {stat.label && <p className="text-xs sm:text-sm text-blue-100 mb-0.5 break-words">{stat.label}</p>}
+                <p className="text-[11px] sm:text-xs text-blue-200 break-words">{stat.sublabel}</p>
               </div>
             ))}
           </div>
