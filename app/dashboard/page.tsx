@@ -58,7 +58,7 @@ function DashboardPageComponent() {
   const canSeeOverview = isDisnaker || isSuperAdmin || canReadPencaker || canReadLowongan || canReadPerusahaan;
   const [stats, setStats] = useState({ jobSeekers: 0, activeJobs: 0, companies: 0 });
   const [candRows, setCandRows] = useState<Array<{ birthdate?: string; gender?: string }>>([]);
-  const [jobRows, setJobRows] = useState<Array<{ createdAt?: string; category?: string; status?: string; application_deadline?: string; company_name?: string; job_title?: string }>>([]);
+  const [jobRows, setJobRows] = useState<Array<{ createdAt?: string; created_at?: string; updated_at?: string; category?: string; status?: string; application_deadline?: string; company_name?: string; job_title?: string }>>([]);
   const ensureArray = (v: unknown): unknown[] => {
     const d = (v as { data?: unknown }).data;
     if (Array.isArray(d)) return d as unknown[];
@@ -82,7 +82,7 @@ function DashboardPageComponent() {
         setCandRows([]);
       }
       if (jobsR.status === "fulfilled" && jobsR.value) {
-        const jobs = ensureArray(jobsR.value) as Array<{ createdAt?: string; category?: string; status?: string }>;
+    const jobs = ensureArray(jobsR.value) as Array<{ createdAt?: string; created_at?: string; updated_at?: string; category?: string; status?: string }>;
         const approved = jobs.filter((j) => String(j.status || "").toLowerCase() === "approved");
         next.activeJobs = approved.length;
         setJobRows(approved);
@@ -103,9 +103,12 @@ function DashboardPageComponent() {
   const monthLabels = useMemo(() => ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], []);
   const jobsPerMonth = useMemo(() => {
     const counts = Array(12).fill(0);
+    const year = new Date().getFullYear();
     jobRows.forEach((j) => {
-      const d = j.createdAt ? new Date(j.createdAt) : null;
-      if (d && !Number.isNaN(d.getTime()) && d.getFullYear() === new Date().getFullYear()) counts[d.getMonth()] += 1;
+      const s = j.updated_at || j.createdAt || j.created_at;
+      if (!s) return;
+      const d = new Date(s);
+      if (!Number.isNaN(d.getTime()) && d.getFullYear() === year) counts[d.getMonth()] += 1;
     });
     return counts;
   }, [jobRows]);
@@ -120,7 +123,7 @@ function DashboardPageComponent() {
   const barOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false }, title: { display: true, text: "Lowongan Disetujui per Bulan (2025)", font: { size: 14, weight: "bold" }, color: "#2a436c" } },
+    plugins: { legend: { display: false }, title: { display: true, text: `Lowongan Disetujui per Bulan (${new Date().getFullYear()})`, font: { size: 14, weight: "bold" }, color: "#2a436c" } },
     scales: { y: { beginAtZero: true, grid: { color: "#e5e7eb" }, ticks: { color: "#6b7280" } }, x: { grid: { display: false }, ticks: { color: "#6b7280" } } },
   } as const;
 

@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Input } from "../shared/field";
 import { usePathname } from "next/navigation";
 import { logout } from "../../services/auth";
-import { getCompanyProfile } from "../../services/profile";
+import { getCandidateProfile, getCompanyProfile, getDisnakerProfile } from "../../services/profile";
 import { listRoles, getRolePermissions } from "../../services/rbac";
 
 export default function Sidebar({ roleProp }: { roleProp?: string }) {
@@ -14,6 +15,11 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
   const role: string = roleProp || (typeof window !== "undefined" ? (localStorage.getItem("role") || "") : "");
   const [companyApproved, setCompanyApproved] = useState(false);
   const [permissionCodes, setPermissionCodes] = useState<string[]>([]);
+  const [userName, setUserName] = useState("");
+  const [userAvatar, setUserAvatar] = useState("");
+  type CompanyProfileLite = { company_name?: string; company_logo?: string; status?: string; disnaker_id?: string };
+  type CandidateProfileLite = { full_name?: string; photo_profile?: string };
+  type DisnakerProfileLite = { full_name?: string; photo_profile?: string };
 
   const pathname = usePathname();
 
@@ -28,17 +34,29 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
           const rows = (perms.data || perms) as { code: string; label: string }[];
           setPermissionCodes(rows.map((r) => r.code));
         }
-        if (role === "company") {
-          const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
-          if (uid) {
+        const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
+        if (uid) {
+          if (role === "company") {
             const res = await getCompanyProfile(uid);
-            const d = res?.data || {};
+            const d = (res?.data || {}) as CompanyProfileLite;
             const raw = String(d.status || "").toLowerCase();
             const approved = Boolean(d.disnaker_id) || ["approved", "terverifikasi", "disetujui"].includes(raw);
             setCompanyApproved(approved);
+            setUserName(String(d.company_name || ""));
+            setUserAvatar(String(d.company_logo || ""));
             if (typeof document !== "undefined") {
               document.cookie = `companyApproved=${approved ? "true" : "false"}; path=/; max-age=1800`;
             }
+          } else if (role === "candidate") {
+            const res = await getCandidateProfile(uid);
+            const d = (res?.data || {}) as CandidateProfileLite;
+            setUserName(String(d.full_name || ""));
+            setUserAvatar(String(d.photo_profile || ""));
+          } else {
+            const res = await getDisnakerProfile(uid);
+            const d = (res?.data || {}) as DisnakerProfileLite;
+            setUserName(String(d.full_name || ""));
+            setUserAvatar(String(d.photo_profile || ""));
           }
         }
       } catch {}
@@ -81,6 +99,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
       if (i.path === "/dashboard/pencaker") return permissionCodes.includes("pencaker.read");
       if (i.path === "/dashboard/users") return permissionCodes.includes("users.read");
       if (i.path === "/dashboard/ak1") return permissionCodes.includes("ak1.read");
+      if (i.path === "/dashboard/akses") return permissionCodes.includes("akses.read");
       // Dashboard, Profil, and others remain accessible
       return true;
     });
@@ -150,8 +169,14 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
 
           <div className="relative">
             <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-2 text-[#6b7280] hover:text-[#355485]">
-              <div className="w-8 h-8 bg-[#4f90c6] rounded-full flex items-center justify-center text-white text-sm font-medium">AD</div>
-              <span className="hidden md:inline text-sm font-medium">Admin Disnaker</span>
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-[#4f90c6] flex items-center justify-center text-white text-sm font-medium">
+                {userAvatar ? (
+                  <Image src={userAvatar} alt={userName || "User"} width={32} height={32} className="w-8 h-8 object-cover" unoptimized />
+                ) : (
+                  <span>{(userName || (role === "company" ? "Perusahaan" : role === "disnaker" ? "Disnaker" : "User")).split(" ").map(w => w[0]).join("") || "U"}</span>
+                )}
+              </div>
+              <span className="hidden md:inline text-sm font-medium">{userName || (role === "company" ? "Perusahaan" : role === "disnaker" ? "Admin Disnaker" : role === "super_admin" ? "Super Admin" : "Pengguna")}</span>
               <i className={`ri-arrow-down-s-line text-gray-500 text-sm transition-transform ${dropdownOpen ? "rotate-180" : ""}`}></i>
             </button>
 

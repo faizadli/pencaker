@@ -258,7 +258,7 @@ export default function AboutPage() {
       </section>
 
       {/* Statistics - Kabupaten Paser */}
-      <section className="py-12 bg-gradient-to-br from-[#4a6fa5] to-[#5a7fb5] text-white">
+      <section className="py-12 bg-[#2a436c] text-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold mb-2">Kabupaten Paser dalam Angka</h2>

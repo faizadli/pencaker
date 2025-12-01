@@ -58,9 +58,6 @@ export default function PencakerPage() {
   const [editingCandidateId, setEditingCandidateId] = useState<string | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewCandidate, setReviewCandidate] = useState<Pencaker | null>(null);
-  const [showTrainingModal, setShowTrainingModal] = useState(false);
-  const [trainingCandidateId, setTrainingCandidateId] = useState<string | null>(null);
-  const [trainingForm, setTrainingForm] = useState<{ nama: string; tanggal: string; status: string }>({ nama: "", tanggal: "", status: "Berlangsung" });
   const [formCandidate, setFormCandidate] = useState<{ user_id?: string; full_name: string; birthdate: string; place_of_birth: string; nik: string; kecamatan: string; kelurahan: string; address: string; postal_code: string; gender: string; no_handphone: string; photo_profile?: string; last_education: string; graduation_year: number; status_perkawinan: string; cv_file?: string; ak1_file?: string }>({ full_name: "", birthdate: "", place_of_birth: "", nik: "", kecamatan: "", kelurahan: "", address: "", postal_code: "", gender: "", no_handphone: "", photo_profile: "", last_education: "", graduation_year: 0, status_perkawinan: "", cv_file: "", ak1_file: "" });
   const [userEmail, setUserEmail] = useState("");
   const [userPassword, setUserPassword] = useState("");
@@ -256,10 +253,7 @@ export default function PencakerPage() {
                       Edit
                     </button>
                   )}
-                  <button onClick={() => { setTrainingCandidateId(p.id); setTrainingForm({ nama: "", tanggal: "", status: "Berlangsung" }); setShowTrainingModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#90b6d5] text-white rounded-lg hover:bg-[#4f90c6] transition">
-                    <i className="ri-add-line mr-1"></i>
-                    Tambah Pelatihan
-                  </button>
+
                 </div>
               </div>
             </div>
@@ -377,43 +371,7 @@ export default function PencakerPage() {
             )}
           </Modal>
 
-          <Modal
-            open={showTrainingModal}
-            title="Tambah Pelatihan"
-            onClose={() => { setShowTrainingModal(false); setTrainingCandidateId(null); }}
-            size="md"
-            actions={
-              <>
-                <button onClick={() => { setShowTrainingModal(false); setTrainingCandidateId(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Batal</button>
-                <button
-                  onClick={() => {
-                    if (!trainingCandidateId) return;
-                    setPencakers((prev) => prev.map((pc) => pc.id === trainingCandidateId ? ({ ...pc, pelatihan: [...pc.pelatihan, { id: Date.now(), nama: trainingForm.nama || "-", status: trainingForm.status || "Berlangsung", tanggal: trainingForm.tanggal || "-" }] }) : pc));
-                    if (reviewCandidate && reviewCandidate.id === trainingCandidateId) {
-                      setReviewCandidate({ ...reviewCandidate, pelatihan: [...reviewCandidate.pelatihan, { id: Date.now(), nama: trainingForm.nama || "-", status: trainingForm.status || "Berlangsung", tanggal: trainingForm.tanggal || "-" }] });
-                    }
-                    setShowTrainingModal(false);
-                    setTrainingCandidateId(null);
-                    setTrainingForm({ nama: "", tanggal: "", status: "Berlangsung" });
-                  }}
-                  className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]"
-                >Simpan</button>
-              </>
-            }
-          >
-            <div className="grid grid-cols-1 gap-4">
-              <Input label="Nama Pelatihan" value={trainingForm.nama} onChange={(e) => setTrainingForm({ ...trainingForm, nama: e.target.value })} />
-              <Input label="Tanggal" type="date" value={trainingForm.tanggal} onChange={(e) => setTrainingForm({ ...trainingForm, tanggal: e.target.value })} />
-              <div>
-                <label className="block text-sm text-[#6b7280] mb-1">Status</label>
-                <select value={trainingForm.status} onChange={(e) => setTrainingForm({ ...trainingForm, status: e.target.value })} className="w-full px-3 py-3 h-11 border border-[#d1d5db] rounded-xl bg-white text-[#111827] text-sm">
-                  <option value="Berlangsung">Berlangsung</option>
-                  <option value="Selesai">Selesai</option>
-                  <option value="Dibatalkan">Dibatalkan</option>
-                </select>
-              </div>
-            </div>
-          </Modal>
+          
 
           <Modal
             open={showFormModal}

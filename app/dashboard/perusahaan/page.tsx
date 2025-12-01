@@ -68,6 +68,15 @@ export default function PerusahaanPage() {
     Ditolak: "REJECTED",
   }) as Record<string, CompanyStatus>, []);
 
+  const getApiStatus = (p: Company): CompanyStatus => {
+    const raw = String(p.status || "").toLowerCase();
+    if (p.disnaker_id) return "APPROVED";
+    if (["approved", "terverifikasi", "disetujui"].includes(raw)) return "APPROVED";
+    if (["pending", "menunggu", "menunggu verifikasi", "menunggu_verifikasi", "waiting"].includes(raw)) return "PENDING";
+    if (["rejected", "ditolak"].includes(raw)) return "REJECTED";
+    return "PENDING";
+  };
+
   useEffect(() => {
     async function boot() {
       try {
@@ -148,7 +157,7 @@ export default function PerusahaanPage() {
     const nama = String(p.company_name || "");
     const sektor = String(p.kelurahan || p.kecamatan || "");
     const matchesSearch = nama.toLowerCase().includes(searchTerm.toLowerCase()) || sektor.toLowerCase().includes(searchTerm.toLowerCase());
-    const uiStatus = apiToUIStatus[p.status];
+    const uiStatus = apiToUIStatus[getApiStatus(p)];
     const matchesStatus = statusFilter === "all" || uiStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -199,21 +208,21 @@ export default function PerusahaanPage() {
             <StatCard title="Total Perusahaan" value={perusahaanList.length} change="+8%" color="#4f90c6" icon="ri-building-line" />
             <StatCard
               title="Terverifikasi"
-              value={perusahaanList.filter((p) => apiToUIStatus[p.status] === "Terverifikasi").length}
+              value={perusahaanList.filter((p) => apiToUIStatus[getApiStatus(p)] === "Terverifikasi").length}
               change="+3"
               color="#355485"
               icon="ri-checkbox-circle-line"
             />
             <StatCard
               title="Menunggu"
-              value={perusahaanList.filter((p) => apiToUIStatus[p.status] === "Menunggu Verifikasi").length}
+              value={perusahaanList.filter((p) => apiToUIStatus[getApiStatus(p)] === "Menunggu Verifikasi").length}
               change="Perlu tinjauan"
               color="#90b6d5"
               icon="ri-time-line"
             />
             <StatCard
               title="Perusahaan Ditolak"
-              value={perusahaanList.filter((p) => apiToUIStatus[p.status] === "Ditolak").length}
+              value={perusahaanList.filter((p) => apiToUIStatus[getApiStatus(p)] === "Ditolak").length}
               change="Total ditolak"
               color="#2a436c"
               icon="ri-close-circle-line"
@@ -259,7 +268,7 @@ export default function PerusahaanPage() {
                           <p className="text-xs text-[#6b7280] truncate">{p.kelurahan || p.kecamatan || "-"}</p>
                         </div>
                       </div>
-                      <span className={`px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0 ${getStatusColor(apiToUIStatus[p.status])}`}>{apiToUIStatus[p.status]}</span>
+                      <span className={`px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0 ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}>{apiToUIStatus[getApiStatus(p)]}</span>
                     </div>
                   </div>
 
@@ -323,7 +332,7 @@ export default function PerusahaanPage() {
                         </td>
                         <td className="py-3 px-4 text-[#111827]">{p.kelurahan || p.kecamatan || "-"}</td>
                         <td className="py-3 px-4">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(apiToUIStatus[p.status])}`}>{apiToUIStatus[p.status]}</span>
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}>{apiToUIStatus[getApiStatus(p)]}</span>
                         </td>
                         <td className="py-3 px-4">
                           <div className="text-center">
@@ -359,7 +368,7 @@ export default function PerusahaanPage() {
                           <p className="text-xs text-[#6b7280] truncate">{p.kelurahan || p.kecamatan || "-"}</p>
                         </div>
                       </div>
-                      <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(apiToUIStatus[p.status])}`}>{apiToUIStatus[p.status]}</span>
+                      <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}>{apiToUIStatus[getApiStatus(p)]}</span>
                     </div>
                     <div className="flex items-center gap-2 mt-2 text-[11px] text-[#6b7280]">
                       <i className="ri-map-pin-line"></i>
@@ -389,7 +398,7 @@ export default function PerusahaanPage() {
             actions={
               <>
                 <button onClick={() => { setShowReviewModal(false); setReviewCompany(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>
-                {reviewCompany && apiToUIStatus[reviewCompany.status] === "Menunggu Verifikasi" && canVerify && (
+                {reviewCompany && apiToUIStatus[getApiStatus(reviewCompany)] === "Menunggu Verifikasi" && canVerify && (
                   <>
                     <button onClick={() => { if (reviewCompany) { handleVerify(String(reviewCompany.id)); setShowReviewModal(false); setReviewCompany(null); } }} className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">Setujui</button>
                     <button onClick={() => { if (reviewCompany) { handleReject(String(reviewCompany.id)); setShowReviewModal(false); setReviewCompany(null); } }} className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Tolak</button>
@@ -410,7 +419,7 @@ export default function PerusahaanPage() {
                   </div>
                   <div>
                     <div className="text-sm text-[#6b7280]">Status</div>
-                    <div className="font-medium text-[#111827]">{apiToUIStatus[reviewCompany.status]}</div>
+                    <div className="font-medium text-[#111827]">{apiToUIStatus[getApiStatus(reviewCompany)]}</div>
                   </div>
                 </div>
 

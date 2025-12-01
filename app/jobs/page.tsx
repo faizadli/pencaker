@@ -99,16 +99,29 @@ export default function JobsPage() {
     loadVillages();
   }, [kecamatan, districts]);
 
-  const educations = useMemo(() => {
-    const set = new Set<string>();
-    jobs.forEach(j => { if (j.education_required) set.add(j.education_required); });
-    return Array.from(set).map(v => ({ value: v, label: v }));
-  }, [jobs]);
-  const types = useMemo(() => {
-    const set = new Set<string>();
-    jobs.forEach(j => { if (j.job_type) set.add(j.job_type); });
-    return Array.from(set).map(v => ({ value: v, label: v }));
-  }, [jobs]);
+  const educations = useMemo(() => (
+    [
+      { value: "SMA/SMK", label: "SMA/SMK" },
+      { value: "Diploma", label: "Diploma" },
+      { value: "S1", label: "S1" },
+    ]
+  ), []);
+  const types = useMemo(() => (
+    [
+      { value: "Full-time", label: "Full-time" },
+      { value: "Part-time", label: "Part-time" },
+      { value: "Shift", label: "Shift" },
+      { value: "Remote", label: "Remote" },
+      { value: "Kontrak", label: "Kontrak" },
+    ]
+  ), []);
+  const apiToUITipe = useMemo(() => ({
+    "full-time": "Full-time",
+    "part-time": "Part-time",
+    internship: "Remote",
+    contract: "Kontrak",
+    freelance: "Shift",
+  }) as Record<string, string>, []);
 
   const resetFilter = () => {
     setKecamatan("");
@@ -126,10 +139,10 @@ export default function JobsPage() {
       const matchKec = !kecamatan || j.company_kecamatan === kecamatan;
       const matchKel = !kelurahan || j.company_kelurahan === kelurahan;
       const matchEducation = !education || j.education_required === education;
-      const matchType = !type || j.job_type === type;
+      const matchType = !type || apiToUITipe[j.job_type] === type;
       return matchSearch && matchKec && matchKel && matchEducation && matchType;
     });
-  }, [jobs, search, kecamatan, kelurahan, education, type]);
+  }, [jobs, search, kecamatan, kelurahan, education, type, apiToUITipe]);
 
   const paged = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -214,6 +227,7 @@ export default function JobsPage() {
 
 function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
   const [logo, setLogo] = useState("");
+  const skills = useMemo(() => ((job.skills_required || "").split(",").map((v) => v.trim()).filter(Boolean)), [job.skills_required]);
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -240,12 +254,30 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
         <div className="min-w-0">
           <h3 className="text-base md:text-lg font-semibold text-[#2a436c] truncate">{job.job_title}</h3>
           <p className="text-sm text-[#6b7280] mt-0.5">{company} • {job.work_setup || "Lokasi tidak tersedia"}</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {job.category && <span className="px-2 py-1 text-xs bg-[#f3f4f6] text-[#355485] rounded-full">{job.category}</span>}
-            {job.job_type && <span className="px-2 py-1 text-xs bg-[#f3f4f6] text-[#355485] rounded-full">{job.job_type}</span>}
-            {job.education_required && <span className="px-2 py-1 text-xs bg-[#f3f4f6] text-[#355485] rounded-full">{job.education_required}</span>}
-            {job.experience_required && <span className="px-2 py-1 text-xs bg-[#f3f4f6] text-[#355485] rounded-full">{job.experience_required}</span>}
+          <div className="mt-2 text-xs text-[#6b7280] flex flex-wrap items-center gap-3">
+            {job.category && (
+              <span className="flex items-center gap-1"><i className="ri-briefcase-line"></i>{job.category}</span>
+            )}
+            {job.job_type && (
+              <span className="flex items-center gap-1"><i className="ri-time-line"></i>{job.job_type}</span>
+            )}
+            {job.education_required && (
+              <span className="flex items-center gap-1"><i className="ri-graduation-cap-line"></i>{job.education_required}</span>
+            )}
+            {job.experience_required && (
+              <span className="flex items-center gap-1"><i className="ri-award-line"></i>{job.experience_required}</span>
+            )}
+            {(job.company_kelurahan || job.company_kecamatan) && (
+              <span className="flex items-center gap-1"><i className="ri-map-pin-line"></i>{[job.company_kelurahan, job.company_kecamatan].filter(Boolean).join(", ")}</span>
+            )}
           </div>
+          {skills.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {skills.map((s, i) => (
+                <span key={`${s}-${i}`} className="px-2 py-1 text-xs bg-[#f3f4f6] text-[#355485] rounded-full">{s}</span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <div className="flex flex-col items-end gap-2 shrink-0">

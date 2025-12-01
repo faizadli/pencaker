@@ -1,15 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { assignRolePermissions, createRole, getRolePermissions, listPermissions, listRoles } from "../../../services/rbac";
 import { Input, SearchableSelect } from "../../../components/shared/field";
 
 export default function AksesPage() {
+  const router = useRouter();
   const [roles, setRoles] = useState<{ id: number; name: string; description?: string }[]>([]);
   const [perms, setPerms] = useState<{ code: string; label: string }[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [selectedPerms, setSelectedPerms] = useState<string[]>([]);
   const [newRole, setNewRole] = useState({ name: "", description: "" });
   const [loadingAssign, setLoadingAssign] = useState(false);
+  const [permissionCodes, setPermissionCodes] = useState<string[]>([]);
+  const [permsLoaded, setPermsLoaded] = useState(false);
   const groupLabels: Record<string, string> = { pencaker: "Pencari Kerja", perusahaan: "Perusahaan", lowongan: "Lowongan" };
   const groupedPerms = (() => {
     const buckets: Record<string, { code: string; label: string }[]> = {};
@@ -28,10 +32,25 @@ export default function AksesPage() {
         const p = await listPermissions();
         setRoles(r.data || []);
         setPerms(p.data || []);
+        const roleName = typeof window !== "undefined" ? (localStorage.getItem("role") || "") : "";
+        const roleItems = (r.data || []) as { id: number; name: string }[];
+        const target = roleItems.find((x) => String(x.name).toLowerCase() === roleName.toLowerCase());
+        if (target) {
+          const rp = await getRolePermissions(target.id);
+          const rows = (rp.data || []) as { code: string; label: string }[];
+          setPermissionCodes(rows.map((x) => x.code));
+        }
       } catch {}
+      setPermsLoaded(true);
     };
     init();
   }, []);
+
+  useEffect(() => {
+    if (!permsLoaded) return;
+    const allowed = permissionCodes.includes("akses.read");
+    if (!allowed) router.replace("/dashboard");
+  }, [permsLoaded, permissionCodes, router]);
 
   useEffect(() => {
     const loadRolePerms = async () => {
@@ -83,7 +102,7 @@ export default function AksesPage() {
           <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Akses</h1>
           <p className="text-sm text-[#6b7280] mt-1">Atur hak akses per role</p>
         </div>
-
+        {permsLoaded && permissionCodes.includes("akses.read") && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
             <h3 className="text-lg font-semibold text-[#2a436c] mb-4">Role</h3>
@@ -135,6 +154,7 @@ export default function AksesPage() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </main>
   );

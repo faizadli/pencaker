@@ -41,7 +41,8 @@ export default function LowonganPage() {
     work_setup: string;
     application_deadline: string;
     status: "pending" | "approved" | "rejected" | "closed";
-    createdAt: string;
+    createdAt?: string;
+    created_at?: string;
   };
 
   type UITipe = "Full-time" | "Part-time" | "Remote" | "Shift" | "Kontrak";
@@ -273,8 +274,8 @@ export default function LowonganPage() {
       sektor: j.category,
       lokasi: j.work_setup,
       tipe: apiToUITipe[j.job_type],
-      tanggalTayang: new Date(j.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
-      batasAkhir: new Date(j.application_deadline).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
+      tanggalTayang: formatDate(j.createdAt || j.created_at),
+      batasAkhir: formatDate(j.application_deadline),
       status: apiToUIStatus[j.status],
       pelamar: 0,
       diterima: 0,
@@ -773,3 +774,11 @@ function StatCard({ title, value, change, color, icon }: { title: string; value:
     </div>
   );
 }
+  const formatDate = (v: unknown) => {
+    const s = typeof v === "string" ? v : "";
+    if (!s) return "-";
+    const d = new Date(s);
+    return Number.isNaN(d.getTime())
+      ? "-"
+      : d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+  };
