@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getJobById, listPublicJobs } from "../../../services/jobs";
+import { getPublicCompanyById } from "../../../services/company";
 
 type Job = {
   id?: string;
@@ -32,6 +33,7 @@ export default function JobDetailPage() {
   const id = String(params?.id || "");
   const [job, setJob] = useState<Job | null>(null);
   const [similar, setSimilar] = useState<Job[]>([]);
+  const [companyLogo, setCompanyLogo] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -64,8 +66,14 @@ export default function JobDetailPage() {
         const normalized = nid ? ({ ...(raw as Job), id: nid } as Job) : (raw as Job);
         setJob(normalized);
         try {
-          const cat = String(normalized?.category || "");
-          const list = await listPublicJobs({ category: cat || undefined, limit: 5 });
+          const c = await getPublicCompanyById(String(normalized.company_id));
+          const cdata = (c as { data?: { company_logo?: string } }).data || (c as { company_logo?: string });
+          const logo = (cdata && (cdata as { company_logo?: string }).company_logo) || "";
+          if (logo) setCompanyLogo(logo);
+        } catch {}
+        try {
+          const cid = String(normalized?.company_id || "");
+          const list = await listPublicJobs({ company_id: cid || undefined, limit: 5 });
           const rawList = (list.data || list) as unknown;
           const arr = Array.isArray(rawList) ? (rawList as Job[]) : [];
           const mapped = arr.map((r) => {
@@ -140,7 +148,7 @@ export default function JobDetailPage() {
       <section className="bg-[#2a436c] text-white py-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-start gap-4">
-            <Image src={`https://picsum.photos/96?random=${encodeURIComponent(job.id || job.job_title || "default")}`} alt={company || "Perusahaan"} width={72} height={72} className="w-18 h-18 rounded-xl object-cover" />
+            <Image src={companyLogo || `https://picsum.photos/96?random=${encodeURIComponent(job.id || job.job_title || "default")}`} alt={company || "Perusahaan"} width={72} height={72} className="w-18 h-18 rounded-xl object-cover" />
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl md:text-3xl font-bold">{job.job_title}</h1>
               <p className="text-sm opacity-90">{company} • {job.work_setup || "Lokasi tidak tersedia"}</p>
@@ -179,46 +187,7 @@ export default function JobDetailPage() {
             <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
               <h2 className="text-lg font-semibold text-[#2a436c] mb-3">Detail Pekerjaan</h2>
               <div className="space-y-4">
-                <div>
-                  <div className="flex items-center gap-2 text-[#355485] text-sm font-medium">
-                    <i className="ri-information-line"></i>
-                    <span>Deskripsi Pekerjaan</span>
-                  </div>
-                  <p className="mt-2 text-sm text-[#374151] leading-relaxed whitespace-pre-line">{job.job_description}</p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 text-[#355485] text-sm font-medium">
-                    <i className="ri-check-double-line"></i>
-                    <span>Tanggung Jawab</span>
-                  </div>
-                  <ul className="mt-2 space-y-2">
-                    {(job.job_description ? job.job_description.split(/\n|\r/).filter((x) => x.trim()).slice(0, 6) : []).map((line, i) => (
-                      <li key={`resp-${i}`} className="flex items-start gap-2">
-                        <i className="ri-check-line text-[#355485] mt-0.5"></i>
-                        <span className="text-sm text-[#374151]">{line.trim()}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 text-[#355485] text-sm font-medium">
-                    <i className="ri-list-check"></i>
-                    <span>Kriteria</span>
-                  </div>
-                  <ul className="mt-2 space-y-2">
-                    {[
-                      job.education_required || "",
-                      job.experience_required || "",
-                      job.work_setup || "",
-                      job.category || "",
-                    ].filter((x) => x && x.trim()).map((x, i) => (
-                      <li key={`crit-${i}`} className="flex items-start gap-2">
-                        <i className="ri-checkbox-circle-line text-[#355485] mt-0.5"></i>
-                        <span className="text-sm text-[#374151]">{x}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <div className="content-rich" dangerouslySetInnerHTML={{ __html: job.job_description }} />
               </div>
             </div>
             {job.skills_required && (
@@ -249,6 +218,11 @@ export default function JobDetailPage() {
                 {(job.company_kecamatan || job.company_kelurahan) && (
                   <p className="text-xs text-[#6b7280]">{[job.company_kelurahan, job.company_kecamatan].filter(Boolean).join(", ")}</p>
                 )}
+                {job.company_id && (
+                  <div className="pt-2">
+                    <Link href={`/companies/${encodeURIComponent(String(job.company_id))}`} className="mt-3 w-full px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-center block">Lihat Profil Perusahaan</Link>
+                  </div>
+                )}
               </div>
             </div>
             <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
@@ -266,7 +240,7 @@ export default function JobDetailPage() {
       {similar.length > 0 && (
         <section className="py-10 bg-white">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <h2 className="text-lg font-semibold text-[#2a436c] mb-4">Lowongan Serupa</h2>
+            <h2 className="text-lg font-semibold text-[#2a436c] mb-4">Lowongan Lainnya dari Perusahaan Ini</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {similar.map((sj, i) => (
                 <Link key={sj.id || `${sj.job_title}-${i}`} href={`/jobs/${encodeURIComponent(String(sj.id || ""))}`} className="block">

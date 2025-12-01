@@ -2,8 +2,10 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Input, SearchableSelect } from "../../components/shared/field";
+import Pagination from "../../components/shared/Pagination";
 import Image from "next/image";
 import { listPublicJobs } from "../../services/jobs";
+import { getPublicCompanyById } from "../../services/company";
 
 type Job = {
   id?: string;
@@ -37,6 +39,8 @@ export default function JobsPage() {
   const [districts, setDistricts] = useState<{ id: string; name: string }[]>([]);
   const [kecamatanOptions, setKecamatanOptions] = useState<{ value: string; label: string }[]>([]);
   const [kelurahanOptions, setKelurahanOptions] = useState<{ value: string; label: string }[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   type EmsifaItem = { id: number | string; name: string };
 
   useEffect(() => {
@@ -127,19 +131,14 @@ export default function JobsPage() {
     });
   }, [jobs, search, kecamatan, kelurahan, education, type]);
 
-  const featured = useMemo(() => {
-    const sorted = [...filtered].sort((a, b) => {
-      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return tb - ta;
-    });
-    return sorted.slice(0, 2);
-  }, [filtered]);
+  const paged = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, page, pageSize]);
 
-  const rest = useMemo(() => {
-    const ids = new Set(featured.map(f => f.id));
-    return filtered.filter(j => !ids.has(j.id));
-  }, [featured, filtered]);
+  useEffect(() => {
+    setPage(1);
+  }, [search, kecamatan, kelurahan, education, type]);
 
   
 
@@ -196,21 +195,13 @@ export default function JobsPage() {
               </div>
             )}
 
-            {featured.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-sm font-semibold text-[#355485] mb-2">Lowongan Unggulan</h3>
-                <div className="space-y-3">
-                  {featured.map((j, i) => (
-                    <JobItem key={j.id ? `f-${j.id}` : `f-${j.job_title}-${i}`} job={j} featured />
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div className="space-y-3">
-              {rest.map((j, i) => (
+              {paged.map((j, i) => (
                 <JobItem key={j.id || `${j.job_title}-${i}`} job={j} />
               ))}
+            </div>
+            <div className="mt-4">
+              <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
             </div>
           </main>
         </div>
@@ -222,6 +213,19 @@ export default function JobsPage() {
 }
 
 function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
+  const [logo, setLogo] = useState("");
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const c = await getPublicCompanyById(String(job.company_id));
+        const cdata = (c as { data?: { company_logo?: string } }).data || (c as { company_logo?: string });
+        const l = (cdata && (cdata as { company_logo?: string }).company_logo) || "";
+        if (alive && l) setLogo(l);
+      } catch {}
+    })();
+    return () => { alive = false; };
+  }, [job.company_id]);
   const deadline = job.application_deadline;
   const closed = job.status === "closed";
   const dateLabel = new Date(deadline).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
@@ -231,7 +235,7 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-start justify-between hover:shadow-md transition-shadow cursor-pointer">
       <div className="flex items-start gap-3 min-w-0">
         <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-          <Image src={`https://picsum.photos/64?random=${encodeURIComponent(job.id || job.job_title || "default")}`} alt={company || "Perusahaan"} width={48} height={48} className="w-12 h-12 object-cover" />
+          <Image src={logo || `https://picsum.photos/64?random=${encodeURIComponent(job.id || job.job_title || "default")}`} alt={company || "Perusahaan"} width={48} height={48} className="w-12 h-12 object-cover" />
         </div>
         <div className="min-w-0">
           <h3 className="text-base md:text-lg font-semibold text-[#2a436c] truncate">{job.job_title}</h3>

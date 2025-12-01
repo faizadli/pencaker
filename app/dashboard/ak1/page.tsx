@@ -88,7 +88,7 @@ export default function Ak1Page() {
   if (!guardReady) {
     return (
       <>
-        <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-20 pb-10 lg:ml-64">
+        <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64">
           <div className="px-4 sm:px-6">
             <div className="py-20 flex items-center justify-center text-[#6b7280]">Memeriksa akses…</div>
           </div>
@@ -99,7 +99,7 @@ export default function Ak1Page() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-20 pb-10 lg:ml-64">
+      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64">
         <div className="px-4 sm:px-6">
           <div className="mb-6 flex items-center justify-between">
             <div>

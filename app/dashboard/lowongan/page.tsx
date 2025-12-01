@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Input, SearchableSelect, SegmentedToggle, TextEditor } from "../../../components/shared/field";
+ import { Input, SearchableSelect, SegmentedToggle, TextEditor } from "../../../components/shared/field";
 import Pagination from "../../../components/shared/Pagination";
 import Modal from "../../../components/shared/Modal";
 import { listJobs, createJob, approveJob, rejectJob, updateJob } from "../../../services/jobs";
@@ -31,7 +30,7 @@ export default function LowonganPage() {
     companyName?: string;
     company?: string;
     job_title: string;
-    job_type: "full_time" | "part_time" | "internship" | "contract" | "freelance";
+    job_type: "full-time" | "part-time" | "internship" | "contract" | "freelance";
     job_description: string;
     category: string;
     min_salary: number;
@@ -59,8 +58,8 @@ export default function LowonganPage() {
   } as const;
 
   const apiToUITipe = useMemo(() => ({
-    full_time: "Full-time",
-    part_time: "Part-time",
+    "full-time": "Full-time",
+    "part-time": "Part-time",
     internship: "Remote",
     contract: "Kontrak",
     freelance: "Shift",
@@ -195,14 +194,31 @@ export default function LowonganPage() {
             const query: { company_id: string; status?: "pending" | "approved" | "rejected" | "closed" } = { company_id: companyId };
             if (statusParam) query.status = statusParam;
             const resp = await listJobs(query);
-            setLowonganList((resp.data || resp) as Job[]);
+            const rows = (resp.data || resp) as Job[];
+            const mapped = rows.map((r) => {
+              const obj = r as Record<string, unknown>;
+              const curr = typeof obj["id"] === "string" ? (obj["id"] as string) : undefined;
+              const jobsId = typeof obj["jobs_id"] === "string" ? (obj["jobs_id"] as string) : undefined;
+              const jobId = typeof obj["job_id"] === "string" ? (obj["job_id"] as string) : undefined;
+              const nid = (curr || jobsId || jobId) || "";
+              return nid ? { ...r, id: nid } : r;
+            });
+            setLowonganList(mapped);
           } else {
             setLowonganList([]);
           }
         } else {
           const resp = await listJobs();
-          const rows = (resp.data || resp) as Job[];
-          const enriched = await enrichJobsWithCompanyName(rows);
+          const rawRows = (resp.data || resp) as Job[];
+          const normalized = rawRows.map((r) => {
+            const obj = r as Record<string, unknown>;
+            const curr = typeof obj["id"] === "string" ? (obj["id"] as string) : undefined;
+            const jobsId = typeof obj["jobs_id"] === "string" ? (obj["jobs_id"] as string) : undefined;
+            const jobId = typeof obj["job_id"] === "string" ? (obj["job_id"] as string) : undefined;
+            const nid = (curr || jobsId || jobId) || "";
+            return nid ? { ...r, id: nid } : r;
+          });
+          const enriched = await enrichJobsWithCompanyName(normalized);
           setLowonganList(enriched);
         }
       } catch {
@@ -288,8 +304,8 @@ export default function LowonganPage() {
         job_type: jobTypeMap[newJob.tipe],
         job_description: newJob.deskripsi || "",
         category: newJob.sektor || "Umum",
-        min_salary: newJob.min_salary || 0,
-        max_salary: newJob.max_salary || 0,
+        min_salary: Number.isFinite(newJob.min_salary) ? newJob.min_salary : 0,
+        max_salary: Number.isFinite(newJob.max_salary) ? newJob.max_salary : 0,
         experience_required: newJob.experience_required || "",
         education_required: newJob.education_required || "",
         skills_required: newJob.skills_required || "",
@@ -297,7 +313,19 @@ export default function LowonganPage() {
         application_deadline: newJob.batasAkhir,
       } as const;
       if (editingId) {
-        await updateJob(editingId, payload);
+        await updateJob(editingId, {
+          job_title: payload.job_title,
+          job_type: payload.job_type,
+          job_description: payload.job_description,
+          category: payload.category,
+          min_salary: payload.min_salary,
+          max_salary: payload.max_salary,
+          experience_required: payload.experience_required,
+          education_required: payload.education_required,
+          skills_required: payload.skills_required,
+          work_setup: payload.work_setup,
+          application_deadline: payload.application_deadline,
+        });
       } else {
         await createJob(payload);
       }
@@ -306,9 +334,10 @@ export default function LowonganPage() {
       setNewJob(EMPTY_NEW_JOB);
       setShowForm(false);
       setEditingId(null);
-      alert("Lowongan berhasil diajukan, menunggu verifikasi.");
-    } catch {
-      alert("Gagal mengajukan lowongan");
+      alert(editingId ? "Lowongan berhasil diperbarui, menunggu verifikasi." : "Lowongan berhasil diajukan, menunggu verifikasi.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Gagal mengajukan lowongan";
+      alert(msg);
     }
   };
 
@@ -392,7 +421,7 @@ export default function LowonganPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-20 pb-10 lg:ml-64" dir="ltr">
+      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64" dir="ltr">
         <div className="px-4 sm:px-6">
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Lowongan Pekerjaan</h1>
@@ -438,14 +467,13 @@ export default function LowonganPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input label="Posisi" type="text" placeholder="Masukkan posisi" value={newJob.posisi} onChange={(e) => setNewJob({ ...newJob, posisi: e.target.value })} />
               <SearchableSelect label="Tipe" value={newJob.tipe} onChange={(v) => setNewJob({ ...newJob, tipe: v as UITipe })} options={[{ value: "Full-time", label: "Full-time" }, { value: "Part-time", label: "Part-time" }, { value: "Shift", label: "Shift" }, { value: "Remote", label: "Remote" }, { value: "Kontrak", label: "Kontrak" }]} />
-              <Input label="Sektor" type="text" placeholder="Masukkan sektor" value={newJob.sektor} onChange={(e) => setNewJob({ ...newJob, sektor: e.target.value })} />
-              <Input label="Skema Kerja" type="text" placeholder="WFO/WFH/Hybrid" value={newJob.work_setup} onChange={(e) => setNewJob({ ...newJob, work_setup: e.target.value })} />
+              <SearchableSelect label="Skema Kerja" value={newJob.work_setup} onChange={(v) => setNewJob({ ...newJob, work_setup: v })} options={[{ value: "WFO", label: "WFO" }, { value: "WFH", label: "WFH" }, { value: "Hybrid", label: "Hybrid" }]} />
               <Input label="Gaji Minimum" type="number" placeholder="0" value={newJob.min_salary} onChange={(e) => setNewJob({ ...newJob, min_salary: Number(e.target.value) })} />
               <Input label="Gaji Maksimum" type="number" placeholder="0" value={newJob.max_salary} onChange={(e) => setNewJob({ ...newJob, max_salary: Number(e.target.value) })} />
               <Input label="Batas Akhir" type="date" value={newJob.batasAkhir} onChange={(e) => setNewJob({ ...newJob, batasAkhir: e.target.value })} />
               <SearchableSelect label="Kategori" value={newJob.sektor} onChange={(v) => setNewJob({ ...newJob, sektor: v })} options={[{ value: "IT", label: "IT" }, { value: "Manufaktur", label: "Manufaktur" }, { value: "Pertanian", label: "Pertanian" }, { value: "Kesehatan", label: "Kesehatan" }, { value: "Umum", label: "Umum" }]} />
               <Input label="Pengalaman" type="text" placeholder="Contoh: 2 tahun di bidang terkait" value={newJob.experience_required} onChange={(e) => setNewJob({ ...newJob, experience_required: e.target.value })} />
-              <Input label="Pendidikan" type="text" placeholder="Contoh: S1 Informatika" value={newJob.education_required} onChange={(e) => setNewJob({ ...newJob, education_required: e.target.value })} />
+              <SearchableSelect label="Pendidikan" value={newJob.education_required} onChange={(v) => setNewJob({ ...newJob, education_required: v })} options={[{ value: "", label: "Pilih..." }, { value: "SMA/SMK", label: "SMA/SMK" }, { value: "Diploma", label: "Diploma" }, { value: "S1", label: "S1" }, { value: "S2", label: "S2" }]} />
               <div className="md:col-span-2">
                 <TextEditor label="Deskripsi" value={newJob.deskripsi} onChange={(v) => setNewJob({ ...newJob, deskripsi: v })} placeholder="Detail tugas, tanggung jawab, dan kualifikasi" />
               </div>
@@ -527,9 +555,9 @@ export default function LowonganPage() {
 
           {viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {paginatedLowongan.map((job) => (
-                <div key={job.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
-                  <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="block p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
+              {paginatedLowongan.map((job, idx) => (
+                <div key={`${job.id || `${job.companyId}-${job.posisi}-${job.batasAkhir}`}-${job.status}-${idx}`} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="block p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="min-w-0">
                         <h3 className="font-bold text-[#2a436c] text-sm leading-tight">{job.posisi}</h3>
@@ -541,9 +569,9 @@ export default function LowonganPage() {
                       <span className={`px-2 py-1 text-xs rounded-full ${getTipeColor(job.tipe as UITipe)}`}>{job.tipe}</span>
                       <span className="text-xs text-[#6b7280] bg-gray-100 px-2 py-1 rounded">{job.lokasi}</span>
                     </div>
-                  </Link>
+                  </div>
 
-                  <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="block p-4 space-y-3">
+                  <div className="block p-4 space-y-3">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-[#374151]">Tayang</span>
                       <span className="font-medium text-[#111827]">{job.tanggalTayang}</span>
@@ -552,9 +580,9 @@ export default function LowonganPage() {
                       <span className="text-[#374151]">Batas Akhir</span>
                       <span className="font-medium text-[#111827]">{job.batasAkhir}</span>
                     </div>
-                  </Link>
+                  </div>
 
-                  <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="block p-4 border-t border-[#e5e7eb] bg-[#f9fafb]">
+                  <div className="block p-4 border-t border-[#e5e7eb] bg-[#f9fafb]">
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div>
                         <p className="text-lg font-bold text-[#2a436c]">{job.pelamar}</p>
@@ -569,7 +597,7 @@ export default function LowonganPage() {
                         <p className="text-xs text-[#6b7280]">Diterima</p>
                       </div>
                     </div>
-                  </Link>
+                  </div>
 
                   <div className="p-4 border-t border-[#e5e7eb]">
                     <div className="flex gap-2">
@@ -578,7 +606,29 @@ export default function LowonganPage() {
                         {job.status === "Menunggu Verifikasi" && canVerify ? "Review & Konfirmasi" : "Detail"}
                       </button>
                       {canEdit && (
-                        <button onClick={() => { setEditingId(String(job.id)); setNewJob({ posisi: job.posisi, sektor: job.sektor, tipe: job.tipe as UITipe, batasAkhir: job.batasAkhir, deskripsi: job.deskripsi, experience_required: job.experience_required, education_required: job.education_required, skills_required: job.skills_required, min_salary: 0, max_salary: 0, work_setup: job.lokasi }); setShowForm(true); }} className="px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition" title="Edit">
+                        <button
+                          onClick={() => {
+                            setEditingId(String(job.id));
+                            const raw = lowonganList.find((j) => String(j.id) === String(job.id));
+                            const isoDeadline = raw?.application_deadline ? new Date(raw.application_deadline).toISOString().slice(0, 10) : "";
+                            setNewJob({
+                              posisi: raw?.job_title || job.posisi,
+                              sektor: raw?.category || job.sektor,
+                              tipe: job.tipe as UITipe,
+                              batasAkhir: isoDeadline,
+                              deskripsi: raw?.job_description || job.deskripsi,
+                              experience_required: raw?.experience_required || job.experience_required,
+                              education_required: raw?.education_required || job.education_required,
+                              skills_required: raw?.skills_required || job.skills_required,
+                              min_salary: typeof raw?.min_salary === "number" ? raw!.min_salary : 0,
+                              max_salary: typeof raw?.max_salary === "number" ? raw!.max_salary : 0,
+                              work_setup: raw?.work_setup || job.lokasi,
+                            });
+                            setShowForm(true);
+                          }}
+                          className="px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition"
+                          title="Edit"
+                        >
                           <i className="ri-edit-line"></i>
                         </button>
                       )}
@@ -604,11 +654,11 @@ export default function LowonganPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedLowongan.map((job) => (
-                      <tr key={job.id} className="border-b border-[#e5e7eb] hover:bg-[#f9fafb]">
+                    {paginatedLowongan.map((job, idx) => (
+                      <tr key={`${job.id || `${job.companyId}-${job.posisi}-${job.batasAkhir}`}-${job.status}-${idx}`} className="border-b border-[#e5e7eb] hover:bg-[#f9fafb]">
                         <td className="py-3 px-4">
                           <div>
-                            <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="font-medium text-[#111827] hover:text-[#355485]">{job.posisi}</Link>
+                            <span className="font-medium text-[#111827] hover:text-[#355485]">{job.posisi}</span>
                             <p className="text-xs text-[#4b5563]">{job.tipe}</p>
                           </div>
                         </td>
@@ -637,9 +687,9 @@ export default function LowonganPage() {
                 </table>
               </div>
               <div className="sm:hidden p-3 space-y-3">
-                {paginatedLowongan.map((job) => (
-                  <div key={`m-${job.id}`} className="border border-[#e5e7eb] rounded-lg p-3">
-                    <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="block">
+                {paginatedLowongan.map((job, idx) => (
+                  <div key={`m-${job.id || `${job.companyId}-${job.posisi}-${job.batasAkhir}`}-${job.status}-${idx}`} className="border border-[#e5e7eb] rounded-lg p-3">
+                    <div className="block">
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
                           <p className="font-semibold text-[#2a436c] truncate">{job.posisi}</p>
@@ -651,13 +701,34 @@ export default function LowonganPage() {
                         <span className="text-[11px] text-[#6b7280] bg-gray-100 px-2 py-1 rounded">{job.lokasi}</span>
                         <span className={`text-[11px] px-2 py-1 rounded ${getTipeColor(job.tipe as UITipe)}`}>{job.tipe}</span>
                       </div>
-                    </Link>
+                    </div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="px-3 py-2 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">
                         {job.status === "Menunggu Verifikasi" && canVerify ? "Review" : "Detail"}
                       </button>
                       {canEdit && (
-                        <button onClick={() => { setEditingId(String(job.id)); setNewJob({ posisi: job.posisi, sektor: job.sektor, tipe: job.tipe as UITipe, batasAkhir: job.batasAkhir, deskripsi: job.deskripsi, experience_required: job.experience_required, education_required: job.education_required, skills_required: job.skills_required, min_salary: 0, max_salary: 0, work_setup: job.lokasi }); setShowForm(true); }} className="px-3 py-2 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition">
+                        <button
+                          onClick={() => {
+                            setEditingId(String(job.id));
+                            const raw = lowonganList.find((j) => String(j.id) === String(job.id));
+                            const isoDeadline = raw?.application_deadline ? new Date(raw.application_deadline).toISOString().slice(0, 10) : "";
+                            setNewJob({
+                              posisi: raw?.job_title || job.posisi,
+                              sektor: raw?.category || job.sektor,
+                              tipe: job.tipe as UITipe,
+                              batasAkhir: isoDeadline,
+                              deskripsi: raw?.job_description || job.deskripsi,
+                              experience_required: raw?.experience_required || job.experience_required,
+                              education_required: raw?.education_required || job.education_required,
+                              skills_required: raw?.skills_required || job.skills_required,
+                              min_salary: typeof raw?.min_salary === "number" ? raw!.min_salary : 0,
+                              max_salary: typeof raw?.max_salary === "number" ? raw!.max_salary : 0,
+                              work_setup: raw?.work_setup || job.lokasi,
+                            });
+                            setShowForm(true);
+                          }}
+                          className="px-3 py-2 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition"
+                        >
                           Edit
                         </button>
                       )}

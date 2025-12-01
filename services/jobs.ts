@@ -32,9 +32,10 @@ export async function listJobs(params?: { company_id?: string; status?: "pending
   return resp.json();
 }
 
-export async function listPublicJobs(params?: { category?: string; page?: number; limit?: number }) {
+export async function listPublicJobs(params?: { category?: string; company_id?: string; page?: number; limit?: number }) {
   const q = new URLSearchParams();
   if (params?.category) q.set("category", params.category);
+  if (params?.company_id) q.set("company_id", params.company_id);
   if (params?.page) q.set("page", String(params.page));
   if (params?.limit) q.set("limit", String(params.limit));
   const resp = await fetch(`${BASE}/api/public/jobs${q.toString() ? `?${q.toString()}` : ""}`, { headers: { ...authHeader() } });
@@ -48,7 +49,16 @@ export async function createJob(payload: JobPayload) {
     headers: { "Content-Type": "application/json", ...authHeader() },
     body: JSON.stringify(payload),
   });
-  if (!resp.ok) throw new Error("Gagal membuat job");
+  if (!resp.ok) {
+    try {
+      const data = await resp.json();
+      const msg = String((data && (data.errors || data.message)) || "Gagal membuat job");
+      throw new Error(msg);
+    } catch {
+      const txt = await resp.text();
+      throw new Error(txt || "Gagal membuat job");
+    }
+  }
   return resp.json();
 }
 
@@ -64,7 +74,16 @@ export async function updateJob(id: string, payload: Partial<JobPayload> & { sta
     headers: { "Content-Type": "application/json", ...authHeader() },
     body: JSON.stringify(payload),
   });
-  if (!resp.ok) throw new Error("Gagal mengubah job");
+  if (!resp.ok) {
+    try {
+      const data = await resp.json();
+      const msg = String((data && (data.errors || data.message)) || "Gagal mengubah job");
+      throw new Error(msg);
+    } catch {
+      const txt = await resp.text();
+      throw new Error(txt || "Gagal mengubah job");
+    }
+  }
   return resp.json();
 }
 

@@ -51,6 +51,15 @@ export async function getCompanyById(id: string) {
   return resp.json();
 }
 
+export async function getPublicCompanyById(id: string, params?: { page?: number; limit?: number }) {
+  const q = new URLSearchParams();
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.limit) q.set("limit", String(params.limit));
+  const resp = await fetch(`${BASE}/api/public/companies/${id}${q.toString() ? `?${q.toString()}` : ""}`);
+  if (!resp.ok) throw new Error("Gagal mengambil detail perusahaan");
+  return resp.json();
+}
+
 export async function createCompanyProfile(payload: Omit<CompanyProfilePayload, 'user_id'> & { user_email: string; user_password: string }) {
   const resp = await fetch(`${BASE}/api/companies`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify(payload) });
   if (!resp.ok) throw new Error("Gagal membuat profil perusahaan");
