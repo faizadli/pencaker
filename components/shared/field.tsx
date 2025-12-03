@@ -11,6 +11,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
   const { icon, className, label, hint, error, required, submitted, ...rest } = props;
   const isRequired = required ?? Boolean(label);
   const [hasFile, setHasFile] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
   
   // For file inputs, remove value entirely
   if (rest.type === "file") {
@@ -19,19 +20,21 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
     const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
       const f = (e.target as HTMLInputElement).files?.[0];
       setHasFile(!!f);
+      setFileName(f ? f.name : null);
       rest.onChange?.(e);
     };
     return (
       <div className="w-full">
         {label && <label className="block mb-1 text-sm font-medium text-[#2a436c]">{label}</label>}
         <div className="relative w-full">
-          {icon && <i className={`${icon} absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]`}></i>}
+          <i className={`${icon || "ri-upload-2-line"} absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]`}></i>
           <input
             ref={ref}
             {...{ ...rest, value: undefined, required: isRequired, onChange: handleFileChange }}
-            className={`w-full ${icon ? "pl-10" : "pl-3"} pr-4 py-2 border ${showError ? "border-red-400" : "border-[#d1d5db]"} rounded-lg focus:ring-2 focus:ring-[#355485] focus:border-transparent placeholder:text-[#6b7280] bg-white text-[#111827] ${className || ""}`}
+            className={`w-full ${icon ? "pl-10" : "pl-10"} pr-4 py-2 h-11 border ${showError ? "border-red-400" : "border-[#d1d5db]"} rounded-xl focus:ring-2 focus:ring-[#355485] focus:border-transparent bg-white text-[#111827] text-sm file:mr-3 file:px-3 file:py-2 file:rounded-lg file:bg-[#355485] file:text-white file:hover:bg-[#2a436c] file:border-0 file:cursor-pointer ${className || ""}`}
           />
         </div>
+        {fileName && <p className="mt-1 text-xs text-[#374151] truncate">{fileName}</p>}
         {errorText && <p className="mt-1 text-xs text-red-600">{errorText}</p>}
         {hint && !errorText && <p className="mt-1 text-xs text-[#6b7280]">{hint}</p>}
       </div>
