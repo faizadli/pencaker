@@ -115,7 +115,6 @@ export default function LowonganPage() {
   };
 
   const [lowonganList, setLowonganList] = useState<Job[]>([]);
-  const [companyNames, setCompanyNames] = useState<Record<string, string>>({});
   const [reviewJob, setReviewJob] = useState<ViewJob | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [page, setPage] = useState(1);
@@ -123,6 +122,7 @@ export default function LowonganPage() {
 
   const EMPTY_NEW_JOB: NewJob = { posisi: "", sektor: "", tipe: "Full-time", batasAkhir: "", deskripsi: "", experience_required: "", education_required: "", skills_required: "", min_salary: 0, max_salary: 0, work_setup: "WFO" };
   const [newJob, setNewJob] = useState<NewJob>(EMPTY_NEW_JOB);
+  const [submittedJob, setSubmittedJob] = useState(false);
 
   // initial role and userId read via useState initializer above
 
@@ -192,7 +192,7 @@ export default function LowonganPage() {
         if (role === "company" && companyId) {
           if (permissions.includes("lowongan.read")) {
             const statusParam = statusFilter !== "all" ? uiToApiStatus[statusFilter as UIStatusExtended] : undefined;
-            const query: { company_id: string; status?: "pending" | "approved" | "rejected" | "closed" } = { company_id: companyId };
+            const query: { company_id: string; status?: "pending" | "approved" | "rejected" | "closed"; page?: number; limit?: number } = { company_id: companyId, page, limit: pageSize };
             if (statusParam) query.status = statusParam;
             const resp = await listJobs(query);
             const rows = (resp.data || resp) as Job[];
@@ -209,7 +209,7 @@ export default function LowonganPage() {
             setLowonganList([]);
           }
         } else {
-          const resp = await listJobs();
+          const resp = await listJobs({ page, limit: pageSize });
           const rawRows = (resp.data || resp) as Job[];
           const normalized = rawRows.map((r) => {
             const obj = r as Record<string, unknown>;
@@ -227,33 +227,9 @@ export default function LowonganPage() {
       }
     }
     loadJobs();
-  }, [role, companyId, permissions, enrichJobsWithCompanyName, statusFilter, permsLoaded, uiToApiStatus]);
+  }, [role, companyId, permissions, enrichJobsWithCompanyName, statusFilter, permsLoaded, uiToApiStatus, page, pageSize]);
 
-  useEffect(() => {
-    async function fillCompanyNames() {
-      try {
-        const ids = Array.from(new Set(lowonganList.map((j) => j.company_id))).filter(Boolean);
-        const missing = ids.filter((id) => !companyNames[String(id)]);
-        if (missing.length === 0) return;
-        const updates: Record<string, string> = {};
-        await Promise.all(
-          missing.map(async (id) => {
-            try {
-              const cp = await getCompanyProfileById(String(id));
-              const data = cp.data || cp;
-              if (data?.company_name) {
-                updates[String(id)] = String(data.company_name);
-              }
-            } catch {}
-          })
-        );
-        if (Object.keys(updates).length > 0) {
-          setCompanyNames((prev) => ({ ...prev, ...updates }));
-        }
-      } catch {}
-    }
-    if (lowonganList.length > 0) fillCompanyNames();
-  }, [lowonganList, companyNames]);
+  
 
   
 
@@ -264,7 +240,6 @@ export default function LowonganPage() {
       perusahaan: role === "company"
         ? (companyName || j.company_id)
         : (
-            companyNames[String(j.company_id)] ||
             j.company_name ||
             j.companyName ||
             j.company ||
@@ -291,13 +266,14 @@ export default function LowonganPage() {
       const matchesStatus = statusFilter === "all" || lowongan.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [lowonganList, searchTerm, statusFilter, apiToUITipe, apiToUIStatus, role, companyName, companyNames]);
+  }, [lowonganList, searchTerm, statusFilter, apiToUITipe, apiToUIStatus, role, companyName]);
 
   const paginatedLowongan = useMemo(() => filteredLowongan.slice((page - 1) * pageSize, page * pageSize), [filteredLowongan, page, pageSize]);
 
   const handleAddJob = async () => {
     if (!companyId) { alert("Perusahaan belum teridentifikasi"); return; }
-    if (!newJob.posisi || !newJob.batasAkhir) { alert("Posisi dan batas akhir wajib diisi!"); return; }
+    setSubmittedJob(true);
+    if (!newJob.posisi || !newJob.batasAkhir) { return; }
     try {
       const payload = {
         company_id: companyId,
@@ -335,6 +311,7 @@ export default function LowonganPage() {
       setNewJob(EMPTY_NEW_JOB);
       setShowForm(false);
       setEditingId(null);
+      setSubmittedJob(false);
       alert(editingId ? "Lowongan berhasil diperbarui, menunggu verifikasi." : "Lowongan berhasil diajukan, menunggu verifikasi.");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Gagal mengajukan lowongan";
@@ -451,7 +428,7 @@ export default function LowonganPage() {
                 />
 
                 {canCreate && (
-                <button onClick={() => { setEditingId(null); setNewJob(EMPTY_NEW_JOB); setShowForm(true); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center gap-2">
+                <button onClick={() => { setEditingId(null); setNewJob(EMPTY_NEW_JOB); setShowForm(true); setSubmittedJob(false); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center gap-2">
                   <i className="ri-add-line"></i>
                   Tambah
                 </button>)}
@@ -466,17 +443,17 @@ export default function LowonganPage() {
             </>
           }>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input label="Posisi" type="text" placeholder="Masukkan posisi" value={newJob.posisi} onChange={(e) => setNewJob({ ...newJob, posisi: e.target.value })} />
-              <SearchableSelect label="Tipe" value={newJob.tipe} onChange={(v) => setNewJob({ ...newJob, tipe: v as UITipe })} options={[{ value: "Full-time", label: "Full-time" }, { value: "Part-time", label: "Part-time" }, { value: "Shift", label: "Shift" }, { value: "Remote", label: "Remote" }, { value: "Kontrak", label: "Kontrak" }]} />
-              <SearchableSelect label="Skema Kerja" value={newJob.work_setup} onChange={(v) => setNewJob({ ...newJob, work_setup: v })} options={[{ value: "WFO", label: "WFO" }, { value: "WFH", label: "WFH" }, { value: "Hybrid", label: "Hybrid" }]} />
-              <Input label="Gaji Minimum" type="number" placeholder="0" value={newJob.min_salary} onChange={(e) => setNewJob({ ...newJob, min_salary: Number(e.target.value) })} />
-              <Input label="Gaji Maksimum" type="number" placeholder="0" value={newJob.max_salary} onChange={(e) => setNewJob({ ...newJob, max_salary: Number(e.target.value) })} />
-              <Input label="Batas Akhir" type="date" value={newJob.batasAkhir} onChange={(e) => setNewJob({ ...newJob, batasAkhir: e.target.value })} />
-              <SearchableSelect label="Kategori" value={newJob.sektor} onChange={(v) => setNewJob({ ...newJob, sektor: v })} options={[{ value: "IT", label: "IT" }, { value: "Manufaktur", label: "Manufaktur" }, { value: "Pertanian", label: "Pertanian" }, { value: "Kesehatan", label: "Kesehatan" }, { value: "Umum", label: "Umum" }]} />
-              <Input label="Pengalaman" type="text" placeholder="Contoh: 2 tahun di bidang terkait" value={newJob.experience_required} onChange={(e) => setNewJob({ ...newJob, experience_required: e.target.value })} />
-              <SearchableSelect label="Pendidikan" value={newJob.education_required} onChange={(v) => setNewJob({ ...newJob, education_required: v })} options={[{ value: "", label: "Pilih..." }, { value: "SMA/SMK", label: "SMA/SMK" }, { value: "Diploma", label: "Diploma" }, { value: "S1", label: "S1" }, { value: "S2", label: "S2" }]} />
+              <Input label="Posisi" type="text" placeholder="Masukkan posisi" value={newJob.posisi} onChange={(e) => setNewJob({ ...newJob, posisi: e.target.value })} submitted={submittedJob} />
+              <SearchableSelect label="Tipe" value={newJob.tipe} onChange={(v) => setNewJob({ ...newJob, tipe: v as UITipe })} options={[{ value: "Full-time", label: "Full-time" }, { value: "Part-time", label: "Part-time" }, { value: "Shift", label: "Shift" }, { value: "Remote", label: "Remote" }, { value: "Kontrak", label: "Kontrak" }]} submitted={submittedJob} />
+              <SearchableSelect label="Skema Kerja" value={newJob.work_setup} onChange={(v) => setNewJob({ ...newJob, work_setup: v })} options={[{ value: "WFO", label: "WFO" }, { value: "WFH", label: "WFH" }, { value: "Hybrid", label: "Hybrid" }]} submitted={submittedJob} />
+              <Input label="Gaji Minimum" type="number" placeholder="0" value={newJob.min_salary} onChange={(e) => setNewJob({ ...newJob, min_salary: Number(e.target.value) })} submitted={submittedJob} />
+              <Input label="Gaji Maksimum" type="number" placeholder="0" value={newJob.max_salary} onChange={(e) => setNewJob({ ...newJob, max_salary: Number(e.target.value) })} submitted={submittedJob} />
+              <Input label="Batas Akhir" type="date" value={newJob.batasAkhir} onChange={(e) => setNewJob({ ...newJob, batasAkhir: e.target.value })} submitted={submittedJob} />
+              <SearchableSelect label="Kategori" value={newJob.sektor} onChange={(v) => setNewJob({ ...newJob, sektor: v })} options={[{ value: "IT", label: "IT" }, { value: "Manufaktur", label: "Manufaktur" }, { value: "Pertanian", label: "Pertanian" }, { value: "Kesehatan", label: "Kesehatan" }, { value: "Umum", label: "Umum" }]} submitted={submittedJob} />
+              <Input label="Pengalaman" type="text" placeholder="Contoh: 2 tahun di bidang terkait" value={newJob.experience_required} onChange={(e) => setNewJob({ ...newJob, experience_required: e.target.value })} submitted={submittedJob} />
+              <SearchableSelect label="Pendidikan" value={newJob.education_required} onChange={(v) => setNewJob({ ...newJob, education_required: v })} options={[{ value: "", label: "Pilih..." }, { value: "SMA/SMK", label: "SMA/SMK" }, { value: "Diploma", label: "Diploma" }, { value: "S1", label: "S1" }, { value: "S2", label: "S2" }]} submitted={submittedJob} />
               <div className="md:col-span-2">
-                <TextEditor label="Deskripsi" value={newJob.deskripsi} onChange={(v) => setNewJob({ ...newJob, deskripsi: v })} placeholder="Detail tugas, tanggung jawab, dan kualifikasi" />
+                <TextEditor label="Deskripsi" value={newJob.deskripsi} onChange={(v) => setNewJob({ ...newJob, deskripsi: v })} placeholder="Detail tugas, tanggung jawab, dan kualifikasi" submitted={submittedJob} />
               </div>
               <div className="md:col-span-2">
                 <Input label="Keahlian" type="text" placeholder="Contoh: React, Node.js, SQL" value={newJob.skills_required} onChange={(e) => setNewJob({ ...newJob, skills_required: e.target.value })} />

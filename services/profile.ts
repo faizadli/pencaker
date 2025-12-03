@@ -59,9 +59,24 @@ export async function getCompanyProfile(user_id: string) {
 }
 
 export async function getCompanyProfileById(id: string) {
-  const resp = await fetch(`${BASE}/api/profile/company?id=${encodeURIComponent(id)}`, { headers: { ...authHeader() } });
+  const url = `${BASE}/api/profile/company?id=${encodeURIComponent(id)}`;
+  const key = `cache:getCompanyProfileById:${id}`;
+  if (typeof window !== "undefined") {
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (raw) {
+        const obj = JSON.parse(raw) as { t: number; d: unknown };
+        if (Date.now() - obj.t < 60000) return obj.d as unknown;
+      }
+    } catch {}
+  }
+  const resp = await fetch(url, { headers: { ...authHeader() } });
   if (!resp.ok) throw new Error("Gagal mengambil profil perusahaan");
-  return resp.json();
+  const data = await resp.json();
+  if (typeof window !== "undefined") {
+    try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch {}
+  }
+  return data;
 }
 
 export async function upsertCandidateProfile(payload: {
@@ -110,9 +125,24 @@ export async function listCandidates(params?: { search?: string; status?: "APPRO
   if (params?.status) q.set("status", params.status);
   if (params?.page) q.set("page", String(params.page));
   if (params?.limit) q.set("limit", String(params.limit));
-  const resp = await fetch(`${BASE}/api/candidates${q.toString() ? `?${q.toString()}` : ""}`, { headers: { ...authHeader() } });
+  const url = `${BASE}/api/candidates${q.toString() ? `?${q.toString()}` : ""}`;
+  const key = `cache:listCandidates:${q.toString()}`;
+  if (typeof window !== "undefined") {
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (raw) {
+        const obj = JSON.parse(raw) as { t: number; d: unknown };
+        if (Date.now() - obj.t < 30000) return obj.d as unknown;
+      }
+    } catch {}
+  }
+  const resp = await fetch(url, { headers: { ...authHeader() } });
   if (!resp.ok) throw new Error("Gagal mengambil data pencaker");
-  return resp.json();
+  const data = await resp.json();
+  if (typeof window !== "undefined") {
+    try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch {}
+  }
+  return data;
 }
 
 export async function createCandidateProfile(payload: Omit<CandidateProfilePayload, 'user_id'> & { user_email: string; user_password: string }): Promise<ApiEnvelope> {

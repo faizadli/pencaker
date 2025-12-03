@@ -27,9 +27,24 @@ export async function listJobs(params?: { company_id?: string; status?: "pending
   if (params?.category) q.set("category", params.category);
   if (params?.page) q.set("page", String(params.page));
   if (params?.limit) q.set("limit", String(params.limit));
-  const resp = await fetch(`${BASE}/api/jobs${q.toString() ? `?${q.toString()}` : ""}`, { headers: { ...authHeader() } });
+  const url = `${BASE}/api/jobs${q.toString() ? `?${q.toString()}` : ""}`;
+  const key = `cache:listJobs:${q.toString()}`;
+  if (typeof window !== "undefined") {
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (raw) {
+        const obj = JSON.parse(raw) as { t: number; d: unknown };
+        if (Date.now() - obj.t < 30000) return obj.d as unknown;
+      }
+    } catch {}
+  }
+  const resp = await fetch(url, { headers: { ...authHeader() } });
   if (!resp.ok) throw new Error("Gagal mengambil jobs");
-  return resp.json();
+  const data = await resp.json();
+  if (typeof window !== "undefined") {
+    try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch {}
+  }
+  return data;
 }
 
 export async function listPublicJobs(params?: { category?: string; company_id?: string; page?: number; limit?: number }) {

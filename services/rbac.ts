@@ -6,9 +6,24 @@ function authHeader(): Record<string, string> {
 }
 
 export async function listRoles() {
-  const resp = await fetch(`${BASE}/api/rbac/roles`, { headers: { ...authHeader() } });
+  const url = `${BASE}/api/rbac/roles`;
+  const key = `cache:listRoles`;
+  if (typeof window !== "undefined") {
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (raw) {
+        const obj = JSON.parse(raw) as { t: number; d: unknown };
+        if (Date.now() - obj.t < 60000) return obj.d as unknown;
+      }
+    } catch {}
+  }
+  const resp = await fetch(url, { headers: { ...authHeader() } });
   if (!resp.ok) throw new Error("Gagal mengambil roles");
-  return resp.json();
+  const data = await resp.json();
+  if (typeof window !== "undefined") {
+    try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch {}
+  }
+  return data;
 }
 
 export async function createRole(payload: { name: string; description?: string }) {
@@ -22,9 +37,24 @@ export async function createRole(payload: { name: string; description?: string }
 }
 
 export async function listPermissions() {
-  const resp = await fetch(`${BASE}/api/rbac/permissions`, { headers: { ...authHeader() } });
+  const url = `${BASE}/api/rbac/permissions`;
+  const key = `cache:listPermissions`;
+  if (typeof window !== "undefined") {
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (raw) {
+        const obj = JSON.parse(raw) as { t: number; d: unknown };
+        if (Date.now() - obj.t < 60000) return obj.d as unknown;
+      }
+    } catch {}
+  }
+  const resp = await fetch(url, { headers: { ...authHeader() } });
   if (!resp.ok) throw new Error("Gagal mengambil permissions");
-  return resp.json();
+  const data = await resp.json();
+  if (typeof window !== "undefined") {
+    try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch {}
+  }
+  return data;
 }
 
 export async function assignRolePermissions(role_id: number, permissions: string[]) {
@@ -38,9 +68,24 @@ export async function assignRolePermissions(role_id: number, permissions: string
 }
 
 export async function getRolePermissions(role_id: number) {
-  const resp = await fetch(`${BASE}/api/rbac/roles/${role_id}/permissions`, { headers: { ...authHeader() } });
+  const url = `${BASE}/api/rbac/roles/${role_id}/permissions`;
+  const key = `cache:getRolePermissions:${role_id}`;
+  if (typeof window !== "undefined") {
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (raw) {
+        const obj = JSON.parse(raw) as { t: number; d: unknown };
+        if (Date.now() - obj.t < 60000) return obj.d as unknown;
+      }
+    } catch {}
+  }
+  const resp = await fetch(url, { headers: { ...authHeader() } });
   if (!resp.ok) throw new Error("Gagal mengambil akses role");
-  return resp.json();
+  const data = await resp.json();
+  if (typeof window !== "undefined") {
+    try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch {}
+  }
+  return data;
 }
 
 export async function assignUserRole(id: string, role_id: number) {

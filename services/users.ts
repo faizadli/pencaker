@@ -11,9 +11,24 @@ export async function listUsers(params?: { page?: number; limit?: number }) {
   const q = new URLSearchParams();
   if (params?.page) q.set("page", String(params.page));
   if (params?.limit) q.set("limit", String(params.limit));
-  const resp = await fetch(`${BASE}/api/users${q.toString() ? `?${q.toString()}` : ""}`, { headers: { ...authHeader() } });
+  const url = `${BASE}/api/users${q.toString() ? `?${q.toString()}` : ""}`;
+  const key = `cache:listUsers:${q.toString()}`;
+  if (typeof window !== "undefined") {
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (raw) {
+        const obj = JSON.parse(raw) as { t: number; d: unknown };
+        if (Date.now() - obj.t < 30000) return obj.d as { data: UserListItem[]; pagination?: { page: number; limit: number; total: number } };
+      }
+    } catch {}
+  }
+  const resp = await fetch(url, { headers: { ...authHeader() } });
   if (!resp.ok) throw new Error("Gagal mengambil data users");
-  return resp.json() as Promise<{ data: UserListItem[]; pagination?: { page: number; limit: number; total: number } }>;
+  const data = await resp.json() as { data: UserListItem[]; pagination?: { page: number; limit: number; total: number } };
+  if (typeof window !== "undefined") {
+    try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch {}
+  }
+  return data;
 }
 
 export async function updateUser(id: string, payload: { email?: string; role?: "candidate" | "company" | "super_admin" | "disnaker"; password?: string }) {

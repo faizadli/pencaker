@@ -68,9 +68,9 @@ function DashboardPageComponent() {
   useEffect(() => {
     const loadStats = async () => {
       const next = { ...stats };
-      const candP = canReadPencaker ? listCandidates() : Promise.resolve(null);
-      const jobsP = canReadLowongan ? listJobs() : Promise.resolve(null);
-      const compsP = canReadPerusahaan ? listCompanies() : Promise.resolve(null);
+      const candP = canReadPencaker ? listCandidates({ limit: 100 }) : Promise.resolve(null);
+      const jobsP = canReadLowongan ? listJobs({ limit: 100 }) : Promise.resolve(null);
+      const compsP = canReadPerusahaan ? listCompanies({ limit: 100 }) : Promise.resolve(null);
 
       const [candR, jobsR, compsR] = await Promise.allSettled([candP, jobsP, compsP]);
 

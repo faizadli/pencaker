@@ -44,6 +44,7 @@ export default function UsersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editUser, setEditUser] = useState<string | null>(null);
   const [form, setForm] = useState<{ nama: string; email: string; role: string; unit: string; telepon: string; status: "Aktif" | "Nonaktif"; password?: string }>({ nama: "", email: "", role: "Superadmin", unit: "", telepon: "", status: "Aktif" });
+  const [submitted, setSubmitted] = useState(false);
 
   
 
@@ -89,6 +90,7 @@ export default function UsersPage() {
     setForm({ nama: "", email: "", role: "Superadmin", unit: "", telepon: "", status: "Aktif", password: "" });
     setEditUser(null);
     setIsModalOpen(true);
+    setSubmitted(false);
   };
 
   const handleEdit = (user: User) => {
@@ -97,19 +99,19 @@ export default function UsersPage() {
     const idStr = window.__usersIds?.[idx];
     setEditUser(idStr ?? null);
     setIsModalOpen(true);
+    setSubmitted(false);
   };
 
   const handleSave = async () => {
-    if (!form.email) {
-      alert("Email wajib diisi!");
+    setSubmitted(true);
+    if (!form.email || (!editUser && !form.password)) {
       return;
     }
     try {
       if (editUser) {
         await updateUser(editUser, { email: form.email, role: ROLE_MAP_TO_API[form.role], ...(form.password ? { password: form.password } : {}) });
       } else {
-        if (!form.password) { alert("Password wajib diisi!"); return; }
-        await createUser(form.email, form.password, ROLE_MAP_TO_API[form.role]);
+        await createUser(form.email, form.password!, ROLE_MAP_TO_API[form.role]);
       }
       const resp = await listUsers({ page, limit: pageSize });
       const rows = resp.data as UserListItem[];
@@ -118,6 +120,7 @@ export default function UsersPage() {
       window.__usersIds = rows.map((u) => u.id);
       setIsModalOpen(false);
       setEditUser(null);
+      setSubmitted(false);
     } catch {
       alert("Gagal menyimpan user");
     }
@@ -299,9 +302,9 @@ export default function UsersPage() {
             )}
           >
             <div className="grid grid-cols-1 gap-4">
-              <Input type="email" label="Email" placeholder="Masukkan email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-              <SearchableSelect label="Role" value={form.role} onChange={(v) => setForm({ ...form, role: v })} options={roles.map((r) => ({ value: r, label: r }))} />
-              <Input type="password" label="Password" placeholder={editUser ? "Opsional, isi jika ingin ubah" : "Masukkan password"} value={form.password || ""} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+              <Input type="email" label="Email" placeholder="Masukkan email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} submitted={submitted} />
+              <SearchableSelect label="Role" value={form.role} onChange={(v) => setForm({ ...form, role: v })} options={roles.map((r) => ({ value: r, label: r }))} submitted={submitted} />
+              <Input type="password" label="Password" placeholder={editUser ? "Opsional, isi jika ingin ubah" : "Masukkan password"} value={form.password || ""} onChange={(e) => setForm({ ...form, password: e.target.value })} required={!editUser} submitted={submitted} />
             </div>
           </Modal>
         </div>

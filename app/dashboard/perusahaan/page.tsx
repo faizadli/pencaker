@@ -51,6 +51,7 @@ export default function PerusahaanPage() {
   const [userEmailCompany, setUserEmailCompany] = useState("");
   const [userPasswordCompany, setUserPasswordCompany] = useState("");
   const [formCompany, setFormCompany] = useState<{ user_id?: string; company_name: string; company_logo?: string; no_handphone: string; kecamatan: string; kelurahan: string; address: string; website?: string; about_company: string }>({ company_name: "", company_logo: "", no_handphone: "", kecamatan: "", kelurahan: "", address: "", website: "", about_company: "" });
+  const [submittedCompany, setSubmittedCompany] = useState(false);
   const [districts, setDistricts] = useState<{ id: string; name: string }[]>([]);
   const [districtOptions, setDistrictOptions] = useState<{ value: string; label: string }[]>([]);
   const [villageOptions, setVillageOptions] = useState<{ value: string; label: string }[]>([]);
@@ -249,7 +250,7 @@ export default function PerusahaanPage() {
                 />
 
                 {canCreate && (
-                  <button onClick={() => { setEditingCompanyId(null); setEditingCompanyUserId(null); setUserEmailCompany(""); setUserPasswordCompany(""); setFormCompany({ company_name: "", company_logo: "", no_handphone: "", kecamatan: "", kelurahan: "", address: "", website: "", about_company: "" }); setShowFormModal(true); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center">+ Tambah</button>
+                  <button onClick={() => { setEditingCompanyId(null); setEditingCompanyUserId(null); setUserEmailCompany(""); setUserPasswordCompany(""); setFormCompany({ company_name: "", company_logo: "", no_handphone: "", kecamatan: "", kelurahan: "", address: "", website: "", about_company: "" }); setShowFormModal(true); setSubmittedCompany(false); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center">+ Tambah</button>
                 )}
               </div>
             </div>
@@ -294,7 +295,7 @@ export default function PerusahaanPage() {
                         Detail
                       </button>
                       {canUpdate && (
-                        <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", kecamatan: p.kecamatan || "", kelurahan: p.kelurahan || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">
+                        <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", kecamatan: p.kecamatan || "", kelurahan: p.kelurahan || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); setSubmittedCompany(false); }} className="flex-1 px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">
                           <i className="ri-pencil-line mr-1"></i>
                           Edit
                         </button>
@@ -467,6 +468,18 @@ export default function PerusahaanPage() {
                 <button onClick={() => { setShowFormModal(false); setEditingCompanyId(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Batal</button>
                 <button
                   onClick={async () => {
+                    setSubmittedCompany(true);
+                    const requiredFilled = (
+                      (!editingCompanyId ? (userEmailCompany && userPasswordCompany) : true) &&
+                      formCompany.company_name &&
+                      formCompany.no_handphone &&
+                      formCompany.kecamatan &&
+                      formCompany.kelurahan &&
+                      formCompany.address &&
+                      (typeof formCompany.website === "string" ? formCompany.website : "") &&
+                      formCompany.about_company
+                    );
+                    if (!requiredFilled) return;
                     try {
                       if (editingCompanyId) {
                         await updateCompanyProfile(editingCompanyId, { ...formCompany, user_id: editingCompanyUserId || userId });
@@ -479,6 +492,7 @@ export default function PerusahaanPage() {
                       setShowFormModal(false);
                       setEditingCompanyId(null);
                       setEditingCompanyUserId(null);
+                      setSubmittedCompany(false);
                     } catch {
                       alert("Gagal menyimpan data perusahaan");
                     }
@@ -491,19 +505,19 @@ export default function PerusahaanPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {!editingCompanyId && (
                 <>
-                  <Input label="Email" type="email" value={userEmailCompany} onChange={(e) => setUserEmailCompany(e.target.value)} />
-                  <Input label="Password" type="password" value={userPasswordCompany} onChange={(e) => setUserPasswordCompany(e.target.value)} />
+                  <Input label="Email" type="email" value={userEmailCompany} onChange={(e) => setUserEmailCompany(e.target.value)} submitted={submittedCompany} />
+                  <Input label="Password" type="password" value={userPasswordCompany} onChange={(e) => setUserPasswordCompany(e.target.value)} submitted={submittedCompany} />
                 </>
               )}
-              <Input label="Nama Perusahaan" value={formCompany.company_name} onChange={(e) => setFormCompany({ ...formCompany, company_name: e.target.value })} />
-              <Input label="Logo" type="file" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setFormCompany({ ...formCompany, company_logo: "" }); return; } const r = new FileReader(); r.onload = () => setFormCompany({ ...formCompany, company_logo: String(r.result || "") }); r.readAsDataURL(f); }} />
-              <Input label="Telepon" value={formCompany.no_handphone} onChange={(e) => setFormCompany({ ...formCompany, no_handphone: e.target.value })} />
-              <SearchableSelect label="Kecamatan" value={formCompany.kecamatan} onChange={(v) => setFormCompany({ ...formCompany, kecamatan: v, kelurahan: "" })} options={[{ value: "", label: "Pilih..." }, ...districtOptions]} />
-              <SearchableSelect label="Kelurahan" value={formCompany.kelurahan} onChange={(v) => setFormCompany({ ...formCompany, kelurahan: v })} options={[{ value: "", label: "Pilih..." }, ...villageOptions]} />
-              <Input label="Alamat" value={formCompany.address} onChange={(e) => setFormCompany({ ...formCompany, address: e.target.value })} />
-              <Input label="Website" value={formCompany.website || ""} onChange={(e) => setFormCompany({ ...formCompany, website: e.target.value })} />
+              <Input label="Nama Perusahaan" value={formCompany.company_name} onChange={(e) => setFormCompany({ ...formCompany, company_name: e.target.value })} submitted={submittedCompany} />
+              <Input label="Logo" type="file" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setFormCompany({ ...formCompany, company_logo: "" }); return; } const r = new FileReader(); r.onload = () => setFormCompany({ ...formCompany, company_logo: String(r.result || "") }); r.readAsDataURL(f); }} submitted={submittedCompany} />
+              <Input label="Telepon" value={formCompany.no_handphone} onChange={(e) => setFormCompany({ ...formCompany, no_handphone: e.target.value })} submitted={submittedCompany} />
+              <SearchableSelect label="Kecamatan" value={formCompany.kecamatan} onChange={(v) => setFormCompany({ ...formCompany, kecamatan: v, kelurahan: "" })} options={[{ value: "", label: "Pilih..." }, ...districtOptions]} submitted={submittedCompany} />
+              <SearchableSelect label="Kelurahan" value={formCompany.kelurahan} onChange={(v) => setFormCompany({ ...formCompany, kelurahan: v })} options={[{ value: "", label: "Pilih..." }, ...villageOptions]} submitted={submittedCompany} />
+              <Input label="Alamat" value={formCompany.address} onChange={(e) => setFormCompany({ ...formCompany, address: e.target.value })} submitted={submittedCompany} />
+              <Input label="Website" value={formCompany.website || ""} onChange={(e) => setFormCompany({ ...formCompany, website: e.target.value })} submitted={submittedCompany} />
               <div className="md:col-span-2">
-                <Input label="Tentang Perusahaan" value={formCompany.about_company} onChange={(e) => setFormCompany({ ...formCompany, about_company: e.target.value })} />
+                <Input label="Tentang Perusahaan" value={formCompany.about_company} onChange={(e) => setFormCompany({ ...formCompany, about_company: e.target.value })} submitted={submittedCompany} />
               </div>
             </div>
           </Modal>

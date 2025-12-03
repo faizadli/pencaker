@@ -24,9 +24,24 @@ export async function listCompanies(params?: { status?: "APPROVED" | "PENDING" |
   if (params?.search) q.set("search", params.search);
   if (params?.page) q.set("page", String(params.page));
   if (params?.limit) q.set("limit", String(params.limit));
-  const resp = await fetch(`${BASE}/api/companies${q.toString() ? `?${q.toString()}` : ""}`, { headers: { ...authHeader() } });
+  const url = `${BASE}/api/companies${q.toString() ? `?${q.toString()}` : ""}`;
+  const key = `cache:listCompanies:${q.toString()}`;
+  if (typeof window !== "undefined") {
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (raw) {
+        const obj = JSON.parse(raw) as { t: number; d: unknown };
+        if (Date.now() - obj.t < 30000) return obj.d as unknown;
+      }
+    } catch {}
+  }
+  const resp = await fetch(url, { headers: { ...authHeader() } });
   if (!resp.ok) throw new Error("Gagal mengambil perusahaan");
-  return resp.json();
+  const data = await resp.json();
+  if (typeof window !== "undefined") {
+    try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch {}
+  }
+  return data;
 }
 
 export async function approveCompany(id: string, disnaker_id: string) {
