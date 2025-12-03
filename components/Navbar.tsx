@@ -105,7 +105,7 @@ export default function Navbar() {
             <p className="text-sm text-gray-600">Silakan pilih jenis akun untuk masuk</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Link href="/login/candidate" className="group border border-[#e5e7eb] rounded-xl p-6 hover:border-[#355485] transition-colors">
+            <Link href="/login/candidate" onClick={() => setOpenLogin(false)} className="group border border-[#e5e7eb] rounded-xl p-6 hover:border-[#355485] transition-colors">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-[#f3f4f6] text-[#355485] flex items-center justify-center">
                   <i className="ri-user-line"></i>
@@ -116,7 +116,7 @@ export default function Navbar() {
                 </div>
               </div>
             </Link>
-            <Link href="/login/company" className="group border border-[#e5e7eb] rounded-xl p-6 hover:border-[#355485] transition-colors">
+            <Link href="/login/company" onClick={() => setOpenLogin(false)} className="group border border-[#e5e7eb] rounded-xl p-6 hover:border-[#355485] transition-colors">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-[#f3f4f6] text-[#355485] flex items-center justify-center">
                   <i className="ri-building-2-line"></i>
@@ -137,11 +137,11 @@ export default function Navbar() {
             <p className="text-sm text-gray-600">Bergabunglah dengan ribuan pencari kerja yang telah menemukan pekerjaan melalui platform kami</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/register/candidate" className="px-8 py-4 bg-[#355485] hover:bg-[#2a436c] text-white font-semibold rounded-xl transition-all shadow-lg flex items-center justify-center gap-3">
+            <Link href="/register/candidate" onClick={() => setOpenRegister(false)} className="px-8 py-4 bg-[#355485] hover:bg-[#2a436c] text-white font-semibold rounded-xl transition-all shadow-lg flex items-center justify-center gap-3">
               <i className="ri-user-add-line"></i>
               Daftar Pencari Kerja
             </Link>
-            <Link href="/register/company" className="px-8 py-4 border-2 border-[#355485] text-[#355485] font-semibold rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-3">
+            <Link href="/register/company" onClick={() => setOpenRegister(false)} className="px-8 py-4 border-2 border-[#355485] text-[#355485] font-semibold rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-3">
               <i className="ri-building-line"></i>
               Daftar Perusahaan
             </Link>
