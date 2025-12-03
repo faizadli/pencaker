@@ -40,6 +40,7 @@ export default function PerusahaanPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
   const canVerify = permissions.includes("perusahaan.verify");
   const canCreate = permissions.includes("perusahaan.create");
   const canUpdate = permissions.includes("perusahaan.update");
@@ -140,6 +141,7 @@ export default function PerusahaanPage() {
   useEffect(() => {
     async function loadCompanies() {
       try {
+        setLoading(true);
         if (!permsLoaded) return;
         const statusParam = statusFilter !== "all" ? uiToApiStatus[statusFilter] : undefined;
         const resp = await listCompanies({ status: statusParam, search: searchTerm || undefined, page, limit: pageSize });
@@ -149,6 +151,8 @@ export default function PerusahaanPage() {
         if (p) setTotal(p.total);
       } catch {
         setPerusahaanList([]);
+      } finally {
+        setLoading(false);
       }
     }
     loadCompanies();
@@ -200,6 +204,14 @@ export default function PerusahaanPage() {
     <>
       <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64">
         <div className="px-4 sm:px-6">
+          {loading && (
+            <div className="flex items-center justify-center h-[40vh]">
+              <div className="flex items-center gap-3 text-[#355485]">
+                <div className="w-5 h-5 border-2 border-[#355485] border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm font-medium">Memuat data perusahaan...</span>
+              </div>
+            </div>
+          )}
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Perusahaan</h1>
             <p className="text-sm text-[#6b7280] mt-1">Kelola data perusahaan mitra dan verifikasi legalitas</p>

@@ -81,7 +81,7 @@ export default function ProfilePage() {
   ]);
 
   const handleLogout = () => {
-    if (confirm("Yakin ingin keluar?")) window.location.href = "/login";
+    if (confirm("Yakin ingin keluar?")) window.location.href = "/";
   };
 
   const handleChangePassword = (e: React.FormEvent) => {

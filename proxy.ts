@@ -9,7 +9,7 @@ export function proxy(req: NextRequest) {
 
   if (path.startsWith("/dashboard")) {
     if (!token) {
-      url.pathname = "/login";
+      url.pathname = "/";
       return NextResponse.redirect(url);
     }
 

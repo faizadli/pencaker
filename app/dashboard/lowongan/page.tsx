@@ -119,6 +119,7 @@ export default function LowonganPage() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [loading, setLoading] = useState(true);
 
   const EMPTY_NEW_JOB: NewJob = { posisi: "", sektor: "", tipe: "Full-time", batasAkhir: "", deskripsi: "", experience_required: "", education_required: "", skills_required: "", min_salary: 0, max_salary: 0, work_setup: "WFO" };
   const [newJob, setNewJob] = useState<NewJob>(EMPTY_NEW_JOB);
@@ -182,12 +183,14 @@ export default function LowonganPage() {
     const allowed = permissions.includes("lowongan.read");
     if (!allowed) {
       router.replace("/dashboard");
+      setLoading(false);
     }
   }, [permissions, permsLoaded, router, role]);
 
   useEffect(() => {
     async function loadJobs() {
       try {
+        setLoading(true);
         if (!permsLoaded) return;
         if (role === "company" && companyId) {
           if (permissions.includes("lowongan.read")) {
@@ -224,6 +227,8 @@ export default function LowonganPage() {
         }
       } catch {
         setLowonganList([]);
+      } finally {
+        setLoading(false);
       }
     }
     loadJobs();
@@ -399,8 +404,16 @@ export default function LowonganPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64" dir="ltr">
+      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64">
         <div className="px-4 sm:px-6">
+          {loading && (
+            <div className="flex items-center justify-center h-[40vh]">
+              <div className="flex items-center gap-3 text-[#355485]">
+                <div className="w-5 h-5 border-2 border-[#355485] border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm font-medium">Memuat data lowongan...</span>
+              </div>
+            </div>
+          )}
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Lowongan Pekerjaan</h1>
             <p className="text-sm text-[#6b7280] mt-1">Kelola lowongan aktif, ajukan baru, dan pantau proses rekrutmen</p>

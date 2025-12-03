@@ -40,6 +40,7 @@ export default function UsersPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editUser, setEditUser] = useState<string | null>(null);
@@ -51,6 +52,7 @@ export default function UsersPage() {
   useEffect(() => {
     async function load() {
       try {
+        setLoading(true);
         const role = typeof window !== "undefined" ? (localStorage.getItem("role") || "") : "";
         const rolesResp = await listRoles();
         const roleItems = (rolesResp.data || rolesResp) as { id: number; name: string }[];
@@ -74,6 +76,8 @@ export default function UsersPage() {
         if (p) setTotal(p.total);
       } catch {
         setUsers([]);
+      } finally {
+        setLoading(false);
       }
     }
     load();
@@ -166,6 +170,14 @@ export default function UsersPage() {
     <>
       <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64">
         <div className="px-4 sm:px-6">
+          {loading && (
+            <div className="flex items-center justify-center h-[40vh]">
+              <div className="flex items-center gap-3 text-[#355485]">
+                <div className="w-5 h-5 border-2 border-[#355485] border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm font-medium">Memuat data pengguna...</span>
+              </div>
+            </div>
+          )}
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Pengguna & Hak Akses</h1>
             <p className="text-sm text-[#6b7280] mt-1">Kelola admin, atur role, dan kontrol akses sistem</p>

@@ -47,7 +47,7 @@ export function startSession(role: string, userId: string | null, token?: string
   }
 }
 
-export function logout(redirect: string = "/login") {
+export function logout(redirect: string = "/") {
   localStorage.removeItem("token");
   localStorage.removeItem("lastActivity");
   localStorage.removeItem("role");

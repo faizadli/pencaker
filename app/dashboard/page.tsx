@@ -59,6 +59,7 @@ function DashboardPageComponent() {
   const [stats, setStats] = useState({ jobSeekers: 0, activeJobs: 0, companies: 0 });
   const [candRows, setCandRows] = useState<Array<{ birthdate?: string; gender?: string }>>([]);
   const [jobRows, setJobRows] = useState<Array<{ createdAt?: string; created_at?: string; updated_at?: string; category?: string; status?: string; application_deadline?: string; company_name?: string; job_title?: string }>>([]);
+  const [loading, setLoading] = useState(true);
   const ensureArray = (v: unknown): unknown[] => {
     const d = (v as { data?: unknown }).data;
     if (Array.isArray(d)) return d as unknown[];
@@ -67,6 +68,7 @@ function DashboardPageComponent() {
 
   useEffect(() => {
     const loadStats = async () => {
+      setLoading(true);
       const next = { ...stats };
       const candP = canReadPencaker ? listCandidates({ limit: 100 }) : Promise.resolve(null);
       const jobsP = canReadLowongan ? listJobs({ limit: 100 }) : Promise.resolve(null);
@@ -95,6 +97,7 @@ function DashboardPageComponent() {
       }
 
       setStats(next);
+      setLoading(false);
     };
     if (canSeeOverview) loadStats();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -198,8 +201,16 @@ function DashboardPageComponent() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64">
+      <main className={`transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64`}>
         <div className="px-4 sm:px-6">
+          {loading && (
+            <div className="flex items-center justify-center h-[40vh]">
+              <div className="flex items-center gap-3 text-[#355485]">
+                <div className="w-5 h-5 border-2 border-[#355485] border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm font-medium">Memuat ringkasan dashboard...</span>
+              </div>
+            </div>
+          )}
           {isCandidate && (
             <div className="mb-6">
               <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Dashboard Pencaker</h1>

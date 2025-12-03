@@ -102,6 +102,14 @@ export default function AksesPage() {
           <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Akses</h1>
           <p className="text-sm text-[#6b7280] mt-1">Atur hak akses per role</p>
         </div>
+        {!permsLoaded && (
+          <div className="flex items-center justify-center h-[40vh]">
+            <div className="flex items-center gap-3 text-[#355485]">
+              <div className="w-5 h-5 border-2 border-[#355485] border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-sm font-medium">Memuat data akses...</span>
+            </div>
+          </div>
+        )}
         {permsLoaded && permissionCodes.includes("akses.read") && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
