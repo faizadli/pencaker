@@ -1,11 +1,15 @@
 "use client";
 import Link from "next/link";
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, useState } from "react";
 import { usePathname } from "next/navigation";
+import Modal from "./shared/Modal";
 
 export default function Navbar() {
   const pathname = usePathname();
   const isDashboard = (pathname || "").startsWith("/dashboard");
+  const [openLogin, setOpenLogin] = useState(false);
+  const [openRegister, setOpenRegister] = useState(false);
+  const [openMobile, setOpenMobile] = useState(false);
   const subscribe = (cb: () => void) => {
     if (typeof window === "undefined") return () => {};
     window.addEventListener("storage", cb);
@@ -58,22 +62,93 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="hidden md:flex items-center gap-4">
-                <Link href="/login" className="text-[#2a436c] hover:text-[#355485] font-medium transition-colors">Masuk</Link>
-                <Link href="/register" className="bg-[#355485] hover:bg-[#2a436c] text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                <button onClick={() => setOpenLogin(true)} className="text-[#2a436c] hover:text-[#355485] font-medium transition-colors">Masuk</button>
+                <button onClick={() => setOpenRegister(true)} className="bg-[#355485] hover:bg-[#2a436c] text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
                   <i className="ri-user-add-line"></i>
                   Daftar
-                </Link>
+                </button>
               </div>
             )}
 
             <div className="md:hidden">
-              <button className="text-[#2a436c] p-2">
+              <button aria-label="Menu" onClick={() => setOpenMobile(v => !v)} className="text-[#2a436c] p-2">
                 <i className="ri-menu-line text-xl"></i>
               </button>
             </div>
           </div>
         </div>
       </nav>
+      {openMobile && (
+        <div className="md:hidden fixed top-16 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow">
+          <div className="px-4 py-3 space-y-3">
+            <Link href="/" onClick={() => setOpenMobile(false)} className="block text-[#2a436c] font-medium">Beranda</Link>
+            <Link href="/about" onClick={() => setOpenMobile(false)} className="block text-gray-700">Tentang Kami</Link>
+            <Link href="/jobs" onClick={() => setOpenMobile(false)} className="block text-gray-700">Lowongan</Link>
+            <Link href="#" onClick={() => setOpenMobile(false)} className="block text-gray-700">Pelatihan</Link>
+            <Link href="#" onClick={() => setOpenMobile(false)} className="block text-gray-700">Informasi</Link>
+            <Link href="#" onClick={() => setOpenMobile(false)} className="block text-gray-700">Pengaduan</Link>
+            {isLoggedIn ? (
+              <Link href="/dashboard" onClick={() => setOpenMobile(false)} className="block bg-[#355485] text-white px-4 py-2 rounded-lg">Dashboard</Link>
+            ) : (
+              <div className="flex gap-3">
+                <button onClick={() => { setOpenMobile(false); setOpenLogin(true); }} className="flex-1 text-[#2a436c] border border-gray-300 px-4 py-2 rounded-lg">Masuk</button>
+                <button onClick={() => { setOpenMobile(false); setOpenRegister(true); }} className="flex-1 bg-[#355485] text-white px-4 py-2 rounded-lg">Daftar</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      <Modal open={openLogin} title="Masuk" onClose={() => setOpenLogin(false)} size="xl">
+        <div className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-[#2a436c] mb-2">Masuk</h2>
+            <p className="text-sm text-gray-600">Silakan pilih jenis akun untuk masuk</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Link href="/login/candidate" className="group border border-[#e5e7eb] rounded-xl p-6 hover:border-[#355485] transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-[#f3f4f6] text-[#355485] flex items-center justify-center">
+                  <i className="ri-user-line"></i>
+                </div>
+                <div>
+                  <div className="font-semibold text-[#1f2937]">Pencaker</div>
+                  <div className="text-sm text-[#6b7280]">Login untuk pencari kerja</div>
+                </div>
+              </div>
+            </Link>
+            <Link href="/login/company" className="group border border-[#e5e7eb] rounded-xl p-6 hover:border-[#355485] transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-[#f3f4f6] text-[#355485] flex items-center justify-center">
+                  <i className="ri-building-2-line"></i>
+                </div>
+                <div>
+                  <div className="font-semibold text-[#1f2937]">Perusahaan</div>
+                  <div className="text-sm text-[#6b7280]">Login untuk perusahaan</div>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </Modal>
+      <Modal open={openRegister} title="Daftar" onClose={() => setOpenRegister(false)} size="xl">
+        <div className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-[#2a436c] mb-2">Siap Mendapatkan Pekerjaan Impian?</h2>
+            <p className="text-sm text-gray-600">Bergabunglah dengan ribuan pencari kerja yang telah menemukan pekerjaan melalui platform kami</p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/register/candidate" className="px-8 py-4 bg-[#355485] hover:bg-[#2a436c] text-white font-semibold rounded-xl transition-all shadow-lg flex items-center justify-center gap-3">
+              <i className="ri-user-add-line"></i>
+              Daftar Pencari Kerja
+            </Link>
+            <Link href="/register/company" className="px-8 py-4 border-2 border-[#355485] text-[#355485] font-semibold rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-3">
+              <i className="ri-building-line"></i>
+              Daftar Perusahaan
+            </Link>
+          </div>
+          <p className="mt-2 text-sm text-gray-600 text-center">Sudah punya akun? <button onClick={() => { setOpenRegister(false); setOpenLogin(true); }} className="text-[#355485] hover:underline font-medium">Masuk di sini</button></p>
+        </div>
+      </Modal>
     </div>
   );
 }
