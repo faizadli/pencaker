@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Input, SearchableSelect } from "../components/shared/field";
+import { Input, SearchableSelect } from "../components/ui/field";
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -355,7 +355,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      
     </div>
   );
 }

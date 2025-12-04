@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getPublicCompanyById } from "../../../services/company";
 import { listPublicJobs } from "../../../services/jobs";
-import Pagination from "../../../components/shared/Pagination";
+import Pagination from "../../../components/ui/Pagination";
 
 type Company = {
   id?: string;

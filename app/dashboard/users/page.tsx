@@ -1,11 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Input, SearchableSelect } from "../../../components/shared/field";
-import Modal from "../../../components/shared/Modal";
+import { Input, SearchableSelect } from "../../../components/ui/field";
+import Modal from "../../../components/ui/Modal";
 import { listUsers, updateUser, deleteUser, createUser, type UserListItem } from "../../../services/users";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { useRouter } from "next/navigation";
-import Pagination from "../../../components/shared/Pagination";
+import Pagination from "../../../components/ui/Pagination";
+import Card from "../../../components/ui/Card";
+import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
+import EmptyState from "../../../components/ui/EmptyState";
 
 const ROLE_MAP_TO_API: Record<string, "super_admin" | "company" | "candidate"> = { Superadmin: "super_admin", Perusahaan: "company", Pencaker: "candidate" };
 const ROLE_MAP_FROM_API: Record<"super_admin" | "company" | "candidate" | "disnaker", string> = { super_admin: "Superadmin", company: "Perusahaan", candidate: "Pencaker", disnaker: "Superadmin" };
@@ -22,6 +25,15 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [permissionCodes, setPermissionCodes] = useState<string[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editUser, setEditUser] = useState<string | null>(null);
+  const [form, setForm] = useState<{ nama: string; email: string; role: string; unit: string; telepon: string; status: "Aktif" | "Nonaktif"; password?: string }>({ nama: "", email: "", role: "Superadmin", unit: "", telepon: "", status: "Aktif" });
+  const [submitted, setSubmitted] = useState(false);
 
   const roles = ["Superadmin", "Perusahaan", "Pencaker"];
 
@@ -35,19 +47,6 @@ export default function UsersPage() {
     status: "Aktif" | "Nonaktif";
     terakhirLogin: string;
   };
-
-  const [users, setUsers] = useState<User[]>([]);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editUser, setEditUser] = useState<string | null>(null);
-  const [form, setForm] = useState<{ nama: string; email: string; role: string; unit: string; telepon: string; status: "Aktif" | "Nonaktif"; password?: string }>({ nama: "", email: "", role: "Superadmin", unit: "", telepon: "", status: "Aktif" });
-  const [submitted, setSubmitted] = useState(false);
-
-  
 
   useEffect(() => {
     async function load() {
@@ -168,8 +167,9 @@ export default function UsersPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64">
+      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
         <div className="px-4 sm:px-6">
+
           {loading && (
             <div className="flex items-center justify-center h-[40vh]">
               <div className="flex items-center gap-3 text-[#355485]">
@@ -178,12 +178,11 @@ export default function UsersPage() {
               </div>
             </div>
           )}
+
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Pengguna & Hak Akses</h1>
             <p className="text-sm text-[#6b7280] mt-1">Kelola admin, atur role, dan kontrol akses sistem</p>
           </div>
-
-          
 
           <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] mb-6">
             <div className="flex flex-col sm:flex-row gap-4">
@@ -203,56 +202,53 @@ export default function UsersPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden mb-8">
-            <div className="overflow-x-auto hidden sm:block">
-              <table className="w-full text-sm">
-                <thead className="bg-[#cbdde9] text-[#2a436c]">
-                  <tr>
-                    <th className="py-3 px-4 font-medium text-left">Pengguna</th>
-                    <th className="py-3 px-4 font-medium text-left">Role</th>
-                    <th className="py-3 px-4 font-medium text-left">Status</th>
-                    <th className="py-3 px-4 font-medium text-left">Login Terakhir</th>
-                    <th className="py-3 px-4 font-medium text-left">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#e5e7eb]">
-                  {filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-[#f9fafb]">
-                      <td className="py-3 px-4">
-                        <div>
-                          <p className="font-medium text-[#111827]">{user.nama}</p>
-                          
-                          <p className="text-xs text-[#9ca3af]">{user.email}</p>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>{user.role}</span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.status)}`}>{user.status}</span>
-                      </td>
-                      <td className="py-3 px-4 text-[#6b7280] text-sm">{user.terakhirLogin}</td>
-                      <td className="py-3 px-4">
-                        <div className="flex gap-2">
-                          {permissionCodes.includes("users.update") && (
-                            <button onClick={() => handleEdit(user)} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition flex items-center gap-1">
-                              <i className="ri-edit-line"></i>
-                              Edit
-                            </button>
-                          )}
-                          {permissionCodes.includes("users.delete") && (
-                            <button onClick={() => handleDelete(user.id)} className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition flex items-center gap-1">
-                              <i className="ri-delete-bin-line"></i>
-                              Hapus
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <Card className="overflow-hidden mb-8">
+            <Table className="hidden sm:block">
+              <TableHead>
+                <tr>
+                  <TH className="font-medium">Pengguna</TH>
+                  <TH className="font-medium">Role</TH>
+                  <TH className="font-medium">Status</TH>
+                  <TH className="font-medium">Login Terakhir</TH>
+                  <TH className="font-medium">Aksi</TH>
+                </tr>
+              </TableHead>
+              <TableBody>
+                {filteredUsers.map((user) => (
+                  <TableRow key={user.id} className="">
+                    <TD>
+                      <div>
+                        <p className="font-medium text-[#111827]">{user.nama}</p>
+                        <p className="text-xs text-[#9ca3af]">{user.email}</p>
+                      </div>
+                    </TD>
+                    <TD>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>{user.role}</span>
+                    </TD>
+                    <TD>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.status)}`}>{user.status}</span>
+                    </TD>
+                    <TD className="text-[#6b7280] text-sm">{user.terakhirLogin}</TD>
+                    <TD>
+                      <div className="flex gap-2">
+                        {permissionCodes.includes("users.update") && (
+                          <button onClick={() => handleEdit(user)} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition flex items-center gap-1">
+                            <i className="ri-edit-line"></i>
+                            Edit
+                          </button>
+                        )}
+                        {permissionCodes.includes("users.delete") && (
+                          <button onClick={() => handleDelete(user.id)} className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition flex items-center gap-1">
+                            <i className="ri-delete-bin-line"></i>
+                            Hapus
+                          </button>
+                        )}
+                      </div>
+                    </TD>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
             <div className="sm:hidden">
               <div className="p-3 space-y-3">
                 {filteredUsers.map((user) => (
@@ -285,21 +281,14 @@ export default function UsersPage() {
                 ))}
               </div>
             </div>
-            <div className="border-t border-[#e5e7eb]">
+            <div className="mt-4">
               <Pagination page={page} pageSize={pageSize} total={total || filteredUsers.length} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
             </div>
-          </div>
+          </Card>
 
           {filteredUsers.length === 0 && (
-            <div className="text-center py-8 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
-              <i className="ri-user-search-line text-4xl text-gray-300 mb-3"></i>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Tidak ada pengguna ditemukan</h3>
-              <p className="text-gray-600 mb-4">Coba ubah kata kunci pencarian atau filter</p>
-              <button onClick={() => { setSearchTerm(""); setRoleFilter("all"); setStatusFilter("all"); }} className="px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">Reset Pencarian</button>
-            </div>
+            <EmptyState icon="ri-user-search-line" title="Tidak ada pengguna ditemukan" description="Coba ubah kata kunci pencarian atau filter" onReset={() => { setSearchTerm(""); setRoleFilter("all"); setStatusFilter("all"); }} resetLabel="Reset Pencarian" />
           )}
-
-          
 
           <Modal
             open={isModalOpen}

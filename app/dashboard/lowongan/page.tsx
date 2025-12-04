@@ -1,9 +1,13 @@
 "use client";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
- import { Input, SearchableSelect, SegmentedToggle, TextEditor } from "../../../components/shared/field";
-import Pagination from "../../../components/shared/Pagination";
-import Modal from "../../../components/shared/Modal";
+ import { Input, SearchableSelect, SegmentedToggle, TextEditor } from "../../../components/ui/field";
+import Pagination from "../../../components/ui/Pagination";
+import Modal from "../../../components/ui/Modal";
+import StatCard from "../../../components/ui/StatCard";
+import CardGrid from "../../../components/ui/CardGrid";
+import Card from "../../../components/ui/Card";
+import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
 import { listJobs, createJob, approveJob, rejectJob, updateJob } from "../../../services/jobs";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { getCompanyProfile, getCompanyProfileById, getDisnakerProfile } from "../../../services/profile";
@@ -47,7 +51,6 @@ export default function LowonganPage() {
 
   type UITipe = "Full-time" | "Part-time" | "Remote" | "Shift" | "Kontrak";
   type UIStatus = "Aktif" | "Menunggu Verifikasi" | "Kadaluarsa";
-  // include rejected status in UI
   type UIStatusExtended = UIStatus | "Ditolak";
 
   const jobTypeMap: Record<UITipe, "full-time" | "part-time" | "internship" | "contract" | "freelance"> = {
@@ -120,12 +123,9 @@ export default function LowonganPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(true);
-
   const EMPTY_NEW_JOB: NewJob = { posisi: "", sektor: "", tipe: "Full-time", batasAkhir: "", deskripsi: "", experience_required: "", education_required: "", skills_required: "", min_salary: 0, max_salary: 0, work_setup: "WFO" };
   const [newJob, setNewJob] = useState<NewJob>(EMPTY_NEW_JOB);
   const [submittedJob, setSubmittedJob] = useState(false);
-
-  // initial role and userId read via useState initializer above
 
   const enrichJobsWithCompanyName = useCallback(async (rows: Job[]) => {
     try {
@@ -234,10 +234,6 @@ export default function LowonganPage() {
     loadJobs();
   }, [role, companyId, permissions, enrichJobsWithCompanyName, statusFilter, permsLoaded, uiToApiStatus, page, pageSize]);
 
-  
-
-  
-
   const filteredLowongan: ViewJob[] = useMemo(() => {
     const toView: ViewJob[] = lowonganList.map((j) => ({
       id: j.id,
@@ -266,8 +262,7 @@ export default function LowonganPage() {
       skills_required: j.skills_required,
     }));
     return toView.filter((lowongan: ViewJob) => {
-      const matchesSearch =
-        lowongan.posisi.toLowerCase().includes(searchTerm.toLowerCase()) || lowongan.perusahaan.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = lowongan.posisi.toLowerCase().includes(searchTerm.toLowerCase()) || lowongan.perusahaan.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === "all" || lowongan.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -404,7 +399,7 @@ export default function LowonganPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64">
+      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
         <div className="px-4 sm:px-6">
           {loading && (
             <div className="flex items-center justify-center h-[40vh]">
@@ -445,9 +440,9 @@ export default function LowonganPage() {
                   <i className="ri-add-line"></i>
                   Tambah
                 </button>)}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
           <Modal open={showForm} title={editingId ? "Ubah Lowongan" : "Ajukan Lowongan"} onClose={() => { setShowForm(false); setEditingId(null); setNewJob(EMPTY_NEW_JOB); }} size="xl" actions={
             <>
@@ -543,9 +538,8 @@ export default function LowonganPage() {
             )}
           </Modal>
 
-
           {viewMode === "grid" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardGrid>
               {paginatedLowongan.map((job, idx) => (
                 <div key={`${job.id || `${job.companyId}-${job.posisi}-${job.batasAkhir}`}-${job.status}-${idx}`} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="block p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
@@ -629,54 +623,52 @@ export default function LowonganPage() {
                   </div>
                 </div>
               ))}
-            </div>
+            </CardGrid>
           ) : (
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
-              <div className="overflow-x-auto hidden sm:block">
-                <table className="w-full text-sm">
-                  <thead className="bg-[#cbdde9] text-[#2a436c]">
-                    <tr>
-                      <th className="py-3 px-4 text-left">Posisi</th>
-                      <th className="py-3 px-4 text-left">Perusahaan</th>
-                      <th className="py-3 px-4 text-left">Lokasi</th>
-                      <th className="py-3 px-4 text-left">Status</th>
-                      <th className="py-3 px-4 text-left">Pelamar</th>
-                      <th className="py-3 px-4 text-left">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedLowongan.map((job, idx) => (
-                      <tr key={`${job.id || `${job.companyId}-${job.posisi}-${job.batasAkhir}`}-${job.status}-${idx}`} className="border-b border-[#e5e7eb] hover:bg-[#f9fafb]">
-                        <td className="py-3 px-4">
-                          <div>
-                            <span className="font-medium text-[#111827] hover:text-[#355485]">{job.posisi}</span>
-                            <p className="text-xs text-[#4b5563]">{job.tipe}</p>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-[#111827]">{job.perusahaan}</td>
-                        <td className="py-3 px-4">
-                          <span className="text-xs bg-gray-100 px-2 py-1 rounded text-[#6b7280]">{job.lokasi}</span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(job.status)}`}>{job.status}</span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="text-center">
-                            <p className="font-bold text-[#2a436c]">{job.pelamar}</p>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                      <div className="flex gap-2">
-                        <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">
-                          {job.status === "Menunggu Verifikasi" && canVerify ? "Review & Konfirmasi" : "Detail"}
-                        </button>
-                      </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <Card className="overflow-hidden">
+              <Table className="hidden sm:block">
+                <TableHead>
+                  <tr>
+                    <TH>Posisi</TH>
+                    <TH>Perusahaan</TH>
+                    <TH>Lokasi</TH>
+                    <TH>Status</TH>
+                    <TH>Pelamar</TH>
+                    <TH>Aksi</TH>
+                  </tr>
+                </TableHead>
+                <TableBody>
+                  {paginatedLowongan.map((job, idx) => (
+                    <TableRow key={`${job.id || `${job.companyId}-${job.posisi}-${job.batasAkhir}`}-${job.status}-${idx}`}>
+                      <TD>
+                        <div>
+                          <span className="font-medium text-[#111827] hover:text-[#355485]">{job.posisi}</span>
+                          <p className="text-xs text-[#4b5563]">{job.tipe}</p>
+                        </div>
+                      </TD>
+                      <TD className="text-[#111827]">{job.perusahaan}</TD>
+                      <TD>
+                        <span className="text-xs bg-gray-100 px-2 py-1 rounded text-[#6b7280]">{job.lokasi}</span>
+                      </TD>
+                      <TD>
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(job.status)}`}>{job.status}</span>
+                      </TD>
+                      <TD>
+                        <div className="text-center">
+                          <p className="font-bold text-[#2a436c]">{job.pelamar}</p>
+                        </div>
+                      </TD>
+                      <TD>
+                        <div className="flex gap-2">
+                          <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">
+                            {job.status === "Menunggu Verifikasi" && canVerify ? "Review & Konfirmasi" : "Detail"}
+                          </button>
+                        </div>
+                      </TD>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
               <div className="sm:hidden p-3 space-y-3">
                 {paginatedLowongan.map((job, idx) => (
                   <div key={`m-${job.id || `${job.companyId}-${job.posisi}-${job.batasAkhir}`}-${job.status}-${idx}`} className="border border-[#e5e7eb] rounded-lg p-3">
@@ -727,10 +719,10 @@ export default function LowonganPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
 
-          <div className="mt-4 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
+          <div className="mt-4">
             <Pagination page={page} pageSize={pageSize} total={filteredLowongan.length} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
           </div>
 
@@ -748,22 +740,7 @@ export default function LowonganPage() {
   );
 }
 
-function StatCard({ title, value, change, color, icon }: { title: string; value: number; change: string; color: string; icon: string }) {
-  return (
-    <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] hover:shadow-lg transition-shadow">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-xs sm:text-sm text-[#6b7280]">{title}</p>
-          <p className="text-xl sm:text-2xl font-bold text-[#2a436c] mt-1">{value}</p>
-          <p className="text-xs text-[#9ca3af] mt-1">{change}</p>
-        </div>
-        <div className="p-2 sm:p-3 w-10 h-10 flex items-center justify-center rounded-full text-white" style={{ backgroundColor: color }}>
-          <i className={`${icon} text-lg sm:text-xl`}></i>
-        </div>
-      </div>
-    </div>
-  );
-}
+ 
   const formatDate = (v: unknown) => {
     const s = typeof v === "string" ? v : "";
     if (!s) return "-";

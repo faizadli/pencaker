@@ -45,6 +45,9 @@ export function startSession(role: string, userId: string | null, token?: string
     document.cookie = `sessionToken=${t}; path=/; max-age=604800`;
     document.cookie = `role=${role}; path=/; max-age=604800`;
   }
+  if (typeof window !== "undefined") {
+    try { window.dispatchEvent(new Event("auth:update")); } catch {}
+  }
 }
 
 export function logout(redirect: string = "/") {
@@ -55,6 +58,9 @@ export function logout(redirect: string = "/") {
   if (typeof document !== "undefined") {
     document.cookie = `sessionToken=; path=/; max-age=0`;
     document.cookie = `role=; path=/; max-age=0`;
+  }
+  if (typeof window !== "undefined") {
+    try { window.dispatchEvent(new Event("auth:update")); } catch {}
   }
   if (typeof window !== "undefined") window.location.href = redirect;
 }

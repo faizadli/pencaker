@@ -1,7 +1,11 @@
 "use client";
 import { useState } from "react";
-import { Input, SearchableSelect, SegmentedToggle } from "../../../components/shared/field";
-import Pagination from "../../../components/shared/Pagination";
+import { Input, SearchableSelect, SegmentedToggle } from "../../../components/ui/field";
+import StatCard from "../../../components/ui/StatCard";
+import Pagination from "../../../components/ui/Pagination";
+import Card from "../../../components/ui/Card";
+import CardGrid from "../../../components/ui/CardGrid";
+import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
 
 export default function PelatihanPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,7 +45,7 @@ export default function PelatihanPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64">
+      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
         <div className="px-4 sm:px-6">
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Pelatihan & BLK</h1>
@@ -78,7 +82,7 @@ export default function PelatihanPage() {
           </div>
 
           {viewMode === "grid" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardGrid>
               {paginatedPrograms.map((prog) => (
                 <div key={prog.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
@@ -121,49 +125,47 @@ export default function PelatihanPage() {
                   </div>
                 </div>
               ))}
-            </div>
+            </CardGrid>
           ) : (
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-[#cbdde9] text-[#2a436c]">
-                    <tr>
-                      <th className="py-3 px-4 text-left">Program Pelatihan</th>
-                      <th className="py-3 px-4 text-left">Penyelenggara</th>
-                      <th className="py-3 px-4 text-left">Bidang</th>
-                      <th className="py-3 px-4 text-left">Status</th>
-                      <th className="py-3 px-4 text-left">Peserta</th>
-                      <th className="py-3 px-4 text-left">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedPrograms.map((prog) => (
-                      <tr key={prog.id} className="border-b border-[#e5e7eb] hover:bg-[#f9fafb]">
-                        <td className="py-3 px-4">
-                          <div>
-                            <p className="font-medium text-[#111827]">{prog.nama}</p>
-                            <p className="text-xs text-[#4b5563]">{prog.jadwal}</p>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-[#111827]">{prog.penyelenggara}</td>
-                        <td className="py-3 px-4"><span className="text-xs bg-gray-100 px-2 py-1 rounded text-[#6b7280]">{prog.bidang}</span></td>
-                        <td className="py-3 px-4"><span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(prog.status)}`}>{prog.status}</span></td>
-                        <td className="py-3 px-4"><div className="text-center"><p className="font-bold text-[#2a436c]">{prog.peserta.length}</p><p className="text-xs text-[#6b7280]">dari {prog.kuota}</p></div></td>
-                        <td className="py-3 px-4">
-                          <div className="flex gap-2">
-                            <button className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Detail</button>
-                            <button className="px-2 py-1 text-xs border border-[#e5e7eb] text-[#6b7280] rounded hover:bg-gray-50 transition">Edit</button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <Card className="overflow-hidden">
+              <Table>
+                <TableHead>
+                  <tr>
+                    <TH>Program Pelatihan</TH>
+                    <TH>Penyelenggara</TH>
+                    <TH>Bidang</TH>
+                    <TH>Status</TH>
+                    <TH>Peserta</TH>
+                    <TH>Aksi</TH>
+                  </tr>
+                </TableHead>
+                <TableBody>
+                  {paginatedPrograms.map((prog) => (
+                    <TableRow key={prog.id}>
+                      <TD>
+                        <div>
+                          <p className="font-medium text-[#111827]">{prog.nama}</p>
+                          <p className="text-xs text-[#4b5563]">{prog.jadwal}</p>
+                        </div>
+                      </TD>
+                      <TD className="text-[#111827]">{prog.penyelenggara}</TD>
+                      <TD><span className="text-xs bg-gray-100 px-2 py-1 rounded text-[#6b7280]">{prog.bidang}</span></TD>
+                      <TD><span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(prog.status)}`}>{prog.status}</span></TD>
+                      <TD><div className="text-center"><p className="font-bold text-[#2a436c]">{prog.peserta.length}</p><p className="text-xs text-[#6b7280]">dari {prog.kuota}</p></div></TD>
+                      <TD>
+                        <div className="flex gap-2">
+                          <button className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Detail</button>
+                          <button className="px-2 py-1 text-xs border border-[#e5e7eb] text-[#6b7280] rounded hover:bg-gray-50 transition">Edit</button>
+                        </div>
+                      </TD>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
           )}
 
-          <div className="mt-4 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
+          <div className="mt-4">
             <Pagination page={page} pageSize={pageSize} total={filteredPrograms.length} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
           </div>
 
@@ -178,22 +180,5 @@ export default function PelatihanPage() {
         </div>
       </main>
     </>
-  );
-}
-
-function StatCard({ title, value, change, color, icon }: { title: string; value: number; change: string; color: string; icon: string }) {
-  return (
-    <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] hover:shadow-lg transition-shadow">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-xs sm:text-sm text-[#6b7280]">{title}</p>
-          <p className="text-xl sm:text-2xl font-bold text-[#2a436c] mt-1">{value}</p>
-          <p className="text-xs text-[#9ca3af] mt-1">{change}</p>
-        </div>
-        <div className="p-2 sm:p-3 w-10 h-10 flex items-center justify-center rounded-full text-white" style={{ backgroundColor: color }}>
-          <i className={`${icon} text-lg sm:text-xl`}></i>
-        </div>
-      </div>
-    </div>
   );
 }

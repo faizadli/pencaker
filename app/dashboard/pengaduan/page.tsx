@@ -1,7 +1,12 @@
 "use client";
 import { useState } from "react";
-import Pagination from "../../../components/shared/Pagination";
-import { Input, SearchableSelect, Textarea, SegmentedToggle } from "../../../components/shared/field";
+import Pagination from "../../../components/ui/Pagination";
+import StatCard from "../../../components/ui/StatCard";
+import CardGrid from "../../../components/ui/CardGrid";
+import Card from "../../../components/ui/Card";
+import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
+import EmptyState from "../../../components/ui/EmptyState";
+import { Input, SearchableSelect, Textarea, SegmentedToggle } from "../../../components/ui/field";
 
 export default function PengaduanPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,7 +63,7 @@ export default function PengaduanPage() {
 
   return (
     <>
-      <main className={`transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64`}>
+      <main className={`transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64`}>
         <div className="px-4 sm:px-6">
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Layanan Pengaduan Ketenagakerjaan</h1>
@@ -92,7 +97,7 @@ export default function PengaduanPage() {
           </div>
 
           {viewMode === "grid" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardGrid>
               {paginatedPengaduan.map((p) => (
                 <div key={p.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
@@ -128,30 +133,42 @@ export default function PengaduanPage() {
                   </div>
                 </div>
               ))}
-            </div>
+            </CardGrid>
           ) : (
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-[#cbdde9] text-[#2a436c]"><tr><th className="py-3 px-4 text-left">ID</th><th className="py-3 px-4 text-left">Pelapor</th><th className="py-3 px-4 text-left">Jenis</th><th className="py-3 px-4 text-left">Perusahaan</th><th className="py-3 px-4 text-left">Status</th><th className="py-3 px-4 text-left">Aksi</th></tr></thead>
-                  <tbody>
-                    {paginatedPengaduan.map((p) => (
-                      <tr key={p.id} className="border-b border-[#e5e7eb] hover:bg-[#f9fafb]">
-                        <td className="py-3 px-4"><span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-[#111827]">#{p.id}</span></td>
-                        <td className="py-3 px-4"><div><p className="font-medium text-[#111827]">{p.pelapor}</p><p className="text-xs text-[#4b5563]">{p.tanggal}</p></div></td>
-                        <td className="py-3 px-4"><span className={`px-2 py-1 text-xs rounded-full ${getJenisColor(p.jenis)}`}>{p.jenis}</span></td>
-                        <td className="py-3 px-4 text-[#6b7280]">{p.perusahaan}</td>
-                        <td className="py-3 px-4"><span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(p.status)}`}>{p.status}</span></td>
-                        <td className="py-3 px-4"><div className="flex gap-2"><button onClick={() => handleEditNote(p.id)} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Edit</button><SearchableSelect value={p.status} onChange={(v) => handleUpdateStatus(p.id, v)} className="text-xs px-2 py-1" options={[{ value: "Pending", label: "Pending" }, { value: "Proses", label: "Proses" }, { value: "Selesai", label: "Selesai" }]} /></div></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <Card className="overflow-hidden">
+              <Table>
+                <TableHead>
+                  <tr>
+                    <TH>ID</TH>
+                    <TH>Pelapor</TH>
+                    <TH>Jenis</TH>
+                    <TH>Perusahaan</TH>
+                    <TH>Status</TH>
+                    <TH>Aksi</TH>
+                  </tr>
+                </TableHead>
+                <TableBody>
+                  {paginatedPengaduan.map((p) => (
+                    <TableRow key={p.id}>
+                      <TD><span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-[#111827]">#{p.id}</span></TD>
+                      <TD><div><p className="font-medium text-[#111827]">{p.pelapor}</p><p className="text-xs text-[#4b5563]">{p.tanggal}</p></div></TD>
+                      <TD><span className={`px-2 py-1 text-xs rounded-full ${getJenisColor(p.jenis)}`}>{p.jenis}</span></TD>
+                      <TD className="text-[#6b7280]">{p.perusahaan}</TD>
+                      <TD><span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(p.status)}`}>{p.status}</span></TD>
+                      <TD>
+                        <div className="flex gap-2">
+                          <button onClick={() => handleEditNote(p.id)} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Edit</button>
+                          <SearchableSelect value={p.status} onChange={(v) => handleUpdateStatus(p.id, v)} className="text-xs px-2 py-1" options={[{ value: "Pending", label: "Pending" }, { value: "Proses", label: "Proses" }, { value: "Selesai", label: "Selesai" }]} />
+                        </div>
+                      </TD>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
           )}
 
-          <div className="mt-4 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
+          <div className="mt-4">
             <Pagination page={page} pageSize={pageSize} total={filteredPengaduan.length} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
           </div>
 
@@ -166,12 +183,7 @@ export default function PengaduanPage() {
           )}
 
           {filteredPengaduan.length === 0 && (
-            <div className="text-center py-8 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
-              <i className="ri-customer-service-line text-4xl text-gray-300 mb-3"></i>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Tidak ada pengaduan</h3>
-              <p className="text-gray-600 mb-4">Coba ubah kata kunci pencarian atau filter</p>
-              <button onClick={() => { setSearchTerm(""); setStatusFilter("all"); }} className="px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">Reset Pencarian</button>
-            </div>
+            <EmptyState icon="ri-customer-service-line" title="Tidak ada pengaduan" description="Coba ubah kata kunci pencarian atau filter" onReset={() => { setSearchTerm(""); setStatusFilter("all"); }} resetLabel="Reset Pencarian" />
           )}
         </div>
       </main>
@@ -179,19 +191,4 @@ export default function PengaduanPage() {
   );
 }
 
-function StatCard({ title, value, change, color, icon }: { title: string; value: number; change: string; color: string; icon: string }) {
-  return (
-    <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] hover:shadow-lg transition-shadow">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-xs sm:text-sm text-[#6b7280]">{title}</p>
-          <p className="text-xl sm:text-2xl font-bold text-[#2a436c] mt-1">{value}</p>
-          <p className="text-xs text-[#9ca3af] mt-1">{change}</p>
-        </div>
-        <div className="p-2 sm:p-3 w-10 h-10 flex items-center justify-center rounded-full text-white" style={{ backgroundColor: color }}>
-          <i className={`${icon} text-lg sm:text-xl`}></i>
-        </div>
-      </div>
-    </div>
-  );
-}
+ 

@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
-import { Input, Textarea } from "../../../components/shared/field";
+import { Input, Textarea } from "../../../components/ui/field";
+import Card from "../../../components/ui/Card";
 
 export default function PengaturanPage() {
   type Instansi = { nama: string; alamat: string; telepon: string; email: string; website: string; logo: string };
@@ -71,27 +72,26 @@ export default function PengaturanPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64">
+      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
         <div className="px-4 sm:px-6">
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Pengaturan Sistem</h1>
             <p className="text-sm text-[#6b7280] mt-1">Atur profil instansi, tampilan publik, dan master data</p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] mb-6 overflow-hidden">
+          <Card className="mb-6 overflow-hidden">
             <div className="flex overflow-x-auto">
-            {sections.map((section) => (
+              {sections.map((section) => (
                 <button key={section.id} onClick={() => setActiveSection(section.id as "instansi" | "banner" | "maintenance" | "kategori" | "master")} className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${activeSection === section.id ? "text-[#355485] border-b-2 border-[#355485]" : "text-[#6b7280] hover:text-[#2a436c]"}`}>
                   <i className={section.icon}></i>
                   {section.label}
                 </button>
               ))}
             </div>
-          </div>
+          </Card>
 
           {activeSection === "instansi" && (
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-              <h3 className="text-lg font-semibold text-[#2a436c] mb-6">Profil Instansi</h3>
+            <Card header={<h3 className="text-lg font-semibold text-[#2a436c]">Profil Instansi</h3>}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   {(["nama", "alamat", "telepon", "email", "website"] as (keyof Instansi)[]).map((key) => (
@@ -151,12 +151,11 @@ export default function PengaturanPage() {
                   )}
                 </div>
               </div>
-            </div>
+            </Card>
           )}
 
           {activeSection === "banner" && (
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-              <h3 className="text-lg font-semibold text-[#2a436c] mb-6">Banner Website</h3>
+            <Card header={<h3 className="text-lg font-semibold text-[#2a436c]">Banner Website</h3>}>
               <div className="mb-6">
                 <div className="w-full h-48 bg-cover bg-center rounded-lg mb-4 border border-[#e5e7eb]" style={{ backgroundImage: `url(${banner.backgroundImage})` }}></div>
                 {editField === "backgroundImage" ? (
@@ -206,12 +205,11 @@ export default function PengaturanPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
 
           {activeSection === "maintenance" && (
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-              <h3 className="text-lg font-semibold text-[#2a436c] mb-6">Mode Pemeliharaan</h3>
+            <Card header={<h3 className="text-lg font-semibold text-[#2a436c]">Mode Pemeliharaan</h3>}>
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-6">
                 <div>
                   <p className="font-medium text-[#2a436c]">Status Maintenance</p>
@@ -253,12 +251,11 @@ export default function PengaturanPage() {
                   ))}
                 </div>
               )}
-            </div>
+            </Card>
           )}
 
           {activeSection === "kategori" && (
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-              <h3 className="text-lg font-semibold text-[#2a436c] mb-6">Kategori Pekerjaan</h3>
+            <Card header={<h3 className="text-lg font-semibold text-[#2a436c]">Kategori Pekerjaan</h3>}>
               {editField !== "kategoriPekerjaan" ? (
                 <div>
                   <div className="flex flex-wrap gap-2 mb-4">
@@ -283,14 +280,13 @@ export default function PengaturanPage() {
                   </div>
                 </div>
               )}
-            </div>
+            </Card>
           )}
 
           {activeSection === "master" && (
             <div className="space-y-6">
               {(["kecamatan", "pendidikan", "keahlian"] as (keyof MasterData)[]).map((key) => (
-                <div key={key} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-                  <h3 className="text-lg font-semibold text-[#2a436c] mb-4 capitalize">{key === "kecamatan" && "Data Kecamatan"}{key === "pendidikan" && "Data Pendidikan"}{key === "keahlian" && "Data Keahlian"}</h3>
+                <Card key={key} header={<h3 className="text-lg font-semibold text-[#2a436c] capitalize">{key === "kecamatan" && "Data Kecamatan"}{key === "pendidikan" && "Data Pendidikan"}{key === "keahlian" && "Data Keahlian"}</h3>}>
                   {editField !== key ? (
                     <div>
                       <div className="flex flex-wrap gap-2 mb-4">
@@ -315,7 +311,7 @@ export default function PengaturanPage() {
                       </div>
                     </div>
                   )}
-                </div>
+                </Card>
               ))}
             </div>
           )}

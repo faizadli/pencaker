@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import Sidebar from "../../components/dashboard/Sidebar";
+import Sidebar from "../../components/layout/Sidebar";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const cookieHeader = (await headers()).get("cookie") || "";

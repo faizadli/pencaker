@@ -12,6 +12,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
   const isRequired = required ?? Boolean(label);
   const [hasFile, setHasFile] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
+  const localFileRef = useRef<HTMLInputElement | null>(null);
+  const setFileRef = (el: HTMLInputElement | null) => {
+    localFileRef.current = el;
+    if (typeof ref === "function") ref(el);
+    else if (ref && typeof ref === "object") (ref as React.MutableRefObject<HTMLInputElement | null>).current = el;
+  };
   
   // For file inputs, remove value entirely
   if (rest.type === "file") {
@@ -27,12 +33,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
       <div className="w-full">
         {label && <label className="block mb-1 text-sm font-medium text-[#2a436c]">{label}</label>}
         <div className="relative w-full">
-          <i className={`${icon || "ri-upload-2-line"} absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]`}></i>
-          <input
-            ref={ref}
-            {...{ ...rest, value: undefined, required: isRequired, onChange: handleFileChange }}
-            className={`w-full ${icon ? "pl-10" : "pl-10"} pr-4 py-2 h-11 border ${showError ? "border-red-400" : "border-[#d1d5db]"} rounded-xl focus:ring-2 focus:ring-[#355485] focus:border-transparent bg-white text-[#111827] text-sm file:mr-3 file:px-3 file:py-2 file:rounded-lg file:bg-[#355485] file:text-white file:hover:bg-[#2a436c] file:border-0 file:cursor-pointer ${className || ""}`}
-          />
+          <input ref={setFileRef} {...{ ...rest, value: undefined, required: isRequired, onChange: handleFileChange }} className="sr-only" />
+          <div className={`flex items-center gap-3 w-full px-3 h-11 border ${showError ? "border-red-400" : "border-[#d1d5db]"} rounded-xl bg-white focus-within:ring-2 focus-within:ring-[#355485] focus-within:border-transparent ${className || ""}`}>
+            <i className={`${icon || "ri-upload-2-line"} text-[#6b7280]`}></i>
+            <button type="button" onClick={() => localFileRef.current?.click()} className="px-3 py-2 rounded-lg bg-[#355485] text-white text-sm hover:bg-[#2a436c]">
+              Pilih File
+            </button>
+            <span className="text-sm text-[#374151] truncate flex-1">{fileName || "Belum ada file"}</span>
+          </div>
         </div>
         {fileName && <p className="mt-1 text-xs text-[#374151] truncate">{fileName}</p>}
         {errorText && <p className="mt-1 text-xs text-red-600">{errorText}</p>}
@@ -184,7 +192,7 @@ export function SearchableSelect({ options, value, onChange, placeholder = "Pili
   }, [open]);
 
   return (
-    <div className={`w-full sm:w-auto sm:min-w-[9rem] shrink-0 ${className || ""}`}>
+    <div className={`w-full sm:w-auto sm:min-w-[9rem] shrink-0 ${className || ""}`}> 
       {label && <label className="block mb-1 text-sm font-medium text-[#2a436c]">{label}</label>}
       <div className="w-full">
         <div ref={containerRef} className="relative w-full">
@@ -371,7 +379,7 @@ export function TextEditor({ value, onChange, placeholder = "Tulis deskripsi..."
   return (
     <div className={`w-full ${className || ""}`}>
       {label && <label className="block mb-1 text-sm font-medium text-[#2a436c]">{label}</label>}
-      <div className={`border ${showError ? "border-red-400" : isFocused ? "border-[#355485]" : "border-[#d1d5db]"} rounded-xl bg-white overflow-hidden transition-colors ${isFocused ? "ring-2 ring-[#355485]" : ""}`}>
+      <div className={`border ${showError ? "border-red-400" : isFocused ? "border-[#355485]" : "border-[#d1d5db]"} rounded-xl bg-white overflow-hidden transition-colors ${isFocused ? "ring-2 ring-[#355485]" : ""}`}> 
         <div className="flex flex-wrap gap-2 p-2 border-b border-[#e5e7eb]">
           <button type="button" disabled={!editor || disabled} onMouseDown={handleBold} className={btn(editor?.isActive("bold") || false)} title="Bold">
             <i className="ri-bold"></i>

@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Input, Textarea, SearchableSelect } from "../../../components/shared/field";
+import { Input, Textarea, SearchableSelect } from "../../../components/ui/field";
 import { login, registerUser, startSession } from "../../../services/auth";
 import { presignCompanyProfileUpload, upsertCompanyProfile, getUserById } from "../../../services/profile";
+import { listDistricts, listVillages } from "../../../services/wilayah";
 
 export default function RegisterCompany() {
   const router = useRouter();
@@ -217,9 +218,7 @@ export default function RegisterCompany() {
   useEffect(() => {
     const loadDistricts = async () => {
       try {
-        const resp = await fetch("/api/wilayah/districts");
-        const rows = await resp.json();
-        const ds = ((rows as EmsifaItem[]) || []).map((r) => ({ id: String(r.id), name: String(r.name) }));
+        const ds = await listDistricts();
         setDistricts(ds);
         setDistrictOptions(ds.map((d) => ({ value: d.name, label: d.name })));
       } catch {
@@ -235,9 +234,8 @@ export default function RegisterCompany() {
     const loadVillages = async () => {
       if (!d) { setVillageOptions([]); return; }
       try {
-        const resp = await fetch(`/api/wilayah/villages/${encodeURIComponent(d.id)}`);
-        const rows = await resp.json();
-        const vs = ((rows as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
+        const vsrc = await listVillages(d.id);
+        const vs = ((vsrc as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
         setVillageOptions(vs);
       } catch {
         setVillageOptions([]);
@@ -312,8 +310,6 @@ export default function RegisterCompany() {
             </div>
           </form>
         )}
-
-        
 
         {step === 4 && (
           <div className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5">

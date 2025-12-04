@@ -1,13 +1,18 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Input, SearchableSelect, SegmentedToggle } from "../../../components/shared/field";
-import Pagination from "../../../components/shared/Pagination";
-import Modal from "../../../components/shared/Modal";
+import { Input, SearchableSelect, SegmentedToggle } from "../../../components/ui/field";
+import Pagination from "../../../components/ui/Pagination";
+import Modal from "../../../components/ui/Modal";
+import StatCard from "../../../components/ui/StatCard";
+import CardGrid from "../../../components/ui/CardGrid";
+import Card from "../../../components/ui/Card";
+import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
 import { useRouter } from "next/navigation";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { getDisnakerProfile } from "../../../services/profile";
 import { listCompanies, approveCompany, rejectCompany, createCompanyProfile, updateCompanyProfile } from "../../../services/company";
+import { listDistricts, listVillages } from "../../../services/wilayah";
 
 export default function PerusahaanPage() {
   const router = useRouter();
@@ -103,9 +108,7 @@ export default function PerusahaanPage() {
   useEffect(() => {
     const loadDistricts = async () => {
       try {
-        const resp = await fetch("/api/wilayah/districts");
-        const rows = await resp.json();
-        const ds = ((rows as EmsifaItem[]) || []).map((r) => ({ id: String(r.id), name: String(r.name) }));
+        const ds = await listDistricts();
         setDistricts(ds);
         setDistrictOptions(ds.map((d) => ({ value: d.name, label: d.name })));
       } catch {
@@ -121,9 +124,8 @@ export default function PerusahaanPage() {
     const loadVillages = async () => {
       if (!d) { setVillageOptions([]); return; }
       try {
-        const resp = await fetch(`/api/wilayah/villages/${encodeURIComponent(d.id)}`);
-        const rows = await resp.json();
-        const vs = ((rows as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
+        const vsrc = await listVillages(d.id);
+        const vs = ((vsrc as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
         setVillageOptions(vs);
       } catch {
         setVillageOptions([]);
@@ -202,7 +204,7 @@ export default function PerusahaanPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64">
+      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
         <div className="px-4 sm:px-6">
           {loading && (
             <div className="flex items-center justify-center h-[40vh]">
@@ -269,7 +271,7 @@ export default function PerusahaanPage() {
           </div>
 
           {viewMode === "grid" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardGrid>
               {filteredPerusahaan.map((p) => (
                 <div key={p.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
@@ -316,60 +318,58 @@ export default function PerusahaanPage() {
                   </div>
                 </div>
               ))}
-            </div>
+            </CardGrid>
           ) : (
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
-              <div className="overflow-x-auto hidden sm:block">
-                <table className="w-full text-sm">
-                  <thead className="bg-[#cbdde9] text-[#2a436c]">
-                    <tr>
-                      <th className="py-3 px-4 text-left">Perusahaan</th>
-                      <th className="py-3 px-4 text-left">Sektor</th>
-                      <th className="py-3 px-4 text-left">Status</th>
-                      <th className="py-3 px-4 text-left">Lowongan</th>
-                      <th className="py-3 px-4 text-left">Pelamar</th>
-                      <th className="py-3 px-4 text-left">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredPerusahaan.map((p) => (
-                      <tr key={p.id} className="border-b border-[#e5e7eb] hover:bg-[#f9fafb]">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-3">
-                            <Image src={p.company_logo || "https://picsum.photos/200"} alt={p.company_name} width={40} height={40} className="w-10 h-10 rounded-lg object-cover" />
-                            <div>
-                              <p className="font-medium text-[#111827]">{p.company_name}</p>
-                              <p className="text-xs text-[#4b5563]">{p.website || "-"}</p>
-                            </div>
+            <Card className="overflow-hidden">
+              <Table className="hidden sm:block">
+                <TableHead>
+                  <tr>
+                    <TH>Perusahaan</TH>
+                    <TH>Sektor</TH>
+                    <TH>Status</TH>
+                    <TH>Lowongan</TH>
+                    <TH>Pelamar</TH>
+                    <TH>Aksi</TH>
+                  </tr>
+                </TableHead>
+                <TableBody>
+                  {filteredPerusahaan.map((p) => (
+                    <TableRow key={p.id}>
+                      <TD>
+                        <div className="flex items-center gap-3">
+                          <Image src={p.company_logo || "https://picsum.photos/200"} alt={p.company_name} width={40} height={40} className="w-10 h-10 rounded-lg object-cover" />
+                          <div>
+                            <p className="font-medium text-[#111827]">{p.company_name}</p>
+                            <p className="text-xs text-[#4b5563]">{p.website || "-"}</p>
                           </div>
-                        </td>
-                        <td className="py-3 px-4 text-[#111827]">{p.kelurahan || p.kecamatan || "-"}</td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}>{apiToUIStatus[getApiStatus(p)]}</span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="text-center">
-                            <p className="font-bold text-[#2a436c]">-</p>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="text-center">
-                            <p className="font-bold text-[#2a436c]">-</p>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex gap-2">
-                            <button onClick={() => { setReviewCompany(p); setShowReviewModal(true); }} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Detail</button>
-                            {canUpdate && (
-                              <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", kecamatan: p.kecamatan || "", kelurahan: p.kelurahan || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="px-3 py-1 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition">Edit</button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </div>
+                      </TD>
+                      <TD className="text-[#111827]">{p.kelurahan || p.kecamatan || "-"}</TD>
+                      <TD>
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}>{apiToUIStatus[getApiStatus(p)]}</span>
+                      </TD>
+                      <TD>
+                        <div className="text-center">
+                          <p className="font-bold text-[#2a436c]">-</p>
+                        </div>
+                      </TD>
+                      <TD>
+                        <div className="text-center">
+                          <p className="font-bold text-[#2a436c]">-</p>
+                        </div>
+                      </TD>
+                      <TD>
+                        <div className="flex gap-2">
+                          <button onClick={() => { setReviewCompany(p); setShowReviewModal(true); }} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Detail</button>
+                          {canUpdate && (
+                            <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", kecamatan: p.kecamatan || "", kelurahan: p.kelurahan || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="px-3 py-1 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition">Edit</button>
+                          )}
+                        </div>
+                      </TD>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
               <div className="sm:hidden p-3 space-y-3">
                 {filteredPerusahaan.map((p) => (
                   <div key={`m-${p.id}`} className="border border-[#e5e7eb] rounded-lg p-3">
@@ -396,10 +396,10 @@ export default function PerusahaanPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
 
-          <div className="mt-4 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
+          <div className="mt-4">
             <Pagination page={page} pageSize={pageSize} total={total || filteredPerusahaan.length} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
           </div>
 
@@ -545,22 +545,5 @@ export default function PerusahaanPage() {
         </div>
       </main>
     </>
-  );
-}
-
-function StatCard({ title, value, change, color, icon }: { title: string; value: number; change: string; color: string; icon: string }) {
-  return (
-    <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] hover:shadow-lg transition-shadow">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-xs sm:text-sm text-[#6b7280]">{title}</p>
-          <p className="text-xl sm:text-2xl font-bold text-[#2a436c] mt-1">{value}</p>
-          <p className="text-xs text-[#9ca3af] mt-1">{change}</p>
-        </div>
-        <div className="p-2 sm:p-3 w-10 h-10 flex items-center justify-center rounded-full text-white" style={{ backgroundColor: color }}>
-          <i className={`${icon} text-lg sm:text-xl`}></i>
-        </div>
-      </div>
-    </div>
   );
 }

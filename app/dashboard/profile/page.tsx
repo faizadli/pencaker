@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
- 
-import { Input, SearchableSelect, Textarea } from "../../../components/shared/field";
+import { Input, SearchableSelect, Textarea } from "../../../components/ui/field";
+import Card from "../../../components/ui/Card";
 import { upsertCompanyProfile, upsertCandidateProfile, upsertDisnakerProfile, getCompanyProfile, getCandidateProfile, getDisnakerProfile, getUserById, presignCompanyProfileUpload, presignCandidateProfileUpload } from "../../../services/profile";
+import { listDistricts, listVillages } from "../../../services/wilayah";
 
 export default function ProfilePage() {
   const [role, setRole] = useState("");
@@ -169,9 +170,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const loadDistricts = async () => {
       try {
-        const resp = await fetch("/api/wilayah/districts");
-        const rows = await resp.json();
-        const ds = ((rows as EmsifaItem[]) || []).map((r) => ({ id: String(r.id), name: String(r.name) }));
+        const ds = await listDistricts();
         setDistricts(ds);
         setDistrictOptions(ds.map((d) => ({ value: d.name, label: d.name })));
       } catch {
@@ -188,9 +187,8 @@ export default function ProfilePage() {
     const loadVillages = async () => {
       if (!d) { setVillageOptionsCompany([]); return; }
       try {
-        const resp = await fetch(`/api/wilayah/villages/${encodeURIComponent(d.id)}`);
-        const rows = await resp.json();
-        const vs = ((rows as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
+        const vsrc = await listVillages(d.id);
+        const vs = ((vsrc as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
         setVillageOptionsCompany(vs);
       } catch {
         setVillageOptionsCompany([]);
@@ -205,9 +203,8 @@ export default function ProfilePage() {
     const loadVillages = async () => {
       if (!d) { setVillageOptionsCandidate([]); return; }
       try {
-        const resp = await fetch(`/api/wilayah/villages/${encodeURIComponent(d.id)}`);
-        const rows = await resp.json();
-        const vs = ((rows as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
+        const vsrc = await listVillages(d.id);
+        const vs = ((vsrc as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
         setVillageOptionsCandidate(vs);
       } catch {
         setVillageOptionsCandidate([]);
@@ -307,9 +304,8 @@ export default function ProfilePage() {
     fetchProfile();
   }, [role, userId]);
 
-  return (
-    <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64">
+  return (          
+      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
         <div className="px-4 sm:px-6">
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Profil Pengguna</h1>
@@ -318,207 +314,187 @@ export default function ProfilePage() {
 
           <div className="grid grid-cols-1 gap-6">
             <div className="space-y-6">
-              <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
-                <div className="p-6 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
-                  <h3 className="text-lg font-semibold text-[#2a436c] flex items-center gap-2">
-                    <i className="ri-user-settings-line"></i>
-                    Informasi Pengguna
-                    {role === "company" && companyFilled && !companyApproved && (
-                      <span className="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">Menunggu persetujuan Disnaker</span>
-                    )}
-                  </h3>
-                </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6" key={`form-${role}`}>
-                    <>
-                      {role === "company" ? (
-                          <>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Logo Perusahaan</label>
-                              <Input icon="ri-file-3-line" type="file" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) { setCompanyForm({ ...companyForm, company_logo: "" }); setCompanyLogoPreview(""); return; } try { const presign = await presignCompanyProfileUpload("logo", f.name, f.type || "application/octet-stream"); const resp = await fetch(presign.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); throw new Error(`Upload gagal (${resp.status}): ${txt}`); } const objectUrl = presign.url.includes("?") ? presign.url.slice(0, presign.url.indexOf("?")) : presign.url; setCompanyForm({ ...companyForm, company_logo: objectUrl }); setCompanyLogoPreview(URL.createObjectURL(f)); } catch (err) { const msg = err instanceof Error ? err.message : "Gagal upload logo perusahaan"; alert(msg); } }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
-                              {companyLogoPreview && (
-                                <div className="mt-2">
-                                  <Image src={companyLogoPreview} alt="Logo Preview" width={96} height={96} className="w-24 h-24 rounded object-cover border" unoptimized />
-                                </div>
-                              )}
+              <Card className="overflow-hidden" header={<h3 className="text-lg font-semibold text-[#2a436c] flex items-center gap-2"><i className="ri-user-settings-line"></i>Informasi Pengguna</h3>}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" key={`form-${role}`}> 
+                  {role === "company" && (
+                      <React.Fragment>
+                        <div>
+                          <label className="block text-sm font-medium text-[#6b7280] mb-2">Logo Perusahaan</label>
+                          <Input icon="ri-file-3-line" type="file" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) { setCompanyForm({ ...companyForm, company_logo: "" }); setCompanyLogoPreview(""); return; } try { const presign = await presignCompanyProfileUpload("logo", f.name, f.type || "application/octet-stream"); const resp = await fetch(presign.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); throw new Error(`Upload gagal (${resp.status}): ${txt}`); } const objectUrl = presign.url.includes("?") ? presign.url.slice(0, presign.url.indexOf("?")) : presign.url; setCompanyForm({ ...companyForm, company_logo: objectUrl }); setCompanyLogoPreview(URL.createObjectURL(f)); } catch (err) { const msg = err instanceof Error ? err.message : "Gagal upload logo perusahaan"; alert(msg); } }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
+                          {companyLogoPreview && (
+                            <div className="mt-2">
+                              <Image src={companyLogoPreview} alt="Logo Preview" width={96} height={96} className="w-24 h-24 rounded object-cover border" unoptimized />
                             </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Nama Perusahaan</label>
-                              <Input type="text" value={companyForm.company_name} onChange={(e) => setCompanyForm({ ...companyForm, company_name: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">No. Handphone</label>
-                              <Input type="text" value={companyForm.no_handphone} onChange={(e) => setCompanyForm({ ...companyForm, no_handphone: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Kecamatan</label>
-                              <SearchableSelect value={companyForm.kecamatan} onChange={(v) => setCompanyForm({ ...companyForm, kecamatan: v, kelurahan: "" })} options={[{ value: "", label: "Pilih..." }, ...districtOptions]} className="w-full" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Website</label>
-                              <Input type="url" value={companyForm.website} onChange={(e) => setCompanyForm({ ...companyForm, website: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Kelurahan</label>
-                              <SearchableSelect value={companyForm.kelurahan} onChange={(v) => setCompanyForm({ ...companyForm, kelurahan: v })} options={[{ value: "", label: "Pilih..." }, ...villageOptionsCompany]} className="w-full" />
-                            </div>
-                            <div className="md:col-span-2">
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Alamat</label>
-                              <Textarea value={companyForm.address} onChange={(e) => setCompanyForm({ ...companyForm, address: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                            </div>
-                            <div className="md:col-span-2">
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Tentang Perusahaan</label>
-                              <Textarea value={companyForm.about_company} onChange={(e) => setCompanyForm({ ...companyForm, about_company: e.target.value })} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
-                            </div>
-                          </>
-                        ) : role === "candidate" ? (
-                          <>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Foto Profil</label>
-                              <Input icon="ri-file-3-line" type="file" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) { setCandidateForm({ ...candidateForm, photo_profile: "" }); setCandidatePhotoPreview(""); return; } try { const presign = await presignCandidateProfileUpload("photo", f.name, f.type || "application/octet-stream"); const resp = await fetch(presign.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); throw new Error(`Upload gagal (${resp.status}): ${txt}`); } const objectUrl = presign.url.includes("?") ? presign.url.slice(0, presign.url.indexOf("?")) : presign.url; setCandidateForm({ ...candidateForm, photo_profile: objectUrl }); setCandidatePhotoPreview(URL.createObjectURL(f)); } catch (err) { const msg = err instanceof Error ? err.message : "Gagal upload foto profil"; alert(msg); } }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
-                              {candidatePhotoPreview && (
-                                <div className="mt-2">
-                                  <Image src={candidatePhotoPreview} alt="Foto Preview" width={96} height={96} className="w-24 h-24 rounded object-cover border" unoptimized />
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Nama Lengkap</label>
-                              <Input type="text" value={candidateForm.full_name} onChange={(e) => setCandidateForm({ ...candidateForm, full_name: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Tanggal Lahir</label>
-                              <Input type="date" value={candidateForm.birthdate} onChange={(e) => setCandidateForm({ ...candidateForm, birthdate: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Tempat Lahir</label>
-                              <Input type="text" value={candidateForm.place_of_birth} onChange={(e) => setCandidateForm({ ...candidateForm, place_of_birth: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">NIK</label>
-                              <Input type="text" value={candidateForm.nik} onChange={(e) => setCandidateForm({ ...candidateForm, nik: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Kecamatan</label>
-                              <SearchableSelect value={candidateForm.kecamatan} onChange={(v) => setCandidateForm({ ...candidateForm, kecamatan: v, kelurahan: "" })} options={[{ value: "", label: "Pilih..." }, ...districtOptions]} className="w-full" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Kelurahan</label>
-                              <SearchableSelect value={candidateForm.kelurahan} onChange={(v) => setCandidateForm({ ...candidateForm, kelurahan: v })} options={[{ value: "", label: "Pilih..." }, ...villageOptionsCandidate]} className="w-full" />
-                            </div>
-                            <div className="md:col-span-2">
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Alamat</label>
-                              <Textarea value={candidateForm.address} onChange={(e) => setCandidateForm({ ...candidateForm, address: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Kode Pos</label>
-                              <Input type="text" value={candidateForm.postal_code} onChange={(e) => setCandidateForm({ ...candidateForm, postal_code: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Jenis Kelamin</label>
-                              <SearchableSelect value={candidateForm.gender} onChange={(v) => setCandidateForm({ ...candidateForm, gender: v })} options={[{ value: "", label: "Pilih..." }, { value: "Laki-laki", label: "Laki-laki" }, { value: "Perempuan", label: "Perempuan" }]} className="w-full" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">No. Handphone</label>
-                              <Input type="text" value={candidateForm.no_handphone} onChange={(e) => setCandidateForm({ ...candidateForm, no_handphone: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Pendidikan Terakhir</label>
-                              <SearchableSelect value={candidateForm.last_education} onChange={(v) => setCandidateForm({ ...candidateForm, last_education: v })} options={[{ value: "", label: "Pilih..." }, { value: "SMA/SMK", label: "SMA/SMK" }, { value: "Diploma", label: "Diploma" }, { value: "S1", label: "S1" }, { value: "S2", label: "S2" }]} className="w-full" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Tahun Lulus</label>
-                              <Input type="number" value={candidateForm.graduation_year} onChange={(e) => setCandidateForm({ ...candidateForm, graduation_year: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Status Perkawinan</label>
-                              <SearchableSelect value={candidateForm.status_perkawinan} onChange={(v) => setCandidateForm({ ...candidateForm, status_perkawinan: v })} options={[{ value: "", label: "Pilih..." }, { value: "Belum Menikah", label: "Belum Menikah" }, { value: "Menikah", label: "Menikah" }, { value: "Cerai", label: "Cerai" }]} className="w-full" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">CV</label>
-                              <Input icon="ri-file-3-line" type="file" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) { setCandidateForm({ ...candidateForm, cv_file: "" }); return; } try { const presign = await presignCandidateProfileUpload("cv", f.name, f.type || "application/octet-stream"); const resp = await fetch(presign.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); throw new Error(`Upload gagal (${resp.status}): ${txt}`); } const objectUrl = presign.url.includes("?") ? presign.url.slice(0, presign.url.indexOf("?")) : presign.url; setCandidateForm({ ...candidateForm, cv_file: objectUrl }); } catch (err) { const msg = err instanceof Error ? err.message : "Gagal upload CV"; alert(msg); } }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">AK1</label>
-                              <Input icon="ri-file-3-line" type="file" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) { setCandidateForm({ ...candidateForm, ak1_file: "" }); return; } try { const presign = await presignCandidateProfileUpload("ak1", f.name, f.type || "application/octet-stream"); const resp = await fetch(presign.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); throw new Error(`Upload gagal (${resp.status}): ${txt}`); } const objectUrl = presign.url.includes("?") ? presign.url.slice(0, presign.url.indexOf("?")) : presign.url; setCandidateForm({ ...candidateForm, ak1_file: objectUrl }); } catch (err) { const msg = err instanceof Error ? err.message : "Gagal upload AK1"; alert(msg); } }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Nama Lengkap</label>
-                              <Input type="text" value={disnakerForm.full_name} onChange={(e) => setDisnakerForm({ ...disnakerForm, full_name: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-[#6b7280] mb-2">Divisi</label>
-                              <SearchableSelect
-                                value={disnakerForm.divisi}
-                                onChange={(v) => setDisnakerForm({ ...disnakerForm, divisi: v as typeof disnakerForm.divisi })}
-                                options={[
-                                  { value: "superadmin", label: "Superadmin" },
-                                  { value: "adminlayanan", label: "Admin Layanan" },
-                                  { value: "adminpelatihan", label: "Admin Pelatihan" },
-                                  { value: "adminpkwt", label: "Admin PKWT" },
-                                ]}
-                                className="w-full"
-                              />
-                            </div>
-                          </>
+                          )}
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#6b7280] mb-2">Nama Perusahaan</label>
+                          <Input type="text" value={companyForm.company_name} onChange={(e) => setCompanyForm({ ...companyForm, company_name: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#6b7280] mb-2">No. Handphone</label>
+                          <Input type="text" value={companyForm.no_handphone} onChange={(e) => setCompanyForm({ ...companyForm, no_handphone: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#6b7280] mb-2">Kecamatan</label>
+                          <SearchableSelect value={companyForm.kecamatan} onChange={(v) => setCompanyForm({ ...companyForm, kecamatan: v, kelurahan: "" })} options={[{ value: "", label: "Pilih..." }, ...districtOptions]} className="w-full" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#6b7280] mb-2">Website</label>
+                          <Input type="url" value={companyForm.website} onChange={(e) => setCompanyForm({ ...companyForm, website: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#6b7280] mb-2">Kelurahan</label>
+                          <SearchableSelect value={companyForm.kelurahan} onChange={(v) => setCompanyForm({ ...companyForm, kelurahan: v })} options={[{ value: "", label: "Pilih..." }, ...villageOptionsCompany]} className="w-full" />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-[#6b7280] mb-2">Alamat</label>
+                          <Textarea value={companyForm.address} onChange={(e) => setCompanyForm({ ...companyForm, address: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-[#6b7280] mb-2">Tentang Perusahaan</label>
+                          <Textarea value={companyForm.about_company} onChange={(e) => setCompanyForm({ ...companyForm, about_company: e.target.value })} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
+                        </div>
+                      </React.Fragment>
+                  )}
+                  {role === "candidate" && (
+                    <React.Fragment>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Foto Profil</label>
+                        <Input icon="ri-file-3-line" type="file" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) { setCandidateForm({ ...candidateForm, photo_profile: "" }); setCandidatePhotoPreview(""); return; } try { const presign = await presignCandidateProfileUpload("photo", f.name, f.type || "application/octet-stream"); const resp = await fetch(presign.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); throw new Error(`Upload gagal (${resp.status}): ${txt}`); } const objectUrl = presign.url.includes("?") ? presign.url.slice(0, presign.url.indexOf("?")) : presign.url; setCandidateForm({ ...candidateForm, photo_profile: objectUrl }); setCandidatePhotoPreview(URL.createObjectURL(f)); } catch (err) { const msg = err instanceof Error ? err.message : "Gagal upload foto profil"; alert(msg); } }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
+                        {candidatePhotoPreview && (
+                          <div className="mt-2">
+                            <Image src={candidatePhotoPreview} alt="Foto Preview" width={96} height={96} className="w-24 h-24 rounded object-cover border" unoptimized />
+                          </div>
                         )}
-                      </>
-                  </div>
-                  <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    <button onClick={handleSaveProfile} className="w-full sm:w-auto px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm transition-all flex items-center justify-center gap-2">
-                      <i className="ri-save-line"></i>
-                      Simpan Perubahan
-                    </button>
-                    <button onClick={handleLogout} className="w-full sm:w-auto px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm transition-all flex items-center justify-center gap-2">
-                      <i className="ri-logout-box-r-line"></i>
-                      Logout
-                    </button>
-                  </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Nama Lengkap</label>
+                        <Input type="text" value={candidateForm.full_name} onChange={(e) => setCandidateForm({ ...candidateForm, full_name: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Tanggal Lahir</label>
+                        <Input type="date" value={candidateForm.birthdate} onChange={(e) => setCandidateForm({ ...candidateForm, birthdate: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Tempat Lahir</label>
+                        <Input type="text" value={candidateForm.place_of_birth} onChange={(e) => setCandidateForm({ ...candidateForm, place_of_birth: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">NIK</label>
+                        <Input type="text" value={candidateForm.nik} onChange={(e) => setCandidateForm({ ...candidateForm, nik: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Kecamatan</label>
+                        <SearchableSelect value={candidateForm.kecamatan} onChange={(v) => setCandidateForm({ ...candidateForm, kecamatan: v, kelurahan: "" })} options={[{ value: "", label: "Pilih..." }, ...districtOptions]} className="w-full" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Kelurahan</label>
+                        <SearchableSelect value={candidateForm.kelurahan} onChange={(v) => setCandidateForm({ ...candidateForm, kelurahan: v })} options={[{ value: "", label: "Pilih..." }, ...villageOptionsCandidate]} className="w-full" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Alamat</label>
+                        <Textarea value={candidateForm.address} onChange={(e) => setCandidateForm({ ...candidateForm, address: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Kode Pos</label>
+                        <Input type="text" value={candidateForm.postal_code} onChange={(e) => setCandidateForm({ ...candidateForm, postal_code: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Jenis Kelamin</label>
+                        <SearchableSelect value={candidateForm.gender} onChange={(v) => setCandidateForm({ ...candidateForm, gender: v })} options={[{ value: "", label: "Pilih..." }, { value: "Laki-laki", label: "Laki-laki" }, { value: "Perempuan", label: "Perempuan" }]} className="w-full" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">No. Handphone</label>
+                        <Input type="text" value={candidateForm.no_handphone} onChange={(e) => setCandidateForm({ ...candidateForm, no_handphone: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Pendidikan Terakhir</label>
+                        <SearchableSelect value={candidateForm.last_education} onChange={(v) => setCandidateForm({ ...candidateForm, last_education: v })} options={[{ value: "", label: "Pilih..." }, { value: "SMA/SMK", label: "SMA/SMK" }, { value: "Diploma", label: "Diploma" }, { value: "S1", label: "S1" }, { value: "S2", label: "S2" }]} className="w-full" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Tahun Lulus</label>
+                        <Input type="number" value={candidateForm.graduation_year} onChange={(e) => setCandidateForm({ ...candidateForm, graduation_year: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Status Perkawinan</label>
+                        <SearchableSelect value={candidateForm.status_perkawinan} onChange={(v) => setCandidateForm({ ...candidateForm, status_perkawinan: v })} options={[{ value: "", label: "Pilih..." }, { value: "Belum Menikah", label: "Belum Menikah" }, { value: "Menikah", label: "Menikah" }, { value: "Cerai", label: "Cerai" }]} className="w-full" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">CV</label>
+                        <Input icon="ri-file-3-line" type="file" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) { setCandidateForm({ ...candidateForm, cv_file: "" }); return; } try { const presign = await presignCandidateProfileUpload("cv", f.name, f.type || "application/octet-stream"); const resp = await fetch(presign.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); throw new Error(`Upload gagal (${resp.status}): ${txt}`); } const objectUrl = presign.url.includes("?") ? presign.url.slice(0, presign.url.indexOf("?")) : presign.url; setCandidateForm({ ...candidateForm, cv_file: objectUrl }); } catch (err) { const msg = err instanceof Error ? err.message : "Gagal upload CV"; alert(msg); } }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">AK1</label>
+                        <Input icon="ri-file-3-line" type="file" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) { setCandidateForm({ ...candidateForm, ak1_file: "" }); return; } try { const presign = await presignCandidateProfileUpload("ak1", f.name, f.type || "application/octet-stream"); const resp = await fetch(presign.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); throw new Error(`Upload gagal (${resp.status}): ${txt}`); } const objectUrl = presign.url.includes("?") ? presign.url.slice(0, presign.url.indexOf("?")) : presign.url; setCandidateForm({ ...candidateForm, ak1_file: objectUrl }); } catch (err) { const msg = err instanceof Error ? err.message : "Gagal upload AK1"; alert(msg); } }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
+                      </div>
+                    </React.Fragment>
+                  )}
+                  {role !== "company" && role !== "candidate" && (
+                    <React.Fragment>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Nama Lengkap</label>
+                        <Input type="text" value={disnakerForm.full_name} onChange={(e) => setDisnakerForm({ ...disnakerForm, full_name: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Divisi</label>
+                        <SearchableSelect
+                          value={disnakerForm.divisi}
+                          onChange={(v) => setDisnakerForm({ ...disnakerForm, divisi: v as typeof disnakerForm.divisi })}
+                          options={[
+                            { value: "superadmin", label: "Superadmin" },
+                            { value: "adminlayanan", label: "Admin Layanan" },
+                            { value: "adminpelatihan", label: "Admin Pelatihan" },
+                            { value: "adminpkwt", label: "Admin PKWT" },
+                          ]}
+                          className="w-full"
+                        />
+                      </div>
+                    </React.Fragment>
+                  )}    
                 </div>
-              </div>
+                <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <button onClick={handleSaveProfile} className="w-full sm:w-auto px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+                    <i className="ri-save-line"></i>
+                    Simpan Perubahan
+                  </button>
+                  <button onClick={handleLogout} className="w-full sm:w-auto px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+                    <i className="ri-logout-box-r-line"></i>
+                    Logout
+                  </button>
+                </div>
+                {role === "company" && companyFilled && !companyApproved && (
+                  <div className="mt-2">
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">Menunggu persetujuan Disnaker</span>
+                  </div>
+                )}
+              </Card>
 
-              <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
-                <div className="p-6 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
-                  <h3 className="text-lg font-semibold text-[#2a436c] flex items-center gap-2">
-                    <i className="ri-lock-password-line"></i>
-                    Ubah Kata Sandi
-                  </h3>
-                </div>
-                <div className="p-6">
-                  <form onSubmit={handleChangePassword} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Password Lama</label>
-                        <Input type="password" value={passwordForm.oldPassword} onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Password Baru</label>
-                        <Input type="password" value={passwordForm.newPassword} onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-[#6b7280] mb-2">Konfirmasi Password</label>
-                        <Input type="password" value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
-                      </div>
+              <Card className="overflow-hidden" header={<div className="flex items-center gap-2"><i className="ri-lock-password-line"></i><span className="text-lg font-semibold text-[#2a436c]">Ubah Kata Sandi</span></div>}>
+                <form onSubmit={handleChangePassword} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-[#6b7280] mb-2">Password Lama</label>
+                      <Input type="password" value={passwordForm.oldPassword} onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
                     </div>
-                    <button type="submit" className="px-6 py-3 bg-[#355485] hover:bg-[#2a436c] text-white rounded-xl text-sm transition-all flex items-center gap-2">
-                      <i className="ri-save-line"></i>
-                      Simpan Kata Sandi
-                    </button>
-                  </form>
-                </div>
-              </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[#6b7280] mb-2">Password Baru</label>
+                      <Input type="password" value={passwordForm.newPassword} onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[#6b7280] mb-2">Konfirmasi Password</label>
+                      <Input type="password" value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
+                    </div>
+                  </div>
+                  <button type="submit" className="px-6 py-3 bg-[#355485] hover:bg-[#2a436c] text-white rounded-xl text-sm transition-all flex items-center gap-2">
+                    <i className="ri-save-line"></i>
+                    Simpan Kata Sandi
+                  </button>
+                </form>
+              </Card>
 
-              <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
-                <div className="p-6 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
-                  <h3 className="text-lg font-semibold text-[#2a436c] flex items-center gap-2">
-                    <i className="ri-settings-3-line"></i>
-                    Preferensi
-                  </h3>
-                </div>
-                <div className="p-6 space-y-4">
+              <Card className="overflow-hidden" header={<div className="flex items-center gap-2"><i className="ri-settings-3-line"></i><span className="text-lg font-semibold text-[#2a436c]">Preferensi</span></div>}>
+                <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 border border-[#e5e7eb] rounded-xl hover:bg-[#f9fafb] transition-colors">
                     <div className="flex items-center gap-3">
                       <i className="ri-moon-line text-xl text-[#4f90c6]"></i>
@@ -546,33 +522,24 @@ export default function ProfilePage() {
                     </label>
                   </div>
                 </div>
-              </div>
+              </Card>
 
-              <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
-                <div className="p-6 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
-                  <h3 className="text-lg font-semibold text-[#2a436c] flex items-center gap-2">
-                    <i className="ri-time-line"></i>
-                    Aktivitas Terakhir
-                  </h3>
-                </div>
-                <div className="p-6">
-                  <div className="space-y-3">
-                    {activityLog.map((act) => (
-                      <div key={act.id} className="flex items-start justify-between p-3 border border-[#e5e7eb] rounded-lg hover:bg-[#f9fafb] transition-colors">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-[#2a436c]">{act.aksi}</p>
-                          <p className="text-sm text-[#6b7280] line-clamp-1">{act.detail}</p>
-                        </div>
-                        <span className="text-xs text-[#6b7280] whitespace-nowrap">{act.waktu}</span>
+              <Card className="overflow-hidden" header={<div className="flex items-center gap-2"><i className="ri-time-line"></i><span className="text-lg font-semibold text-[#2a436c]">Aktivitas Terakhir</span></div>}>
+                <div className="space-y-3">
+                  {activityLog.map((act) => (
+                    <div key={act.id} className="flex items-start justify-between p-3 border border-[#e5e7eb] rounded-lg hover:bg-[#f9fafb] transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-[#2a436c]">{act.aksi}</p>
+                        <p className="text-sm text-[#6b7280] line-clamp-1">{act.detail}</p>
                       </div>
-                    ))}
-                  </div>
+                      <span className="text-xs text-[#6b7280] whitespace-nowrap">{act.waktu}</span>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              </Card>
             </div>
           </div>
         </div>
       </main>
-    </>
   );
 }

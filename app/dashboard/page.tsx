@@ -1,5 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
+import StatCard from "../../components/ui/StatCard";
+import Card from "../../components/ui/Card";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Bar, Pie } from "react-chartjs-2";
@@ -197,11 +199,9 @@ function DashboardPageComponent() {
     scales: { y: { beginAtZero: true, grid: { color: "#e5e7eb" }, ticks: { color: "#6b7280" } }, x: { grid: { display: false }, ticks: { color: "#6b7280" } } },
   } as const;
 
-  
-
   return (
     <>
-      <main className={`transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64`}>
+      <main className={`transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64`}>
         <div className="px-4 sm:px-6">
           {loading && (
             <div className="flex items-center justify-center h-[40vh]">
@@ -220,13 +220,15 @@ function DashboardPageComponent() {
                 <StatCard title="Lamaran Terkirim" value={5} change="Minggu ini" color="#355485" icon="ri-send-plane-2-line" />
                 <StatCard title="Wawancara Terjadwal" value={2} change="Jadwal terbaru" color="#90b6d5" icon="ri-calendar-check-line" />
               </div>
-              <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6 mt-8">
-                <h2 className="text-lg font-semibold text-[#2a436c] mb-4">Rekomendasi Lowongan</h2>
+              <Card
+                className="mt-8"
+                header={<h2 className="text-lg font-semibold text-[#2a436c]">Rekomendasi Lowongan</h2>}
+              >
                 <ul className="space-y-3 text-sm text-[#2a436c]">
                   <li className="flex justify-between"><span>Frontend Developer - PT Solusi Digital</span><Link href="/jobs" className="text-[#355485]">Lihat</Link></li>
                   <li className="flex justify-between"><span>Teknisi Jaringan - CV Makmur Abadi</span><Link href="/jobs" className="text-[#355485]">Lihat</Link></li>
                 </ul>
-              </div>
+              </Card>
             </div>
           )}
 
@@ -239,13 +241,15 @@ function DashboardPageComponent() {
                 <StatCard title="Total Pelamar" value={134} change="+27" color="#355485" icon="ri-user-line" />
                 <StatCard title="Menunggu Verifikasi" value={3} change="Perlu tindakan" color="#90b6d5" icon="ri-time-line" />
               </div>
-              <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6 mt-8">
-                <h2 className="text-lg font-semibold text-[#2a436c] mb-4">Aktivitas Terbaru</h2>
+              <Card
+                className="mt-8"
+                header={<h2 className="text-lg font-semibold text-[#2a436c]">Aktivitas Terbaru</h2>}
+              >
                 <ul className="space-y-3 text-sm text-[#2a436c]">
                   <li className="flex justify-between"><span>Lamaran baru untuk &quot;Frontend Developer&quot;</span><a href="/dashboard/lowongan" className="text-[#355485]">Kelola</a></li>
                   <li className="flex justify-between"><span>Lowongan &quot;Operator&quot; menunggu verifikasi</span><a href="/dashboard/lowongan" className="text-[#355485]">Tinjau</a></li>
                 </ul>
-              </div>
+              </Card>
             </div>
           )}
 
@@ -266,17 +270,17 @@ function DashboardPageComponent() {
 
           {canReadLowongan && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
+            <Card>
               <div className="h-64 sm:h-80">
                 <Bar data={barData} options={barOptions} />
               </div>
-            </div>
+            </Card>
             {(canReadLowongan || canReadPerusahaan) && (
-              <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
+              <Card>
                 <div className="h-64 sm:h-80">
                   <Pie data={sectorData} options={pieOptions} />
                 </div>
-              </div>
+              </Card>
             )}
           </div>
           )}
@@ -284,21 +288,14 @@ function DashboardPageComponent() {
           {(canReadPencaker || canReadLowongan) && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {canReadPencaker && (
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-[#2a436c]">Distribusi Pencari Kerja</h2>
-              </div>
+            <Card header={<h2 className="text-lg font-semibold text-[#2a436c]">Distribusi Pencari Kerja</h2>}>
               <div className="h-64 sm:h-80">
                 <Bar data={demographicsData} options={demographicOptions} />
               </div>
-            </div>
+            </Card>
             )}
             {canReadLowongan && (
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-[#2a436c]">Lowongan Hampir Tutup</h2>
-                <span className="text-xs text-[#6b7280] bg-[#f9fafb] px-2 py-1 rounded">{expiringJobs.length} lowongan</span>
-              </div>
+            <Card header={<div className="flex items-center justify-between"><h2 className="text-lg font-semibold text-[#2a436c]">Lowongan Hampir Tutup</h2><span className="text-xs text-[#6b7280] bg-[#f9fafb] px-2 py-1 rounded">{expiringJobs.length} lowongan</span></div>}>
               <div className="space-y-3">
                 {expiringJobs.length === 0 && (
                   <p className="text-sm text-[#6b7280]">Belum ada lowongan yang mendekati batas waktu.</p>
@@ -313,7 +310,7 @@ function DashboardPageComponent() {
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
             )}
           </div>
           )}
@@ -342,20 +339,3 @@ function DashboardPageComponent() {
 }
 
 export default dynamic(() => Promise.resolve(DashboardPageComponent), { ssr: false });
-
-function StatCard({ title, value, change, color, icon }: { title: string; value: number | string; change: string; color: string; icon: string }) {
-  return (
-    <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] hover:shadow-lg transition-shadow">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-xs sm:text-sm text-[#6b7280]">{title}</p>
-          <p className="text-xl sm:text-2xl font-bold text-[#2a436c] mt-1">{typeof value === "number" ? new Intl.NumberFormat("id-ID").format(value) : value}</p>
-          <p className="text-xs text-[#9ca3af] mt-1">{change}</p>
-        </div>
-        <div className="p-2 sm:p-3 w-10 h-10 flex items-center justify-center rounded-full text-white" style={{ backgroundColor: color }}>
-          <i className={`${icon} text-lg sm:text-xl`}></i>
-        </div>
-      </div>
-    </div>
-  );
-}

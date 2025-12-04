@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { assignRolePermissions, createRole, getRolePermissions, listPermissions, listRoles } from "../../../services/rbac";
-import { Input, SearchableSelect } from "../../../components/shared/field";
+import { Input, SearchableSelect } from "../../../components/ui/field";
+import Card from "../../../components/ui/Card";
 
 export default function AksesPage() {
   const router = useRouter();
@@ -96,7 +97,7 @@ export default function AksesPage() {
   };
 
   return (
-    <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64">
+    <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
       <div className="px-4 sm:px-6">
         <div className="mb-6">
           <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Akses</h1>
@@ -112,8 +113,7 @@ export default function AksesPage() {
         )}
         {permsLoaded && permissionCodes.includes("akses.read") && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-            <h3 className="text-lg font-semibold text-[#2a436c] mb-4">Role</h3>
+          <Card header={<h3 className="text-lg font-semibold text-[#2a436c]">Role</h3>}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[#6b7280] mb-2">Pilih Role</label>
@@ -145,10 +145,9 @@ export default function AksesPage() {
                 Simpan Akses
               </button>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-            <h3 className="text-lg font-semibold text-[#2a436c] mb-4">Buat Role Baru</h3>
+          <Card header={<h3 className="text-lg font-semibold text-[#2a436c]">Buat Role Baru</h3>}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[#6b7280] mb-2">Nama Role</label>
@@ -160,7 +159,7 @@ export default function AksesPage() {
               </div>
               <button onClick={handleCreateRole} className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm transition-all">Buat Role</button>
             </div>
-          </div>
+          </Card>
         </div>
         )}
       </div>

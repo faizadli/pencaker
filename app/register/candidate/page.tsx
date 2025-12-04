@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Input, SearchableSelect, SegmentedToggle, Textarea } from "../../../components/shared/field";
+import { Input, SearchableSelect, SegmentedToggle, Textarea } from "../../../components/ui/field";
 import { login, registerUser, startSession } from "../../../services/auth";
 import { presignCandidateProfileUpload, upsertCandidateProfile, getUserById } from "../../../services/profile";
 import { presignUpload, upsertAk1Document } from "../../../services/ak1";
+import { listDistricts, listVillages } from "../../../services/wilayah";
 
 export default function RegisterCandidate() {
   const router = useRouter();
@@ -269,8 +270,6 @@ export default function RegisterCandidate() {
           await upsertAk1Document({ ktp: ktpUrl, ijazah: ijazahUrl, pas_photo: pasUrl, certificate: certUrl });
         }
       }
-      
-      
       setFinalized(true);
       router.replace("/dashboard");
     } catch (e: unknown) {
@@ -284,9 +283,7 @@ export default function RegisterCandidate() {
   useEffect(() => {
     const loadDistricts = async () => {
       try {
-        const resp = await fetch("/api/wilayah/districts");
-        const rows = await resp.json();
-        const ds = ((rows as EmsifaItem[]) || []).map((r) => ({ id: String(r.id), name: String(r.name) }));
+        const ds = await listDistricts();
         setDistricts(ds);
         setDistrictOptions(ds.map((d) => ({ value: d.name, label: d.name })));
       } catch {
@@ -302,9 +299,8 @@ export default function RegisterCandidate() {
     const loadVillages = async () => {
       if (!d) { setVillageOptions([]); return; }
       try {
-        const resp = await fetch(`/api/wilayah/villages/${encodeURIComponent(d.id)}`);
-        const rows = await resp.json();
-        const vs = ((rows as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
+        const vsrc = await listVillages(d.id);
+        const vs = ((vsrc as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
         setVillageOptions(vs);
       } catch {
         setVillageOptions([]);
@@ -312,8 +308,6 @@ export default function RegisterCandidate() {
     };
     loadVillages();
   }, [profile.kecamatan, districts]);
-
-  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f3f6fb] px-4 sm:px-6 lg:px-8 py-8">

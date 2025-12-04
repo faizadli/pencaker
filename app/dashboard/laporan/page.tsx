@@ -10,6 +10,9 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import StatCard from "../../../components/ui/StatCard";
+import Card from "../../../components/ui/Card";
+import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
@@ -40,7 +43,7 @@ export default function LaporanPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64" id="print-area">
+      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64" id="print-area">
         <div className="px-4 sm:px-6">
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Laporan & Statistik</h1>
@@ -64,28 +67,43 @@ export default function LaporanPage() {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6"><div className="h-80"><Bar data={barData} options={barOptions} /></div></div>
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6"><div className="h-80"><Pie data={sectorData} options={pieOptions} /></div></div>
+            <Card><div className="h-80"><Bar data={barData} options={barOptions} /></div></Card>
+            <Card><div className="h-80"><Pie data={sectorData} options={pieOptions} /></div></Card>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6 text-center"><div className="flex items-center justify-center gap-3 mb-3"><div className="p-3 bg-blue-100 rounded-xl"><i className="ri-book-line text-2xl text-blue-600"></i></div><div><p className="text-2xl font-bold text-[#2a436c]">{stats.pelatihanSelesai}</p><p className="text-sm text-[#6b7280]">Pelatihan Selesai</p></div></div><p className="text-xs text-[#9ca3af]">Sertifikat telah diterbitkan</p></div>
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6 text-center"><div className="flex items-center justify-center gap-3 mb-3"><div className="p-3 bg-green-100 rounded-xl"><i className="ri-customer-service-line text-2xl text-green-600"></i></div><div><p className="text-2xl font-bold text-[#2a436c]">{stats.pengaduanSelesai}</p><p className="text-sm text-[#6b7280]">Pengaduan Ditangani</p></div></div><p className="text-xs text-[#9ca3af]">Termasuk mediasi & inspeksi</p></div>
+            <Card><div className="text-center"><div className="flex items-center justify-center gap-3 mb-3"><div className="p-3 bg-blue-100 rounded-xl"><i className="ri-book-line text-2xl text-blue-600"></i></div><div><p className="text-2xl font-bold text-[#2a436c]">{stats.pelatihanSelesai}</p><p className="text-sm text-[#6b7280]">Pelatihan Selesai</p></div></div><p className="text-xs text-[#9ca3af]">Sertifikat telah diterbitkan</p></div></Card>
+            <Card><div className="text-center"><div className="flex items-center justify-center gap-3 mb-3"><div className="p-3 bg-green-100 rounded-xl"><i className="ri-customer-service-line text-2xl text-green-600"></i></div><div><p className="text-2xl font-bold text-[#2a436c]">{stats.pengaduanSelesai}</p><p className="text-sm text-[#6b7280]">Pengaduan Ditangani</p></div></div><p className="text-xs text-[#9ca3af]">Termasuk mediasi & inspeksi</p></div></Card>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden mb-8">
-            <div className="p-6 border-b border-[#e5e7eb]"><h3 className="text-lg font-semibold text-[#2a436c]">Rekap Program BLK & Pengaduan</h3></div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-[#cbdde9] text-[#2a436c]"><tr><th className="py-3 px-4 font-medium">Kategori</th><th className="py-3 px-4 font-medium">Jumlah</th><th className="py-3 px-4 font-medium">Catatan</th></tr></thead>
-                <tbody className="divide-y divide-[#e5e7eb]">
-                  <tr className="hover:bg-[#f9fafb]"><td className="py-3 px-4 text-[#111827]">Program Pelatihan Selesai</td><td className="py-3 px-4 font-medium text-[#111827]">{stats.pelatihanSelesai}</td><td className="py-3 px-4 text-sm text-[#4b5563]">Sertifikat telah diterbitkan</td></tr>
-                  <tr className="hover:bg-[#f9fafb]"><td className="py-3 px-4 text-[#111827]">Pengaduan Ditangani</td><td className="py-3 px-4 font-medium text-[#111827]">{stats.pengaduanSelesai}</td><td className="py-3 px-4 text-sm text-[#4b5563]">Termasuk mediasi & inspeksi</td></tr>
-                  <tr className="hover:bg-[#f9fafb]"><td className="py-3 px-4 text-[#111827]">Rata-rata Penyelesaian Pengaduan</td><td className="py-3 px-4 font-medium text-[#111827]">5.2 hari</td><td className="py-3 px-4 text-sm text-[#4b5563]">Berdasarkan data 6 bulan terakhir</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <Card className="overflow-hidden mb-8" header={<h3 className="text-lg font-semibold text-[#2a436c]">Rekap Program BLK & Pengaduan</h3>}>
+            <Table className="text-left">
+              <TableHead>
+                <tr>
+                  <TH className="font-medium">Kategori</TH>
+                  <TH className="font-medium">Jumlah</TH>
+                  <TH className="font-medium">Catatan</TH>
+                </tr>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TD className="text-[#111827]">Program Pelatihan Selesai</TD>
+                  <TD className="font-medium text-[#111827]">{stats.pelatihanSelesai}</TD>
+                  <TD className="text-sm text-[#4b5563]">Sertifikat telah diterbitkan</TD>
+                </TableRow>
+                <TableRow>
+                  <TD className="text-[#111827]">Pengaduan Ditangani</TD>
+                  <TD className="font-medium text-[#111827]">{stats.pengaduanSelesai}</TD>
+                  <TD className="text-sm text-[#4b5563]">Termasuk mediasi & inspeksi</TD>
+                </TableRow>
+                <TableRow>
+                  <TD className="text-[#111827]">Rata-rata Penyelesaian Pengaduan</TD>
+                  <TD className="font-medium text-[#111827]">5.2 hari</TD>
+                  <TD className="text-sm text-[#4b5563]">Berdasarkan data 6 bulan terakhir</TD>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </Card>
 
           <div className="bg-gradient-to-r from-[#355485] to-[#4f90c6] text-white p-6 rounded-xl shadow-md mb-8">
             <div className="flex items-start gap-3"><div className="p-2 bg-white/20 rounded-lg"><i className="ri-lightbulb-line text-lg"></i></div><div className="flex-1"><h3 className="text-lg font-semibold mb-3">Kesimpulan Laporan</h3><ul className="text-sm space-y-2 opacity-95"><li className="flex items-center gap-2"><div className="w-1 h-1 bg-white rounded-full"></div><span>Jumlah pencari kerja meningkat 14% dibanding tahun lalu.</span></li><li className="flex items-center gap-2"><div className="w-1 h-1 bg-white rounded-full"></div><span>Sektor IT menjadi penyumbang terbesar penempatan kerja (28%).</span></li><li className="flex items-center gap-2"><div className="w-1 h-1 bg-white rounded-full"></div><span>Efektivitas penanganan pengaduan mencapai 92% terselesaikan tepat waktu.</span></li><li className="flex items-center gap-2"><div className="w-1 h-1 bg-white rounded-full"></div><span>Diperlukan peningkatan kerja sama dengan industri manufaktur dan pertanian.</span></li></ul></div></div>
@@ -98,22 +116,5 @@ export default function LaporanPage() {
         </div>
       </main>
     </>
-  );
-}
-
-function StatCard({ title, value, change, color, icon }: { title: string; value: number | string; change: string; color: string; icon: string }) {
-  return (
-    <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] hover:shadow-lg transition-shadow">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-xs sm:text-sm text-[#6b7280]">{title}</p>
-          <p className="text-xl sm:text-2xl font-bold text-[#2a436c] mt-1">{value}</p>
-          <p className="text-xs text-[#9ca3af] mt-1">{change}</p>
-        </div>
-        <div className="p-2 sm:p-3 w-10 h-10 flex items-center justify-center rounded-full text-white" style={{ backgroundColor: color }}>
-          <i className={`${icon} text-lg sm:text-xl`}></i>
-        </div>
-      </div>
-    </div>
   );
 }

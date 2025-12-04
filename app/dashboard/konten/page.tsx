@@ -1,7 +1,10 @@
 "use client";
 import { useState } from "react";
-import { Input, Textarea, SearchableSelect } from "../../../components/shared/field";
-import Pagination from "../../../components/shared/Pagination";
+import { Input, Textarea, SearchableSelect } from "../../../components/ui/field";
+import StatCard from "../../../components/ui/StatCard";
+import Pagination from "../../../components/ui/Pagination";
+import Card from "../../../components/ui/Card";
+import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
 
 export default function KontenPage() {
   type Berita = { id: number; judul: string; tanggal: string; kategori: string; isi: string; status: "Publikasi" | "Draft" };
@@ -87,7 +90,7 @@ export default function KontenPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64">
+      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
         <div className="px-4 sm:px-6">
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Konten Website</h1>
@@ -101,7 +104,7 @@ export default function KontenPage() {
             <StatCard title="FAQ Terbit" value={faqList.filter((f) => f.status === "Publikasi").length} change="Aktif" color="#2a436c" icon="ri-question-line" />
           </div>
 
-          <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] mb-6 overflow-hidden">
+          <Card className="mb-6" >
             <div className="flex overflow-x-auto">
                 {[ 
                 { id: "berita", label: "📰 Berita & Artikel", icon: "ri-article-line" },
@@ -115,7 +118,7 @@ export default function KontenPage() {
                 </button>
               ))}
             </div>
-          </div>
+          </Card>
 
           {activeTab === "berita" && (
             <div className="space-y-4">
@@ -222,7 +225,7 @@ export default function KontenPage() {
                         </div>
                         <div className="flex flex-col items-end gap-2">
                           <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ag.status)}`}>{ag.status}</span>
-                      <button onClick={() => handleEdit("agenda", ag)} className="px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition flex items-center gap-1">
+                          <button onClick={() => handleEdit("agenda", ag)} className="px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition flex items-center gap-1">
                             <i className="ri-edit-line"></i>
                             Edit
                           </button>
@@ -246,48 +249,46 @@ export default function KontenPage() {
                 </button>
               </div>
 
-              <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-[#cbdde9] text-[#2a436c]">
-                      <tr>
-                        <th className="py-3 px-4 font-medium text-left">Nama Dokumen</th>
-                        <th className="py-3 px-4 font-medium text-left">Tipe</th>
-                        <th className="py-3 px-4 font-medium text-left">Ukuran</th>
-                        <th className="py-3 px-4 font-medium text-left">Tanggal</th>
-                        <th className="py-3 px-4 font-medium text-left">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#e5e7eb]">
-                      {dokumenList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((doc) => (
-                        <tr key={doc.id} className="hover:bg-[#f9fafb]">
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-3">
-                              <i className={`ri-file-${doc.tipe.toLowerCase()}-line text-lg text-[#4f90c6]`}></i>
-                              <span className="font-medium text-[#2a436c]">{doc.nama}</span>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4"><span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">{doc.tipe}</span></td>
-                          <td className="py-3 px-4 text-[#6b7280]">{doc.ukuran}</td>
-                          <td className="py-3 px-4 text-[#6b7280]">{doc.uploadDate}</td>
-                          <td className="py-3 px-4">
-                            <div className="flex gap-2">
-                              <button className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
-                                <i className="ri-download-line"></i>
-                                Unduh
-                              </button>
-                              <button className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1">
-                                <i className="ri-delete-bin-line"></i>
-                                Hapus
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <Card className="overflow-hidden">
+                <Table>
+                  <TableHead>
+                    <tr>
+                      <TH>Nama Dokumen</TH>
+                      <TH>Tipe</TH>
+                      <TH>Ukuran</TH>
+                      <TH>Tanggal</TH>
+                      <TH>Aksi</TH>
+                    </tr>
+                  </TableHead>
+                  <TableBody>
+                    {dokumenList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TD>
+                          <div className="flex items-center gap-3">
+                            <i className={`ri-file-${doc.tipe.toLowerCase()}-line text-lg text-[#4f90c6]`}></i>
+                            <span className="font-medium text-[#2a436c]">{doc.nama}</span>
+                          </div>
+                        </TD>
+                        <TD><span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">{doc.tipe}</span></TD>
+                        <TD className="text-[#6b7280]">{doc.ukuran}</TD>
+                        <TD className="text-[#6b7280]">{doc.uploadDate}</TD>
+                        <TD>
+                          <div className="flex gap-2">
+                            <button className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
+                              <i className="ri-download-line"></i>
+                              Unduh
+                            </button>
+                            <button className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1">
+                              <i className="ri-delete-bin-line"></i>
+                              Hapus
+                            </button>
+                          </div>
+                        </TD>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
             </div>
           )}
 
@@ -350,28 +351,11 @@ export default function KontenPage() {
             </div>
           )}
 
-          <div className="mt-4 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
+          <div className="mt-4">
             <Pagination page={page} pageSize={pageSize} total={(activeTab === "berita" ? beritaList.length : activeTab === "agenda" ? agendaList.length : activeTab === "dokumen" ? dokumenList.length : faqList.length)} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
           </div>
         </div>
       </main>
     </>
-  );
-}
-
-function StatCard({ title, value, change, color, icon }: { title: string; value: number; change: string; color: string; icon: string }) {
-  return (
-    <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] hover:shadow-lg transition-shadow">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-xs sm:text-sm text-[#6b7280]">{title}</p>
-          <p className="text-xl sm:text-2xl font-bold text-[#2a436c] mt-1">{value}</p>
-          <p className="text-xs text-[#9ca3af] mt-1">{change}</p>
-        </div>
-        <div className="p-2 sm:p-3 w-10 h-10 flex items-center justify-center rounded-full text-white" style={{ backgroundColor: color }}>
-          <i className={`${icon} text-lg sm:text-xl`}></i>
-        </div>
-      </div>
-    </div>
   );
 }

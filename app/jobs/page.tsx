@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Input, SearchableSelect } from "../../components/shared/field";
-import Pagination from "../../components/shared/Pagination";
+import { Input, SearchableSelect } from "../../components/ui/field";
+import Pagination from "../../components/ui/Pagination";
 import Image from "next/image";
 import { listPublicJobs } from "../../services/jobs";
 import { getPublicCompanyById } from "../../services/company";
+import { listDistricts, listVillages } from "../../services/wilayah";
 
 type Job = {
   id?: string;
@@ -70,9 +71,7 @@ export default function JobsPage() {
   useEffect(() => {
     const loadDistricts = async () => {
       try {
-        const resp = await fetch("/api/wilayah/districts");
-        const rows = await resp.json();
-        const ds = ((rows as EmsifaItem[]) || []).map((r) => ({ id: String(r.id), name: String(r.name) }));
+        const ds = await listDistricts();
         setDistricts(ds);
         setKecamatanOptions(ds.map((d) => ({ value: d.name, label: d.name })));
       } catch {
@@ -88,9 +87,8 @@ export default function JobsPage() {
     const loadVillages = async () => {
       if (!d) { setKelurahanOptions([]); return; }
       try {
-        const resp = await fetch(`/api/wilayah/villages/${encodeURIComponent(d.id)}`);
-        const rows = await resp.json();
-        const vs = ((rows as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
+        const vsrc = await listVillages(d.id);
+        const vs = ((vsrc as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
         setKelurahanOptions(vs);
       } catch {
         setKelurahanOptions([]);
@@ -152,8 +150,6 @@ export default function JobsPage() {
   useEffect(() => {
     setPage(1);
   }, [search, kecamatan, kelurahan, education, type]);
-
-  
 
   return (
     <div className="min-h-screen bg-white">
@@ -220,7 +216,6 @@ export default function JobsPage() {
         </div>
       </section>
 
-      
     </div>
   );
 }

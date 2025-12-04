@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Input } from "../shared/field";
+import { Input } from "../ui/field";
 import { usePathname } from "next/navigation";
 import { logout } from "../../services/auth";
 import { getCandidateProfile, getCompanyProfile, getDisnakerProfile } from "../../services/profile";
@@ -74,14 +74,12 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
     };
   }, []);
 
-  // No client-side redirection here; avoids content flashes
-
   const allItems = [
     { name: "Dashboard", icon: "ri-dashboard-line", path: "/dashboard" },
     { name: "Pencari Kerja", icon: "ri-user-line", path: "/dashboard/pencaker" },
     { name: "Perusahaan", icon: "ri-building-line", path: "/dashboard/perusahaan" },
     { name: "Lowongan", icon: "ri-briefcase-line", path: "/dashboard/lowongan" },
-    { name: "Pelatihan / BLK", icon: "ri-book-open-line", path: "/dashboard/pelatihan" },
+    { name: "Pelatihan", icon: "ri-book-open-line", path: "/dashboard/pelatihan" },
     { name: "Pengaduan", icon: "ri-alert-line", path: "/dashboard/pengaduan" },
     { name: "Laporan", icon: "ri-file-chart-line", path: "/dashboard/laporan" },
     { name: "Konten Website", icon: "ri-pages-line", path: "/dashboard/konten" },
@@ -92,17 +90,17 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
   ];
 
   const filteredItems = (() => {
-    const withAk1 = permissionCodes.includes("ak1.read") ? allItems.concat([{ name: "Kartu Kuning (AK1)", icon: "ri-profile-line", path: "/dashboard/ak1" }]) : allItems;
-    return withAk1.filter((i) => {
+    const base = permissionCodes.includes("ak1.read") ? allItems.concat([{ name: "Kartu Kuning (AK1)", icon: "ri-profile-line", path: "/dashboard/ak1" }]) : allItems;
+    const filtered = base.filter((i) => {
       if (i.path === "/dashboard/perusahaan") return permissionCodes.includes("perusahaan.read");
       if (i.path === "/dashboard/lowongan") return permissionCodes.includes("lowongan.read") && (role !== "company" || companyApproved);
       if (i.path === "/dashboard/pencaker") return permissionCodes.includes("pencaker.read");
       if (i.path === "/dashboard/users") return permissionCodes.includes("users.read");
       if (i.path === "/dashboard/ak1") return permissionCodes.includes("ak1.read");
       if (i.path === "/dashboard/akses") return permissionCodes.includes("akses.read");
-      // Dashboard, Profil, and others remain accessible
       return true;
     });
+    return filtered.concat([{ name: "Kembali ke Beranda", icon: "ri-home-5-line", path: "/" }]);
   })();
 
   return (
@@ -116,7 +114,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0 ${isMinimized ? "w-16" : "w-64"}`}
       >
-        <div className="flex items-center p-5 border-b border-[#4f90c6]">
+        <div className="flex items-center justify-between p-5 border-b border-[#4f90c6]">
           {isMinimized ? (
             <div className="w-full flex justify-center">
               <span className="text-2xl">💼</span>
@@ -126,6 +124,9 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
               DISNAKER<span className="font-normal text-sm">KabPaser</span>
             </h1>
           )}
+          <button onClick={() => setIsMobileOpen(false)} className="lg:hidden p-2 rounded hover:bg-[#4f90c6]" aria-label="Tutup Sidebar">
+            <i className="ri-close-line text-xl"></i>
+          </button>
         </div>
 
         <nav className="mt-4 px-2 flex-1 overflow-y-auto">
@@ -150,7 +151,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
       </aside>
 
       <header
-        className={`fixed top-0 right-0 left-0 z-40 bg-white shadow-sm border-b border-[#e5e7eb] px-4 py-4 transition-all duration-300 flex items-center gap-4
+        className={`fixed top-0 right-0 left-0 z-40 bg-white shadow-sm border-b border-[#e5e7eb] px-4 py-3 transition-all duration-300 flex items-center gap-4
         ${isMinimized ? "lg:left-16" : "lg:left-64"} min-h-16`}
       >
         <button onClick={() => setIsMobileOpen(true)} className="lg:hidden p-2 text-[#6b7280]" aria-label="Toggle Sidebar">
@@ -203,7 +204,6 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
           </div>
         </div>
       </header>
-      <div className="h-5"></div>
     </>
   );
 }

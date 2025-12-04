@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useSyncExternalStore, useState } from "react";
 import { usePathname } from "next/navigation";
-import Modal from "./shared/Modal";
+import Modal from "../ui/Modal";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -13,13 +13,35 @@ export default function Navbar() {
   const subscribe = (cb: () => void) => {
     if (typeof window === "undefined") return () => {};
     window.addEventListener("storage", cb);
-    return () => window.removeEventListener("storage", cb);
+    window.addEventListener("auth:update", cb as EventListener);
+    window.addEventListener("focus", cb);
+    document.addEventListener("visibilitychange", cb);
+    return () => {
+      window.removeEventListener("storage", cb);
+      window.removeEventListener("auth:update", cb as EventListener);
+      window.removeEventListener("focus", cb);
+      document.removeEventListener("visibilitychange", cb);
+    };
+  };
+  const decodeExpMs = (t: string) => {
+    try {
+      const parts = t.split(".");
+      if (parts.length < 2) return 0;
+      const payload = JSON.parse(atob(parts[1] || ""));
+      const exp = Number(payload.exp || 0);
+      return exp > 0 ? exp * 1000 : 0;
+    } catch {
+      return 0;
+    }
   };
   const getSnapshot = () => {
     if (typeof window === "undefined") return "|";
     const token = localStorage.getItem("token") || "";
     const uid = localStorage.getItem("id") || localStorage.getItem("user_id") || "";
-    return `${token}|${uid}`;
+    const expMs = token ? decodeExpMs(token) : 0;
+    const now = Date.now();
+    const valid = token && uid && (expMs === 0 || expMs > now);
+    return valid ? `${token}|${uid}` : "|";
   };
   const getServerSnapshot = () => "|";
   const snap = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);

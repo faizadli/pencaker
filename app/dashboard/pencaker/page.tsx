@@ -1,12 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Input, SearchableSelect } from "../../../components/shared/field";
-import Pagination from "../../../components/shared/Pagination";
-import Modal from "../../../components/shared/Modal";
+import { Input, SearchableSelect } from "../../../components/ui/field";
+import Pagination from "../../../components/ui/Pagination";
+import Modal from "../../../components/ui/Modal";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { listCandidates, createCandidateProfile, updateCandidateProfile } from "../../../services/profile";
 import { useRouter } from "next/navigation";
+import CardGrid from "../../../components/ui/CardGrid";
+import Card from "../../../components/ui/Card";
+import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
+import EmptyState from "../../../components/ui/EmptyState";
+import { listDistricts, listVillages } from "../../../services/wilayah";
 
 export default function PencakerPage() {
   const router = useRouter();
@@ -66,8 +71,6 @@ export default function PencakerPage() {
   const [villageOptions, setVillageOptions] = useState<{ value: string; label: string }[]>([]);
   type EmsifaItem = { id: number | string; name: string };
 
-  
-
   useEffect(() => {
     async function boot() {
       try {
@@ -88,9 +91,7 @@ export default function PencakerPage() {
   useEffect(() => {
     const loadDistricts = async () => {
       try {
-        const resp = await fetch("/api/wilayah/districts");
-        const rows = await resp.json();
-        const ds = ((rows as EmsifaItem[]) || []).map((r) => ({ id: String(r.id), name: String(r.name) }));
+        const ds = await listDistricts();
         setDistricts(ds);
         setDistrictOptions(ds.map((d) => ({ value: d.name, label: d.name })));
       } catch {
@@ -106,9 +107,8 @@ export default function PencakerPage() {
     const loadVillages = async () => {
       if (!d) { setVillageOptions([]); return; }
       try {
-        const resp = await fetch(`/api/wilayah/villages/${encodeURIComponent(d.id)}`);
-        const rows = await resp.json();
-        const vs = ((rows as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
+        const vsrc = await listVillages(d.id);
+        const vs = ((vsrc as EmsifaItem[]) || []).map((r) => ({ value: String(r.name), label: String(r.name) }));
         setVillageOptions(vs);
       } catch {
         setVillageOptions([]);
@@ -159,18 +159,15 @@ export default function PencakerPage() {
   });
 
   const paginatedPencakers = filteredPencakers.slice((page - 1) * pageSize, page * pageSize);
-  
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-16 pb-10 lg:ml-64">
+      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
         <div className="px-4 sm:px-6">
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Pencari Kerja</h1>
             <p className="text-sm text-[#6b7280] mt-1">Kelola data pencari kerja dan verifikasi Kartu Kuning (AK1)</p>
           </div>
-
-          
 
           <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] mb-6">
             <div className="flex flex-col sm:flex-row gap-4">
@@ -185,7 +182,7 @@ export default function PencakerPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <CardGrid>
             {paginatedPencakers.map((p) => (
               <div key={p.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
                 <div className="p-4 sm:p-6 border-b border-[#e5e7eb] bg-[#f9fafb]">
@@ -211,8 +208,6 @@ export default function PencakerPage() {
                           <div className="text-[#111827] font-medium">{p.jenisKelamin}</div>
                         </div>
                       </div>
-                      
-
                       <div className="grid grid-cols-1 gap-2 mt-3 text-sm">
                         <div className="space-y-1">
                           <div>
@@ -236,43 +231,33 @@ export default function PencakerPage() {
                         <div className="text-[#111827]">{p.alamat}</div>
                       </div>
                     </div>
+                  </div>
                 </div>
-              </div>
 
-              
-
-                  <div className="p-4 border-t border-[#e5e7eb]">
-                <div className="flex gap-2">
-                  <button onClick={() => { setReviewCandidate(p); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition">
-                    <i className="ri-eye-line mr-1"></i>
-                    Detail
-                  </button>
-                  {permissions.includes("pencaker.update") && (
-                    <button onClick={() => { setEditingCandidateId(p.id); const src = rawCandidates.find((c) => c.id === p.id); if (src) setFormCandidate({ user_id: src.user_id, full_name: src.full_name || "", birthdate: src.birthdate || "", place_of_birth: src.place_of_birth || "", nik: src.nik || "", kecamatan: src.kecamatan || "", kelurahan: src.kelurahan || "", address: src.address || "", postal_code: src.postal_code || "", gender: src.gender || "", no_handphone: src.no_handphone || "", photo_profile: src.photo_profile || "", last_education: src.last_education || "", graduation_year: Number(src.graduation_year || 0), status_perkawinan: src.status_perkawinan || "", cv_file: undefined, ak1_file: undefined }); setShowFormModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">
-                      <i className="ri-pencil-line mr-1"></i>
-                      Edit
+                <div className="p-4 border-t border-[#e5e7eb]">
+                  <div className="flex gap-2">
+                    <button onClick={() => { setReviewCandidate(p); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition">
+                      <i className="ri-eye-line mr-1"></i>
+                      Detail
                     </button>
-                  )}
-
+                    {permissions.includes("pencaker.update") && (
+                      <button onClick={() => { setEditingCandidateId(p.id); const src = rawCandidates.find((c) => c.id === p.id); if (src) setFormCandidate({ user_id: src.user_id, full_name: src.full_name || "", birthdate: src.birthdate || "", place_of_birth: src.place_of_birth || "", nik: src.nik || "", kecamatan: src.kecamatan || "", kelurahan: src.kelurahan || "", address: src.address || "", postal_code: src.postal_code || "", gender: src.gender || "", no_handphone: src.no_handphone || "", photo_profile: src.photo_profile || "", last_education: src.last_education || "", graduation_year: Number(src.graduation_year || 0), status_perkawinan: src.status_perkawinan || "", cv_file: undefined, ak1_file: undefined }); setShowFormModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">
+                        <i className="ri-pencil-line mr-1"></i>
+                        Edit
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </CardGrid>
 
-          <div className="mt-4 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
+          <div className="mt-4">
             <Pagination page={page} pageSize={pageSize} total={filteredPencakers.length} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
           </div>
 
           {filteredPencakers.length === 0 && (
-            <div className="text-center py-8 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
-              <i className="ri-search-line text-4xl text-gray-300 mb-3"></i>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Tidak ada data ditemukan</h3>
-              <p className="text-gray-600 mb-4">Coba ubah kata kunci pencarian atau filter</p>
-              <button onClick={() => { setSearchTerm(""); }} className="px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">
-                Reset Pencarian
-              </button>
-            </div>
+            <EmptyState icon="ri-search-line" title="Tidak ada data ditemukan" description="Coba ubah kata kunci pencarian atau filter" onReset={() => { setSearchTerm(""); }} resetLabel="Reset Pencarian" />
           )}
 
           <Modal
@@ -333,45 +318,44 @@ export default function PencakerPage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg p-4 border">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-[#2a436c]">Riwayat Pelatihan</h4>
-                    <span className="text-xs text-[#6b7280] bg-[#f9fafb] px-2 py-1 rounded">{reviewCandidate.pelatihan.length} pelatihan</span>
-                  </div>
-                  {reviewCandidate.pelatihan.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm border border-[#e5e7eb] rounded-lg">
-                        <thead className="bg-[#cbdde9] text-[#2a436c]">
-                          <tr>
-                            <th className="py-2 px-3 text-left">No</th>
-                            <th className="py-2 px-3 text-left">Nama Pelatihan</th>
-                            <th className="py-2 px-3 text-left">Tanggal</th>
-                            <th className="py-2 px-3 text-left">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {reviewCandidate.pelatihan.map((pt, idx) => (
-                            <tr key={`${pt.id}-${idx}`} className="border-b border-[#f3f4f6] odd:bg-white even:bg-[#f9fafb] hover:bg-[#eef2f7]">
-                              <td className="py-2 px-3 text-[#111827]">{idx + 1}</td>
-                              <td className="py-2 px-3 font-medium text-[#111827]">{pt.nama}</td>
-                              <td className="py-2 px-3 text-[#4b5563]">{pt.tanggal}</td>
-                              <td className="py-2 px-3">
-                                <span className={`inline-block px-2 py-1 text-xs rounded-full ${pt.status === "Selesai" ? "bg-blue-100 text-blue-800" : pt.status === "Berlangsung" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>{pt.status}</span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                <Card
+                  header={
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-[#2a436c]">Riwayat Pelatihan</h4>
+                      <span className="text-xs text-[#6b7280] bg-[#f9fafb] px-2 py-1 rounded">{reviewCandidate.pelatihan.length} pelatihan</span>
                     </div>
+                  }
+                >
+                  {reviewCandidate.pelatihan.length > 0 ? (
+                    <Table>
+                      <TableHead>
+                        <tr>
+                          <TH>No</TH>
+                          <TH>Nama Pelatihan</TH>
+                          <TH>Tanggal</TH>
+                          <TH>Status</TH>
+                        </tr>
+                      </TableHead>
+                      <TableBody>
+                        {reviewCandidate.pelatihan.map((pt, idx) => (
+                          <TableRow key={`${pt.id}-${idx}`}>
+                            <TD className="text-[#111827]">{idx + 1}</TD>
+                            <TD className="font-medium text-[#111827]">{pt.nama}</TD>
+                            <TD className="text-[#4b5563]">{pt.tanggal}</TD>
+                            <TD>
+                              <span className={`inline-block px-2 py-1 text-xs rounded-full ${pt.status === "Selesai" ? "bg-blue-100 text-blue-800" : pt.status === "Berlangsung" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>{pt.status}</span>
+                            </TD>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   ) : (
                     <p className="text-sm text-[#9ca3af] italic">Belum ada pelatihan.</p>
                   )}
-                </div>
+                </Card>
               </div>
             )}
           </Modal>
-
-          
 
           <Modal
             open={showFormModal}
@@ -476,5 +460,3 @@ export default function PencakerPage() {
     </>
   );
 }
-
- 

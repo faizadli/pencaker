@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { logout } from "../services/auth";
+import { logout } from "../../services/auth";
 
 export default function AutoToTop() {
   const pathname = usePathname();

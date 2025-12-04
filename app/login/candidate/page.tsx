@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Input } from "../../../components/shared/field";
+import { Input } from "../../../components/ui/field";
 import { login, startSession } from "../../../services/auth";
 import { getUserById } from "../../../services/profile";
 
