@@ -25,6 +25,6 @@ export function TH({ children, className }: { children: React.ReactNode; classNa
   return <th className={`py-3 px-4 text-left ${className || ""}`}>{children}</th>;
 }
 
-export function TD({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <td className={`py-3 px-4 ${className || ""}`}>{children}</td>;
+export function TD({ children, className, colSpan }: { children: React.ReactNode; className?: string; colSpan?: number }) {
+  return <td colSpan={colSpan} className={`py-3 px-4 ${className || ""}`}>{children}</td>;
 }

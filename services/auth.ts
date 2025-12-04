@@ -54,6 +54,7 @@ export function logout(redirect: string = "/") {
   localStorage.removeItem("token");
   localStorage.removeItem("lastActivity");
   localStorage.removeItem("role");
+  localStorage.removeItem("id");
   localStorage.removeItem("user_id");
   if (typeof document !== "undefined") {
     document.cookie = `sessionToken=; path=/; max-age=0`;

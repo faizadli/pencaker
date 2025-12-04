@@ -119,6 +119,12 @@ export async function getCandidateProfile(user_id: string) {
   return resp.json();
 }
 
+export async function getCandidateProfileById(id: string) {
+  const resp = await fetch(`${BASE}/api/profile/candidate?id=${encodeURIComponent(id)}`, { headers: { ...authHeader() } });
+  if (!resp.ok) throw new Error("Gagal mengambil profil pencaker");
+  return resp.json();
+}
+
 export async function listCandidates(params?: { search?: string; status?: "APPROVED" | "REJECTED" | "PENDING"; page?: number; limit?: number }) {
   const q = new URLSearchParams();
   if (params?.search) q.set("search", params.search);

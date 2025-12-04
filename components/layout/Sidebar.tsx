@@ -79,6 +79,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
     { name: "Pencari Kerja", icon: "ri-user-line", path: "/dashboard/pencaker" },
     { name: "Perusahaan", icon: "ri-building-line", path: "/dashboard/perusahaan" },
     { name: "Lowongan", icon: "ri-briefcase-line", path: "/dashboard/lowongan" },
+    { name: "Lamaran Saya", icon: "ri-send-plane-2-line", path: "/dashboard/lamaran" },
     { name: "Pelatihan", icon: "ri-book-open-line", path: "/dashboard/pelatihan" },
     { name: "Pengaduan", icon: "ri-alert-line", path: "/dashboard/pengaduan" },
     { name: "Laporan", icon: "ri-file-chart-line", path: "/dashboard/laporan" },
@@ -98,6 +99,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
       if (i.path === "/dashboard/users") return permissionCodes.includes("users.read");
       if (i.path === "/dashboard/ak1") return permissionCodes.includes("ak1.read");
       if (i.path === "/dashboard/akses") return permissionCodes.includes("akses.read");
+      if (i.path === "/dashboard/lamaran") return role === "candidate";
       return true;
     });
     return filtered.concat([{ name: "Kembali ke Beranda", icon: "ri-home-5-line", path: "/" }]);

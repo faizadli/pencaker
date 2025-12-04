@@ -12,22 +12,54 @@ export default function Navbar() {
   const [openMobile, setOpenMobile] = useState(false);
   const subscribe = (cb: () => void) => {
     if (typeof window === "undefined") return () => {};
+    const checkAndEmit = () => {
+      const token = localStorage.getItem("token") || "";
+      const uid = localStorage.getItem("id") || localStorage.getItem("user_id") || "";
+      const expMs = token ? decodeExpMs(token) : 0;
+      const now = Date.now();
+      const hasCookie = typeof document !== "undefined" && document.cookie.split(";").some((c) => c.trim().startsWith("sessionToken="));
+      const valid = Boolean(token && uid && expMs > now && hasCookie);
+      if (!valid && (token || uid || hasCookie)) {
+        try {
+          localStorage.removeItem("token");
+          localStorage.removeItem("id");
+          localStorage.removeItem("user_id");
+          localStorage.removeItem("role");
+          localStorage.removeItem("lastActivity");
+        } catch {}
+        try {
+          if (typeof document !== "undefined") {
+            document.cookie = "sessionToken=; path=/; max-age=0";
+            document.cookie = "role=; path=/; max-age=0";
+          }
+        } catch {}
+        window.dispatchEvent(new Event("auth:update"));
+      }
+    };
+    const timer = window.setInterval(() => { checkAndEmit(); cb(); }, 30000);
+    const onFocus = () => { checkAndEmit(); cb(); };
+    const onVisibility = () => { checkAndEmit(); cb(); };
     window.addEventListener("storage", cb);
     window.addEventListener("auth:update", cb as EventListener);
-    window.addEventListener("focus", cb);
-    document.addEventListener("visibilitychange", cb);
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
+      window.clearInterval(timer);
       window.removeEventListener("storage", cb);
       window.removeEventListener("auth:update", cb as EventListener);
-      window.removeEventListener("focus", cb);
-      document.removeEventListener("visibilitychange", cb);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   };
   const decodeExpMs = (t: string) => {
     try {
       const parts = t.split(".");
       if (parts.length < 2) return 0;
-      const payload = JSON.parse(atob(parts[1] || ""));
+      const b64url = parts[1] || "";
+      const b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
+      const pad = b64.length % 4 === 0 ? "" : "=".repeat(4 - (b64.length % 4));
+      const json = atob(b64 + pad);
+      const payload = JSON.parse(json);
       const exp = Number(payload.exp || 0);
       return exp > 0 ? exp * 1000 : 0;
     } catch {
@@ -40,7 +72,8 @@ export default function Navbar() {
     const uid = localStorage.getItem("id") || localStorage.getItem("user_id") || "";
     const expMs = token ? decodeExpMs(token) : 0;
     const now = Date.now();
-    const valid = token && uid && (expMs === 0 || expMs > now);
+    const hasCookie = typeof document !== "undefined" && document.cookie.split(";").some((c) => c.trim().startsWith("sessionToken="));
+    const valid = Boolean(token && uid && expMs > now && hasCookie);
     return valid ? `${token}|${uid}` : "|";
   };
   const getServerSnapshot = () => "|";

@@ -1,4 +1,5 @@
 export type WilayahItem = { id: string; name: string };
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
 const FALLBACK_DISTRICTS: WilayahItem[] = [
   { id: "6401010", name: "BATU SOPANG" },
@@ -15,7 +16,7 @@ const FALLBACK_DISTRICTS: WilayahItem[] = [
 
 export async function listDistricts(): Promise<WilayahItem[]> {
   try {
-    const resp = await fetch("https://emsifa.github.io/api-wilayah-indonesia/api/districts/6401.json", { cache: "no-store" });
+    const resp = await fetch(`${BASE}/api/public/wilayah/districts`, { cache: "no-store" });
     if (!resp.ok) throw new Error("bad status");
     const rows = (await resp.json()) as Array<{ id: string | number; regency_id?: string | number; name: string }>;
     return rows.map((r) => ({ id: String(r.id), name: String(r.name) }));
@@ -27,7 +28,7 @@ export async function listDistricts(): Promise<WilayahItem[]> {
 export async function listVillages(districtId: string): Promise<WilayahItem[]> {
   if (!districtId) return [];
   try {
-    const resp = await fetch(`https://emsifa.github.io/api-wilayah-indonesia/api/villages/${encodeURIComponent(districtId)}.json`, { cache: "no-store" });
+    const resp = await fetch(`${BASE}/api/public/wilayah/villages/${encodeURIComponent(districtId)}`, { cache: "no-store" });
     if (!resp.ok) throw new Error("bad status");
     const rows = (await resp.json()) as Array<{ id: string | number; district_id?: string | number; name: string }>;
     return rows.map((r) => ({ id: String(r.id), name: String(r.name) }));

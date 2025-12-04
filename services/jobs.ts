@@ -153,3 +153,28 @@ export async function listApplications(params?: { candidate_id?: string; company
   if (!resp.ok) throw new Error("Gagal mengambil applications");
   return resp.json();
 }
+
+export async function listMyApplications() {
+  const resp = await fetch(`${BASE}/api/jobs/applications/me`, { headers: { ...authHeader() } });
+  if (!resp.ok) throw new Error("Gagal mengambil applications");
+  return resp.json();
+}
+
+export async function updateApplication(id: string, payload: { status?: "pending" | "test" | "interview" | "approve" | "rejected"; schedule_start?: string | null; schedule_end?: string | null; note?: string | null }) {
+  const resp = await fetch(`${BASE}/api/jobs/applications/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify(payload),
+  });
+  if (!resp.ok) {
+    try {
+      const data = await resp.json();
+      const msg = String((data && (data.errors || data.message)) || "Gagal mengubah aplikasi");
+      throw new Error(msg);
+    } catch {
+      const txt = await resp.text();
+      throw new Error(txt || "Gagal mengubah aplikasi");
+    }
+  }
+  return resp.json();
+}

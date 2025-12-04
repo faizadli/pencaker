@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
  import { Input, SearchableSelect, SegmentedToggle, TextEditor } from "../../../components/ui/field";
 import Pagination from "../../../components/ui/Pagination";
 import Modal from "../../../components/ui/Modal";
@@ -8,7 +9,7 @@ import StatCard from "../../../components/ui/StatCard";
 import CardGrid from "../../../components/ui/CardGrid";
 import Card from "../../../components/ui/Card";
 import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
-import { listJobs, createJob, approveJob, rejectJob, updateJob } from "../../../services/jobs";
+import { listJobs, createJob, approveJob, rejectJob, updateJob, listApplications } from "../../../services/jobs";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { getCompanyProfile, getCompanyProfileById, getDisnakerProfile } from "../../../services/profile";
 
@@ -126,6 +127,7 @@ export default function LowonganPage() {
   const EMPTY_NEW_JOB: NewJob = { posisi: "", sektor: "", tipe: "Full-time", batasAkhir: "", deskripsi: "", experience_required: "", education_required: "", skills_required: "", min_salary: 0, max_salary: 0, work_setup: "WFO" };
   const [newJob, setNewJob] = useState<NewJob>(EMPTY_NEW_JOB);
   const [submittedJob, setSubmittedJob] = useState(false);
+  const [appCounts, setAppCounts] = useState<Record<string, { total: number; processed: number; approved: number }>>({});
 
   const enrichJobsWithCompanyName = useCallback(async (rows: Job[]) => {
     try {
@@ -186,6 +188,8 @@ export default function LowonganPage() {
       setLoading(false);
     }
   }, [permissions, permsLoaded, router, role]);
+
+  
 
   useEffect(() => {
     async function loadJobs() {
@@ -269,6 +273,34 @@ export default function LowonganPage() {
   }, [lowonganList, searchTerm, statusFilter, apiToUITipe, apiToUIStatus, role, companyName]);
 
   const paginatedLowongan = useMemo(() => filteredLowongan.slice((page - 1) * pageSize, page * pageSize), [filteredLowongan, page, pageSize]);
+
+  useEffect(() => {
+    async function loadCounts() {
+      try {
+        if (paginatedLowongan.length === 0) { setAppCounts({}); return; }
+        const entries = await Promise.all(paginatedLowongan.map(async (job) => {
+          try {
+            const resp = await listApplications({ job_id: job.id, ...(role === "company" && companyId ? { company_id: companyId } : {}) });
+            const obj = resp as unknown;
+            const base = (obj as { data?: unknown }).data ?? obj;
+            const arr = Array.isArray(base) ? base as Array<{ status?: string }> : [];
+            const total = arr.length;
+            const approved = arr.filter((a) => a.status === "approve").length;
+            const processed = arr.filter((a) => a.status === "test" || a.status === "interview").length;
+            return [job.id, { total, processed, approved }] as const;
+          } catch {
+            return [job.id, { total: 0, processed: 0, approved: 0 }] as const;
+          }
+        }));
+        const map: Record<string, { total: number; processed: number; approved: number }> = {};
+        entries.forEach(([id, c]) => { map[id] = c; });
+        setAppCounts(map);
+      } catch {
+        setAppCounts({});
+      }
+    }
+    loadCounts();
+  }, [paginatedLowongan, role, companyId]);
 
   const handleAddJob = async () => {
     if (!companyId) { alert("Perusahaan belum teridentifikasi"); return; }
@@ -520,6 +552,7 @@ export default function LowonganPage() {
                   <div className="text-sm text-[#6b7280] mb-1">Deskripsi</div>
                   <div className="content-rich" dangerouslySetInnerHTML={{ __html: reviewJob.deskripsi }} />
                 </div>
+                
                 <div className="bg-white rounded-lg p-4 border grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <div className="text-sm text-[#6b7280]">Pengalaman</div>
@@ -570,15 +603,15 @@ export default function LowonganPage() {
                   <div className="block p-4 border-t border-[#e5e7eb] bg-[#f9fafb]">
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div>
-                        <p className="text-lg font-bold text-[#2a436c]">{job.pelamar}</p>
+                        <p className="text-lg font-bold text-[#2a436c]">{appCounts[job.id]?.total ?? 0}</p>
                         <p className="text-xs text-[#6b7280]">Pelamar</p>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-[#2a436c]">{job.diproses}</p>
+                        <p className="text-lg font-bold text-[#2a436c]">{appCounts[job.id]?.processed ?? 0}</p>
                         <p className="text-xs text-[#6b7280]">Diproses</p>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-[#2a436c]">{job.diterima}</p>
+                        <p className="text-lg font-bold text-[#2a436c]">{appCounts[job.id]?.approved ?? 0}</p>
                         <p className="text-xs text-[#6b7280]">Diterima</p>
                       </div>
                     </div>
@@ -586,10 +619,14 @@ export default function LowonganPage() {
 
                   <div className="p-4 border-t border-[#e5e7eb]">
                     <div className="flex gap-2">
-                      <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition">
-                        <i className="ri-eye-line mr-1"></i>
-                        {job.status === "Menunggu Verifikasi" && canVerify ? "Review & Konfirmasi" : "Detail"}
+                      <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition flex items-center justify-center gap-2">
+                        <i className="ri-eye-line"></i>
+                        <span>{job.status === "Menunggu Verifikasi" && canVerify ? "Review & Konfirmasi" : "Detail"}</span>
                       </button>
+                      <Link href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`} className="flex-1 px-3 py-2 text-sm bg-[#7c3aed] text-white rounded-lg hover:bg-[#5b21b6] transition flex items-center justify-center gap-2" title="Pelamar">
+                        <i className="ri-user-search-line"></i>
+                        <span>Pelamar</span>
+                      </Link>
                       {canEdit && (
                         <button
                           onClick={() => {
@@ -611,14 +648,13 @@ export default function LowonganPage() {
                             });
                             setShowForm(true);
                           }}
-                          className="px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition"
+                          className="flex-1 px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition flex items-center justify-center gap-2"
                           title="Edit"
                         >
                           <i className="ri-edit-line"></i>
+                          <span>Edit</span>
                         </button>
                       )}
-                      
-                      
                     </div>
                   </div>
                 </div>
@@ -655,14 +691,17 @@ export default function LowonganPage() {
                       </TD>
                       <TD>
                         <div className="text-center">
-                          <p className="font-bold text-[#2a436c]">{job.pelamar}</p>
+                          <p className="font-bold text-[#2a436c]">{appCounts[job.id]?.total ?? 0}</p>
                         </div>
                       </TD>
                       <TD>
                         <div className="flex gap-2">
-                          <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">
+                          <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">
                             {job.status === "Menunggu Verifikasi" && canVerify ? "Review & Konfirmasi" : "Detail"}
                           </button>
+                          <Link href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`} className="flex-1 px-3 py-1 text-xs bg-[#7c3aed] text-white rounded hover:bg-[#5b21b6] transition">
+                            Pelamar
+                          </Link>
                         </div>
                       </TD>
                     </TableRow>
@@ -685,10 +724,13 @@ export default function LowonganPage() {
                         <span className={`text-[11px] px-2 py-1 rounded ${getTipeColor(job.tipe as UITipe)}`}>{job.tipe}</span>
                       </div>
                     </div>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="px-3 py-2 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">
+                    <div className="mt-3 flex gap-2">
+                      <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">
                         {job.status === "Menunggu Verifikasi" && canVerify ? "Review" : "Detail"}
                       </button>
+                      <Link href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`} className="flex-1 px-3 py-2 text-xs bg-[#7c3aed] text-white rounded hover:bg-[#5b21b6] transition">
+                        Pelamar
+                      </Link>
                       {canEdit && (
                         <button
                           onClick={() => {
@@ -710,7 +752,7 @@ export default function LowonganPage() {
                             });
                             setShowForm(true);
                           }}
-                          className="px-3 py-2 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition"
+                          className="flex-1 px-3 py-2 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition"
                         >
                           Edit
                         </button>

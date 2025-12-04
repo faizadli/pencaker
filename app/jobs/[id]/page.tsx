@@ -3,8 +3,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getJobById, listPublicJobs } from "../../../services/jobs";
+import { getJobById, listPublicJobs, applyJob } from "../../../services/jobs";
+import { getCandidateProfile } from "../../../services/profile";
 import { getPublicCompanyById } from "../../../services/company";
+import Modal from "../../../components/ui/Modal";
 
 type Job = {
   id?: string;
@@ -36,6 +38,11 @@ export default function JobDetailPage() {
   const [companyLogo, setCompanyLogo] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [candidateId, setCandidateId] = useState<string>("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
 
   useEffect(() => {
     async function boot() {
@@ -94,6 +101,27 @@ export default function JobDetailPage() {
     }
     boot();
   }, [id, router]);
+
+  useEffect(() => {
+    async function resolveCandidate() {
+      try {
+        const role = typeof window !== "undefined" ? (localStorage.getItem("role") || "") : "";
+        const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
+        if (role === "candidate" && uid) {
+          const cp = await getCandidateProfile(uid);
+          const obj = cp as Record<string, unknown>;
+          const data = (obj["data"] as Record<string, unknown> | undefined) || obj;
+          const cid = (data as Record<string, unknown>)["id"];
+          setCandidateId(typeof cid === "string" ? cid : "");
+        } else {
+          setCandidateId("");
+        }
+      } catch {
+        setCandidateId("");
+      }
+    }
+    resolveCandidate();
+  }, []);
 
   const salary = useMemo(() => {
     if (!job) return "-";
@@ -206,7 +234,18 @@ export default function JobDetailPage() {
               <div className="text-sm text-[#2a436c]">Gaji Per Bulan</div>
               <div className="text-xl font-bold text-[#2a436c]">{salary}</div>
               <div className="text-xs text-[#6b7280] mt-1">Tutup pada {deadlineLabel}</div>
-              <button className="mt-3 w-full px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c]">Lamar Sekarang</button>
+              <button
+                onClick={() => {
+                  const role = typeof window !== "undefined" ? (localStorage.getItem("role") || "") : "";
+                  const token = typeof window !== "undefined" ? (localStorage.getItem("token") || "") : "";
+                  if (!token || role !== "candidate") { setLoginOpen(true); return; }
+                  if (!candidateId || !job?.id || !job?.company_id) { alert("Profil pencaker belum lengkap atau data lowongan tidak valid"); return; }
+                  setConfirmOpen(true);
+                }}
+                className="mt-3 w-full px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c]"
+              >
+                Lamar Sekarang
+              </button>
             </div>
             <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
               <h3 className="text-base font-semibold text-[#2a436c] mb-3">Tentang Perusahaan</h3>
@@ -236,6 +275,71 @@ export default function JobDetailPage() {
           </aside>
         </div>
       </section>
+
+      <Modal
+        open={confirmOpen}
+        title="Konfirmasi Lamaran"
+        onClose={() => setConfirmOpen(false)}
+        size="sm"
+        actions={
+          <>
+            <button onClick={() => setConfirmOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Batal</button>
+            <button
+              onClick={async () => {
+                if (!job?.id || !job?.company_id || !candidateId) { setConfirmOpen(false); return; }
+                try {
+                  setApplying(true);
+                  await applyJob({ candidate_id: candidateId, company_id: String(job.company_id), job_id: String(job.id) });
+                  setConfirmOpen(false);
+                  setSuccessOpen(true);
+                } catch (e) {
+                  const msg = e instanceof Error ? e.message : "Gagal mengirim lamaran";
+                  alert(msg);
+                  setConfirmOpen(false);
+                } finally {
+                  setApplying(false);
+                }
+              }}
+              disabled={applying}
+              className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]"
+            >
+              {applying ? "Mengirim..." : "Ya, Lamar"}
+            </button>
+          </>
+        }
+      >
+        <div className="text-sm text-[#374151]">Apakah Anda yakin ingin melamar lowongan ini?</div>
+      </Modal>
+
+      <Modal
+        open={loginOpen}
+        title="Perlu Login"
+        onClose={() => setLoginOpen(false)}
+        size="sm"
+        actions={
+          <>
+            <button onClick={() => setLoginOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>
+            <button onClick={() => { setLoginOpen(false); router.push("/login/candidate"); }} className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]">Login Kandidat</button>
+          </>
+        }
+      >
+        <div className="text-sm text-[#374151]">Anda harus login sebagai Kandidat untuk melamar lowongan ini.</div>
+      </Modal>
+
+      <Modal
+        open={successOpen}
+        title="Lamaran Berhasil"
+        onClose={() => setSuccessOpen(false)}
+        size="sm"
+        actions={
+          <>
+            <button onClick={() => setSuccessOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>
+            <button onClick={() => router.push("/dashboard/lamaran")} className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]">Lihat Status Lamaran</button>
+          </>
+        }
+      >
+        <div className="text-sm text-[#374151]">Lamaran Anda telah terkirim. Anda dapat melihat statusnya di halaman Dashboard → Lamaran Saya.</div>
+      </Modal>
 
       {similar.length > 0 && (
         <section className="py-10 bg-white">

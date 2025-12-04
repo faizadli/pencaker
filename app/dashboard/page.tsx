@@ -102,6 +102,7 @@ function DashboardPageComponent() {
       setLoading(false);
     };
     if (canSeeOverview) loadStats();
+    else setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canReadPencaker, canReadLowongan, canReadPerusahaan, canSeeOverview]);
 
