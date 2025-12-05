@@ -16,7 +16,6 @@ type CandidateProfilePayload = {
   address: string;
   postal_code: string;
   gender: string;
-  no_handphone: string;
   photo_profile?: string;
   last_education: string;
   graduation_year: number;
@@ -35,7 +34,6 @@ export async function upsertCompanyProfile(payload: {
   user_id: string;
   company_name: string;
   company_logo?: string;
-  no_handphone: string;
   kecamatan: string;
   kelurahan: string;
   address: string;
@@ -90,7 +88,6 @@ export async function upsertCandidateProfile(payload: {
   address: string;
   postal_code: string;
   gender: string;
-  no_handphone: string;
   photo_profile?: string;
   last_education: string;
   graduation_year: number;

@@ -35,7 +35,7 @@ export default function AdminLogin() {
     setError("");
     setLoading(true);
     try {
-      const result = await login(form.email, form.password);
+      const result = await login({ email: form.email }, form.password);
       if (String(result.role) !== "super_admin") {
         setLoading(false);
         setError("Akun Anda bukan Admin Disnaker.");

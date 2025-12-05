@@ -25,7 +25,7 @@ export default function RegisterCandidate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const [account, setAccount] = useState({ email: "", password: "", confirm: "" });
+  const [account, setAccount] = useState({ email: "", no_handphone: "", password: "", confirm: "" });
   const [profile, setProfile] = useState({
     full_name: "",
     birthdate: "",
@@ -60,6 +60,12 @@ export default function RegisterCandidate() {
     setError("");
     setLoading(true);
     try {
+      const hasPhone = String(account.no_handphone || "").trim().length > 0;
+      if (!hasPhone) {
+        setError("Nomor HP wajib diisi.");
+        setLoading(false);
+        return;
+      }
       if ((account.password || "").length < 8) {
         setError("Password minimal 8 karakter.");
         setLoading(false);
@@ -96,7 +102,6 @@ export default function RegisterCandidate() {
       profile.kelurahan,
       profile.address,
       profile.postal_code,
-      profile.no_handphone,
       profile.last_education,
       profile.graduation_year,
     ];
@@ -138,17 +143,15 @@ export default function RegisterCandidate() {
     try {
       let uid = "";
       let token = "";
-      try {
-        const reg = await registerUser("candidate", account.email, account.password);
-        uid = String(reg?.id || "");
-        const lg = await login(account.email, account.password);
-        token = lg.token;
-        uid = uid || String(lg.id || "");
-      } catch {
-        const lg = await login(account.email, account.password);
-        token = lg.token;
-        uid = String(lg.id || "");
-      }
+      const reg = await registerUser(
+        "candidate",
+        { email: String(account.email || "").trim() || undefined, no_handphone: String(account.no_handphone || "").trim() || undefined },
+        account.password
+      );
+      uid = String(reg?.id || "");
+      const lg = await login({ email: String(account.email || "").trim() || undefined, no_handphone: String(account.no_handphone || "").trim() || undefined }, account.password);
+      token = lg.token;
+      uid = uid || String(lg.id || "");
       startSession("candidate", uid, token);
       const compressImage = (file: File) => new Promise<Blob>((resolve, reject) => {
         const img = new Image();
@@ -238,7 +241,6 @@ export default function RegisterCandidate() {
         address: profile.address,
         postal_code: profile.postal_code,
         gender: profile.gender,
-        no_handphone: profile.no_handphone,
         last_education: profile.last_education,
         graduation_year: Number(profile.graduation_year || 0),
         status_perkawinan: profile.status_perkawinan,
@@ -338,9 +340,14 @@ export default function RegisterCandidate() {
               <h2 className="text-lg font-semibold text-[#2a436c]">Data Akun</h2>
               {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{error}</div>}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-[#6b7280] mb-2">Email</label>
-                <Input icon="ri-mail-line" type="email" id="email" name="email" value={account.email} onChange={(e) => setAccount({ ...account, email: e.target.value })} className="w-full rounded-lg" placeholder="admin@contoh.com" required />
+                <label htmlFor="email" className="block text-sm font-medium text-[#6b7280] mb-2">Email (Opsional)</label>
+                <Input icon="ri-mail-line" type="email" id="email" name="email" value={account.email} onChange={(e) => { setAccount({ ...account, email: e.target.value }); }} className="w-full rounded-lg" placeholder="admin@contoh.com" required={false} />
               </div>
+              <div>
+                <label htmlFor="no_handphone" className="block text-sm font-medium text-[#6b7280] mb-2">Nomor Handphone</label>
+                <Input icon="ri-phone-line" type="tel" id="no_handphone" name="no_handphone" value={account.no_handphone} onChange={(e) => { setAccount({ ...account, no_handphone: e.target.value }); }} className="w-full rounded-lg" placeholder="08xxxxxxxxxx" required />
+              </div>
+              
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-[#6b7280] mb-2">Password</label>
                 <Input icon="ri-lock-2-line" type="password" id="password" name="password" value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} className="w-full rounded-lg" placeholder="Minimal 8 karakter" required />
@@ -375,7 +382,7 @@ export default function RegisterCandidate() {
                   <Textarea label="Alamat" value={profile.address} onChange={(e) => setProfile({ ...profile, address: e.target.value })} required rows={3} />
                 </div>
                 <Input label="Kode Pos" value={profile.postal_code} onChange={(e) => setProfile({ ...profile, postal_code: e.target.value })} required />
-                <Input label="No. Handphone" value={profile.no_handphone} onChange={(e) => setProfile({ ...profile, no_handphone: e.target.value })} required />
+
                 <Input label="Pendidikan Terakhir" value={profile.last_education} onChange={(e) => setProfile({ ...profile, last_education: e.target.value })} required />
                 <Input label="Tahun Lulus" type="number" value={profile.graduation_year} onChange={(e) => setProfile({ ...profile, graduation_year: e.target.value })} required />
               </div>

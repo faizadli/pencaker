@@ -9,7 +9,7 @@ type CompanyProfilePayload = {
   user_id: string;
   company_name: string;
   company_logo?: string;
-  no_handphone: string;
+  no_handphone?: string;
   kecamatan: string;
   kelurahan: string;
   address: string;

@@ -1,13 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Input } from "../../../components/ui/field";
+import { Input, SegmentedToggle } from "../../../components/ui/field";
 import { login, startSession } from "../../../services/auth";
 import { getUserById } from "../../../services/profile";
 
 export default function CandidateLogin() {
   const router = useRouter();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ email: "", no_handphone: "", password: "" });
+  const [usePhone, setUsePhone] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -35,7 +36,7 @@ export default function CandidateLogin() {
     setError("");
     setLoading(true);
     try {
-      const result = await login(form.email, form.password);
+      const result = await login(usePhone ? { no_handphone: form.no_handphone } : { email: form.email }, form.password);
       if (String(result.role) !== "candidate") {
         setLoading(false);
         setError("Akun Anda bukan Pencaker.");
@@ -63,20 +64,19 @@ export default function CandidateLogin() {
             <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{error}</div>
           )}
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-[#6b7280] mb-2">Email</label>
-            <Input
-              icon="ri-mail-line"
-              type="text"
-              id="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              className="w-full rounded-lg"
-              placeholder="pencaker@example.com"
-              required
-            />
-          </div>
+          <SegmentedToggle value={usePhone ? "phone" : "email"} onChange={(v) => setUsePhone(v === "phone")} options={[{ label: "Email", value: "email" }, { label: "Nomor HP", value: "phone" }]} />
+          {!usePhone && (
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-[#6b7280] mb-2">Email</label>
+              <Input icon="ri-mail-line" type="text" id="email" name="email" value={form.email} onChange={handleChange} className="w-full rounded-lg" placeholder="pencaker@example.com" required />
+            </div>
+          )}
+          {usePhone && (
+            <div>
+              <label htmlFor="no_handphone" className="block text-sm font-medium text-[#6b7280] mb-2">Nomor Handphone</label>
+              <Input icon="ri-phone-line" type="tel" id="no_handphone" name="no_handphone" value={form.no_handphone} onChange={handleChange} className="w-full rounded-lg" placeholder="08xxxxxxxxxx" required />
+            </div>
+          )}
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-[#6b7280] mb-2">Password</label>

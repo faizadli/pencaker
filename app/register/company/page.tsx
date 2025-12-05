@@ -34,7 +34,7 @@ export default function RegisterCompany() {
     website: "",
     about_company: "",
   });
-  const [account, setAccount] = useState({ email: "", password: "", confirm: "" });
+  const [account, setAccount] = useState({ email: "", no_handphone: "", password: "", confirm: "" });
   
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [finalized, setFinalized] = useState(false);
@@ -50,6 +50,12 @@ export default function RegisterCompany() {
     setError("");
     setLoading(true);
     try {
+      const hasPhone = String(account.no_handphone || "").trim().length > 0;
+      if (!hasPhone) {
+        setError("Nomor HP wajib diisi.");
+        setLoading(false);
+        return;
+      }
       if ((account.password || "").length < 8) {
         setError("Password minimal 8 karakter.");
         setLoading(false);
@@ -75,7 +81,6 @@ export default function RegisterCompany() {
     try {
       const required = [
         company.company_name,
-        company.no_handphone,
         company.kecamatan,
         company.kelurahan,
         company.address,
@@ -83,7 +88,7 @@ export default function RegisterCompany() {
       ];
       const allFilled = required.every((v) => String(v || "").trim().length > 0);
       if (!allFilled) {
-        setError("Lengkapi data perusahaan: Nama, No. Handphone, Kecamatan, Kelurahan, Alamat, dan Tentang Perusahaan.");
+        setError("Lengkapi data perusahaan: Nama, Kecamatan, Kelurahan, Alamat, dan Tentang Perusahaan.");
         setLoading(false);
         return;
       }
@@ -115,17 +120,15 @@ export default function RegisterCompany() {
     try {
       let uid = "";
       let token = "";
-      try {
-        const reg = await registerUser("company", account.email, account.password);
-        uid = String(reg?.id || "");
-        const lg = await login(account.email, account.password);
-        token = lg.token;
-        uid = uid || String(lg.id || "");
-      } catch {
-        const lg = await login(account.email, account.password);
-        token = lg.token;
-        uid = String(lg.id || "");
-      }
+      const reg = await registerUser(
+        "company",
+        { email: String(account.email || "").trim() || undefined, no_handphone: String(account.no_handphone || "").trim() || undefined },
+        account.password
+      );
+      uid = String(reg?.id || "");
+      const lg = await login({ email: String(account.email || "").trim() || undefined, no_handphone: String(account.no_handphone || "").trim() || undefined }, account.password);
+      token = lg.token;
+      uid = uid || String(lg.id || "");
       startSession("company", uid, token);
 
       const putSigned = async (url: string, body: Blob | File, contentType: string) => {
@@ -167,7 +170,6 @@ export default function RegisterCompany() {
       await upsertCompanyProfile({
         user_id: uid,
         company_name: company.company_name,
-        no_handphone: company.no_handphone,
         kecamatan: company.kecamatan,
         kelurahan: company.kelurahan,
         address: company.address,
@@ -197,7 +199,6 @@ export default function RegisterCompany() {
           user_id: uid,
           company_name: company.company_name,
           company_logo: logoUrl,
-          no_handphone: company.no_handphone,
           kecamatan: company.kecamatan,
           kelurahan: company.kelurahan,
           address: company.address,
@@ -270,11 +271,18 @@ export default function RegisterCompany() {
 
         {step === 1 && (
           <form onSubmit={submitAccount} className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-6">
-            {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{error}</div>}
             <h2 className="text-lg font-semibold text-[#2a436c]">Data Akun Administrator</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Input label="Email Administrator" icon="ri-mail-line" type="email" value={account.email} onChange={(e) => setAccount({ ...account, email: e.target.value })} placeholder="admin@perusahaan.com" required />
+            {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{error}</div>}
+            <div>
+              <Input label="Email Administrator (Opsional)" icon="ri-mail-line" type="email" value={account.email} onChange={(e) => { setAccount({ ...account, email: e.target.value }); }} placeholder="admin@perusahaan.com" required={false} />
+            </div>
+            <div>
+              <Input label="Nomor Handphone" icon="ri-phone-line" type="tel" value={account.no_handphone} onChange={(e) => { setAccount({ ...account, no_handphone: e.target.value }); }} placeholder="08xxxxxxxxxx" required />
+            </div>
+            <div>
               <Input label="Password" icon="ri-lock-2-line" type="password" value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} placeholder="Minimal 8 karakter" required />
+            </div>
+            <div>
               <Input label="Konfirmasi Password" icon="ri-lock-2-line" type="password" value={account.confirm} onChange={(e) => setAccount({ ...account, confirm: e.target.value })} placeholder="Ulangi password" required />
             </div>
             <div className="flex items-center justify-between">
@@ -292,7 +300,6 @@ export default function RegisterCompany() {
             <h2 className="text-lg font-semibold text-[#2a436c]">Data Perusahaan</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-3 md:gap-4">
               <Input label="Nama Perusahaan" value={company.company_name} onChange={(e) => setCompany({ ...company, company_name: e.target.value })} required />
-              <Input label="No. Handphone" value={company.no_handphone} onChange={(e) => setCompany({ ...company, no_handphone: e.target.value })} required />
               <SearchableSelect label="Kecamatan" options={[{ value: "", label: "Pilih..." }, ...districtOptions]} value={company.kecamatan} onChange={(v) => setCompany({ ...company, kecamatan: v, kelurahan: "" })} />
               <SearchableSelect label="Kelurahan" options={[{ value: "", label: "Pilih..." }, ...villageOptions]} value={company.kelurahan} onChange={(v) => setCompany({ ...company, kelurahan: v })} />
               <div className="sm:col-span-2 md:col-span-2">

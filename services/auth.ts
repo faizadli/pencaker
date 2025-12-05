@@ -7,11 +7,11 @@ export function getToken() {
 
 type AuthEnvelope = { message?: string; id?: string; role?: string; token?: string };
 
-export async function registerUser(role: "company" | "candidate", email: string, password: string): Promise<AuthEnvelope> {
+export async function registerUser(role: "company" | "candidate", emailOrPhone: { email?: string; no_handphone?: string }, password: string): Promise<AuthEnvelope> {
   const resp = await fetch(`${BASE}/api/user/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password, role }),
+    body: JSON.stringify({ ...emailOrPhone, password, role }),
   });
   let data: AuthEnvelope | undefined;
   try {
@@ -21,15 +21,37 @@ export async function registerUser(role: "company" | "candidate", email: string,
   return (data || {}) as AuthEnvelope;
 }
 
-export async function login(email: string, password: string) {
+export async function login(credential: { email?: string; no_handphone?: string }, password: string) {
   const resp = await fetch(`${BASE}/api/user/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ ...credential, password }),
   });
   if (!resp.ok) throw new Error("Login gagal");
   const data = await resp.json();
   return { role: String(data.role), id: String(data.id), token: String(data.token || "") };
+}
+
+export async function requestOtp(channel: "email" | "phone", target: string, user_id?: string) {
+  const resp = await fetch(`${BASE}/api/user/request-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ channel, target, user_id }),
+  });
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error(String((data && data.message) || "Gagal mengirim OTP"));
+  return data;
+}
+
+export async function verifyOtp(channel: "email" | "phone", target: string, code: string) {
+  const resp = await fetch(`${BASE}/api/user/verify-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ channel, target, code }),
+  });
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error(String((data && data.message) || "Verifikasi OTP gagal"));
+  return data as { ok: boolean };
 }
 
 export function startSession(role: string, userId: string | null, token?: string) {
