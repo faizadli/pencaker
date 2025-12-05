@@ -11,10 +11,12 @@ import Card from "../../../components/ui/Card";
 import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
 import { listJobs, createJob, approveJob, rejectJob, updateJob, listApplications } from "../../../services/jobs";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
+import { useToast } from "../../../components/ui/Toast";
 import { getCompanyProfile, getCompanyProfileById, getDisnakerProfile } from "../../../services/profile";
 
 export default function LowonganPage() {
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
@@ -303,7 +305,7 @@ export default function LowonganPage() {
   }, [paginatedLowongan, role, companyId]);
 
   const handleAddJob = async () => {
-    if (!companyId) { alert("Perusahaan belum teridentifikasi"); return; }
+    if (!companyId) { showError("Perusahaan belum teridentifikasi"); return; }
     setSubmittedJob(true);
     if (!newJob.posisi || !newJob.batasAkhir) { return; }
     try {
@@ -344,15 +346,15 @@ export default function LowonganPage() {
       setShowForm(false);
       setEditingId(null);
       setSubmittedJob(false);
-      alert(editingId ? "Lowongan berhasil diperbarui, menunggu verifikasi." : "Lowongan berhasil diajukan, menunggu verifikasi.");
+      showSuccess(editingId ? "Lowongan berhasil diperbarui, menunggu verifikasi." : "Lowongan berhasil diajukan, menunggu verifikasi.");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Gagal mengajukan lowongan";
-      alert(msg);
+      showError(msg);
     }
   };
 
   const handleApprove = async (id: string) => {
-    if (!disnakerId) { alert("Profil disnaker tidak ditemukan"); return; }
+    if (!disnakerId) { showError("Profil disnaker tidak ditemukan"); return; }
     try {
       await approveJob(id, disnakerId);
       let rows: Job[] = [];
@@ -367,8 +369,9 @@ export default function LowonganPage() {
         rows = (resp.data || resp) as Job[];
       }
       setLowonganList(rows);
+      showSuccess("Lowongan disetujui");
     } catch {
-      alert("Gagal menyetujui lowongan");
+      showError("Gagal menyetujui lowongan");
     }
   };
 
@@ -388,8 +391,9 @@ export default function LowonganPage() {
         rows = (resp.data || resp) as Job[];
       }
       setLowonganList(rows);
+      showSuccess("Lowongan ditolak");
     } catch {
-      alert("Gagal menolak lowongan");
+      showError("Gagal menolak lowongan");
     }
   };
 

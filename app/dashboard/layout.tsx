@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import Sidebar from "../../components/layout/Sidebar";
+import ToastProvider from "../../components/ui/Toast";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const cookieHeader = (await headers()).get("cookie") || "";
@@ -16,7 +17,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <>
       <Sidebar roleProp={roleCookie} />
       <div className="fixed inset-0 bg-white -z-10"></div>
-      <div className="px-4 sm:px-6">{children}</div>
+      <ToastProvider>
+        <div className="px-4 sm:px-6">{children}</div>
+      </ToastProvider>
     </>
   );
 }

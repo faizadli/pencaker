@@ -4,9 +4,11 @@ import { useRouter } from "next/navigation";
 import { assignRolePermissions, createRole, getRolePermissions, listPermissions, listRoles } from "../../../services/rbac";
 import { Input, SearchableSelect } from "../../../components/ui/field";
 import Card from "../../../components/ui/Card";
+import { useToast } from "../../../components/ui/Toast";
 
 export default function AksesPage() {
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
   const [roles, setRoles] = useState<{ id: number; name: string; description?: string }[]>([]);
   const [perms, setPerms] = useState<{ code: string; label: string }[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>("");
@@ -76,23 +78,23 @@ export default function AksesPage() {
     setLoadingAssign(true);
     try {
       await assignRolePermissions(rid, selectedPerms);
-      alert("Akses role berhasil diperbarui");
+      showSuccess("Akses role berhasil diperbarui");
     } catch {
-      alert("Gagal menyimpan akses role");
+      showError("Gagal menyimpan akses role");
     } finally {
       setLoadingAssign(false);
     }
   };
 
   const handleCreateRole = async () => {
-    if (!newRole.name.trim()) { alert("Nama role wajib diisi"); return; }
+    if (!newRole.name.trim()) { showError("Nama role wajib diisi"); return; }
     try {
       const res = await createRole({ name: newRole.name.trim(), description: newRole.description.trim() || undefined });
       setRoles((r) => [...r, res.data]);
       setNewRole({ name: "", description: "" });
-      alert("Role berhasil dibuat");
+      showSuccess("Role berhasil dibuat");
     } catch {
-      alert("Gagal membuat role");
+      showError("Gagal membuat role");
     }
   };
 

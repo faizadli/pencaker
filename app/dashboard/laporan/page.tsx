@@ -13,10 +13,12 @@ import {
 import StatCard from "../../../components/ui/StatCard";
 import Card from "../../../components/ui/Card";
 import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
+import { useToast } from "../../../components/ui/Toast";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
 export default function LaporanPage() {
+  const { showError } = useToast();
   const stats = {
     totalPencaker: 14230,
     totalPerusahaan: 345,
@@ -37,8 +39,8 @@ export default function LaporanPage() {
   const sectorData = { labels: ["IT & Digital", "Manufaktur", "Pertanian", "Jasa", "Konstruksi"], datasets: [{ data: [28, 22, 16, 14, 12], backgroundColor: ["#4f90c6", "#90b6d5", "#cbdde9", "#355485", "#2a436c"] }] };
   const pieOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { color: "#6b7280" } }, title: { display: true, text: "Distribusi Penempatan Kerja per Sektor", font: { size: 14, weight: "bold" }, color: "#2a436c" } } } as const;
 
-  const handleExportPDF = () => alert("Fitur export PDF akan segera tersedia. (jsPDF + html2canvas)");
-  const handleExportExcel = () => alert("Fitur export Excel akan segera tersedia. (SheetJS/xlsx)");
+  const handleExportPDF = () => showError("Fitur export PDF akan segera tersedia.");
+  const handleExportExcel = () => showError("Fitur export Excel akan segera tersedia.");
   const handlePrint = () => window.print();
 
   return (

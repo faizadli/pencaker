@@ -13,9 +13,11 @@ import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { getDisnakerProfile } from "../../../services/profile";
 import { listCompanies, approveCompany, rejectCompany, createCompanyProfile, updateCompanyProfile } from "../../../services/company";
 import { listDistricts, listVillages } from "../../../services/wilayah";
+import { useToast } from "../../../components/ui/Toast";
 
 export default function PerusahaanPage() {
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
@@ -170,13 +172,14 @@ export default function PerusahaanPage() {
   });
 
   const handleVerify = async (id: string) => {
-    if (!disnakerId) { alert("Profil disnaker tidak ditemukan"); return; }
+    if (!disnakerId) { showError("Profil disnaker tidak ditemukan"); return; }
     try {
       await approveCompany(id, disnakerId);
       const statusParam = statusFilter !== "all" ? uiToApiStatus[statusFilter] : undefined;
       const resp = await listCompanies({ status: statusParam, search: searchTerm || undefined });
       setPerusahaanList((resp.data || resp) as Company[]);
-    } catch { alert("Gagal verifikasi perusahaan"); }
+      showSuccess("Perusahaan diverifikasi");
+    } catch { showError("Gagal verifikasi perusahaan"); }
   };
 
   const handleReject = async (id: string) => {
@@ -186,7 +189,8 @@ export default function PerusahaanPage() {
       const statusParam = statusFilter !== "all" ? uiToApiStatus[statusFilter] : undefined;
       const resp = await listCompanies({ status: statusParam, search: searchTerm || undefined });
       setPerusahaanList((resp.data || resp) as Company[]);
-    } catch { alert("Gagal menolak verifikasi perusahaan"); }
+      showSuccess("Verifikasi perusahaan ditolak");
+    } catch { showError("Gagal menolak verifikasi perusahaan"); }
   };
 
   const getStatusColor = (status: string) => {
@@ -506,7 +510,7 @@ export default function PerusahaanPage() {
                       setEditingCompanyUserId(null);
                       setSubmittedCompany(false);
                     } catch {
-                      alert("Gagal menyimpan data perusahaan");
+                      showError("Gagal menyimpan data perusahaan");
                     }
                   }}
                   className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]"

@@ -8,8 +8,10 @@ import { Input, SearchableSelect } from "../../../../../components/ui/field";
 import Modal from "../../../../../components/ui/Modal";
 import { listApplications, updateApplication, getJobById } from "../../../../../services/jobs";
 import { getCandidateProfileById } from "../../../../../services/profile";
+import { useToast } from "../../../../../components/ui/Toast";
 
 export default function PelamarLowonganPage() {
+  const { showSuccess, showError } = useToast();
   const params = useParams();
   const router = useRouter();
   const jobId = String(params?.id || "");
@@ -183,10 +185,10 @@ export default function PelamarLowonganPage() {
       }));
       setRows(refreshed);
       setShowEditModal(false);
-      alert("Aplikasi diperbarui");
+      showSuccess("Aplikasi diperbarui");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Gagal memperbarui aplikasi";
-      alert(msg);
+      showError(msg);
     } finally {
       setSaving("");
     }

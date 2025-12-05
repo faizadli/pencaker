@@ -11,6 +11,7 @@ import CardGrid from "../../../components/ui/CardGrid";
 import Card from "../../../components/ui/Card";
 import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
 import EmptyState from "../../../components/ui/EmptyState";
+import { useToast } from "../../../components/ui/Toast";
 import { listDistricts, listVillages } from "../../../services/wilayah";
 
 export default function PencakerPage() {
@@ -58,6 +59,7 @@ export default function PencakerPage() {
   const [pencakers, setPencakers] = useState<Pencaker[]>([]);
   const [rawCandidates, setRawCandidates] = useState<CandidateApi[]>([]);
   const [page, setPage] = useState(1);
+  const { showSuccess, showError } = useToast();
   const [pageSize, setPageSize] = useState(10);
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingCandidateId, setEditingCandidateId] = useState<string | null>(null);
@@ -420,8 +422,9 @@ export default function PencakerPage() {
                       setRawCandidates(rows);
                       setShowFormModal(false);
                       setEditingCandidateId(null);
+                      showSuccess(editingCandidateId ? "Data pencaker diperbarui" : "Pencaker ditambahkan");
                     } catch {
-                      alert("Gagal menyimpan data pencaker");
+                      showError("Gagal menyimpan data pencaker");
                     }
                   }}
                   className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]"

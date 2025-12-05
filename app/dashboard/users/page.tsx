@@ -9,6 +9,7 @@ import Pagination from "../../../components/ui/Pagination";
 import Card from "../../../components/ui/Card";
 import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
 import EmptyState from "../../../components/ui/EmptyState";
+import { useToast } from "../../../components/ui/Toast";
 
 const ROLE_MAP_TO_API: Record<string, "super_admin" | "company" | "candidate"> = { Superadmin: "super_admin", Perusahaan: "company", Pencaker: "candidate" };
 const ROLE_MAP_FROM_API: Record<"super_admin" | "company" | "candidate" | "disnaker", string> = { super_admin: "Superadmin", company: "Perusahaan", candidate: "Pencaker", disnaker: "Superadmin" };
@@ -21,6 +22,7 @@ declare global {
 
 export default function UsersPage() {
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -124,8 +126,9 @@ export default function UsersPage() {
       setIsModalOpen(false);
       setEditUser(null);
       setSubmitted(false);
+      showSuccess(editUser ? "Pengguna diperbarui" : "Pengguna ditambahkan");
     } catch {
-      alert("Gagal menyimpan user");
+      showError("Gagal menyimpan user");
     }
   };
 
@@ -141,8 +144,9 @@ export default function UsersPage() {
     const mapped: User[] = rows.map((u, idx2) => ({ id: idx2 + 1, nama: u.email, email: u.email, role: ROLE_MAP_FROM_API[u.role], unit: "-", telepon: "-", status: "Aktif", terakhirLogin: u.updatedAt ? new Date(u.updatedAt).toLocaleString("id-ID") : "-" }));
     setUsers(mapped);
     window.__usersIds = rows.map((u) => u.id);
+    showSuccess("Pengguna dihapus");
     } catch {
-      alert("Gagal menghapus user");
+      showError("Gagal menghapus user");
     }
   };
 
