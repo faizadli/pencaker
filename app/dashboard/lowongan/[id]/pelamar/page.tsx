@@ -74,16 +74,26 @@ export default function PelamarLowonganPage() {
           let age: number | undefined = undefined;
           let kecamatan: string | undefined = undefined;
           let kelurahan: string | undefined = undefined;
-          try {
-            const cp = await getCandidateProfileById(a.candidate_id);
-            const base = hasData(cp) ? cp.data : cp;
-            const obj = isObj(base) ? base : {};
-            const nm = obj["full_name"];
-            name = typeof nm === "string" ? nm : a.candidate_id;
-            age = calcAge(typeof obj["birthdate"] === "string" ? (obj["birthdate"] as string) : undefined);
-            kecamatan = typeof obj["kecamatan"] === "string" ? (obj["kecamatan"] as string) : undefined;
-            kelurahan = typeof obj["kelurahan"] === "string" ? (obj["kelurahan"] as string) : undefined;
-          } catch {}
+          const cname = objA["candidate_name"];
+          const cbirth = objA["candidate_birthdate"];
+          const ckec = objA["candidate_kecamatan"];
+          const ckel = objA["candidate_kelurahan"];
+          if (typeof cname === "string" && cname) name = cname;
+          if (typeof cbirth === "string" && cbirth) age = calcAge(cbirth);
+          if (typeof ckec === "string" && ckec) kecamatan = ckec;
+          if (typeof ckel === "string" && ckel) kelurahan = ckel;
+          if (name === a.candidate_id) {
+            try {
+              const cp = await getCandidateProfileById(a.candidate_id);
+              const base = hasData(cp) ? cp.data : cp;
+              const obj = isObj(base) ? base : {};
+              const nm = obj["full_name"];
+              name = typeof nm === "string" ? nm : a.candidate_id;
+              age = age ?? calcAge(typeof obj["birthdate"] === "string" ? (obj["birthdate"] as string) : undefined);
+              kecamatan = kecamatan ?? (typeof obj["kecamatan"] === "string" ? (obj["kecamatan"] as string) : undefined);
+              kelurahan = kelurahan ?? (typeof obj["kelurahan"] === "string" ? (obj["kelurahan"] as string) : undefined);
+            } catch {}
+          }
           return { id, candidate_id: a.candidate_id, name, age, kecamatan, kelurahan, status: toStatus(a.status), schedule_start: a.schedule_start || null, schedule_end: a.schedule_end || null, note: a.note || null };
         }));
         setRows(normalized);
@@ -149,16 +159,26 @@ export default function PelamarLowonganPage() {
         let age: number | undefined = undefined;
         let kecamatan: string | undefined = undefined;
         let kelurahan: string | undefined = undefined;
-        try {
-          const cp = await getCandidateProfileById(a.candidate_id);
-          const base = hasData(cp) ? cp.data : cp;
-          const obj = isObj(base) ? base : {};
-          const n = obj["full_name"];
-          nm = typeof n === "string" ? n : a.candidate_id;
-          age = calcAge(typeof obj["birthdate"] === "string" ? (obj["birthdate"] as string) : undefined);
-          kecamatan = typeof obj["kecamatan"] === "string" ? (obj["kecamatan"] as string) : undefined;
-          kelurahan = typeof obj["kelurahan"] === "string" ? (obj["kelurahan"] as string) : undefined;
-        } catch {}
+        const cname = objA["candidate_name"];
+        const cbirth = objA["candidate_birthdate"];
+        const ckec = objA["candidate_kecamatan"];
+        const ckel = objA["candidate_kelurahan"];
+        if (typeof cname === "string" && cname) nm = cname;
+        if (typeof cbirth === "string" && cbirth) age = calcAge(cbirth);
+        if (typeof ckec === "string" && ckec) kecamatan = ckec;
+        if (typeof ckel === "string" && ckel) kelurahan = ckel;
+        if (nm === a.candidate_id) {
+          try {
+            const cp = await getCandidateProfileById(a.candidate_id);
+            const base = hasData(cp) ? cp.data : cp;
+            const obj = isObj(base) ? base : {};
+            const n = obj["full_name"];
+            nm = typeof n === "string" ? n : a.candidate_id;
+            age = age ?? calcAge(typeof obj["birthdate"] === "string" ? (obj["birthdate"] as string) : undefined);
+            kecamatan = kecamatan ?? (typeof obj["kecamatan"] === "string" ? (obj["kecamatan"] as string) : undefined);
+            kelurahan = kelurahan ?? (typeof obj["kelurahan"] === "string" ? (obj["kelurahan"] as string) : undefined);
+          } catch {}
+        }
         return { id: nid, candidate_id: a.candidate_id, name: nm, age, kecamatan, kelurahan, status: toStatus(a.status), schedule_start: a.schedule_start || null, schedule_end: a.schedule_end || null, note: a.note || null };
       }));
       setRows(refreshed);

@@ -120,9 +120,22 @@ export async function getCandidateProfile(user_id: string) {
 }
 
 export async function getCandidateProfileById(id: string) {
-  const resp = await fetch(`${BASE}/api/profile/candidate?id=${encodeURIComponent(id)}`, { headers: { ...authHeader() } });
-  if (!resp.ok) throw new Error("Gagal mengambil profil pencaker");
-  return resp.json();
+  const tryFetch = async (url: string) => {
+    const r = await fetch(url, { headers: { ...authHeader() } });
+    if (!r.ok) return null;
+    let out: unknown;
+    try { out = await r.json(); } catch { out = null; }
+    const env = out as { data?: unknown } | unknown;
+    const data = env && (env as { data?: unknown }).data !== undefined ? (env as { data?: unknown }).data : env;
+    return data || null;
+  };
+  const byCandidate = await tryFetch(`${BASE}/api/profile/candidate?candidate_id=${encodeURIComponent(id)}`);
+  if (byCandidate) return { data: byCandidate };
+  const byId = await tryFetch(`${BASE}/api/profile/candidate?id=${encodeURIComponent(id)}`);
+  if (byId) return { data: byId };
+  const byUser = await tryFetch(`${BASE}/api/profile/candidate?user_id=${encodeURIComponent(id)}`);
+  if (byUser) return { data: byUser };
+  return { data: null };
 }
 
 export async function listCandidates(params?: { search?: string; status?: "APPROVED" | "REJECTED" | "PENDING"; page?: number; limit?: number }) {
