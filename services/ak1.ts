@@ -25,15 +25,14 @@ export type Ak1LayoutField = {
   x: number;
   y: number;
   size?: number;
-  kind?: 'text' | 'box';
+  kind?: 'text' | 'box' | 'image';
   count?: number;
   cellW?: number;
   cellH?: number;
   gap?: number;
   source?: string;
-  side?: 'front' | 'back';
 };
-export type Ak1Layout = { name: string; front_width: number; front_height: number; fields: Ak1LayoutField[] };
+export type Ak1Layout = { name: string; front_width: number; front_height: number; coordinates: Ak1LayoutField[] };
 
 export async function getAk1Layout(name?: string) {
   const q = name ? `?name=${encodeURIComponent(name)}` : "";
@@ -50,14 +49,7 @@ export async function upsertAk1Layout(payload: Ak1Layout) {
 
 export type Ak1Template = {
   name: string;
-  front_url?: string | null;
-  back_url?: string | null;
-  front_width?: number;
-  front_height?: number;
-  back_width?: number | null;
-  back_height?: number | null;
-  file_type?: string;
-  active?: boolean;
+  file_template?: string | null;
 };
 
 export async function getAk1Template(name?: string) {
@@ -73,11 +65,7 @@ export async function upsertAk1Template(payload: Ak1Template) {
   return resp.json();
 }
 
-export async function activateAk1Template(name: string) {
-  const resp = await fetch(`${BASE}/api/ak1/template/activate`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify({ name }) });
-  if (!resp.ok) throw new Error("Gagal mengaktifkan template AK1");
-  return resp.json();
-}
+// activate endpoint tidak digunakan pada skema minimal
 
 export async function listAk1Templates() {
   const resp = await fetch(`${BASE}/api/ak1/template/list`, { headers: { ...authHeader() } });
