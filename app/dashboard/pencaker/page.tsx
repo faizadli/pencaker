@@ -65,7 +65,7 @@ export default function PencakerPage() {
   const [editingCandidateId, setEditingCandidateId] = useState<string | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewCandidate, setReviewCandidate] = useState<Pencaker | null>(null);
-  const [formCandidate, setFormCandidate] = useState<{ user_id?: string; full_name: string; birthdate: string; place_of_birth: string; nik: string; kecamatan: string; kelurahan: string; address: string; postal_code: string; gender: string; no_handphone: string; photo_profile?: string; last_education: string; graduation_year: number; status_perkawinan: string; cv_file?: string; ak1_file?: string }>({ full_name: "", birthdate: "", place_of_birth: "", nik: "", kecamatan: "", kelurahan: "", address: "", postal_code: "", gender: "", no_handphone: "", photo_profile: "", last_education: "", graduation_year: 0, status_perkawinan: "", cv_file: "", ak1_file: "" });
+  const [formCandidate, setFormCandidate] = useState<{ user_id?: string; full_name: string; birthdate: string; place_of_birth: string; nik: string; kecamatan: string; kelurahan: string; address: string; postal_code: string; gender: string; no_handphone: string; photo_profile?: string; last_education: string; graduation_year: number; status_perkawinan: string; cv_file?: string }>({ full_name: "", birthdate: "", place_of_birth: "", nik: "", kecamatan: "", kelurahan: "", address: "", postal_code: "", gender: "", no_handphone: "", photo_profile: "", last_education: "", graduation_year: 0, status_perkawinan: "", cv_file: "" });
   const [userEmail, setUserEmail] = useState("");
   const [userPassword, setUserPassword] = useState("");
   const [districts, setDistricts] = useState<{ id: string; name: string }[]>([]);
@@ -178,7 +178,7 @@ export default function PencakerPage() {
               </div>
               <div className="flex flex-col sm:flex-row gap-2 items-stretch">
                 {permissions.includes("pencaker.create") && (
-                  <button onClick={() => { setEditingCandidateId(null); setFormCandidate({ full_name: "", birthdate: "", place_of_birth: "", nik: "", kecamatan: "", kelurahan: "", address: "", postal_code: "", gender: "", no_handphone: "", photo_profile: "", last_education: "", graduation_year: 0, status_perkawinan: "", cv_file: "", ak1_file: "" }); setUserEmail(""); setUserPassword(""); setShowFormModal(true); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center">+ Tambah</button>
+                  <button onClick={() => { setEditingCandidateId(null); setFormCandidate({ full_name: "", birthdate: "", place_of_birth: "", nik: "", kecamatan: "", kelurahan: "", address: "", postal_code: "", gender: "", no_handphone: "", photo_profile: "", last_education: "", graduation_year: 0, status_perkawinan: "", cv_file: "" }); setUserEmail(""); setUserPassword(""); setShowFormModal(true); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center">+ Tambah</button>
                 )}
               </div>
             </div>
@@ -243,7 +243,7 @@ export default function PencakerPage() {
                       Detail
                     </button>
                     {permissions.includes("pencaker.update") && (
-                      <button onClick={() => { setEditingCandidateId(p.id); const src = rawCandidates.find((c) => c.id === p.id); if (src) setFormCandidate({ user_id: src.user_id, full_name: src.full_name || "", birthdate: src.birthdate || "", place_of_birth: src.place_of_birth || "", nik: src.nik || "", kecamatan: src.kecamatan || "", kelurahan: src.kelurahan || "", address: src.address || "", postal_code: src.postal_code || "", gender: src.gender || "", no_handphone: src.no_handphone || "", photo_profile: src.photo_profile || "", last_education: src.last_education || "", graduation_year: Number(src.graduation_year || 0), status_perkawinan: src.status_perkawinan || "", cv_file: undefined, ak1_file: undefined }); setShowFormModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">
+                      <button onClick={() => { setEditingCandidateId(p.id); const src = rawCandidates.find((c) => c.id === p.id); if (src) setFormCandidate({ user_id: src.user_id, full_name: src.full_name || "", birthdate: src.birthdate || "", place_of_birth: src.place_of_birth || "", nik: src.nik || "", kecamatan: src.kecamatan || "", kelurahan: src.kelurahan || "", address: src.address || "", postal_code: src.postal_code || "", gender: src.gender || "", no_handphone: src.no_handphone || "", photo_profile: src.photo_profile || "", last_education: src.last_education || "", graduation_year: Number(src.graduation_year || 0), status_perkawinan: src.status_perkawinan || "", cv_file: undefined }); setShowFormModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">
                         <i className="ri-pencil-line mr-1"></i>
                         Edit
                       </button>
@@ -388,7 +388,6 @@ export default function PencakerPage() {
                           graduation_year: formCandidate.graduation_year,
                           status_perkawinan: formCandidate.status_perkawinan,
                           cv_file: formCandidate.cv_file,
-                          ak1_file: formCandidate.ak1_file,
                         };
                         await updateCandidateProfile(editingCandidateId, updatePayload);
                       } else {
@@ -407,7 +406,6 @@ export default function PencakerPage() {
                           graduation_year: formCandidate.graduation_year,
                           status_perkawinan: formCandidate.status_perkawinan,
                           cv_file: formCandidate.cv_file,
-                          ak1_file: formCandidate.ak1_file,
                           user_email: userEmail,
                           user_password: userPassword,
                         };
@@ -452,7 +450,7 @@ export default function PencakerPage() {
               <Input label="Tahun Lulus" type="number" value={String(formCandidate.graduation_year)} onChange={(e) => setFormCandidate({ ...formCandidate, graduation_year: Number(e.target.value || 0) })} />
               <Input label="Status Perkawinan" value={formCandidate.status_perkawinan} onChange={(e) => setFormCandidate({ ...formCandidate, status_perkawinan: e.target.value })} />
               <Input label="CV" type="file" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setFormCandidate({ ...formCandidate, cv_file: "" }); return; } const r = new FileReader(); r.onload = () => setFormCandidate({ ...formCandidate, cv_file: String(r.result || "") }); r.readAsDataURL(f); }} />
-              <Input label="AK1" type="file" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setFormCandidate({ ...formCandidate, ak1_file: "" }); return; } const r = new FileReader(); r.onload = () => setFormCandidate({ ...formCandidate, ak1_file: String(r.result || "") }); r.readAsDataURL(f); }} />
+              
             </div>
           </Modal>
 

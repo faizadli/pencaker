@@ -53,8 +53,7 @@ export default function ProfilePage() {
     last_education: "", 
     graduation_year: "", 
     status_perkawinan: "", 
-    cv_file: "", 
-    ak1_file: "" 
+    cv_file: "" 
   });
   const [candidatePhotoPreview, setCandidatePhotoPreview] = useState<string>("");
   const [districts, setDistricts] = useState<{ id: string; name: string }[]>([]);
@@ -132,7 +131,6 @@ export default function ProfilePage() {
           graduation_year: Number(candidateForm.graduation_year || 0),
           status_perkawinan: candidateForm.status_perkawinan,
           cv_file: candidateForm.cv_file || undefined,
-          ak1_file: candidateForm.ak1_file || undefined,
         });
         showSuccess("Profil pencaker berhasil disimpan");
       } else {
@@ -270,7 +268,6 @@ export default function ProfilePage() {
               graduation_year: String(res.data.graduation_year || ""),
               status_perkawinan: res.data.status_perkawinan || "",
               cv_file: res.data.cv_file || "",
-              ak1_file: res.data.ak1_file || "",
             });
             setCandidatePhotoPreview(res.data.photo_profile || "");
             setUser((u) => ({
@@ -424,10 +421,7 @@ export default function ProfilePage() {
                         <label className="block text-sm font-medium text-[#6b7280] mb-2">CV</label>
                         <Input icon="ri-file-3-line" type="file" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) { setCandidateForm({ ...candidateForm, cv_file: "" }); return; } try { const presign = await presignCandidateProfileUpload("cv", f.name, f.type || "application/octet-stream"); const resp = await fetch(presign.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); throw new Error(`Upload gagal (${resp.status}): ${txt}`); } const objectUrl = presign.url.includes("?") ? presign.url.slice(0, presign.url.indexOf("?")) : presign.url; setCandidateForm({ ...candidateForm, cv_file: objectUrl }); } catch (err) { const msg = err instanceof Error ? err.message : "Gagal upload CV"; showError(msg); } }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-[#6b7280] mb-2">AK1</label>
-                        <Input icon="ri-file-3-line" type="file" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) { setCandidateForm({ ...candidateForm, ak1_file: "" }); return; } try { const presign = await presignCandidateProfileUpload("ak1", f.name, f.type || "application/octet-stream"); const resp = await fetch(presign.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); throw new Error(`Upload gagal (${resp.status}): ${txt}`); } const objectUrl = presign.url.includes("?") ? presign.url.slice(0, presign.url.indexOf("?")) : presign.url; setCandidateForm({ ...candidateForm, ak1_file: objectUrl }); } catch (err) { const msg = err instanceof Error ? err.message : "Gagal upload AK1"; showError(msg); } }} className="w-full px-4 py-3 rounded-xl md:col-span-2" />
-                      </div>
+                      
                     </React.Fragment>
                   )}
                   {role !== "company" && role !== "candidate" && (

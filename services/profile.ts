@@ -21,7 +21,6 @@ type CandidateProfilePayload = {
   graduation_year: number;
   status_perkawinan: string;
   cv_file?: string;
-  ak1_file?: string;
 };
 
 type ApiEnvelope<T = unknown> = { message?: string; data?: T };
@@ -93,7 +92,6 @@ export async function upsertCandidateProfile(payload: {
   graduation_year: number;
   status_perkawinan: string;
   cv_file?: string;
-  ak1_file?: string;
 }): Promise<ApiEnvelope> {
   const resp = await fetch(`${BASE}/api/profile/candidate/upsert`, {
     method: "POST",

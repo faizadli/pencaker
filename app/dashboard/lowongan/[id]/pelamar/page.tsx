@@ -352,14 +352,6 @@ export default function PelamarLowonganPage() {
                             <div className="text-sm text-[#111827]">-</div>
                           )}
                         </div>
-                        <div>
-                          <div className="text-xs text-[#6b7280]">File AK1</div>
-                          {typeof detailProfile.ak1_file === "string" && detailProfile.ak1_file ? (
-                            <a href={String(detailProfile.ak1_file)} target="_blank" rel="noopener noreferrer" className="text-[#355485] text-sm">Unduh</a>
-                          ) : (
-                            <div className="text-sm text-[#111827]">-</div>
-                          )}
-                        </div>
                       </div>
                     </div>
                   </div>

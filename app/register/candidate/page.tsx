@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input, SearchableSelect, SegmentedToggle, Textarea } from "../../../components/ui/field";
 import { login, registerUser, startSession } from "../../../services/auth";
-import { presignCandidateProfileUpload, upsertCandidateProfile, getUserById } from "../../../services/profile";
+import { presignCandidateProfileUpload, upsertCandidateProfile, getUserById, getCandidateProfile } from "../../../services/profile";
 import { presignUpload, upsertAk1Document } from "../../../services/ak1";
 import { listDistricts, listVillages } from "../../../services/wilayah";
 
@@ -46,6 +46,9 @@ export default function RegisterCandidate() {
   const [ak1Files, setAk1Files] = useState<{ ktp?: File | null; ijazah?: File | null; pas_photo?: File | null; certificate?: File | null }>({ ktp: null, ijazah: null, pas_photo: null, certificate: null });
   const [hasAk1Card, setHasAk1Card] = useState<string>("ya");
   const [ak1CardFile, setAk1CardFile] = useState<File | null>(null);
+  const [ak1CreatedAt, setAk1CreatedAt] = useState<string>("");
+  const [ak1ExpiredAt, setAk1ExpiredAt] = useState<string>("");
+  const [ak1NoReg, setAk1NoReg] = useState<string>("");
   const [finalized, setFinalized] = useState(false);
 
   const limitMB = 8;
@@ -123,9 +126,11 @@ export default function RegisterCandidate() {
 
   const submitAk1 = async () => {
     setError("");
-    if (hasAk1Card === "ya" && !ak1CardFile) {
-      setError("Unggah file kartu AK1 terlebih dahulu.");
-      return;
+    if (hasAk1Card === "ya") {
+      if (!ak1CardFile) { setError("Unggah file kartu AK1 terlebih dahulu."); return; }
+      if (!ak1CreatedAt) { setError("Isi tanggal kartu dibuat terlebih dahulu."); return; }
+      if (!ak1ExpiredAt) { setError("Isi tanggal kartu kadaluarsa terlebih dahulu."); return; }
+      if (!ak1NoReg) { setError("Isi nomor pendaftaran pencari kerja terlebih dahulu."); return; }
     }
     if (hasAk1Card !== "ya" && !(ak1Files.ktp && ak1Files.ijazah && ak1Files.pas_photo)) {
       setError("Lengkapi dokumen AK1: KTP, Ijazah, dan Pas Foto.");
@@ -134,7 +139,11 @@ export default function RegisterCandidate() {
     setStep(4);
   };
 
-  const canSaveAk1 = hasAk1Card === "ya" ? Boolean(ak1CardFile) : hasAk1Card === "tidak" ? Boolean(ak1Files.ktp && ak1Files.ijazah && ak1Files.pas_photo) : false;
+  const canSaveAk1 = hasAk1Card === "ya"
+    ? Boolean(ak1CardFile && ak1CreatedAt && ak1ExpiredAt && ak1NoReg)
+    : hasAk1Card === "tidak"
+    ? Boolean(ak1Files.ktp && ak1Files.ijazah && ak1Files.pas_photo)
+    : false;
 
   const finalize = async () => {
     if (finalized || loading) return;
@@ -229,7 +238,7 @@ export default function RegisterCandidate() {
         const pre = await presignCandidateProfileUpload("candidate/ak1", ak1CardFile.name, ak1CardFile.type || "application/octet-stream");
         return await putSigned(pre.url, ak1CardFile, ak1CardFile.type || "application/octet-stream");
       })() : Promise.resolve(undefined);
-      const [photoUrl, cvUrl, ak1Url] = await Promise.all([photoPromise, cvPromise, ak1CardPromise]);
+        const [photoUrl, cvUrl, ak1Url] = await Promise.all([photoPromise, cvPromise, ak1CardPromise]);
       const basePayload = {
         user_id: uid,
         full_name: profile.full_name,
@@ -246,9 +255,16 @@ export default function RegisterCandidate() {
         status_perkawinan: profile.status_perkawinan,
         ...(photoUrl ? { photo_profile: photoUrl } : {}),
         ...(cvUrl ? { cv_file: cvUrl } : {}),
-        ...(ak1Url ? { ak1_file: ak1Url } : {}),
       };
       await upsertCandidateProfile(basePayload);
+      const profEnv = await getCandidateProfile(uid);
+      const profUnknown: unknown = profEnv;
+      const maybeData = (typeof profUnknown === 'object' && profUnknown !== null) ? (profUnknown as { data?: unknown }).data : undefined;
+      const src: unknown = (typeof maybeData === 'object' && maybeData !== null) ? maybeData : profUnknown;
+      const candidateId = String(((src as { id?: string }).id) || "");
+      if (hasAk1Card === "ya" && ak1Url) {
+        await upsertAk1Document({ candidate_id: candidateId, card_file: ak1Url, card_created_at: ak1CreatedAt || undefined, card_expired_at: ak1ExpiredAt || undefined, no_pendaftaran_pencari_kerja: ak1NoReg || undefined });
+      }
       if (hasAk1Card !== "ya" && ak1Files.ktp && ak1Files.ijazah && ak1Files.pas_photo) {
         const prepare = async (f: File) => {
           if (f.type && f.type.startsWith("image/")) {
@@ -269,7 +285,7 @@ export default function RegisterCandidate() {
           ak1Files.certificate ? put(`ak1/${uid}/sertifikat`, ak1Files.certificate) : Promise.resolve(undefined),
         ]);
         if (ktpUrl && ijazahUrl && pasUrl) {
-          await upsertAk1Document({ ktp: ktpUrl, ijazah: ijazahUrl, pas_photo: pasUrl, certificate: certUrl });
+          await upsertAk1Document({ candidate_id: candidateId, ktp_file: ktpUrl, ijazah_file: ijazahUrl, pas_photo_file: pasUrl, certificate_file: certUrl });
         }
       }
       setFinalized(true);
@@ -405,7 +421,10 @@ export default function RegisterCandidate() {
               {hasAk1Card === "ya" ? (
                 <div className="grid grid-cols-1 gap-3">
                   <Input label="File Kartu AK1 (PDF/JPG)" type="file" onChange={(e) => setAk1CardFile((e.target as HTMLInputElement).files?.[0] || null)} />
-                  <p className="text-xs text-[#6b7280]">Unggah file kartu AK1 jika sudah memiliki kartu fisik.</p>
+                  <Input label="Nomor Pendaftaran Pencari Kerja" value={ak1NoReg} onChange={(e) => setAk1NoReg(e.target.value)} />
+                  <Input label="Tanggal Kartu Dibuat" type="date" value={ak1CreatedAt} onChange={(e) => setAk1CreatedAt(e.target.value)} />
+                  <Input label="Tanggal Kartu Kadaluarsa" type="date" value={ak1ExpiredAt} onChange={(e) => setAk1ExpiredAt(e.target.value)} />
+                  <p className="text-xs text-[#6b7280]">Isi data kartu jika Anda sudah memiliki kartu AK1.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
