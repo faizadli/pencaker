@@ -2,20 +2,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Input } from "../../../components/ui/field";
 import Modal from "../../../components/ui/Modal";
-import { getCandidateProfile, getCandidateProfileById } from "../../../services/profile";
-import { getAk1Document, upsertAk1Document, verifyAk1, listAk1Documents, presignUpload, presignDownload } from "../../../services/ak1";
+import { getCandidateProfile, getCandidateProfileById, getUserById } from "../../../services/profile";
+import { getAk1Document, upsertAk1Document, verifyAk1, listAk1Documents, presignUpload, presignDownload, getAk1Layout, getAk1Template } from "../../../services/ak1";
 import { useRouter } from "next/navigation";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import Card from "../../../components/ui/Card";
 import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
 import { useToast } from "../../../components/ui/Toast";
 import type { PDFImage } from "pdf-lib";
-import type { Ak1Layout } from "../../../services/ak1";
+import type { Ak1Layout, Ak1LayoutField } from "../../../services/ak1";
 
 export default function Ak1Page() {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
-  type CandidateProfileLite = { full_name?: string; nik?: string; place_of_birth?: string; birthdate?: string; gender?: string; status_perkawinan?: string; address?: string; postal_code?: string };
+  type CandidateProfileLite = { full_name?: string; nik?: string; place_of_birth?: string; birthdate?: string; gender?: string; status_perkawinan?: string; address?: string; postal_code?: string; user_id?: string };
   type Ak1Document = { status?: string; card_file?: string | null } & { ktp_file?: string; ijazah_file?: string; pas_photo_file?: string; certificate_file?: string };
   const [profile, setProfile] = useState<CandidateProfileLite | null>(null);
   const [doc, setDoc] = useState<Ak1Document | null>(null);
@@ -37,6 +37,7 @@ export default function Ak1Page() {
   const [genCandidate, setGenCandidate] = useState<CandidateProfileLite | null>(null);
   const [genDocDetail, setGenDocDetail] = useState<Ak1Document | null>(null);
   const [layout, setLayout] = useState<Ak1Layout | null>(null);
+  const [genPasPhotoUrl, setGenPasPhotoUrl] = useState<string | null>(null);
   const genNoReg = useMemo(() => {
     const nik = genCandidate?.nik || "";
     const noUrut = genMeta.no_urut_pendaftaran || "";
@@ -55,13 +56,14 @@ export default function Ak1Page() {
     return "";
   }, [genCandidate, genMeta.no_urut_pendaftaran]);
   const frontRef = useRef<HTMLDivElement | null>(null);
-  const backRef = useRef<HTMLDivElement | null>(null);
   const frontContainerRef = useRef<HTMLDivElement | null>(null);
-  const backContainerRef = useRef<HTMLDivElement | null>(null);
   
   const [frontScale, setFrontScale] = useState(1);
-  const [backScale, setBackScale] = useState(1);
-  const [frontSvgUrl, setFrontSvgUrl] = useState<string | null>(null);
+  const [frontSrcUrl, setFrontSrcUrl] = useState<string | null>(null);
+  const [frontPreviewUrl, setFrontPreviewUrl] = useState<string | null>(null);
+  const [genUser, setGenUser] = useState<{ id?: string; email?: string; role?: string; no_handphone?: string } | null>(null);
+  
+  type Ak1LayoutFieldExt = Ak1LayoutField & { w?: number; h?: number };
   type Pos = { x: number; y: number };
   const posFront: Record<string, Pos> = {
     noReg: { x: 560, y: 220 },
@@ -78,76 +80,32 @@ export default function Ak1Page() {
   const FRONT_DESIGN = { w: 1400, h: 600 };
   const frontUnitX = FRONT_BASE.w / FRONT_DESIGN.w;
   const frontUnitY = FRONT_BASE.h / FRONT_DESIGN.h;
-  const posBack: Record<string, Pos> = {
-    laporan1: { x: 1030, y: 140 },
-    laporan2: { x: 1030, y: 210 },
-    laporan3: { x: 1030, y: 280 },
-    terhitung: { x: 680, y: 360 },
-  };
+  
   
 
   useEffect(() => {
     const calc = () => {
       try {
         const fw = frontContainerRef.current?.clientWidth || 0;
-        const bw = backContainerRef.current?.clientWidth || 0;
-        setFrontScale(fw ? Math.min(fw / FRONT_BASE.w, 1) : 1);
-        setBackScale(bw ? Math.min(bw / 1400, 1) : 1);
+        const autoFront = fw ? Math.min(fw / FRONT_BASE.w, 1) : 1;
+        setFrontScale(autoFront);
       } catch {}
     };
+    if (!showGenerateModal) return;
     calc();
     window.addEventListener("resize", calc);
-    return () => window.removeEventListener("resize", calc);
-  }, [FRONT_BASE.w]);
+    return () => {
+      window.removeEventListener("resize", calc);
+    };
+  }, [showGenerateModal, FRONT_BASE.w]);
 
   useEffect(() => {
-    const buildFrontSvg = async () => {
-      try {
-        if (!showGenerateModal) return;
-        const resp = await fetch('/ak1/front.svg');
-        if (!resp.ok) return;
-        let svg = await resp.text();
-        const ttl = `${String(genCandidate?.place_of_birth || '')} / ${formatDate(genCandidate?.birthdate)}`;
-        const expired = String(formatDate(genMeta.card_expired_at));
-        const noReg = String(genNoReg);
-        const nik = String(genCandidate?.nik || '');
-        const kv: Record<string, string> = {
-          fulln_name: String(genCandidate?.full_name || ''),
-          full_name: String(genCandidate?.full_name || ''),
-          ttl,
-          gender: String(genCandidate?.gender || ''),
-          status: String(genCandidate?.status_perkawinan || ''),
-          status_kawin: String(genCandidate?.status_perkawinan || ''),
-          alamat: String(genCandidate?.address || ''),
-          address: String(genCandidate?.address || ''),
-          expired: expired,
-          expired_date: expired,
-          no_reg: noReg,
-          nik,
-        };
-        svg = svg.replace(/\[\[(\w+)\]\]/g, (_, k: string) => kv[k] ?? '');
-        svg = svg.replace(/\[(\w+)\]/g, (_, k: string) => kv[k] ?? '');
-        svg = svg.replace(/\{(\w+)\}/g, (_, k: string) => kv[k] ?? '');
-        svg = svg.replace(/\[(\w+)\}/g, (_, k: string) => kv[k] ?? '');
-        svg = svg.replace(/\bnik_(\d+)\b/g, (_, idx: string) => {
-          const i = Number(idx);
-          const ch = (nik.padEnd(16, ' ').split('')[i] || ' ').trim();
-          return ch;
-        });
-        svg = svg.replace(/\bno_reg_(\d+)\b/g, (_, idx: string) => {
-          const i = Number(idx);
-          const ch = (noReg.padEnd(15, ' ').split('')[i] || ' ').trim();
-          return ch;
-        });
-        const blob = new Blob([svg], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(blob);
-        if (frontSvgUrl) URL.revokeObjectURL(frontSvgUrl);
-        setFrontSvgUrl(url);
-      } catch {}
-    };
-    buildFrontSvg();
-    return () => { if (frontSvgUrl) URL.revokeObjectURL(frontSvgUrl); };
-  }, [showGenerateModal, genCandidate, genMeta.card_expired_at, genMeta.no_urut_pendaftaran, genNoReg, frontSvgUrl]);
+    try {
+      if (!showGenerateModal) return;
+      if (!frontSrcUrl) return;
+      setFrontPreviewUrl(frontSrcUrl);
+    } catch {}
+  }, [showGenerateModal, frontSrcUrl]);
 
   const formatDate = (val?: string) => {
     if (!val) return "";
@@ -158,17 +116,7 @@ export default function Ak1Page() {
     const yy = String(d.getFullYear());
     return `${dd}-${mm}-${yy}`;
   };
-  const addMonths = (val?: string, m?: number) => {
-    if (!val || !m) return "";
-    const d = new Date(String(val));
-    if (Number.isNaN(d.getTime())) return "";
-    const nd = new Date(d);
-    nd.setMonth(nd.getMonth() + m);
-    const dd = String(nd.getDate()).padStart(2, "0");
-    const mm = String(nd.getMonth() + 1).padStart(2, "0");
-    const yy = String(nd.getFullYear());
-    return `${dd}-${mm}-${yy}`;
-  };
+  
 
   useEffect(() => {
     async function bootPerms() {
@@ -320,25 +268,58 @@ export default function Ak1Page() {
                             <button
                               className="px-3 py-1 text-xs rounded bg-[#4f90c6] text-white hover:bg-[#3a719f]"
                               onClick={async () => {
-                                setShowGenerateModal(true);
-                                setGenMeta({ ak1_document_id: r.ak1_document_id, candidate_id: r.candidate_id, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
-                                setGenCandidate(null);
-                                setGenDocDetail(null);
                                 try {
-                                  const cp = await getCandidateProfileById(r.candidate_id);
-                                  const prof = (cp && (cp as { data?: CandidateProfileLite }).data !== undefined) ? (cp as { data?: CandidateProfileLite }).data as CandidateProfileLite : (cp as CandidateProfileLite);
-                                  setGenCandidate(prof);
-                                  const dResp = await getAk1Document(undefined, r.candidate_id);
-                                  const dData = (dResp && (dResp as { data?: Ak1Document }).data !== undefined) ? (dResp as { data?: Ak1Document }).data as Ak1Document : (dResp as Ak1Document | null);
-                                  setGenDocDetail(dData || null);
+                                  setGenMeta({ ak1_document_id: r.ak1_document_id, candidate_id: r.candidate_id, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
+                                  setGenCandidate({ full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate } as CandidateProfileLite);
+                                  setGenDocDetail(null);
+                                  const tpResp = await getAk1Template() as { data?: { name?: string; file_template?: string | null } };
+                                  const t = tpResp.data || null;
+                                  const name = t?.name ? String(t.name) : undefined;
+                                  if (t?.file_template) setFrontSrcUrl(String(t.file_template));
+                                  const lyResp = await getAk1Layout(name);
+                                  const lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
+                                  setLayout(lyData);
                                   try {
-                                    const ly = await (await fetch("/api/ak1/layout")).json();
-                                    setLayout(ly?.data || null);
-                                    const tp = await (await fetch("/api/ak1/template")).json();
-                                    const t = tp?.data || null;
-                                    if (t && t.front_url) setFrontSvgUrl(String(t.front_url));
+                                    const prof = await getCandidateProfileById(r.candidate_id);
+                                    const cand = (prof as { data?: CandidateProfileLite | null }).data || null;
+                                    setGenCandidate(cand);
+                                    try {
+                                      const cid = String(cand?.user_id || '');
+                                      if (cid) {
+                                        const u = await getUserById(cid);
+                                        const env = u as { data?: Record<string, unknown> };
+                                        const ud: Record<string, unknown> = env && env.data !== undefined ? (env.data as Record<string, unknown>) : (u as unknown as Record<string, unknown>);
+                                        setGenUser(ud || null);
+                                      }
+                                    } catch {}
+                                    const d = await getAk1Document(undefined, r.candidate_id);
+                                    setGenDocDetail(d.data || null);
+                                    try {
+                                      const rawPhoto = (() => {
+                                        const env = d as { data?: { pas_photo_file?: string } };
+                                        return String(env?.data?.pas_photo_file || '');
+                                      })();
+                                      if (rawPhoto) {
+                                        const pre = await presignDownload(rawPhoto);
+                                        setGenPasPhotoUrl(pre.url);
+                                      } else {
+                                        setGenPasPhotoUrl(null);
+                                      }
+                                    } catch { setGenPasPhotoUrl(null); }
+                                    try {
+                                      const candUserId = (() => { try { return String(((cand as unknown as { user_id?: string }) || {})?.user_id || ''); } catch { return ''; } })();
+                                      const docUserId = (() => { try { return String((((d?.data as unknown as { user_id?: string }) || {})?.user_id) || ''); } catch { return ''; } })();
+                                      const userId = candUserId || docUserId;
+                                      if (userId) {
+                                        const u = await getUserById(userId);
+                                        const env = u as { data?: Record<string, unknown> };
+                                        const ud: Record<string, unknown> = env && env.data !== undefined ? (env.data as Record<string, unknown>) : (u as unknown as Record<string, unknown>);
+                                        setGenUser(ud || null);
+                                      }
+                                    } catch {}
                                   } catch {}
                                 } catch {}
+                                setShowGenerateModal(true);
                               }}
                             >
                               Generate
@@ -357,7 +338,7 @@ export default function Ak1Page() {
             <p className="text-sm text-[#6b7280]">Setelah dokumen diunggah dan profil lengkap, AK1 akan diverifikasi oleh petugas Disnaker. Jika disetujui, kartu dapat diunduh di halaman ini.</p>
           </Modal>
           
-          <Modal open={showGenerateModal} title="Generate Kartu AK1" size="xl" onClose={() => setShowGenerateModal(false)} actions={<>
+          <Modal open={showGenerateModal} title="Generate Kartu AK1" size="full" onClose={() => setShowGenerateModal(false)} actions={<> 
             <button onClick={() => setShowGenerateModal(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>
             <button
               onClick={async () => {
@@ -384,45 +365,101 @@ export default function Ak1Page() {
                       img.onerror = () => reject(new Error("image"));
                       img.src = url;
                     });
-                    const srcUrl = frontSvgUrl || "/ak1/front.svg";
+                    const srcUrl = frontPreviewUrl || frontSrcUrl || "/ak1/front.svg";
                     const frontUrl = await toPng(srcUrl, FRONT_BASE.w, FRONT_BASE.h);
                     const frontImg = await pdfDoc.embedPng(frontUrl);
                     const page = pdfDoc.addPage([FRONT_BASE.w, FRONT_BASE.h]);
                     page.drawImage(frontImg, { x: 0, y: 0, width: FRONT_BASE.w, height: FRONT_BASE.h });
 
-                    if (layout?.fields?.length) {
-                      const mapText: Record<string, string> = {
-                        full_name: String(genCandidate?.full_name || ''),
-                        ttl: `${String(genCandidate?.place_of_birth || '')} / ${formatDate(genCandidate?.birthdate)}`,
-                        gender: String(genCandidate?.gender || ''),
-                        status: String(genCandidate?.status_perkawinan || ''),
-                        address: String(genCandidate?.address || ''),
-                        expired: String(formatDate(genMeta.card_expired_at)),
-                        no_reg: String(genNoReg),
-                        nik: String(genCandidate?.nik || ''),
+                    let pdfPhoto: PDFImage | null = null;
+                    try {
+                      const photoUrl = genPasPhotoUrl || String(genDocDetail?.pas_photo_file || '');
+                      if (photoUrl) {
+                        const res = await fetch(photoUrl);
+                        const ab = await res.arrayBuffer();
+                        const u8 = new Uint8Array(ab);
+                        try { pdfPhoto = await pdfDoc.embedPng(u8); } catch { pdfPhoto = await pdfDoc.embedJpg(u8); }
+                      }
+                    } catch {}
+                    const hasLayoutPhoto = ((layout?.coordinates || []) as Ak1LayoutField[]).some((ff) => (ff.kind || 'text') === 'image' && String(ff.token) === 'pas_photo');
+
+                    const layoutW = Number(layout?.front_width || FRONT_DESIGN.w);
+                    const layoutH = Number(layout?.front_height || FRONT_DESIGN.h);
+                    const unitX = FRONT_BASE.w / layoutW;
+                    const unitY = FRONT_BASE.h / layoutH;
+
+                    if ((layout?.coordinates || []).length) {
+                      const getTokenText = (token: string): string => {
+                        const [src, key] = token.includes(':') ? token.split(':', 2) as [string, string] : ['', token];
+                        const alias = (k: string) => {
+                          const map: Record<string, string> = { no_hp: 'no_handphone', phone: 'no_handphone', telepon: 'no_handphone', hp: 'no_handphone' };
+                          return map[k] || k;
+                        };
+                        const normKey = alias(key);
+                        if (key === 'ttl' || token === 'ttl') return `${String(genCandidate?.place_of_birth || '')} / ${formatDate(genCandidate?.birthdate)}`;
+                        if (key === 'expired' || token === 'expired') return String(formatDate(genMeta.card_expired_at));
+                        if (key === 'no_reg' || token === 'no_reg') return String(genNoReg);
+                        const readFrom = (namespace: string, k: string): string => {
+                          if (namespace === 'candidate') return String((genCandidate as unknown as Record<string, unknown>)?.[k] ?? '');
+                          if (namespace === 'user') return String((genUser as unknown as Record<string, unknown>)?.[k] ?? '');
+                          if (namespace === 'ak1_doc' || namespace === 'doc') {
+                            if (k === 'card_expired_at') return String(formatDate(genMeta.card_expired_at));
+                            return String((genDocDetail as unknown as Record<string, unknown>)?.[k] ?? '');
+                          }
+                          return '';
+                        };
+                        if (src) {
+                          const first = readFrom(src, normKey);
+                          if (first) return first;
+                          const c = readFrom('candidate', normKey);
+                          if (c) return c;
+                          const u = readFrom('user', normKey);
+                          if (u) return u;
+                          const d = readFrom('doc', normKey);
+                          return d;
+                        }
+                        const c = readFrom('candidate', normKey);
+                        if (c) return c;
+                        const u = readFrom('user', normKey);
+                        if (u) return u;
+                        const d = readFrom('doc', normKey);
+                        return d;
                       };
-                      layout.fields.forEach((f) => {
+                      ((layout?.coordinates || []) as Ak1LayoutField[]).forEach((f: Ak1LayoutField) => {
                         const kind = f.kind || 'text';
                         if (kind === 'text') {
-                          const sizePx = Math.round((f.size || 16) * frontUnitY);
-                          const xPx = (f.x || 0) * frontUnitX;
-                          const yPx = FRONT_BASE.h - ((f.y || 0) * frontUnitY) - sizePx;
-                          page.drawText(mapText[f.token] ?? '', { x: xPx, y: yPx, size: sizePx, font });
+                          const sizePx = Math.round((f.size || 16) * unitY);
+                          const xPx = (f.x || 0) * unitX;
+                          const yPx = FRONT_BASE.h - ((f.y || 0) * unitY) - sizePx;
+                          const val = getTokenText(f.token);
+                          page.drawText(val || String(f.token), { x: xPx, y: yPx, size: sizePx, font });
+                        } else if (kind === 'image') {
+                          const fe = f as Ak1LayoutFieldExt;
+                          const wPx = Math.max(1, Number(fe.w || 0)) * unitX;
+                          const hPx = Math.max(1, Number(fe.h || 0)) * unitY;
+                          const x = (f.x || 0) * unitX;
+                          const y = FRONT_BASE.h - ((f.y || 0) * unitY) - hPx;
+                          if (String(f.token) === 'pas_photo' && pdfPhoto) {
+                            page.drawImage(pdfPhoto, { x, y, width: wPx, height: hPx });
+                          } else {
+                            page.drawRectangle({ x, y, width: wPx, height: hPx, borderColor: rgb(0, 0, 0), borderWidth: 1 });
+                          }
                         } else {
                           const count = Math.max(1, Number(f.count || 1));
-                          const cellW = Math.max(1, Number(f.cellW || 24)) * frontUnitX;
-                          const cellH = Math.max(1, Number(f.cellH || 32)) * frontUnitY;
-                          const gap = Math.max(0, Number(f.gap || 4)) * frontUnitX;
-                          const startX = (f.x || 0) * frontUnitX;
-                          const startY = (f.y || 0) * frontUnitY;
-                          const src = String(f.source || f.token || '');
+                          const cellW = Math.max(1, Number(f.cellW || 24)) * unitX;
+                          const cellH = Math.max(1, Number(f.cellH || 32)) * unitY;
+                          const gap = Math.max(0, Number(f.gap || 4)) * unitX;
+                          const startX = (f.x || 0) * unitX;
+                          const startY = (f.y || 0) * unitY;
+                          const srcRaw = String(f.source || f.token || '');
+                          const [srcNs, srcKey] = srcRaw.includes(':') ? (srcRaw.split(':', 2) as [string, string]) : ['', srcRaw];
                           let digits: string[] = [];
-                          if (src === 'noreg_nik4') {
+                          if (srcRaw === 'noreg_nik4' || srcRaw === 'nik_pendaftaran') {
                             digits = String(genCandidate?.nik || '').slice(0, 4).padEnd(4, ' ').split('');
-                          } else if (src === 'noreg_no8') {
+                          } else if (srcRaw === 'noreg_no8' || srcRaw === 'no_urut_pendaftaran') {
                             const noUrut = String(genMeta.no_urut_pendaftaran || '').padStart(8, '0').slice(0, 8);
                             digits = noUrut.split('');
-                          } else if (src === 'noreg_ttl6') {
+                          } else if (srcRaw === 'noreg_ttl6' || srcRaw === 'birthdate_pendaftaran') {
                             const bdStr = String(genCandidate?.birthdate || '');
                             const d = new Date(bdStr);
                             if (!Number.isNaN(d.getTime())) {
@@ -431,10 +468,10 @@ export default function Ak1Page() {
                               const yy = String(d.getFullYear()).slice(-2);
                               digits = `${dd}${mm}${yy}`.split('');
                             }
-                          } else if (src === 'nik') {
-                            digits = String(genCandidate?.nik || '').padEnd(16, ' ').slice(0, 16).split('');
+                          } else if (srcRaw === 'nik' || (srcNs === 'candidate' && srcKey === 'nik')) {
+                            digits = String(genCandidate?.nik || '').padEnd(count, ' ').slice(0, count).split('');
                           }
-                          const sizeTxt = Math.round((f.size || 16) * frontUnitY);
+                          const sizeTxt = Math.round((f.size || 16) * unitY);
                           for (let i = 0; i < count; i++) {
                             const x = startX + i * (cellW + gap);
                             const y = FRONT_BASE.h - startY - cellH;
@@ -519,86 +556,15 @@ export default function Ak1Page() {
                         page.drawText(String(formatDate(genMeta.card_expired_at)), { x, y, size: sizeText, font, color: rgb(0, 0, 0) });
                       }
                     }
-                    if (genDocDetail?.pas_photo_file) {
-                      try {
-                        const res = await fetch(String(genDocDetail.pas_photo_file));
-                        const ab = await res.arrayBuffer();
-                        const u8 = new Uint8Array(ab);
-                        let photo: PDFImage | null = null;
-                        try { photo = await pdfDoc.embedPng(u8); } catch { photo = await pdfDoc.embedJpg(u8); }
-                        if (photo) {
-                          const pw = 90 * frontUnitX;
-                          const ph = 110 * frontUnitY;
-                          const px = posFront.photo.x * frontUnitX;
-                          const py = FRONT_BASE.h - posFront.photo.y * frontUnitY - ph;
-                          page.drawImage(photo, { x: px, y: py, width: pw, height: ph });
-                        }
-                      } catch {}
+                    if (!hasLayoutPhoto && pdfPhoto) {
+                      const pw = 90 * frontUnitX;
+                      const ph = 110 * frontUnitY;
+                      const px = posFront.photo.x * frontUnitX;
+                      const py = FRONT_BASE.h - posFront.photo.y * frontUnitY - ph;
+                      page.drawImage(pdfPhoto, { x: px, y: py, width: pw, height: ph });
                     }
 
-                    const backSrc = (await (async () => { try { const tp = await (await fetch("/api/ak1/template")).json(); return tp?.data?.back_url || null; } catch { return null; } })()) || null;
-                    const bw = 1400, bh = 500;
-                    const page2 = pdfDoc.addPage([bw, bh]);
-                    if (backSrc) {
-                      const backUrl = await toPng(backSrc, bw, bh);
-                      const backImg = await pdfDoc.embedPng(backUrl);
-                      page2.drawImage(backImg, { x: 0, y: 0, width: bw, height: bh });
-                    }
-                    const drawMap: Record<string, string> = {
-                      full_name: String(genCandidate?.full_name || ''),
-                      ttl: `${String(genCandidate?.place_of_birth || '')} / ${formatDate(genCandidate?.birthdate)}`,
-                      gender: String(genCandidate?.gender || ''),
-                      status: String(genCandidate?.status_perkawinan || ''),
-                      address: String(genCandidate?.address || ''),
-                      expired: String(formatDate(genMeta.card_expired_at)),
-                      no_reg: String(genNoReg),
-                      nik: String(genCandidate?.nik || ''),
-                    };
-                    (layout?.fields || []).filter((f) => (f.side || 'front') === 'back').forEach((f) => {
-                      if ((f.kind || 'text') === 'text') {
-                        const size = Math.round((f.size || 16));
-                        const x = (f.x || 0);
-                        const y = bh - (f.y || 0) - size;
-                        page2.drawText(drawMap[f.token] ?? '', { x, y, size, font });
-                      } else {
-                        const count = Math.max(1, Number(f.count || 1));
-                        const cellW = Math.max(1, Number(f.cellW || 24));
-                        const cellH = Math.max(1, Number(f.cellH || 32));
-                        const gap = Math.max(0, Number(f.gap || 4));
-                        const startX = (f.x || 0);
-                        const startY = (f.y || 0);
-                        const src = String(f.source || f.token || '');
-                        let digits: string[] = [];
-                        if (src === 'noreg_nik4') {
-                          digits = String(genCandidate?.nik || '').slice(0, 4).padEnd(4, ' ').split('');
-                        } else if (src === 'noreg_no8') {
-                          const noUrut = String(genMeta.no_urut_pendaftaran || '').padStart(8, '0').slice(0, 8);
-                          digits = noUrut.split('');
-                        } else if (src === 'noreg_ttl6') {
-                          const bdStr = String(genCandidate?.birthdate || '');
-                          const d = new Date(bdStr);
-                          if (!Number.isNaN(d.getTime())) {
-                            const dd = String(d.getDate()).padStart(2, '0');
-                            const mm = String(d.getMonth() + 1).padStart(2, '0');
-                            const yy = String(d.getFullYear()).slice(-2);
-                            digits = `${dd}${mm}${yy}`.split('');
-                          }
-                        } else if (src === 'nik') {
-                          digits = String(genCandidate?.nik || '').padEnd(16, ' ').slice(0, 16).split('');
-                        }
-                        const sizeTxt = Math.round((f.size || 16));
-                        for (let i = 0; i < count; i++) {
-                          const x = startX + i * (cellW + gap);
-                          const y = bh - startY - cellH;
-                          page2.drawRectangle({ x, y, width: cellW, height: cellH, borderColor: rgb(0, 0, 0), borderWidth: 1 });
-                          const ch = (digits[i] || '').trim();
-                          if (ch) {
-                            const tw = font.widthOfTextAtSize(ch, sizeTxt);
-                            page2.drawText(ch, { x: x + (cellW - tw) / 2, y: y + (cellH - sizeTxt) / 2, size: sizeTxt, font, color: rgb(0, 0, 0) });
-                          }
-                        }
-                      }
-                    });
+                    // Back page dihapus; PDF hanya halaman depan sesuai template aktif
 
                     const bytes = await pdfDoc.save();
                     const uint = new Uint8Array(bytes);
@@ -625,47 +591,118 @@ export default function Ak1Page() {
           </>}>
             <div>
               <div className="space-y-6">
-                <div className="text-xs text-[#6b7280] mb-2">Preview Kartu (depan)</div>
-                <div ref={frontContainerRef} className="w-full">
-                  <div className="relative" style={{ width: FRONT_BASE.w * frontScale, height: FRONT_BASE.h * frontScale }}>
-                    <div ref={frontRef} className="relative border-2 border-black bg-white" style={{ width: FRONT_BASE.w, height: FRONT_BASE.h, transform: `scale(${frontScale})`, transformOrigin: 'top left' }}>
-                      <div aria-label="Front" style={{ width: FRONT_BASE.w, height: FRONT_BASE.h, backgroundImage: `url(${frontSvgUrl || "/ak1/front.svg"})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                      <svg width={FRONT_BASE.w} height={FRONT_BASE.h} viewBox={`0 0 ${FRONT_BASE.w} ${FRONT_BASE.h}`} xmlns="http://www.w3.org/2000/svg" style={{ position: 'absolute', inset: 0 }}>
-                        {layout?.fields?.length ? (
+                <div className="grid grid-cols-1 gap-3">
+                  <label className="text-sm text-[#374151]">No Urut Pendaftaran
+                    <Input type="text" className="mt-1 w-full" value={genMeta.no_urut_pendaftaran || ''} onChange={(e) => setGenMeta({ ...genMeta, no_urut_pendaftaran: (e.target as HTMLInputElement).value })} />
+                  </label>
+                  <label className="text-sm text-[#374151]">Tanggal Kadaluarsa
+                    <Input type="date" className="mt-1 w-full" value={genMeta.card_expired_at || ''} onChange={(e) => setGenMeta({ ...genMeta, card_expired_at: (e.target as HTMLInputElement).value })} />
+                  </label>
+                </div>
+                <div>
+                  <div className="text-xs text-[#6b7280] mb-2">Preview Kartu (depan)</div>
+                  <div ref={frontContainerRef} className="w-full overflow-auto">
+                    <div className="relative" style={{ width: FRONT_BASE.w * frontScale, height: FRONT_BASE.h * frontScale }}>
+                      <div ref={frontRef} className="relative border-2 border-black bg-white" style={{ width: FRONT_BASE.w, height: FRONT_BASE.h, transform: `scale(${frontScale})`, transformOrigin: 'top left' }}>
+                        <div aria-label="Front" style={{ width: FRONT_BASE.w, height: FRONT_BASE.h, backgroundImage: `url(${frontPreviewUrl || frontSrcUrl || ""})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                        <svg width={FRONT_BASE.w} height={FRONT_BASE.h} viewBox={`0 0 ${FRONT_BASE.w} ${FRONT_BASE.h}`} xmlns="http://www.w3.org/2000/svg" style={{ position: 'absolute', inset: 0 }}>
+                        {(layout?.coordinates || []).length ? (
                           <>
-                            {layout.fields.map((f, i) => {
+                            {((layout?.coordinates || []) as Ak1LayoutField[]).map((f: Ak1LayoutField, i: number) => {
                               const kind = f.kind || 'text';
                               if (kind === 'text') {
-                                const valMap: Record<string, string> = {
-                                  full_name: String(genCandidate?.full_name || ''),
-                                  ttl: `${String(genCandidate?.place_of_birth || '')} / ${formatDate(genCandidate?.birthdate)}`,
-                                  gender: String(genCandidate?.gender || ''),
-                                  status: String(genCandidate?.status_perkawinan || ''),
-                                  address: String(genCandidate?.address || ''),
-                                  expired: String(formatDate(genMeta.card_expired_at)),
-                                  no_reg: String(genNoReg),
-                                  nik: String(genCandidate?.nik || ''),
-                                };
+                                const tokenStr = String(f.token);
+                                const [src, key] = tokenStr.includes(':') ? tokenStr.split(':', 2) as [string, string] : ['', tokenStr];
+                                const mappedVal = (() => {
+                                  const alias = (k: string) => {
+                                    const map: Record<string, string> = { no_hp: 'no_handphone', phone: 'no_handphone', telepon: 'no_handphone', hp: 'no_handphone' };
+                                    return map[k] || k;
+                                  };
+                                  const normKey = alias(key);
+                                  if (normKey === 'ttl' || key === 'ttl') return `${String(genCandidate?.place_of_birth || '')} / ${formatDate(genCandidate?.birthdate)}`;
+                                  if (normKey === 'expired' || key === 'expired') return String(formatDate(genMeta.card_expired_at));
+                                  if (normKey === 'no_reg' || key === 'no_reg') return String(genNoReg);
+                                  const readFrom = (namespace: string, k: string): string => {
+                                    if (namespace === 'candidate') return String((genCandidate as unknown as Record<string, unknown>)?.[k] ?? '');
+                                    if (namespace === 'user') return String((genUser as unknown as Record<string, unknown>)?.[k] ?? '');
+                                    if (namespace === 'ak1_doc' || namespace === 'doc') {
+                                      if (k === 'card_expired_at') return String(formatDate(genMeta.card_expired_at));
+                                      return String((genDocDetail as unknown as Record<string, unknown>)?.[k] ?? '');
+                                    }
+                                    return '';
+                                  };
+                                  if (src) {
+                                    const first = readFrom(src, normKey);
+                                    if (first) return first;
+                                    const c = readFrom('candidate', normKey);
+                                    if (c) return c;
+                                    const u = readFrom('user', normKey);
+                                    if (u) return u;
+                                    const d = readFrom('doc', normKey);
+                                    return d;
+                                  }
+                                  const c = readFrom('candidate', normKey);
+                                  if (c) return c;
+                                  const u = readFrom('user', normKey);
+                                  if (u) return u;
+                                  const d = readFrom('doc', normKey);
+                                  return d;
+                                })();
+                                const txt = mappedVal || key;
+                                const fill = '#6b7280';
+                                const weight = 700;
+                                const fe = f as Ak1LayoutFieldExt;
+                                const w = Math.max(1, Number(fe.w || 0));
+                                const h = Math.max(1, Number(fe.h || 0));
                                 return (
-                                  <text key={`f-${i}`} x={(f.x || 0) * frontUnitX} y={(f.y || 0) * frontUnitY} fontFamily="Arial, sans-serif" fontSize={Math.round((f.size || 16) * frontUnitY)} fill="#000000">
-                                    {valMap[f.token] ?? ''}
-                                  </text>
+                                  <g key={`f-${i}`}>
+                                    {w && h ? <rect x={(f.x || 0)} y={(f.y || 0)} width={w} height={h} fill="#ffffff" fillOpacity={0.2} stroke="#6b7280" strokeDasharray="4 4" /> : null}
+                                    <text x={(f.x || 0)} y={(f.y || 0)} dominantBaseline="hanging" textAnchor="start" fontFamily="Arial, sans-serif" fontSize={Math.round((f.size || 16) * 1.3)} fill={fill} fontWeight={weight}>{txt}</text>
+                                  </g>
+                                );
+                              } else if (kind === 'image') {
+                                const fe = f as Ak1LayoutFieldExt;
+                                const w = Math.max(1, Number(fe.w || 0));
+                                const h = Math.max(1, Number(fe.h || 0));
+                                const x = (f.x || 0);
+                                const y = (f.y || 0);
+                                const srcToken = String(f.token || '');
+                                const [mSrc, mKey] = srcToken.includes(':') ? srcToken.split(':', 2) as [string, string] : ['', srcToken];
+                                const photoUrl = (() => {
+                                  if (genPasPhotoUrl) return genPasPhotoUrl;
+                                  if ((mSrc === 'ak1_doc' || mSrc === 'doc') && mKey) {
+                                    const gdd = genDocDetail as unknown as Record<string, unknown>;
+                                    return String((gdd && gdd[mKey]) || '');
+                                  }
+                                  if (srcToken === 'pas_photo' || mKey === 'pas_photo_file') return String(genDocDetail?.pas_photo_file || '');
+                                  return '';
+                                })();
+                                return (
+                                  <g key={`f-${i}`} transform={`translate(${x}, ${y})`}>
+                                    <rect width={w} height={h} fill="#ffffff" stroke="#000000" strokeWidth={1} />
+                                    {photoUrl ? (
+                                      <image href={photoUrl} width={w} height={h} preserveAspectRatio="xMidYMid slice" />
+                                    ) : (
+                                      <text x={w / 2} y={h / 2} textAnchor="middle" fontFamily="Arial, sans-serif" fontSize={14} fill="#6b7280" fontWeight={700}>{mKey || String(f.token)}</text>
+                                    )}
+                                  </g>
                                 );
                               } else {
                                 const count = Math.max(1, Number(f.count || 1));
-                                const cellW = Math.max(1, Number(f.cellW || 24)) * frontUnitX;
-                                const cellH = Math.max(1, Number(f.cellH || 32)) * frontUnitY;
-                                const gap = Math.max(0, Number(f.gap || 4)) * frontUnitX;
-                                const startX = (f.x || 0) * frontUnitX;
-                                const startY = (f.y || 0) * frontUnitY;
-                                const src = String(f.source || f.token || '');
+                                const cellW = Math.max(1, Number(f.cellW || 24));
+                                const cellH = Math.max(1, Number(f.cellH || 32));
+                                const gap = Math.max(0, Number(f.gap || 4));
+                                const startX = (f.x || 0);
+                                const startY = (f.y || 0);
+                                const srcRaw = String((f as unknown as { source?: string }).source || f.token || '');
+                                const [srcNs, srcKey] = srcRaw.includes(':') ? (srcRaw.split(':', 2) as [string, string]) : ['', srcRaw];
                                 let digits: string[] = [];
-                                if (src === 'noreg_nik4') {
+                                if (srcRaw === 'noreg_nik4' || srcRaw === 'nik_pendaftaran') {
                                   digits = String(genCandidate?.nik || '').slice(0, 4).padEnd(4, ' ').split('');
-                                } else if (src === 'noreg_no8') {
+                                } else if (srcRaw === 'noreg_no8' || srcRaw === 'no_urut_pendaftaran') {
                                   const noUrut = String(genMeta.no_urut_pendaftaran || '').padStart(8, '0').slice(0, 8);
                                   digits = noUrut.split('');
-                                } else if (src === 'noreg_ttl6') {
+                                } else if (srcRaw === 'noreg_ttl6' || srcRaw === 'birthdate_pendaftaran') {
                                   const bdStr = String(genCandidate?.birthdate || '');
                                   const d = new Date(bdStr);
                                   if (!Number.isNaN(d.getTime())) {
@@ -674,94 +711,39 @@ export default function Ak1Page() {
                                     const yy = String(d.getFullYear()).slice(-2);
                                     digits = `${dd}${mm}${yy}`.split('');
                                   }
-                                } else if (src === 'nik') {
-                                  digits = String(genCandidate?.nik || '').padEnd(16, ' ').slice(0, 16).split('');
+                                } else if (srcRaw === 'nik' || (srcNs === 'candidate' && srcKey === 'nik')) {
+                                  digits = String(genCandidate?.nik || '').padEnd(count, ' ').slice(0, count).split('');
                                 }
-                                const sizeTxt = Math.round((f.size || 16) * frontUnitY);
+                                const sizeTxt = Math.round((f.size || 16));
                                 return (
                                   <g key={`f-${i}`}>
-                                    {Array.from({ length: count }).map((_, idx) => (
-                                      <g key={`box-${i}-${idx}`} transform={`translate(${startX + idx * (cellW + gap)}, ${startY})`}>
-                                        <rect width={cellW} height={cellH} fill="#ffffff" stroke="#000000" strokeWidth={1} />
-                                        <text x={cellW / 2} y={cellH / 2 + 2} textAnchor="middle" fontFamily="Arial, sans-serif" fontSize={sizeTxt} fill="#000000">{(digits[idx] || '').trim()}</text>
-                                      </g>
-                                    ))}
+                                    {Array.from({ length: count }).map((_, idx) => {
+                                      const ch = (digits[idx] || '').trim();
+                                      const isEmpty = ch.length === 0;
+                                      const fill = isEmpty ? '#6b7280' : '#000000';
+                                      const txt = isEmpty ? '•' : ch;
+                                      const weight = isEmpty ? 700 : 400;
+                                      return (
+                                        <g key={`box-${i}-${idx}`} transform={`translate(${startX + idx * (cellW + gap)}, ${startY})`}>
+                                          <rect width={cellW} height={cellH} fill="#ffffff" stroke="#000000" strokeWidth={1} />
+                                          <text x={cellW / 2} y={cellH / 2 + 2} textAnchor="middle" fontFamily="Arial, sans-serif" fontSize={sizeTxt} fill={fill} fontWeight={weight}>{txt}</text>
+                                        </g>
+                                      );
+                                    })}
                                   </g>
                                 );
                               }
                             })}
                           </>
-                        ) : (
-                          <>
-                            {(() => {
-                              const CELL_W = 24 * frontUnitX;
-                              const CELL_H = 32 * frontUnitY;
-                              const GAP = 4;
-                              const digits = (genNoReg || '').padEnd(15, ' ').split('').slice(0, 15);
-                              const startX = posFront.noReg.x * frontUnitX;
-                              const startY = posFront.noReg.y * frontUnitY;
-                              return digits.map((d, i) => (
-                                <g key={`noreg-${i}`} transform={`translate(${startX + i * (CELL_W + GAP)}, ${startY})`}>
-                                  <rect width={CELL_W} height={CELL_H} fill="#ffffff" stroke="#000000" strokeWidth={1} />
-                                  <text x={CELL_W / 2} y={CELL_H / 2 + 2} textAnchor="middle" fontFamily="Arial, sans-serif" fontSize={Math.round(18 * frontUnitY)} fontWeight={700} fill="#000000">{d.trim()}</text>
-                                </g>
-                              ));
-                            })()}
-                            {(() => {
-                              const CELL_W = 24 * frontUnitX;
-                              const CELL_H = 32 * frontUnitY;
-                              const GAP = 4;
-                              const digits = ((genCandidate?.nik || '')).padEnd(16, ' ').split('').slice(0, 16);
-                              const startX = posFront.nik.x * frontUnitX;
-                              const startY = posFront.nik.y * frontUnitY;
-                              return digits.map((d, i) => (
-                                <g key={`nik-${i}`} transform={`translate(${startX + i * (CELL_W + GAP)}, ${startY})`}>
-                                  <rect width={CELL_W} height={CELL_H} fill="#ffffff" stroke="#000000" strokeWidth={1} />
-                                  <text x={CELL_W / 2} y={CELL_H / 2 + 2} textAnchor="middle" fontFamily="Arial, sans-serif" fontSize={Math.round(16 * frontUnitY)} fill="#000000">{d.trim()}</text>
-                                </g>
-                              ));
-                            })()}
-                            <text x={posFront.fullName.x * frontUnitX} y={posFront.fullName.y * frontUnitY} fontFamily="Arial, sans-serif" fontSize={Math.round(16 * frontUnitY)} fill="#000000">{genCandidate?.full_name || ''}</text>
-                            <text x={posFront.ttl.x * frontUnitX} y={posFront.ttl.y * frontUnitY} fontFamily="Arial, sans-serif" fontSize={Math.round(16 * frontUnitY)} fill="#000000">{`${genCandidate?.place_of_birth || ''} / ${formatDate(genCandidate?.birthdate)}`}</text>
-                            <text x={posFront.gender.x * frontUnitX} y={posFront.gender.y * frontUnitY} fontFamily="Arial, sans-serif" fontSize={Math.round(16 * frontUnitY)} fill="#000000">{genCandidate?.gender || ''}</text>
-                            <text x={posFront.status.x * frontUnitX} y={posFront.status.y * frontUnitY} fontFamily="Arial, sans-serif" fontSize={Math.round(16 * frontUnitY)} fill="#000000">{genCandidate?.status_perkawinan || ''}</text>
-                            <text x={posFront.address.x * frontUnitX} y={posFront.address.y * frontUnitY} fontFamily="Arial, sans-serif" fontSize={Math.round(16 * frontUnitY)} fill="#000000">{genCandidate?.address || ''}</text>
-                            <text x={posFront.expired.x * frontUnitX} y={posFront.expired.y * frontUnitY} fontFamily="Arial, sans-serif" fontSize={Math.round(16 * frontUnitY)} fill="#000000">{formatDate(genMeta.card_expired_at)}</text>
-                          </>
-                        )}
-                      </svg>
-                      {genDocDetail?.pas_photo_file ? (
-                        <div aria-label="Pas Foto" style={{ position: 'absolute', left: posFront.photo.x * frontUnitX, top: posFront.photo.y * frontUnitY, width: 90 * frontUnitX, height: 110 * frontUnitY, backgroundImage: `url(${String(genDocDetail.pas_photo_file)})`, backgroundSize: 'cover', border: '1px solid black' }} />
-                      ) : null}
+                        ) : null}
+                        </svg>
+                        
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="text-xs text-[#6b7280] mb-2">Preview Kartu (belakang)</div>
-                <div ref={backContainerRef} className="w-full">
-                  <div className="relative" style={{ width: 1400 * backScale, height: 500 * backScale }}>
-                    <div ref={backRef} className="relative border-2 border-black bg-white" style={{ width: 1400, height: 500, transform: `scale(${backScale})`, transformOrigin: 'top left', fontFamily: 'Arial, sans-serif' }}>
-                      <div style={{ position: 'absolute', left: posBack.laporan1.x, top: posBack.laporan1.y }} className="text-sm text-black">{addMonths(genMeta.card_created_at, 6)}</div>
-                      <div style={{ position: 'absolute', left: posBack.laporan2.x, top: posBack.laporan2.y }} className="text-sm text-black">{addMonths(genMeta.card_created_at, 12)}</div>
-                      <div style={{ position: 'absolute', left: posBack.laporan3.x, top: posBack.laporan3.y }} className="text-sm text-black">{addMonths(genMeta.card_created_at, 18)}</div>
-                      <div style={{ position: 'absolute', left: posBack.terhitung.x, top: posBack.terhitung.y }} className="text-sm text-black">{formatDate(genMeta.card_created_at)}</div>
-                    </div>
-                  </div>
+                  {/* Back preview dihapus sesuai kebutuhan */}
                 </div>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
-              <label className="text-sm text-[#374151]">No Urut Pendaftaran
-                <input className="mt-1 w-full border rounded p-2" value={genMeta.no_urut_pendaftaran || ""} onChange={(e) => setGenMeta({ ...genMeta, no_urut_pendaftaran: e.target.value })} />
-              </label>
-              <label className="text-sm text-[#374151]">Tanggal Kartu Dibuat
-                <input type="date" className="mt-1 w-full border rounded p-2" value={genMeta.card_created_at || ""} onChange={(e) => setGenMeta({ ...genMeta, card_created_at: e.target.value })} />
-              </label>
-              <label className="text-sm text-[#374151]">Tanggal Kartu Kadaluarsa
-                <input type="date" className="mt-1 w-full border rounded p-2" value={genMeta.card_expired_at || ""} onChange={(e) => setGenMeta({ ...genMeta, card_expired_at: e.target.value })} />
-              </label>
-              <div className="text-xs text-[#6b7280] md:col-span-3">No Pendaftaran: <strong>{genNoReg || '-'}</strong></div>
             </div>
           </Modal>
           

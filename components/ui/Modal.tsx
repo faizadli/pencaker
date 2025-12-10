@@ -13,8 +13,8 @@ type ModalProps = {
 export default function Modal({ open, title, onClose, children, actions, size = "md" }: ModalProps) {
   if (!open) return null;
   const maxW = size === "sm" ? "max-w-md" : size === "md" ? "max-w-lg" : size === "lg" ? "max-w-2xl" : size === "xl" ? "max-w-4xl" : "max-w-[95vw]";
-  const containerSizing = size === "full" ? "max-h-none overflow-visible" : "max-h-[90vh] sm:max-h-[85vh] overflow-hidden";
-  const bodyOverflow = size === "full" ? "overflow-visible" : "overflow-y-auto";
+  const containerSizing = "max-h-[90vh] sm:max-h-[85vh] overflow-hidden";
+  const bodyOverflow = "overflow-y-auto";
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />

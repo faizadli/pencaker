@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Input, Textarea } from "../../../components/ui/field";
+import { Input, Textarea, SearchableSelect } from "../../../components/ui/field";
 import { presignUpload, upsertAk1Template, listAk1Templates, upsertAk1Layout, getAk1Layout } from "../../../services/ak1";
 import type { Ak1Template } from "../../../services/ak1";
 import Card from "../../../components/ui/Card";
@@ -85,7 +85,7 @@ export default function PengaturanPage() {
           <Card className="mb-6 overflow-hidden">
             <div className="flex overflow-x-auto">
               {sections.map((section) => (
-                <button key={section.id} onClick={() => setActiveSection(section.id as "instansi" | "banner" | "maintenance" | "kategori" | "master")} className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${activeSection === section.id ? "text-[#355485] border-b-2 border-[#355485]" : "text-[#6b7280] hover:text-[#2a436c]"}`}>
+                <button key={section.id} onClick={() => setActiveSection(section.id as "instansi" | "banner" | "maintenance" | "kategori" | "master" | "ak1layout")} className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${activeSection === section.id ? "text-[#355485] border-b-2 border-[#355485]" : "text-[#6b7280] hover:text-[#2a436c]"}`}>
                   <i className={section.icon}></i>
                   {section.label}
                 </button>
@@ -329,8 +329,11 @@ export default function PengaturanPage() {
 }
 
 function Ak1LayoutEditor() {
-  type FieldCfg = { token: string; x: number; y: number; size?: number; kind?: 'text' | 'box' | 'image'; count?: number; cellW?: number; cellH?: number; gap?: number; source?: string };
+  type FieldCfg = { token: string; x: number; y: number; size?: number; kind?: 'text' | 'box' | 'image'; count?: number; cellW?: number; cellH?: number; gap?: number; source?: string; w?: number; h?: number };
   const FRONT = { w: 3900, h: 1216 };
+  const candidateColumns = ['full_name','nik','place_of_birth','birthdate','gender','status_perkawinan','address','postal_code','photo_profile','last_education','graduation_year','cv_file'];
+  const userColumns = ['id','email','no_handphone','role'];
+  const docColumns = ['ktp_file','ijazah_file','pas_photo_file','certificate_file','card_file','card_created_at','card_expired_at','no_pendaftaran_pencari_kerja'];
   const [fields, setFields] = useState<FieldCfg[]>([]);
   const [saving, setSaving] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>("");
@@ -344,9 +347,11 @@ function Ak1LayoutEditor() {
   const [dragOrigin, setDragOrigin] = useState<{ x: number; y: number } | null>(null);
   const [startPointer, setStartPointer] = useState<{ x: number; y: number } | null>(null);
   const [resizeIdx, setResizeIdx] = useState<number | null>(null);
-  const [resizeOrigin, setResizeOrigin] = useState<{ size?: number; cellW?: number; cellH?: number } | null>(null);
+  const [resizeOrigin, setResizeOrigin] = useState<{ size?: number; cellW?: number; cellH?: number; w?: number; h?: number; x?: number; y?: number } | null>(null);
   const [resizeStart, setResizeStart] = useState<{ x: number; y: number } | null>(null);
-  const [resizeAxis, setResizeAxis] = useState<'x' | 'y' | 'both' | null>(null);
+  
+  const [resizeEdge, setResizeEdge] = useState<'l' | 'r' | 't' | 'b' | 'tl' | 'tr' | 'bl' | 'br' | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
   useEffect(() => {
     const recalc = () => {
@@ -387,13 +392,59 @@ function Ak1LayoutEditor() {
       const dy = (e.clientY - resizeStart.y) / scale;
       const f = fields[resizeIdx];
       if (f.kind === 'box') {
-        const newW = Math.max(8, Math.round((resizeOrigin.cellW || 24) + (resizeAxis === 'y' ? 0 : dx)));
-        const newH = Math.max(8, Math.round((resizeOrigin.cellH || 32) + (resizeAxis === 'x' ? 0 : dy)));
-        updateField(resizeIdx, { cellW: newW, cellH: newH });
+        const count = Math.max(1, Number(f.count || 1));
+        const baseCellW = Math.max(1, Number(resizeOrigin.cellW || 24));
+        const baseCellH = Math.max(1, Number(resizeOrigin.cellH || 32));
+        const baseGap = Math.max(0, Number(f.gap || 4));
+        const baseTotalW = count * baseCellW + (count - 1) * baseGap;
+        const baseTotalH = baseCellH;
+        let newTotalW = baseTotalW;
+        let newTotalH = baseTotalH;
+        let newX = resizeOrigin.x ?? f.x;
+        let newY = resizeOrigin.y ?? f.y;
+        if (resizeEdge === 'r') { newTotalW = Math.max(8, Math.round(baseTotalW + dx)); }
+        if (resizeEdge === 'l') { newTotalW = Math.max(8, Math.round(baseTotalW - dx)); newX = Math.round((resizeOrigin.x || f.x) + dx); }
+        if (resizeEdge === 'b') { newTotalH = Math.max(8, Math.round(baseTotalH + dy)); }
+        if (resizeEdge === 't') { newTotalH = Math.max(8, Math.round(baseTotalH - dy)); newY = Math.round((resizeOrigin.y || f.y) + dy); }
+        if (resizeEdge === 'tr') { newTotalW = Math.max(8, Math.round(baseTotalW + dx)); newTotalH = Math.max(8, Math.round(baseTotalH - dy)); newY = Math.round((resizeOrigin.y || f.y) + dy); }
+        if (resizeEdge === 'tl') { newTotalW = Math.max(8, Math.round(baseTotalW - dx)); newTotalH = Math.max(8, Math.round(baseTotalH - dy)); newX = Math.round((resizeOrigin.x || f.x) + dx); newY = Math.round((resizeOrigin.y || f.y) + dy); }
+        if (resizeEdge === 'br') { newTotalW = Math.max(8, Math.round(baseTotalW + dx)); newTotalH = Math.max(8, Math.round(baseTotalH + dy)); }
+        if (resizeEdge === 'bl') { newTotalW = Math.max(8, Math.round(baseTotalW - dx)); newTotalH = Math.max(8, Math.round(baseTotalH + dy)); newX = Math.round((resizeOrigin.x || f.x) + dx); }
+        const newCellW = Math.max(4, Math.round((newTotalW - (count - 1) * baseGap) / count));
+        const newCellH = Math.max(4, Math.round(newTotalH));
+        updateField(resizeIdx, { cellW: newCellW, cellH: newCellH, x: newX, y: newY });
+      } else if (f.kind === 'image') {
+        const baseW = Math.max(8, Math.round(resizeOrigin.w || Math.round((f.w || f.size || 120))));
+        const baseH = Math.max(8, Math.round(resizeOrigin.h || Math.round((f.h || Math.round((f.w || f.size || 120) * 0.625)))));
+        let newW = baseW;
+        let newH = baseH;
+        let newX = resizeOrigin.x ?? f.x;
+        let newY = resizeOrigin.y ?? f.y;
+        if (resizeEdge === 'r') { newW = Math.max(8, Math.round(baseW + dx)); }
+        if (resizeEdge === 'l') { newW = Math.max(8, Math.round(baseW - dx)); newX = Math.round((resizeOrigin.x || f.x) + dx); }
+        if (resizeEdge === 'b') { newH = Math.max(8, Math.round(baseH + dy)); }
+        if (resizeEdge === 't') { newH = Math.max(8, Math.round(baseH - dy)); newY = Math.round((resizeOrigin.y || f.y) + dy); }
+        if (resizeEdge === 'tr') { newW = Math.max(8, Math.round(baseW + dx)); newH = Math.max(8, Math.round(baseH - dy)); newY = Math.round((resizeOrigin.y || f.y) + dy); }
+        if (resizeEdge === 'tl') { newW = Math.max(8, Math.round(baseW - dx)); newH = Math.max(8, Math.round(baseH - dy)); newX = Math.round((resizeOrigin.x || f.x) + dx); newY = Math.round((resizeOrigin.y || f.y) + dy); }
+        if (resizeEdge === 'br') { newW = Math.max(8, Math.round(baseW + dx)); newH = Math.max(8, Math.round(baseH + dy)); }
+        if (resizeEdge === 'bl') { newW = Math.max(8, Math.round(baseW - dx)); newH = Math.max(8, Math.round(baseH + dy)); newX = Math.round((resizeOrigin.x || f.x) + dx); }
+        updateField(resizeIdx, { w: newW, h: newH, x: newX, y: newY });
       } else {
-        const delta = resizeAxis === 'y' ? dy : (resizeAxis === 'x' ? dx : ((dx + dy) / 2));
-        const newSize = Math.max(8, Math.round((resizeOrigin.size || 16) + delta));
-        updateField(resizeIdx, { size: newSize });
+        const baseW = Math.max(8, Math.round(resizeOrigin.w || Math.round((f.size || 16) * 8)));
+        const baseH = Math.max(8, Math.round(resizeOrigin.h || Math.round((f.size || 16) * 2)));
+        let newW = baseW;
+        let newH = baseH;
+        let newX = resizeOrigin.x ?? f.x;
+        let newY = resizeOrigin.y ?? f.y;
+        if (resizeEdge === 'r') { newW = Math.max(8, Math.round(baseW + dx)); }
+        if (resizeEdge === 'l') { newW = Math.max(8, Math.round(baseW - dx)); newX = Math.round((resizeOrigin.x || f.x) + dx); }
+        if (resizeEdge === 'b') { newH = Math.max(8, Math.round(baseH + dy)); }
+        if (resizeEdge === 't') { newH = Math.max(8, Math.round(baseH - dy)); newY = Math.round((resizeOrigin.y || f.y) + dy); }
+        if (resizeEdge === 'tr') { newW = Math.max(8, Math.round(baseW + dx)); newH = Math.max(8, Math.round(baseH - dy)); newY = Math.round((resizeOrigin.y || f.y) + dy); }
+        if (resizeEdge === 'tl') { newW = Math.max(8, Math.round(baseW - dx)); newH = Math.max(8, Math.round(baseH - dy)); newX = Math.round((resizeOrigin.x || f.x) + dx); newY = Math.round((resizeOrigin.y || f.y) + dy); }
+        if (resizeEdge === 'br') { newW = Math.max(8, Math.round(baseW + dx)); newH = Math.max(8, Math.round(baseH + dy)); }
+        if (resizeEdge === 'bl') { newW = Math.max(8, Math.round(baseW - dx)); newH = Math.max(8, Math.round(baseH + dy)); newX = Math.round((resizeOrigin.x || f.x) + dx); }
+        updateField(resizeIdx, { w: newW, h: newH, x: newX, y: newY });
       }
       return;
     }
@@ -412,7 +463,8 @@ function Ak1LayoutEditor() {
       setResizeIdx(null);
       setResizeOrigin(null);
       setResizeStart(null);
-      setResizeAxis(null);
+      
+      setResizeEdge(null);
     }
   };
 
@@ -426,44 +478,51 @@ function Ak1LayoutEditor() {
       <Card header={<h3 className="text-lg font-semibold text-[#2a436c]">Koordinat Layout</h3>}>
         <div className="space-y-6">
           <div className="space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
-              <label className="text-sm text-[#374151]">Pilih Layout
-                <select className="mt-1 w-full border rounded p-2" value={templateName} onChange={(e) => {
-                  const name = e.target.value; setTemplateName(name);
-                const t = templates.find((x) => x.name === name);
-                if (t) {
-                  const url = t.file_template || "";
-                  setPreviewUrl(url);
-                  try {
-                    const img = new window.Image();
-                    img.onload = () => {
-                      const w = img.naturalWidth || FRONT.w;
-                      const h = img.naturalHeight || FRONT.h;
-                      setFrontDim({ w, h });
-                      const cw = containerRef.current?.clientWidth || w;
-                      setScale(Math.min(1, cw / w));
-                    };
-                    img.src = url;
-                  } catch {}
-                }
-                }}>
-                  <option value="">-- pilih --</option>
-                  {templates.map((t) => (
-                    <option key={t.name} value={t.name}>{t.name}</option>
-                  ))}
-                </select>
-              </label>
-              
+            <div className="w-full">
+              <SearchableSelect
+                label="Pilih Layout"
+                options={[{ value: "", label: "-- pilih --" }, ...templates.map((t) => ({ value: t.name, label: t.name }))]}
+                value={templateName}
+                onChange={(name) => {
+                  setTemplateName(name);
+                  const t = templates.find((x) => x.name === name);
+                  if (t) {
+                    const url = t.file_template || "";
+                    setPreviewUrl(url);
+                    try {
+                      const img = new window.Image();
+                      img.onload = () => {
+                        const w = img.naturalWidth || FRONT.w;
+                        const h = img.naturalHeight || FRONT.h;
+                        setFrontDim({ w, h });
+                        const cw = containerRef.current?.clientWidth || w;
+                        setScale(Math.min(1, cw / w));
+                      };
+                      img.src = url;
+                    } catch {}
+                  }
+                  (async () => {
+                    try {
+                      if (!name) { setFields([]); return; }
+                      const data = await getAk1Layout(name);
+                      const ly = (data?.data) || null;
+                      setFields(Array.isArray(ly?.coordinates) ? (ly!.coordinates as FieldCfg[]) : []);
+                    } catch {
+                      setFields([]);
+                    }
+                  })();
+                }}
+                className="w-full"
+              />
             </div>
           </div>
           {templateName ? (
           <div ref={containerRef} style={{ width: '100%', overflow: 'hidden' }}>
-            <div style={{ width: frontDim.w * scale, height: frontDim.h * scale, position: 'relative' }} onPointerMove={onPointerMove} onPointerUp={onPointerUp}>
+            <div style={{ width: frontDim.w * scale, height: frontDim.h * scale, position: 'relative' }} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerDown={() => setSelectedIdx(null)}>
               <div aria-label={"Front"} style={{ width: frontDim.w * scale, height: frontDim.h * scale, backgroundImage: `url(${previewUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
               {fields.map((f, idx) => {
                 const left = f.x * scale;
                 const top = f.y * scale;
-                const fs = (f.size || 16) * scale;
               if (f.kind === 'box') {
                 const count = Math.max(1, Number(f.count || 1));
                 const cellW = Math.max(1, Number(f.cellW || 24)) * scale;
@@ -472,80 +531,114 @@ function Ak1LayoutEditor() {
                 const totalW = count * cellW + (count - 1) * gap;
                 const totalH = cellH;
                 return (
-                  <div key={f.token} style={{ position: 'absolute', left, top }} onPointerDown={(e) => onPointerDown(idx, e)} className="cursor-move" data-field-item>
-                    <div style={{ position: 'absolute', left: 0, top: 0, width: totalW, height: totalH, border: '1px dashed #355485', background: 'rgba(53,84,133,0.08)', pointerEvents: 'none' }} />
-                      {Array.from({ length: count }).map((_, i) => (
-                        <div key={`cell-${i}`} style={{ width: cellW, height: cellH, border: '1px solid #000', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginRight: i < count - 1 ? gap : 0, fontSize: fs }}>
+                  <div key={`field-${idx}`} style={{ position: 'absolute', left, top, width: totalW, height: totalH }} onPointerDown={(e) => { setSelectedIdx(idx); onPointerDown(idx, e); e.stopPropagation(); }} className={selectedIdx === idx ? "cursor-move" : "cursor-pointer"} data-field-item>
+                    {Array.from({ length: count }).map((_, i) => {
+                      const ch = Math.max(1, f.token.length || 1);
+                      const fsAutoW = (cellW * 0.92) / (ch * 0.6);
+                      const fsAutoH = cellH * 0.85;
+                      const fsCell = Math.max(8 * scale, Math.min(fsAutoW, fsAutoH));
+                      return (
+                        <div key={`cell-${i}`} style={{ width: cellW, height: cellH, border: '1px solid #000', background: '#fff', color: '#1f2937', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginRight: i < count - 1 ? gap : 0, fontSize: fsCell, lineHeight: fsCell, whiteSpace: 'nowrap', fontWeight: 600, zIndex: 1 }}>
                           {f.token}
                         </div>
-                      ))}
-                      <div style={{ position: 'absolute', left: 0 - 7, top: 0 - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nwse-resize' }}
-                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('both'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                      <div style={{ position: 'absolute', left: totalW - 7, top: 0 - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nesw-resize' }}
-                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('x'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                      <div style={{ position: 'absolute', left: 0 - 7, top: totalH - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nesw-resize' }}
-                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('y'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                      <div style={{ position: 'absolute', left: totalW - 7, top: totalH - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nwse-resize' }}
-                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('both'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                      <div style={{ position: 'absolute', left: (totalW / 2) - 7, top: 0 - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ns-resize' }}
-                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('y'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                      <div style={{ position: 'absolute', left: (totalW / 2) - 7, top: totalH - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ns-resize' }}
-                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('y'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                      <div style={{ position: 'absolute', left: 0 - 7, top: (totalH / 2) - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ew-resize' }}
-                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('x'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                      <div style={{ position: 'absolute', left: totalW - 7, top: (totalH / 2) - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ew-resize' }}
-                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('x'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                    </div>
-                );
-              }
-              if (f.kind === 'image') {
-                const w = Math.max(16, Number(f.size || 120)) * scale;
-                const hasSrc = Boolean((f.source || '').trim());
-                const imgH = Math.max(48, Math.round(w * 0.625));
-                return (
-                  <div key={f.token} style={{ position: 'absolute', left, top, width: w, height: imgH }} className="cursor-move" onPointerDown={(e) => onPointerDown(idx, e)} data-field-item>
-                    {hasSrc ? (
-                      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                        <Image src={f.source as string} alt={f.token} fill unoptimized style={{ objectFit: 'contain', border: '1px dashed #355485', background: '#fff' }} />
-                      </div>
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', border: '1px dashed #355485', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', fontSize: fs }}>
-                        image
-                      </div>
-                    )}
-                    <div style={{ position: 'absolute', left: -7, top: -7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nwse-resize' }}
-                      onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ size: f.size }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('both'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                    <div style={{ position: 'absolute', left: w - 7, top: -7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ew-resize' }}
-                      onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ size: f.size }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('x'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                    <div style={{ position: 'absolute', left: -7, top: (imgH / 2) - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ew-resize' }}
-                      onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ size: f.size }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('x'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                    <div style={{ position: 'absolute', left: w - 7, top: (imgH / 2) - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ew-resize' }}
-                      onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ size: f.size }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('x'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                      );
+                    })}
+                    {selectedIdx === idx ? (
+                      <>
+                        <div style={{ position: 'absolute', left: 0, top: 0, width: totalW, height: totalH, border: '1px dashed #355485', background: 'rgba(53,84,133,0.2)', pointerEvents: 'none', zIndex: 2 }} />
+                        <div style={{ position: 'absolute', left: 0 - 7, top: 0 - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nwse-resize', zIndex: 3 }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('tl'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                        <div style={{ position: 'absolute', left: totalW - 7, top: 0 - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nesw-resize', zIndex: 3 }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('tr'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                        <div style={{ position: 'absolute', left: 0 - 7, top: totalH - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nesw-resize', zIndex: 3 }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('bl'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                        <div style={{ position: 'absolute', left: totalW - 7, top: totalH - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nwse-resize', zIndex: 3 }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('br'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                        <div style={{ position: 'absolute', left: (totalW / 2) - 7, top: 0 - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ns-resize', zIndex: 3 }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('t'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                        <div style={{ position: 'absolute', left: (totalW / 2) - 7, top: totalH - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ns-resize', zIndex: 3 }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('b'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                        <div style={{ position: 'absolute', left: 0 - 7, top: (totalH / 2) - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ew-resize', zIndex: 3 }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('l'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                        <div style={{ position: 'absolute', left: totalW - 7, top: (totalH / 2) - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ew-resize', zIndex: 3 }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ cellW: f.cellW, cellH: f.cellH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('r'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                      </>
+                    ) : null}
                   </div>
                 );
               }
-              const boxW = Math.max(80, Math.round(f.token.length * fs * 0.6) + 40);
-              const boxH = Math.max(32, Math.round(fs) + 16);
+              if (f.kind === 'image') {
+                const baseW = Math.max(16, Number(f.w || f.size || 120));
+                const baseH = Math.max(16, Number(f.h || Math.round(baseW * 0.625)));
+                const w = baseW * scale;
+                const h = baseH * scale;
+                const ch = 5;
+                const fsAutoW = (w * 0.92) / (ch * 0.6);
+                const fsAutoH = h * 0.85;
+                const fsLabel = Math.max(8 * scale, Math.min(fsAutoW, fsAutoH));
+                return (
+                  <div key={`field-${idx}`} style={{ position: 'absolute', left, top, width: w, height: h, border: '1px solid #000', background: '#fff' }} onPointerDown={(e) => { setSelectedIdx(idx); onPointerDown(idx, e); e.stopPropagation(); }} className={selectedIdx === idx ? "cursor-move" : "cursor-pointer"} data-field-item>
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1f2937', background: 'transparent', fontSize: fsLabel, lineHeight: fsLabel, fontWeight: 600, zIndex: 1 }}>
+                      IMAGE
+                    </div>
+                    {selectedIdx === idx ? (
+                      <>
+                        <div style={{ position: 'absolute', left: 0, top: 0, width: w, height: h, border: '1px dashed #355485', background: 'rgba(53,84,133,0.2)', pointerEvents: 'none', zIndex: 2 }} />
+                        <div style={{ position: 'absolute', left: -7, top: -7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nwse-resize' }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('tl'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                        <div style={{ position: 'absolute', left: w - 7, top: -7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nesw-resize' }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('tr'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                        <div style={{ position: 'absolute', left: -7, top: h - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nesw-resize' }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('bl'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                        <div style={{ position: 'absolute', left: w - 7, top: h - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nwse-resize' }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('br'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                        <div style={{ position: 'absolute', left: (w / 2) - 7, top: -7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ns-resize' }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('t'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                        <div style={{ position: 'absolute', left: (w / 2) - 7, top: h - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ns-resize' }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('b'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                        <div style={{ position: 'absolute', left: -7, top: (h / 2) - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ew-resize' }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('l'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                        <div style={{ position: 'absolute', left: w - 7, top: (h / 2) - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ew-resize' }}
+                          onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('r'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                      </>
+                    ) : null}
+                  </div>
+                );
+              }
+              const baseW = Math.max(32, Number(f.w || Math.round((f.size || 16) * 8)));
+              const baseH = Math.max(24, Number(f.h || Math.round((f.size || 16) * 2)));
+              const boxW = baseW * scale;
+              const boxH = baseH * scale;
+              const ch = Math.max(1, f.token.length || 1);
+              const fsAutoW = (boxW * 0.92) / (ch * 0.6);
+              const fsAutoH = boxH * 0.85;
+              const fsText = Math.max(8 * scale, Math.min(fsAutoW, fsAutoH));
               return (
-                <div key={f.token} style={{ position: 'absolute', left, top, fontSize: fs }} className="text-black bg-white/60 px-2 rounded cursor-move" onPointerDown={(e) => onPointerDown(idx, e)} data-field-item>
-                  <div style={{ position: 'absolute', width: boxW, height: boxH, left: -4, top: -6, border: '1px dashed #355485', background: 'rgba(53,84,133,0.08)', pointerEvents: 'none' }} />
-                  {f.token}
-                  <div style={{ position: 'absolute', left: -7, top: -7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nwse-resize' }}
-                    onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ size: f.size }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('both'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                  <div style={{ position: 'absolute', left: boxW - 7, top: -7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nesw-resize' }}
-                    onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ size: f.size }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('x'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                  <div style={{ position: 'absolute', left: -7, top: boxH - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nesw-resize' }}
-                    onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ size: f.size }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('y'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                  <div style={{ position: 'absolute', left: boxW - 7, top: boxH - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nwse-resize' }}
-                    onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ size: f.size }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('both'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                  <div style={{ position: 'absolute', left: (boxW / 2) - 7, top: -7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ns-resize' }}
-                    onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ size: f.size }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('y'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                  <div style={{ position: 'absolute', left: (boxW / 2) - 7, top: boxH - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ns-resize' }}
-                    onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ size: f.size }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('y'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                  <div style={{ position: 'absolute', left: -7, top: (boxH / 2) - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ew-resize' }}
-                    onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ size: f.size }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('x'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
-                  <div style={{ position: 'absolute', left: boxW - 7, top: (boxH / 2) - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ew-resize' }}
-                    onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ size: f.size }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeAxis('x'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                <div key={`field-${idx}`} style={{ position: 'absolute', left, top, width: boxW, height: boxH }} onPointerDown={(e) => { setSelectedIdx(idx); onPointerDown(idx, e); e.stopPropagation(); }} className={selectedIdx === idx ? "text-black bg-white/60 rounded cursor-move" : "cursor-pointer"} data-field-item>
+                  <div style={{ width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: fsText, lineHeight: fsText, whiteSpace: 'nowrap', zIndex: 1, color: '#1f2937' }}>
+                    {f.token}
+                  </div>
+                  {selectedIdx === idx ? (
+                    <>
+                      <div style={{ position: 'absolute', left: 0, top: 0, width: boxW, height: boxH, border: '1px dashed #355485', background: 'rgba(53,84,133,0.2)', pointerEvents: 'none', zIndex: 2 }} />
+                      <div style={{ position: 'absolute', left: -7, top: -7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nwse-resize' }}
+                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('tl'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                      <div style={{ position: 'absolute', left: boxW - 7, top: -7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nesw-resize' }}
+                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('tr'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                      <div style={{ position: 'absolute', left: -7, top: boxH - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nesw-resize' }}
+                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('bl'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                      <div style={{ position: 'absolute', left: boxW - 7, top: boxH - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'nwse-resize' }}
+                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('br'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                      <div style={{ position: 'absolute', left: (boxW / 2) - 7, top: -7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ns-resize' }}
+                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('t'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                      <div style={{ position: 'absolute', left: (boxW / 2) - 7, top: boxH - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ns-resize' }}
+                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('b'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                      <div style={{ position: 'absolute', left: -7, top: (boxH / 2) - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ew-resize' }}
+                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('l'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                      <div style={{ position: 'absolute', left: boxW - 7, top: (boxH / 2) - 7, width: 14, height: 14, borderRadius: 14, border: '2px solid #fff', background: '#355485', boxShadow: '0 0 0 1px #1f2937', cursor: 'ew-resize' }}
+                        onPointerDown={(e) => { setResizeIdx(idx); setResizeOrigin({ w: baseW, h: baseH, x: f.x, y: f.y }); setResizeStart({ x: e.clientX, y: e.clientY }); setResizeEdge('r'); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); e.stopPropagation(); }} />
+                    </>
+                  ) : null}
                 </div>
               );
               })}
@@ -556,102 +649,249 @@ function Ak1LayoutEditor() {
           )}
 
         {templateName && (
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <button className="px-3 py-2 rounded bg-[#355485] text-white hover:bg-[#2a436c]" onClick={() => setFields((prev) => [...prev, { token: "new_field", x: 200, y: 200, size: 16, kind: 'text' }])}>Tambah Koordinat</button>
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <button className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c] text-sm font-medium" onClick={() => setFields((prev) => [...prev, { token: "new_field", x: 200, y: 200, size: 16, w: 128, h: 32, kind: 'text' }])}>
+              <i className="ri-add-line mr-2"></i>
+              Tambah Koordinat
+            </button>
             <div className="text-xs text-[#6b7280]">Geser untuk memindahkan, resize untuk mengubah ukuran.</div>
           </div>
-          {fields.map((f, idx) => (
-            <div key={`${f.token}-${idx}`} className="grid grid-cols-1 md:grid-cols-9 gap-2 items-end">
-              <div className="md:col-span-2">
-                <label className="text-sm text-[#374151]">Token
-                  <input className="mt-1 w-full border rounded p-2" value={f.token} onChange={(e) => updateField(idx, { token: e.target.value })} />
-                </label>
+          
+          <div className="space-y-4">
+            {fields.map((f, idx) => (
+              <div key={idx} className="border border-[#e5e7eb] rounded-lg p-4 bg-white space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <SearchableSelect
+                    label="Token"
+                    options={[
+                      { value: '', label: '-- pilih kolom --' },
+                      ...candidateColumns.map((k) => ({ value: `candidate:${k}`, label: `candidate.${k}` })),
+                      ...userColumns.map((k) => ({ value: `user:${k}`, label: `user.${k}` })),
+                      ...docColumns.map((k) => ({ value: `ak1_doc:${k}`, label: `ak1_doc.${k}` })),
+                    ]}
+                    value={f.token}
+                    onChange={(val) => updateField(idx, { token: val })}
+                  />
+                  
+                  <div className="sm:col-span-2 lg:col-span-1">
+                    <SearchableSelect
+                      label="Tipe"
+                      options={[
+                        { value: 'text', label: 'Text' },
+                        { value: 'box', label: 'Box' },
+                        { value: 'image', label: 'Image' },
+                      ]}
+                      value={f.kind || 'text'}
+                      onChange={(val) => updateField(idx, { kind: val as 'text' | 'box' | 'image' })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  <Input 
+                    type="number" 
+                    label="X" 
+                    value={f.x} 
+                    onChange={(e) => updateField(idx, { x: Number((e.target as HTMLInputElement).value) })} 
+                  />
+                  <Input 
+                    type="number" 
+                    label="Y" 
+                    value={f.y} 
+                    onChange={(e) => updateField(idx, { y: Number((e.target as HTMLInputElement).value) })} 
+                  />
+                  
+                  {f.kind === 'text' && (
+                    <>
+                      <Input 
+                        type="number" 
+                        label="Size" 
+                        value={f.size || 16} 
+                        onChange={(e) => updateField(idx, { size: Number((e.target as HTMLInputElement).value) })} 
+                      />
+                      <Input 
+                        type="number" 
+                        label="Width" 
+                        value={f.w || 128} 
+                        onChange={(e) => updateField(idx, { w: Number((e.target as HTMLInputElement).value) })} 
+                      />
+                      <Input 
+                        type="number" 
+                        label="Height" 
+                        value={f.h || 32} 
+                        onChange={(e) => updateField(idx, { h: Number((e.target as HTMLInputElement).value) })} 
+                      />
+                    </>
+                  )}
+                  
+                  {f.kind === 'image' && (
+                    <>
+                      <Input 
+                        type="number" 
+                        label="Width" 
+                        value={f.w || 120} 
+                        onChange={(e) => updateField(idx, { w: Number((e.target as HTMLInputElement).value) })} 
+                      />
+                      <Input 
+                        type="number" 
+                        label="Height" 
+                        value={f.h || Math.round((f.w || f.size || 120) * 0.625)} 
+                        onChange={(e) => updateField(idx, { h: Number((e.target as HTMLInputElement).value) })} 
+                      />
+                    </>
+                  )}
+                  
+                  {f.kind === 'box' && (
+                    <>
+                      <Input 
+                        type="number" 
+                        label="Jumlah" 
+                        value={f.count || 1} 
+                        onChange={(e) => updateField(idx, { count: Number((e.target as HTMLInputElement).value) })} 
+                      />
+                      <Input 
+                        type="number" 
+                        label="Lebar Cell" 
+                        value={f.cellW || 24} 
+                        onChange={(e) => updateField(idx, { cellW: Number((e.target as HTMLInputElement).value) })} 
+                      />
+                      <Input 
+                        type="number" 
+                        label="Tinggi Cell" 
+                        value={f.cellH || 32} 
+                        onChange={(e) => updateField(idx, { cellH: Number((e.target as HTMLInputElement).value) })} 
+                      />
+                      <Input 
+                        type="number" 
+                        label="Jarak" 
+                        value={f.gap || 4} 
+                        onChange={(e) => updateField(idx, { gap: Number((e.target as HTMLInputElement).value) })} 
+                      />
+                      <SearchableSelect
+                        label="Sumber"
+                        options={[
+                          { value: '', label: '-- pilih sumber --' },
+                          { value: 'noreg_nik4', label: 'NIK awal (4)' },
+                          { value: 'noreg_no8', label: 'No urut (8)' },
+                          { value: 'noreg_ttl6', label: 'TTL (6)' },
+                        ]}
+                        value={f.source || ''}
+                        onChange={(val) => updateField(idx, { source: val })}
+                      />
+                    </>
+                  )}
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button 
+                    className="px-4 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-sm font-medium flex items-center gap-2" 
+                    onClick={() => setFields((prev) => prev.filter((_, i) => i !== idx))}
+                  >
+                    <i className="ri-delete-bin-line"></i>
+                    Hapus
+                  </button>
+                </div>
               </div>
-              
-              <label className="text-sm text-[#374151]">Jenis
-                <select className="mt-1 w-full border rounded p-2" value={f.kind || 'text'} onChange={(e) => updateField(idx, { kind: e.target.value as 'text' | 'box' | 'image' })}>
-                  <option value="text">text</option>
-                  <option value="box">box</option>
-                  <option value="image">image</option>
-                </select>
-              </label>
-              <label className="text-sm text-[#374151]">X
-                <input type="number" className="mt-1 w-full border rounded p-2" value={f.x} onChange={(e) => updateField(idx, { x: Number(e.target.value) })} />
-              </label>
-              <label className="text-sm text-[#374151]">Y
-                <input type="number" className="mt-1 w-full border rounded p-2" value={f.y} onChange={(e) => updateField(idx, { y: Number(e.target.value) })} />
-              </label>
-              <label className="text-sm text-[#374151]">{f.kind === 'image' ? 'Width' : 'Size'}
-                <input type="number" className="mt-1 w-full border rounded p-2" value={f.size || 16} onChange={(e) => updateField(idx, { size: Number(e.target.value) })} />
-              </label>
-              {f.kind === 'image' && (
-                <label className="text-sm text-[#374151]">Source
-                  <input type="text" className="mt-1 w-full border rounded p-2" value={f.source || ''} onChange={(e) => updateField(idx, { source: e.target.value })} />
-                </label>
-              )}
-              {f.kind === 'box' && (
-                <>
-                  <label className="text-sm text-[#374151]">Jumlah
-                    <input type="number" className="mt-1 w-full border rounded p-2" value={f.count || 1} onChange={(e) => updateField(idx, { count: Number(e.target.value) })} />
-                  </label>
-                  <label className="text-sm text-[#374151]">Lebar Cell
-                    <input type="number" className="mt-1 w-full border rounded p-2" value={f.cellW || 24} onChange={(e) => updateField(idx, { cellW: Number(e.target.value) })} />
-                  </label>
-                  <label className="text-sm text-[#374151]">Tinggi Cell
-                    <input type="number" className="mt-1 w-full border rounded p-2" value={f.cellH || 32} onChange={(e) => updateField(idx, { cellH: Number(e.target.value) })} />
-                  </label>
-                  <label className="text-sm text-[#374151]">Jarak
-                    <input type="number" className="mt-1 w-full border rounded p-2" value={f.gap || 4} onChange={(e) => updateField(idx, { gap: Number(e.target.value) })} />
-                  </label>
-                </>
-              )}
-              <div className="flex gap-2 items-end">
-                <button className="px-3 py-2 rounded bg-red-100 text-red-700 hover:bg-red-200" onClick={() => setFields((prev) => prev.filter((_, i) => i !== idx))}>Hapus</button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
         )}
 
-        <div className="flex gap-2">
-          <button disabled={saving} onClick={async () => { try { setSaving(true); await upsertAk1Layout({ name: templateName || "default", front_width: FRONT.w, front_height: FRONT.h, coordinates: fields }); } finally { setSaving(false); } }} className={`px-4 py-2 rounded-lg ${saving ? "bg-gray-300 text-gray-600" : "bg-[#355485] text-white hover:bg-[#2a436c]"}`}>Simpan Layout</button>
-          <button onClick={async () => { const data = await getAk1Layout(templateName || undefined); const ly = (data?.data) || null; if (ly) setFields(ly.coordinates || fields); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Muat Layout</button>
+        {templateName && (
+        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#e5e7eb]">
+          <button 
+            disabled={saving} 
+            onClick={async () => { 
+              try { 
+                setSaving(true); 
+                await upsertAk1Layout({ 
+                  name: templateName || "default", 
+                  front_width: FRONT.w, 
+                  front_height: FRONT.h, 
+                  coordinates: fields 
+                }); 
+              } finally { 
+                setSaving(false); 
+              } 
+            }} 
+            className={`px-6 py-3 rounded-lg text-sm font-medium ${saving ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-[#355485] text-white hover:bg-[#2a436c]"}`}
+          >
+            {saving ? "Menyimpan..." : "Simpan Layout"}
+          </button>
+          <button 
+            onClick={async () => { 
+              const data = await getAk1Layout(templateName || undefined); 
+              const ly = (data?.data) || null; 
+              if (ly) setFields(ly.coordinates || fields); 
+            }} 
+            className="px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485] text-sm font-medium"
+          >
+            Muat Layout
+          </button>
         </div>
+        )}
 
-        <div className="text-xs text-[#6b7280]">Untuk No Pendaftaran: sediakan 4 kotak (NIK awal), 8 kotak (No Urut), 6 kotak (TTL). NIK juga gunakan 16 kotak.</div>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+          <p className="text-sm text-blue-800">
+            <i className="ri-information-line mr-2"></i>
+            <strong>Catatan:</strong> Untuk No Pendaftaran: sediakan 4 kotak (NIK awal), 8 kotak (No Urut), 6 kotak (TTL). NIK juga gunakan 16 kotak.
+          </p>
+        </div>
         </div>
       </Card>
     </>
   );
 }
+
 function UploadTemplateInline({ onDone }: { onDone: () => void }) {
   const [name, setName] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  
   return (
-    <div className="flex items-end gap-3">
-      <label className="text-sm text-[#374151]">Nama
-        <input type="text" className="mt-1 w-full border rounded p-2" value={name} onChange={(e) => setName(e.target.value)} />
-      </label>
-      <label className="text-sm text-[#374151]">File Template
-        <input type="file" accept=".svg,.png,.jpg,.jpeg" className="mt-1 w-full border rounded p-2" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-      </label>
-      <button disabled={saving || !name || !file} className={`px-3 py-2 rounded ${saving ? 'bg-gray-300 text-gray-600' : 'bg-[#355485] text-white hover:bg-[#2a436c]'}`} onClick={async () => {
-        try {
-          setSaving(true);
-          if (file) {
-            const pre = await presignUpload("ak1_templates", `${name}_front_${Date.now()}${file.name.substring(file.name.lastIndexOf('.'))}`, file.type || "application/octet-stream");
-            const put = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": file.type || "application/octet-stream" }, body: file });
-            if (!put.ok) throw new Error('upload failed');
-            const url = pre.url.includes("?") ? pre.url.slice(0, pre.url.indexOf("?")) : pre.url;
-            await upsertAk1Template({ name, file_template: url });
-          }
-          onDone();
-        } finally {
-          setSaving(false);
-        }
-      }}>Tambah Template</button>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input 
+          label="Nama Template" 
+          value={name} 
+          onChange={(e) => setName((e.target as HTMLInputElement).value)} 
+          placeholder="Masukkan nama template"
+        />
+        <Input 
+          type="file" 
+          label="File Template" 
+          hint="Format: SVG, PNG, atau JPG" 
+          accept=".svg,.png,.jpg,.jpeg" 
+          onChange={(e) => setFile((e.target as HTMLInputElement).files?.[0] || null)} 
+        />
+      </div>
+      
+      <div className="flex justify-end">
+        <button 
+          disabled={saving || !name || !file} 
+          className={`px-6 py-3 rounded-lg text-sm font-medium ${saving || !name || !file ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-[#355485] text-white hover:bg-[#2a436c]'}`} 
+          onClick={async () => {
+            try {
+              setSaving(true);
+              if (file) {
+                const pre = await presignUpload("ak1_templates", `${name}_front_${Date.now()}${file.name.substring(file.name.lastIndexOf('.'))}`, file.type || "application/octet-stream");
+                const put = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": file.type || "application/octet-stream" }, body: file });
+                if (!put.ok) throw new Error('upload failed');
+                const url = pre.url.includes("?") ? pre.url.slice(0, pre.url.indexOf("?")) : pre.url;
+                await upsertAk1Template({ name, file_template: url });
+              }
+              setName("");
+              setFile(null);
+              onDone();
+            } finally {
+              setSaving(false);
+            }
+          }}
+        >
+          {saving ? "Mengunggah..." : "Tambah Template"}
+        </button>
+      </div>
     </div>
   );
 }

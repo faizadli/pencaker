@@ -31,6 +31,7 @@ export type Ak1LayoutField = {
   cellH?: number;
   gap?: number;
   source?: string;
+  side?: 'front' | 'back';
 };
 export type Ak1Layout = { name: string; front_width: number; front_height: number; coordinates: Ak1LayoutField[] };
 
