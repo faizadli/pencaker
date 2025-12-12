@@ -1,12 +1,15 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Input } from "../../../components/ui/field";
+import { Input, SearchableSelect, SegmentedToggle } from "../../../components/ui/field";
+import Pagination from "../../../components/ui/Pagination";
+import StatCard from "../../../components/ui/StatCard";
 import Modal from "../../../components/ui/Modal";
 import { getCandidateProfile, getCandidateProfileById, getUserById } from "../../../services/profile";
 import { getAk1Document, upsertAk1Document, verifyAk1, listAk1Documents, presignUpload, presignDownload, getAk1Layout, getAk1Template } from "../../../services/ak1";
 import { useRouter } from "next/navigation";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import Card from "../../../components/ui/Card";
+import CardGrid from "../../../components/ui/CardGrid";
 import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
 import { useToast } from "../../../components/ui/Toast";
 import type { PDFImage } from "pdf-lib";
@@ -28,6 +31,11 @@ export default function Ak1Page() {
   const [guardReady, setGuardReady] = useState(false);
   type Ak1Row = { full_name?: string; nik?: string; place_of_birth?: string; birthdate?: string; status?: string; file?: string | null; candidate_id: string; ak1_document_id?: string };
   const [rows, setRows] = useState<Ak1Row[]>([]);
+  const [viewMode, setViewMode] = useState<"grid" | "table">("table");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailData, setDetailData] = useState<{ candidate?: CandidateProfileLite; document?: Ak1Document | null } | null>(null);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
@@ -63,7 +71,7 @@ export default function Ak1Page() {
   const [frontPreviewUrl, setFrontPreviewUrl] = useState<string | null>(null);
   const [genUser, setGenUser] = useState<{ id?: string; email?: string; role?: string; no_handphone?: string } | null>(null);
   
-  type Ak1LayoutFieldExt = Ak1LayoutField & { w?: number; h?: number };
+  type Ak1LayoutFieldExt = Ak1LayoutField & { w?: number; h?: number; digitSize?: number };
   type Pos = { x: number; y: number };
   const posFront: Record<string, Pos> = {
     noReg: { x: 560, y: 220 },
@@ -116,6 +124,38 @@ export default function Ak1Page() {
     const yy = String(d.getFullYear());
     return `${dd}-${mm}-${yy}`;
   };
+  const apiToUIStatusAk1 = useMemo(() => ({
+    APPROVED: "Aktif",
+    PENDING: "Menunggu Verifikasi",
+    REJECTED: "Ditolak",
+  }) as Record<string, "Aktif" | "Menunggu Verifikasi" | "Ditolak">, []);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Aktif":
+        return "bg-green-100 text-green-800";
+      case "Menunggu Verifikasi":
+        return "bg-yellow-100 text-yellow-800";
+      case "Ditolak":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+  const filteredAk1 = useMemo(() => {
+    const base = rows.map((r) => ({
+      ...r,
+      uiStatus: apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi',
+    }));
+    const bySearch = base.filter((r) => {
+      const nama = String(r.full_name || '');
+      const nik = String(r.nik || '');
+      const term = searchTerm.toLowerCase();
+      return nama.toLowerCase().includes(term) || nik.toLowerCase().includes(term);
+    });
+    const byStatus = bySearch.filter((r) => statusFilter === 'all' || r.uiStatus === statusFilter);
+    return byStatus;
+  }, [rows, searchTerm, statusFilter, apiToUIStatusAk1]);
+  const paginatedAk1 = useMemo(() => filteredAk1.slice((page - 1) * pageSize, page * pageSize), [filteredAk1, page, pageSize]);
   
 
   useEffect(() => {
@@ -159,8 +199,28 @@ export default function Ak1Page() {
         } else {
           const list = await listAk1Documents();
           const items = ((list?.data) || []) as Array<{ id: string; candidate_id: string; full_name?: string; nik?: string; place_of_birth?: string; birthdate?: string; status?: string; file?: string | null }>;
-          const rows: Ak1Row[] = items.map((d) => ({ full_name: d.full_name, nik: d.nik, place_of_birth: d.place_of_birth, birthdate: d.birthdate, status: d.status, file: d.file || null, candidate_id: d.candidate_id, ak1_document_id: d.id }));
-          setRows(rows);
+          const baseRows: Ak1Row[] = items.map((d) => ({ full_name: d.full_name, nik: d.nik, place_of_birth: d.place_of_birth, birthdate: d.birthdate, status: d.status, file: d.file || null, candidate_id: d.candidate_id, ak1_document_id: d.id }));
+          try {
+            const ids = Array.from(new Set(baseRows.map((r) => r.candidate_id))).filter(Boolean);
+            const candMap: Record<string, CandidateProfileLite> = {};
+            await Promise.all(ids.map(async (id) => {
+              try {
+                const prof = await getCandidateProfileById(String(id));
+                const cand = (prof as { data?: CandidateProfileLite | null }).data || null;
+                if (cand) candMap[String(id)] = cand;
+              } catch {}
+            }));
+            const enriched = baseRows.map((r) => ({
+              ...r,
+              full_name: r.full_name || candMap[String(r.candidate_id)]?.full_name,
+              nik: r.nik || candMap[String(r.candidate_id)]?.nik,
+              place_of_birth: r.place_of_birth || candMap[String(r.candidate_id)]?.place_of_birth,
+              birthdate: r.birthdate || candMap[String(r.candidate_id)]?.birthdate,
+            }));
+            setRows(enriched);
+          } catch {
+            setRows(baseRows);
+          }
         }
       } catch {}
       setLoading(false);
@@ -210,7 +270,7 @@ export default function Ak1Page() {
               </div>
             </div>
           )}
-          
+
           {role === "candidate" && permissions.includes("ak1.submit") && !doc && (
             <Card className="mb-6" header={<h2 className="text-lg font-semibold text-[#2a436c]">Unggah Dokumen</h2>}>
               <div className="grid grid-cols-1 gap-3">
@@ -226,112 +286,271 @@ export default function Ak1Page() {
           )}
 
           {(role !== "candidate" || !!doc) && (
-            <Card
-              header={
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-[#2a436c]">Data AK1</h2>
-                  <button onClick={() => setShowInfo(true)} className="text-sm text-[#355485]">Info</button>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <StatCard title="Total Pengajuan" value={filteredAk1.length} change="" color="#4f90c6" icon="ri-id-card-line" />
+                <StatCard title="Aktif" value={filteredAk1.filter((r) => r.uiStatus === 'Aktif').length} change="" color="#355485" icon="ri-checkbox-circle-line" />
+                <StatCard title="Menunggu" value={filteredAk1.filter((r) => r.uiStatus === 'Menunggu Verifikasi').length} change="" color="#90b6d5" icon="ri-time-line" />
+                <StatCard title="Ditolak" value={filteredAk1.filter((r) => r.uiStatus === 'Ditolak').length} change="" color="#2a436c" icon="ri-close-circle-line" />
+              </div>
+              <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] mb-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <Input icon="ri-search-line" type="text" placeholder="Cari nama atau NIK..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full py-3" />
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2 items-stretch">
+                    <SearchableSelect value={statusFilter} onChange={(v) => setStatusFilter(v)} options={[{ value: "all", label: "Semua Status" }, { value: "Aktif", label: "Aktif" }, { value: "Menunggu Verifikasi", label: "Menunggu" }, { value: "Ditolak", label: "Ditolak" }]} />
+                    <SegmentedToggle value={viewMode} onChange={(v) => setViewMode(v as "grid" | "table")} options={[{ value: "grid", icon: "ri-grid-line" }, { value: "table", icon: "ri-list-check" }]} />
+                    <button onClick={() => setShowInfo(true)} className="px-3 py-2 rounded-lg bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#355485] text-sm">Info</button>
+                  </div>
                 </div>
-              }
-              className="overflow-hidden"
-            >
-              <Table>
-                <TableHead>
-                  <tr>
-                    <TH>Nama</TH>
-                    <TH>NIK</TH>
-                    <TH>Status</TH>
-                    <TH>File</TH>
-                    <TH>Aksi</TH>
-                  </tr>
-                </TableHead>
-                <TableBody>
-                  {rows.map((r) => (
-                    <TableRow key={`${r.candidate_id}-${r.nik}`}>
-                      <TD>{r.full_name || '-'}</TD>
-                      <TD>{r.nik || '-'}</TD>
-                      <TD>{r.status || '-'}</TD>
-                      <TD>
-                        {r.file ? (
-                          <button className="text-[#355485] underline" onClick={async () => { const d = await presignDownload(r.file as string); window.open(d.url, "_blank"); }}>Unduh</button>
-                        ) : (
-                          '-'
-                        )}
-                      </TD>
-                      <TD>
-                        <div className="flex gap-2">
-                          <button className="px-3 py-1 text-xs rounded bg-[#f3f4f6] hover:bg-[#e5e7eb]" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
-                          {permissions.includes("ak1.verify") && (
-                            <button className="px-3 py-1 text-xs rounded bg-[#355485] text-white hover:bg-[#2a436c]" onClick={() => { setVerifyPayload({ ak1_document_id: r.ak1_document_id || "", status: "APPROVED" }); setShowVerifyModal(true); }}>Verifikasi</button>
-                          )}
-                          {permissions.includes("ak1.generate") && (
-                            <button
-                              className="px-3 py-1 text-xs rounded bg-[#4f90c6] text-white hover:bg-[#3a719f]"
-                              onClick={async () => {
-                                try {
-                                  setGenMeta({ ak1_document_id: r.ak1_document_id, candidate_id: r.candidate_id, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
-                                  setGenCandidate({ full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate } as CandidateProfileLite);
-                                  setGenDocDetail(null);
-                                  const tpResp = await getAk1Template() as { data?: { name?: string; file_template?: string | null } };
-                                  const t = tpResp.data || null;
-                                  const name = t?.name ? String(t.name) : undefined;
-                                  if (t?.file_template) setFrontSrcUrl(String(t.file_template));
-                                  const lyResp = await getAk1Layout(name);
-                                  const lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
-                                  setLayout(lyData);
+              </div>
+              <Card
+                header={<h2 className="text-lg font-semibold text-[#2a436c]">Data AK1</h2>}
+                className="overflow-hidden"
+              >
+              {viewMode === "grid" ? (
+                <CardGrid>
+                  {paginatedAk1.map((r) => (
+                    <div key={`ak1-${r.candidate_id}-${r.nik}`} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
+                      <div className="p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-bold text-[#2a436c] text-sm leading-tight truncate">{r.full_name || '-'}</p>
+                            <p className="text-xs text-[#6b7280] truncate">{r.nik || '-'}</p>
+                          </div>
+                          {(() => { const ui = apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi'; return (<span className={`px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0 ${getStatusColor(ui)}`}>{ui}</span>); })()}
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="text-xs text-[#4b5563]">
+                            {r.file ? (
+                              <button className="text-[#355485] underline" onClick={async () => { const d = await presignDownload(r.file as string); window.open(d.url, "_blank"); }}>Unduh Kartu</button>
+                            ) : (
+                              <span>-</span>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <button className="px-3 py-1 text-xs rounded bg-[#4f90c6] text-white hover:bg-[#355485]" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
+                            {permissions.includes("ak1.verify") && (
+                              <button className="px-3 py-1 text-xs rounded bg-[#355485] text-white hover:bg-[#2a436c]" onClick={() => { setVerifyPayload({ ak1_document_id: r.ak1_document_id || "", status: "APPROVED" }); setShowVerifyModal(true); }}>Verifikasi</button>
+                            )}
+                            {permissions.includes("ak1.generate") && (
+                              <button
+                                className="px-3 py-1 text-xs rounded bg-[#4f90c6] text-white hover:bg-[#3a719f]"
+                                onClick={async () => {
                                   try {
-                                    const prof = await getCandidateProfileById(r.candidate_id);
-                                    const cand = (prof as { data?: CandidateProfileLite | null }).data || null;
-                                    setGenCandidate(cand);
+                                    setGenMeta({ ak1_document_id: r.ak1_document_id, candidate_id: r.candidate_id, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
+                                    setGenCandidate({ full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate } as CandidateProfileLite);
+                                    setGenDocDetail(null);
+                                    const tpResp = await getAk1Template() as { data?: { name?: string; file_template?: string | null } };
+                                    const t = tpResp.data || null;
+                                    const name = t?.name ? String(t.name) : undefined;
+                                    if (t?.file_template) setFrontSrcUrl(String(t.file_template));
+                                    const lyResp = await getAk1Layout(name);
+                                    const lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
+                                    setLayout(lyData);
                                     try {
-                                      const cid = String(cand?.user_id || '');
-                                      if (cid) {
-                                        const u = await getUserById(cid);
-                                        const env = u as { data?: Record<string, unknown> };
-                                        const ud: Record<string, unknown> = env && env.data !== undefined ? (env.data as Record<string, unknown>) : (u as unknown as Record<string, unknown>);
-                                        setGenUser(ud || null);
-                                      }
-                                    } catch {}
-                                    const d = await getAk1Document(undefined, r.candidate_id);
-                                    setGenDocDetail(d.data || null);
-                                    try {
-                                      const rawPhoto = (() => {
-                                        const env = d as { data?: { pas_photo_file?: string } };
-                                        return String(env?.data?.pas_photo_file || '');
-                                      })();
-                                      if (rawPhoto) {
-                                        const pre = await presignDownload(rawPhoto);
-                                        setGenPasPhotoUrl(pre.url);
-                                      } else {
-                                        setGenPasPhotoUrl(null);
-                                      }
-                                    } catch { setGenPasPhotoUrl(null); }
-                                    try {
-                                      const candUserId = (() => { try { return String(((cand as unknown as { user_id?: string }) || {})?.user_id || ''); } catch { return ''; } })();
-                                      const docUserId = (() => { try { return String((((d?.data as unknown as { user_id?: string }) || {})?.user_id) || ''); } catch { return ''; } })();
-                                      const userId = candUserId || docUserId;
-                                      if (userId) {
-                                        const u = await getUserById(userId);
-                                        const env = u as { data?: Record<string, unknown> };
-                                        const ud: Record<string, unknown> = env && env.data !== undefined ? (env.data as Record<string, unknown>) : (u as unknown as Record<string, unknown>);
-                                        setGenUser(ud || null);
-                                      }
+                                      const prof = await getCandidateProfileById(r.candidate_id);
+                                      const cand = (prof as { data?: CandidateProfileLite | null }).data || null;
+                                      setGenCandidate(cand);
+                                      try {
+                                        const cid = String(cand?.user_id || '');
+                                        if (cid) {
+                                          const u = await getUserById(cid);
+                                          const env = u as { data?: Record<string, unknown> };
+                                          const ud: Record<string, unknown> = env && env.data !== undefined ? (env.data as Record<string, unknown>) : (u as unknown as Record<string, unknown>);
+                                          setGenUser(ud || null);
+                                        }
+                                      } catch {}
+                                      const d = await getAk1Document(undefined, r.candidate_id);
+                                      setGenDocDetail(d.data || null);
+                                      try {
+                                        const rawPhoto = (() => {
+                                          const env = d as { data?: { pas_photo_file?: string } };
+                                          return String(env?.data?.pas_photo_file || '');
+                                        })();
+                                        if (rawPhoto) {
+                                          const pre = await presignDownload(rawPhoto);
+                                          setGenPasPhotoUrl(pre.url);
+                                        } else {
+                                          setGenPasPhotoUrl(null);
+                                        }
+                                      } catch { setGenPasPhotoUrl(null); }
+                                      try {
+                                        const candUserId = (() => { try { return String(((cand as unknown as { user_id?: string }) || {})?.user_id || ''); } catch { return ''; } })();
+                                        const docUserId = (() => { try { return String((((d?.data as unknown as { user_id?: string }) || {})?.user_id) || ''); } catch { return ''; } })();
+                                        const userId = candUserId || docUserId;
+                                        if (userId) {
+                                          const u = await getUserById(userId);
+                                          const env = u as { data?: Record<string, unknown> };
+                                          const ud: Record<string, unknown> = env && env.data !== undefined ? (env.data as Record<string, unknown>) : (u as unknown as Record<string, unknown>);
+                                          setGenUser(ud || null);
+                                        }
+                                      } catch {}
                                     } catch {}
                                   } catch {}
-                                } catch {}
-                                setShowGenerateModal(true);
-                              }}
-                            >
-                              Generate
-                            </button>
-                          )}
+                                  setShowGenerateModal(true);
+                                }}
+                              >
+                                Generate
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </TD>
-                    </TableRow>
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
-            </Card>
+                </CardGrid>
+              ) : (
+                <>
+                <Table className="hidden sm:block">
+                  <TableHead>
+                    <tr>
+                      <TH>Nama</TH>
+                      <TH>NIK</TH>
+                      <TH>Status</TH>
+                      <TH>File</TH>
+                      <TH>Aksi</TH>
+                    </tr>
+                  </TableHead>
+                  <TableBody>
+                    {paginatedAk1.map((r) => (
+                      <TableRow key={`${r.candidate_id}-${r.nik}`}>
+                        <TD className="text-[#111827]">{r.full_name || '-'}</TD>
+                        <TD className="text-[#111827]">{r.nik || '-'}</TD>
+                        <TD>{(() => { const ui = apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi'; return (<span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ui)}`}>{ui}</span>); })()}</TD>
+                        <TD>
+                          {r.file ? (
+                            <button className="text-[#355485] underline" onClick={async () => { const d = await presignDownload(r.file as string); window.open(d.url, "_blank"); }}>Unduh</button>
+                          ) : (
+                            '-'
+                          )}
+                        </TD>
+                        <TD>
+                          <div className="flex gap-2">
+                            <button className="px-3 py-1 text-xs rounded bg-[#4f90c6] text-white hover:bg-[#355485]" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
+                            {permissions.includes("ak1.verify") && (
+                              <button className="px-3 py-1 text-xs rounded bg-[#355485] text-white hover:bg-[#2a436c]" onClick={() => { setVerifyPayload({ ak1_document_id: r.ak1_document_id || "", status: "APPROVED" }); setShowVerifyModal(true); }}>Verifikasi</button>
+                            )}
+                            {permissions.includes("ak1.generate") && (
+                              <button
+                                className="px-3 py-1 text-xs rounded bg-[#4f90c6] text-white hover:bg-[#3a719f]"
+                                onClick={async () => {
+                                  try {
+                                    setGenMeta({ ak1_document_id: r.ak1_document_id, candidate_id: r.candidate_id, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
+                                    setGenCandidate({ full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate } as CandidateProfileLite);
+                                    setGenDocDetail(null);
+                                    const tpResp = await getAk1Template() as { data?: { name?: string; file_template?: string | null } };
+                                    const t = tpResp.data || null;
+                                    const name = t?.name ? String(t.name) : undefined;
+                                    if (t?.file_template) setFrontSrcUrl(String(t.file_template));
+                                    const lyResp = await getAk1Layout(name);
+                                    const lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
+                                    setLayout(lyData);
+                                    try {
+                                      const prof = await getCandidateProfileById(r.candidate_id);
+                                      const cand = (prof as { data?: CandidateProfileLite | null }).data || null;
+                                      setGenCandidate(cand);
+                                      try {
+                                        const cid = String(cand?.user_id || '');
+                                        if (cid) {
+                                          const u = await getUserById(cid);
+                                          const env = u as { data?: Record<string, unknown> };
+                                          const ud: Record<string, unknown> = env && env.data !== undefined ? (env.data as Record<string, unknown>) : (u as unknown as Record<string, unknown>);
+                                          setGenUser(ud || null);
+                                        }
+                                      } catch {}
+                                      const d = await getAk1Document(undefined, r.candidate_id);
+                                      setGenDocDetail(d.data || null);
+                                      try {
+                                        const rawPhoto = (() => {
+                                          const env = d as { data?: { pas_photo_file?: string } };
+                                          return String(env?.data?.pas_photo_file || '');
+                                        })();
+                                        if (rawPhoto) {
+                                          const pre = await presignDownload(rawPhoto);
+                                          setGenPasPhotoUrl(pre.url);
+                                        } else {
+                                          setGenPasPhotoUrl(null);
+                                        }
+                                      } catch { setGenPasPhotoUrl(null); }
+                                      try {
+                                        const candUserId = (() => { try { return String(((cand as unknown as { user_id?: string }) || {})?.user_id || ''); } catch { return ''; } })();
+                                        const docUserId = (() => { try { return String((((d?.data as unknown as { user_id?: string }) || {})?.user_id) || ''); } catch { return ''; } })();
+                                        const userId = candUserId || docUserId;
+                                        if (userId) {
+                                          const u = await getUserById(userId);
+                                          const env = u as { data?: Record<string, unknown> };
+                                          const ud: Record<string, unknown> = env && env.data !== undefined ? (env.data as Record<string, unknown>) : (u as unknown as Record<string, unknown>);
+                                          setGenUser(ud || null);
+                                        }
+                                      } catch {}
+                                    } catch {}
+                                  } catch {}
+                                  setShowGenerateModal(true);
+                                }}
+                              >
+                                Generate
+                              </button>
+                            )}
+                          </div>
+                        </TD>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <div className="sm:hidden p-3 space-y-3">
+                  {paginatedAk1.map((r, idx) => (
+                    <div key={`m-${r.candidate_id}-${r.nik}-${idx}`} className="border border-[#e5e7eb] rounded-lg p-3">
+                      <div className="flex items-start justify-between">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-[#2a436c] truncate">{r.full_name || '-'}</p>
+                          <p className="text-xs text-[#6b7280] truncate">{r.nik || '-'}</p>
+                        </div>
+                        {(() => { const ui = apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi'; return (<span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(ui)}`}>{ui}</span>); })()}
+                      </div>
+                      <div className="mt-3 flex gap-2">
+                        <button className="flex-1 px-3 py-2 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
+                        {permissions.includes("ak1.verify") && (
+                          <button className="flex-1 px-3 py-2 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition" onClick={() => { setVerifyPayload({ ak1_document_id: r.ak1_document_id || "", status: "APPROVED" }); setShowVerifyModal(true); }}>Verifikasi</button>
+                        )}
+                        {permissions.includes("ak1.generate") && (
+                          <button className="flex-1 px-3 py-2 text-xs bg-[#7c3aed] text-white rounded hover:bg-[#5b21b6] transition" onClick={async () => {
+                            try {
+                              setGenMeta({ ak1_document_id: r.ak1_document_id, candidate_id: r.candidate_id, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
+                              setGenCandidate({ full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate } as CandidateProfileLite);
+                              setGenDocDetail(null);
+                              const tpResp = await getAk1Template() as { data?: { name?: string; file_template?: string | null } };
+                              const t = tpResp.data || null;
+                              const name = t?.name ? String(t.name) : undefined;
+                              if (t?.file_template) setFrontSrcUrl(String(t.file_template));
+                              const lyResp = await getAk1Layout(name);
+                              const lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
+                              setLayout(lyData);
+                              try {
+                                const prof = await getCandidateProfileById(r.candidate_id);
+                                const cand = (prof as { data?: CandidateProfileLite | null }).data || null;
+                                setGenCandidate(cand);
+                                const d = await getAk1Document(undefined, r.candidate_id);
+                                setGenDocDetail(d.data || null);
+                              } catch {}
+                            } catch {}
+                            setShowGenerateModal(true);
+                          }}>Generate</button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                </>
+              )}
+              </Card>
+              <div className="mt-4">
+                <Pagination page={page} pageSize={pageSize} total={filteredAk1.length} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
+              </div>
+            </>
           )}
 
           <Modal open={showInfo} title="Tentang AK1" onClose={() => setShowInfo(false)} actions={<button onClick={() => setShowInfo(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>}>
@@ -391,8 +610,8 @@ export default function Ak1Page() {
                       return kindF === 'image' && (t === 'pas_photo' || k === 'pas_photo_file');
                     });
 
-                    const layoutW = Number(layout?.front_width || FRONT_DESIGN.w);
-                    const layoutH = Number(layout?.front_height || FRONT_DESIGN.h);
+                    const layoutW = Number(layout?.front_width || FRONT_BASE.w);
+                    const layoutH = Number(layout?.front_height || FRONT_BASE.h);
                     const unitX = FRONT_BASE.w / layoutW;
                     const unitY = FRONT_BASE.h / layoutH;
 
@@ -440,7 +659,7 @@ export default function Ak1Page() {
                           const xPx = (f.x || 0) * unitX;
                           const yPx = FRONT_BASE.h - ((f.y || 0) * unitY) - sizePx;
                           const val = getTokenText(f.token);
-                          page.drawText(val || String(f.token), { x: xPx, y: yPx, size: sizePx, font });
+                          page.drawText(val || String(f.token), { x: xPx, y: yPx, size: sizePx, font, color: rgb(0, 0, 0) });
                         } else if (kind === 'image') {
                           const fe = f as Ak1LayoutFieldExt;
                           const wPx = Math.max(1, Number(fe.w || 0)) * unitX;
@@ -482,7 +701,8 @@ export default function Ak1Page() {
                           } else if (srcRaw === 'nik' || (srcNs === 'candidate' && srcKey === 'nik')) {
                             digits = String(genCandidate?.nik || '').padEnd(count, ' ').slice(0, count).split('');
                           }
-                          const sizeTxt = Math.round((f.size || 16) * unitY);
+                          const fe = f as Ak1LayoutFieldExt;
+                          const sizeTxt = Math.round(((fe.digitSize || f.size || 16)) * unitY);
                           for (let i = 0; i < count; i++) {
                             const x = startX + i * (cellW + gap);
                             const y = FRONT_BASE.h - startY - cellH;
@@ -660,15 +880,11 @@ export default function Ak1Page() {
                                   return d;
                                 })();
                                 const txt = mappedVal || key;
-                                const fill = '#6b7280';
-                                const weight = 700;
-                                const fe = f as Ak1LayoutFieldExt;
-                                const w = Math.max(1, Number(fe.w || 0));
-                                const h = Math.max(1, Number(fe.h || 0));
+                                const fill = '#000000';
+                                const weight = 400;
                                 return (
                                   <g key={`f-${i}`}>
-                                    {w && h ? <rect x={(f.x || 0)} y={(f.y || 0)} width={w} height={h} fill="#ffffff" fillOpacity={0.2} stroke="#6b7280" strokeDasharray="4 4" /> : null}
-                                    <text x={(f.x || 0)} y={(f.y || 0)} dominantBaseline="hanging" textAnchor="start" fontFamily="Arial, sans-serif" fontSize={Math.round((f.size || 16) * 1.3)} fill={fill} fontWeight={weight}>{txt}</text>
+                                    <text x={(f.x || 0)} y={(f.y || 0)} dominantBaseline="hanging" textAnchor="start" fontFamily="Arial, sans-serif" fontSize={Math.round((f.size || 16))} fill={fill} fontWeight={weight}>{txt}</text>
                                   </g>
                                 );
                               } else if (kind === 'image') {
@@ -725,7 +941,8 @@ export default function Ak1Page() {
                                 } else if (srcRaw === 'nik' || (srcNs === 'candidate' && srcKey === 'nik')) {
                                   digits = String(genCandidate?.nik || '').padEnd(count, ' ').slice(0, count).split('');
                                 }
-                                const sizeTxt = Math.round((f.size || 16));
+                                const fe2 = f as Ak1LayoutFieldExt;
+                                const sizeTxt = Math.round((fe2.digitSize || f.size || 16));
                                 return (
                                   <g key={`f-${i}`}>
                                     {Array.from({ length: count }).map((_, idx) => {

@@ -329,7 +329,7 @@ export default function PengaturanPage() {
 }
 
 function Ak1LayoutEditor() {
-  type FieldCfg = { token: string; x: number; y: number; size?: number; kind?: 'text' | 'box' | 'image'; count?: number; cellW?: number; cellH?: number; gap?: number; source?: string; w?: number; h?: number };
+  type FieldCfg = { token: string; x: number; y: number; size?: number; digitSize?: number; kind?: 'text' | 'box' | 'image'; count?: number; cellW?: number; cellH?: number; gap?: number; source?: string; w?: number; h?: number };
   const FRONT = { w: 3900, h: 1216 };
   const candidateColumns = ['full_name','nik','place_of_birth','birthdate','gender','status_perkawinan','address','postal_code','photo_profile','last_education','graduation_year','cv_file'];
   const userColumns = ['id','email','no_handphone','role'];
@@ -475,7 +475,7 @@ function Ak1LayoutEditor() {
           <UploadTemplateInline onDone={async () => { const data = await listAk1Templates(); const list: Ak1Template[] = data?.data || []; setTemplates(list); }} />
         </div>
       </Card>
-      <Card header={<h3 className="text-lg font-semibold text-[#2a436c]">Koordinat Layout</h3>}>
+      <Card className="mt-6" header={<h3 className="text-lg font-semibold text-[#2a436c]">Koordinat Layout</h3>}>
         <div className="space-y-6">
           <div className="space-y-3">
             <div className="w-full">
@@ -533,13 +533,13 @@ function Ak1LayoutEditor() {
                 return (
                   <div key={`field-${idx}`} style={{ position: 'absolute', left, top, width: totalW, height: totalH }} onPointerDown={(e) => { setSelectedIdx(idx); onPointerDown(idx, e); e.stopPropagation(); }} className={selectedIdx === idx ? "cursor-move" : "cursor-pointer"} data-field-item>
                     {Array.from({ length: count }).map((_, i) => {
-                      const ch = Math.max(1, f.token.length || 1);
+                      const ch = 1;
                       const fsAutoW = (cellW * 0.92) / (ch * 0.6);
                       const fsAutoH = cellH * 0.85;
-                      const fsCell = Math.max(8 * scale, Math.min(fsAutoW, fsAutoH));
+                      const fsCell = Math.max(8 * scale, f.digitSize ? (f.digitSize * scale) : Math.min(fsAutoW, fsAutoH));
                       return (
                         <div key={`cell-${i}`} style={{ width: cellW, height: cellH, border: '1px solid #000', background: '#fff', color: '#1f2937', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginRight: i < count - 1 ? gap : 0, fontSize: fsCell, lineHeight: fsCell, whiteSpace: 'nowrap', fontWeight: 600, zIndex: 1 }}>
-                          {f.token}
+                          0
                         </div>
                       );
                     })}
@@ -609,10 +609,7 @@ function Ak1LayoutEditor() {
               const baseH = Math.max(24, Number(f.h || Math.round((f.size || 16) * 2)));
               const boxW = baseW * scale;
               const boxH = baseH * scale;
-              const ch = Math.max(1, f.token.length || 1);
-              const fsAutoW = (boxW * 0.92) / (ch * 0.6);
-              const fsAutoH = boxH * 0.85;
-              const fsText = Math.max(8 * scale, Math.min(fsAutoW, fsAutoH));
+              const fsText = Math.max(1, (f.size || 16)) * scale;
               return (
                 <div key={`field-${idx}`} style={{ position: 'absolute', left, top, width: boxW, height: boxH }} onPointerDown={(e) => { setSelectedIdx(idx); onPointerDown(idx, e); e.stopPropagation(); }} className={selectedIdx === idx ? "text-black bg-white/60 rounded cursor-move" : "cursor-pointer"} data-field-item>
                   <div style={{ width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: fsText, lineHeight: fsText, whiteSpace: 'nowrap', zIndex: 1, color: '#1f2937' }}>
@@ -651,7 +648,7 @@ function Ak1LayoutEditor() {
         {templateName && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <button className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c] text-sm font-medium" onClick={() => setFields((prev) => [...prev, { token: "new_field", x: 200, y: 200, size: 16, w: 128, h: 32, kind: 'text' }])}>
+            <button className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c] text-sm font-medium" onClick={() => setFields((prev) => [...prev, { token: "new_field", x: 200, y: 200, size: 18, w: 128, h: 32, kind: 'text' }])}>
               <i className="ri-add-line mr-2"></i>
               Tambah Koordinat
             </button>
@@ -707,7 +704,7 @@ function Ak1LayoutEditor() {
                       <Input 
                         type="number" 
                         label="Size" 
-                        value={f.size || 16} 
+                        value={f.size || 18} 
                         onChange={(e) => updateField(idx, { size: Number((e.target as HTMLInputElement).value) })} 
                       />
                       <Input 
@@ -768,6 +765,12 @@ function Ak1LayoutEditor() {
                         value={f.gap || 4} 
                         onChange={(e) => updateField(idx, { gap: Number((e.target as HTMLInputElement).value) })} 
                       />
+                      <Input 
+                        type="number" 
+                        label="Ukuran Teks Box" 
+                        value={f.digitSize || 18} 
+                        onChange={(e) => updateField(idx, { digitSize: Number((e.target as HTMLInputElement).value) })} 
+                      />
                       <SearchableSelect
                         label="Sumber"
                         options={[
@@ -805,11 +808,20 @@ function Ak1LayoutEditor() {
             onClick={async () => { 
               try { 
                 setSaving(true); 
+                const normalized = fields.map((f) => { 
+                  if ((f.kind || 'text') === 'text') { 
+                    return { ...f, size: f.size || 18 }; 
+                  } 
+                  if ((f.kind || 'text') === 'box') { 
+                    return { ...f, digitSize: f.digitSize || 18 }; 
+                  } 
+                  return f; 
+                }); 
                 await upsertAk1Layout({ 
                   name: templateName || "default", 
                   front_width: FRONT.w, 
                   front_height: FRONT.h, 
-                  coordinates: fields 
+                  coordinates: normalized 
                 }); 
               } finally { 
                 setSaving(false); 
