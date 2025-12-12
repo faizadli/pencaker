@@ -375,13 +375,21 @@ export default function Ak1Page() {
                     try {
                       const photoUrl = genPasPhotoUrl || String(genDocDetail?.pas_photo_file || '');
                       if (photoUrl) {
-                        const res = await fetch(photoUrl);
+                        const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+                        const token = typeof window !== "undefined" ? (localStorage.getItem("token") || "") : "";
+                        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+                        const res = await fetch(`${apiBase}/api/uploads/file?filename=${encodeURIComponent(photoUrl)}`, { headers });
                         const ab = await res.arrayBuffer();
                         const u8 = new Uint8Array(ab);
                         try { pdfPhoto = await pdfDoc.embedPng(u8); } catch { pdfPhoto = await pdfDoc.embedJpg(u8); }
                       }
                     } catch {}
-                    const hasLayoutPhoto = ((layout?.coordinates || []) as Ak1LayoutField[]).some((ff) => (ff.kind || 'text') === 'image' && String(ff.token) === 'pas_photo');
+                    const hasLayoutPhoto = ((layout?.coordinates || []) as Ak1LayoutField[]).some((ff) => {
+                      const kindF = (ff as Ak1LayoutField).kind || 'text';
+                      const t = String((ff as Ak1LayoutField).token || '');
+                      const k = t.includes(':') ? (t.split(':', 2)[1] || '') : t;
+                      return kindF === 'image' && (t === 'pas_photo' || k === 'pas_photo_file');
+                    });
 
                     const layoutW = Number(layout?.front_width || FRONT_DESIGN.w);
                     const layoutH = Number(layout?.front_height || FRONT_DESIGN.h);
@@ -439,7 +447,10 @@ export default function Ak1Page() {
                           const hPx = Math.max(1, Number(fe.h || 0)) * unitY;
                           const x = (f.x || 0) * unitX;
                           const y = FRONT_BASE.h - ((f.y || 0) * unitY) - hPx;
-                          if (String(f.token) === 'pas_photo' && pdfPhoto) {
+                          const tokenStr = String(f.token || '');
+                          const mKey = tokenStr.includes(':') ? (tokenStr.split(':', 2)[1] || '') : tokenStr;
+                          const matchPas = tokenStr === 'pas_photo' || mKey === 'pas_photo_file';
+                          if (matchPas && pdfPhoto) {
                             page.drawImage(pdfPhoto, { x, y, width: wPx, height: hPx });
                           } else {
                             page.drawRectangle({ x, y, width: wPx, height: hPx, borderColor: rgb(0, 0, 0), borderWidth: 1 });
