@@ -14,16 +14,14 @@ import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../componen
 import { useToast } from "../../../components/ui/Toast";
 import type { PDFImage } from "pdf-lib";
 import type { Ak1Layout, Ak1LayoutField } from "../../../services/ak1";
-
 export default function Ak1Page() {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
   type CandidateProfileLite = { full_name?: string; nik?: string; place_of_birth?: string; birthdate?: string; gender?: string; status_perkawinan?: string; address?: string; postal_code?: string; user_id?: string };
-  type Ak1Document = { status?: string; card_file?: string | null } & { ktp_file?: string; ijazah_file?: string; pas_photo_file?: string; certificate_file?: string };
+  type Ak1Document = { status?: string; card_file?: string | null; card_created_at?: string; card_expired_at?: string; no_urut_pendaftaran?: string; candidate_id?: string; id?: string } & { ktp_file?: string; ijazah_file?: string; pas_photo_file?: string; certificate_file?: string };
   const [profile, setProfile] = useState<CandidateProfileLite | null>(null);
   const [doc, setDoc] = useState<Ak1Document | null>(null);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState<{ ktp_file: string; ijazah_file: string; pas_photo_file: string; certificate_file?: string }>({ ktp_file: "", ijazah_file: "", pas_photo_file: "", certificate_file: "" });
   const [showInfo, setShowInfo] = useState(false);
   const [permissions, setPermissions] = useState<string[]>([]);
   const [permsLoaded, setPermsLoaded] = useState(false);
@@ -46,6 +44,8 @@ export default function Ak1Page() {
   const [genDocDetail, setGenDocDetail] = useState<Ak1Document | null>(null);
   const [layout, setLayout] = useState<Ak1Layout | null>(null);
   const [genPasPhotoUrl, setGenPasPhotoUrl] = useState<string | null>(null);
+  const [showRenewModal, setShowRenewModal] = useState(false);
+  const [renewForm, setRenewForm] = useState<{ ktp_file: string; ijazah_file: string; pas_photo_file: string; certificate_file?: string }>({ ktp_file: "", ijazah_file: "", pas_photo_file: "", certificate_file: "" });
   const genNoReg = useMemo(() => {
     const nik = genCandidate?.nik || "";
     const noUrut = genMeta.no_urut_pendaftaran || "";
@@ -186,16 +186,47 @@ export default function Ak1Page() {
         if (role === "candidate") {
           const prof = await getCandidateProfile(uid);
           setProfile(prof.data || prof);
-          const d = await getAk1Document(uid);
-          setDoc(d.data || null);
+          let docData: Ak1Document | null = null;
+          try {
+            const byAuth = await getAk1Document();
+            docData = (byAuth as { data?: Ak1Document | null }).data || null;
+          } catch {}
+          if (!docData) {
+            const first = await getAk1Document(uid);
+            docData = (first as { data?: Ak1Document | null }).data || null;
+          }
+          if (!docData) {
+            try {
+              const env = (prof.data || prof) as Record<string, unknown>;
+              const candIdRaw = (env?.candidate_id as unknown) || (env?.id as unknown);
+              const candId = typeof candIdRaw === "string" ? candIdRaw : String(candIdRaw || "");
+              if (candId) {
+                const second = await getAk1Document(undefined, candId);
+                docData = (second as { data?: Ak1Document | null }).data || null;
+              }
+            } catch {}
+          }
+          if (!docData) {
+            try {
+              const list = await listAk1Documents();
+              const items = ((list?.data) || []) as Array<{ id: string; candidate_id: string; nik?: string; full_name?: string; status?: string; file?: string | null }>;
+              const p = (prof.data || prof) as CandidateProfileLite;
+              const match = items.find((x) => (p.nik && x.nik && String(p.nik) === String(x.nik)) || (p.full_name && x.full_name && String(p.full_name) === String(x.full_name)));
+              if (match) {
+                const byCand = await getAk1Document(undefined, match.candidate_id);
+                docData = (byCand as { data?: Ak1Document | null }).data || null;
+              }
+            } catch {}
+          }
+          setDoc(docData);
           const status = (() => {
-            const s = (d?.data || {})?.status;
+            const s = (docData || {})?.status;
             if (s) return String(s).toUpperCase();
-            if (d?.data) return "PENDING";
+            if (docData) return "PENDING";
             return undefined;
           })();
-          const hasDoc = Boolean(d?.data);
-          setRows(hasDoc ? [{ full_name: (prof.data || prof)?.full_name, nik: (prof.data || prof)?.nik, place_of_birth: (prof.data || prof)?.place_of_birth, birthdate: (prof.data || prof)?.birthdate, status, file: (d?.data || {})?.card_file || null, candidate_id: (d?.data || {})?.candidate_id || "", ak1_document_id: (d?.data || {})?.id || "" }] : []);
+          const hasDoc = Boolean(docData);
+          setRows(hasDoc ? [{ full_name: (prof.data || prof)?.full_name, nik: (prof.data || prof)?.nik, place_of_birth: (prof.data || prof)?.place_of_birth, birthdate: (prof.data || prof)?.birthdate, status, file: (docData || {})?.card_file || null, candidate_id: (docData || {})?.candidate_id || "", ak1_document_id: (docData || {})?.id || "" }] : []);
         } else {
           const list = await listAk1Documents();
           const items = ((list?.data) || []) as Array<{ id: string; candidate_id: string; full_name?: string; nik?: string; place_of_birth?: string; birthdate?: string; status?: string; file?: string | null }>;
@@ -271,18 +302,91 @@ export default function Ak1Page() {
             </div>
           )}
 
-          {role === "candidate" && permissions.includes("ak1.submit") && !doc && (
-            <Card className="mb-6" header={<h2 className="text-lg font-semibold text-[#2a436c]">Unggah Dokumen</h2>}>
-              <div className="grid grid-cols-1 gap-3">
-                <Input label="Scan KTP" type="file" onChange={async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setForm({ ...form, ktp_file: "" }); return; } const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : ""; const pre = await presignUpload(`ak1/${uid}/ktp`, f.name, f.type || "application/octet-stream"); const resp = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); showError(`Upload gagal (${resp.status}): ${txt}`); return; } const objectUrl = pre.url.includes("?") ? pre.url.slice(0, pre.url.indexOf("?")) : pre.url; setForm({ ...form, ktp_file: objectUrl }); }} />
-                <Input label="Ijazah" type="file" onChange={async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setForm({ ...form, ijazah_file: "" }); return; } const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : ""; const pre = await presignUpload(`ak1/${uid}/ijazah`, f.name, f.type || "application/octet-stream"); const resp = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); showError(`Upload gagal (${resp.status}): ${txt}`); return; } const objectUrl = pre.url.includes("?") ? pre.url.slice(0, pre.url.indexOf("?")) : pre.url; setForm({ ...form, ijazah_file: objectUrl }); }} />
-                <Input label="Pas Foto" type="file" onChange={async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setForm({ ...form, pas_photo_file: "" }); return; } const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : ""; const pre = await presignUpload(`ak1/${uid}/pasfoto`, f.name, f.type || "application/octet-stream"); const resp = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); showError(`Upload gagal (${resp.status}): ${txt}`); return; } const objectUrl = pre.url.includes("?") ? pre.url.slice(0, pre.url.indexOf("?")) : pre.url; setForm({ ...form, pas_photo_file: objectUrl }); }} />
-                <Input label="Sertifikat (Opsional)" type="file" onChange={async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setForm({ ...form, certificate_file: "" }); return; } const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : ""; const pre = await presignUpload(`ak1/${uid}/sertifikat`, f.name, f.type || "application/octet-stream"); const resp = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); showError(`Upload gagal (${resp.status}): ${txt}`); return; } const objectUrl = pre.url.includes("?") ? pre.url.slice(0, pre.url.indexOf("?")) : pre.url; setForm({ ...form, certificate_file: objectUrl }); }} />
-              </div>
-              <div className="mt-4">
-                <button disabled={!requiredComplete || !form.ktp_file || !form.ijazah_file || !form.pas_photo_file} onClick={async () => { try { await upsertAk1Document(form); const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : ""; const d = await getAk1Document(uid); setDoc(d.data || null); const status = (() => { const s = (d?.data || {})?.status; if (s) return String(s).toUpperCase(); if (d?.data) return "PENDING"; return undefined; })(); setRows([{ full_name: (profile || {})?.full_name, nik: (profile || {})?.nik, place_of_birth: (profile || {})?.place_of_birth, birthdate: (profile || {})?.birthdate, status, file: (d?.data || {})?.card_file || null, candidate_id: (d?.data || {})?.candidate_id || "", ak1_document_id: (d?.data || {})?.id || "" }]); showSuccess("Dokumen AK1 tersimpan, menunggu verifikasi."); } catch { showError("Gagal menyimpan dokumen AK1"); } }} className={`px-4 py-2 rounded-lg ${requiredComplete && form.ktp_file && form.ijazah_file && form.pas_photo_file ? "bg-[#355485] text-white hover:bg-[#2a436c]" : "bg-gray-200 text-gray-500"}`}>Simpan Dokumen</button>
-              </div>
+          {!loading && role === "candidate" && !doc && (
+            <Card className="mb-6" header={<h2 className="text-lg font-semibold text-[#2a436c]">Status AK1</h2>}>
+              <p className="text-sm text-[#374151]">Belum ada pengajuan AK1 untuk akun ini.</p>
             </Card>
+          )}
+
+          {role === "candidate" && !!doc && (
+            <>
+              {(() => {
+                const hasCard = Boolean(doc?.card_file);
+                const statusRaw = String((doc || {}).status || "PENDING").toUpperCase();
+                const ui = apiToUIStatusAk1[statusRaw] || "Menunggu Verifikasi";
+                const expired = (() => {
+                  const raw = (doc || {}).card_expired_at ? String(doc?.card_expired_at) : "";
+                  if (!raw) return false;
+                  const d = new Date(raw);
+                  if (Number.isNaN(d.getTime())) return false;
+                  const today = new Date();
+                  today.setHours(0,0,0,0);
+                  d.setHours(0,0,0,0);
+                  return d < today;
+                })();
+                if (!hasCard) {
+                  if (permissions.includes("ak1.generate")) {
+                    return (
+                      <Card className="mb-6" header={<h2 className="text-lg font-semibold text-[#2a436c]">Dokumen diterima — siap generate</h2>}>
+                        <p className="text-sm text-[#374151]">Semua dokumen telah diunggah. Anda dapat membuat kartu AK1 sekarang.</p>
+                        <div className="mt-3">
+                          <button
+                            className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]"
+                            onClick={async () => {
+                              try {
+                                const cid = String(rows[0]?.candidate_id || doc?.candidate_id || "");
+                                setGenMeta({ ak1_document_id: String(rows[0]?.ak1_document_id || doc?.id || ""), candidate_id: cid, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
+                                setGenCandidate(profile);
+                                setGenDocDetail(doc);
+                                const tpResp = await getAk1Template() as { data?: { name?: string; file_template?: string | null } };
+                                const t = tpResp.data || null;
+                                const name = t?.name ? String(t.name) : undefined;
+                                if (t?.file_template) setFrontSrcUrl(String(t.file_template));
+                                const lyResp = await getAk1Layout(name);
+                                const lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
+                                setLayout(lyData);
+                                try {
+                                  const rawPhoto = String((doc || {}).pas_photo_file || "");
+                                  if (rawPhoto) {
+                                    const pre = await presignDownload(rawPhoto);
+                                    setGenPasPhotoUrl(pre.url);
+                                  } else {
+                                    setGenPasPhotoUrl(null);
+                                  }
+                                } catch { setGenPasPhotoUrl(null); }
+                              } catch {}
+                              setShowGenerateModal(true);
+                            }}
+                          >
+                            Generate Kartu
+                          </button>
+                        </div>
+                      </Card>
+                    );
+                  }
+                  return (
+                    <Card className="mb-6" header={<h2 className="text-lg font-semibold text-[#2a436c]">Menunggu Generate</h2>}>
+                      <p className="text-sm text-[#374151]">Dokumen Anda sudah diterima. Petugas akan melakukan generate kartu AK1.</p>
+                    </Card>
+                  );
+                }
+                return (
+                  <Card className="mb-6" header={<h2 className="text-lg font-semibold text-[#2a436c]">Status Kartu AK1</h2>}>
+                    <div className="flex items-center gap-3">
+                      <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(ui)}`}>{expired ? "Kadaluarsa" : ui}</span>
+                      {doc?.card_file ? (
+                        <button className="text-[#355485] underline" onClick={async () => { const d = await presignDownload(String(doc?.card_file)); window.open(d.url, "_blank"); }}>Unduh Kartu</button>
+                      ) : null}
+                    </div>
+                    {expired && (
+                      <div className="mt-3 flex gap-2">
+                        <button className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]" onClick={() => { setRenewForm({ ktp_file: String(doc?.ktp_file || ""), ijazah_file: String(doc?.ijazah_file || ""), pas_photo_file: String(doc?.pas_photo_file || ""), certificate_file: String(doc?.certificate_file || "") }); setShowRenewModal(true); }}>Perpanjang Kartu</button>
+                      </div>
+                    )}
+                  </Card>
+                );
+              })()}
+            </>
           )}
 
           {(role !== "candidate" || !!doc) && (
@@ -333,10 +437,21 @@ export default function Ak1Page() {
                           </div>
                           <div className="flex gap-2">
                             <button className="px-3 py-1 text-xs rounded bg-[#4f90c6] text-white hover:bg-[#355485]" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
-                            {permissions.includes("ak1.verify") && (
-                              <button className="px-3 py-1 text-xs rounded bg-[#355485] text-white hover:bg-[#2a436c]" onClick={() => { setVerifyPayload({ ak1_document_id: r.ak1_document_id || "", status: "APPROVED" }); setShowVerifyModal(true); }}>Verifikasi</button>
+                            {permissions.includes("ak1.verify") && r.file && ((apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi') === 'Menunggu Verifikasi') && (
+                              <button
+                                className="px-3 py-1 text-xs rounded bg-[#355485] text-white hover:bg-[#2a436c]"
+                                onClick={async () => {
+                                  const d = await getAk1Document(undefined, r.candidate_id);
+                                  const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate };
+                                  setDetailData({ candidate: cand, document: d.data || null });
+                                  setVerifyPayload({ ak1_document_id: r.ak1_document_id || "", status: "APPROVED" });
+                                  setShowVerifyModal(true);
+                                }}
+                              >
+                                Verifikasi
+                              </button>
                             )}
-                            {permissions.includes("ak1.generate") && (
+                            {permissions.includes("ak1.generate") && !r.file && (
                               <button
                                 className="px-3 py-1 text-xs rounded bg-[#4f90c6] text-white hover:bg-[#3a719f]"
                                 onClick={async () => {
@@ -431,10 +546,21 @@ export default function Ak1Page() {
                         <TD>
                           <div className="flex gap-2">
                             <button className="px-3 py-1 text-xs rounded bg-[#4f90c6] text-white hover:bg-[#355485]" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
-                            {permissions.includes("ak1.verify") && (
-                              <button className="px-3 py-1 text-xs rounded bg-[#355485] text-white hover:bg-[#2a436c]" onClick={() => { setVerifyPayload({ ak1_document_id: r.ak1_document_id || "", status: "APPROVED" }); setShowVerifyModal(true); }}>Verifikasi</button>
+                            {permissions.includes("ak1.verify") && r.file && ((apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi') === 'Menunggu Verifikasi') && (
+                              <button
+                                className="px-3 py-1 text-xs rounded bg-[#355485] text-white hover:bg-[#2a436c]"
+                                onClick={async () => {
+                                  const d = await getAk1Document(undefined, r.candidate_id);
+                                  const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate };
+                                  setDetailData({ candidate: cand, document: d.data || null });
+                                  setVerifyPayload({ ak1_document_id: r.ak1_document_id || "", status: "APPROVED" });
+                                  setShowVerifyModal(true);
+                                }}
+                              >
+                                Verifikasi
+                              </button>
                             )}
-                            {permissions.includes("ak1.generate") && (
+                            {permissions.includes("ak1.generate") && !r.file && (
                               <button
                                 className="px-3 py-1 text-xs rounded bg-[#4f90c6] text-white hover:bg-[#3a719f]"
                                 onClick={async () => {
@@ -513,10 +639,21 @@ export default function Ak1Page() {
                       </div>
                       <div className="mt-3 flex gap-2">
                         <button className="flex-1 px-3 py-2 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
-                        {permissions.includes("ak1.verify") && (
-                          <button className="flex-1 px-3 py-2 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition" onClick={() => { setVerifyPayload({ ak1_document_id: r.ak1_document_id || "", status: "APPROVED" }); setShowVerifyModal(true); }}>Verifikasi</button>
+                        {permissions.includes("ak1.verify") && r.file && ((apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi') === 'Menunggu Verifikasi') && (
+                          <button
+                            className="flex-1 px-3 py-2 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition"
+                            onClick={async () => {
+                              const d = await getAk1Document(undefined, r.candidate_id);
+                              const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate };
+                              setDetailData({ candidate: cand, document: d.data || null });
+                              setVerifyPayload({ ak1_document_id: r.ak1_document_id || "", status: "APPROVED" });
+                              setShowVerifyModal(true);
+                            }}
+                          >
+                            Verifikasi
+                          </button>
                         )}
-                        {permissions.includes("ak1.generate") && (
+                        {permissions.includes("ak1.generate") && !r.file && (
                           <button className="flex-1 px-3 py-2 text-xs bg-[#7c3aed] text-white rounded hover:bg-[#5b21b6] transition" onClick={async () => {
                             try {
                               setGenMeta({ ak1_document_id: r.ak1_document_id, candidate_id: r.candidate_id, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
@@ -974,6 +1111,68 @@ export default function Ak1Page() {
               </div>
             </div>
           </Modal>
+
+          <Modal open={showRenewModal} title="Perpanjang Kartu AK1" onClose={() => setShowRenewModal(false)} actions={<>
+            <button onClick={() => setShowRenewModal(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Batal</button>
+            <button
+              onClick={async () => {
+                try {
+                  await upsertAk1Document({ ktp_file: renewForm.ktp_file, ijazah_file: renewForm.ijazah_file, pas_photo_file: renewForm.pas_photo_file, certificate_file: renewForm.certificate_file });
+                  const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
+                  const d = await getAk1Document(uid);
+                  const ddoc = (d as { data?: Ak1Document | null }).data || null;
+                  setDoc(ddoc);
+                  if (permissions.includes("ak1.generate")) {
+                    try {
+                      const cid = String(rows[0]?.candidate_id || (ddoc || {})?.candidate_id || "");
+                      setGenMeta({ ak1_document_id: String(rows[0]?.ak1_document_id || (ddoc || {})?.id || ""), candidate_id: cid, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
+                      setGenCandidate(profile);
+                      setGenDocDetail(ddoc || null);
+                      const tpResp = await getAk1Template() as { data?: { name?: string; file_template?: string | null } };
+                      const t = tpResp.data || null;
+                      const name = t?.name ? String(t.name) : undefined;
+                      if (t?.file_template) setFrontSrcUrl(String(t.file_template));
+                      const lyResp = await getAk1Layout(name);
+                      const lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
+                      setLayout(lyData);
+                      try {
+                        const rawPhoto = String((ddoc || {})?.pas_photo_file || "");
+                        if (rawPhoto) {
+                          const pre = await presignDownload(rawPhoto);
+                          setGenPasPhotoUrl(pre.url);
+                        } else {
+                          setGenPasPhotoUrl(null);
+                        }
+                      } catch { setGenPasPhotoUrl(null); }
+                    } catch {}
+                    setShowRenewModal(false);
+                    setShowGenerateModal(true);
+                  } else {
+                    setShowRenewModal(false);
+                    showSuccess("Dokumen diperbarui. Menunggu verifikasi.");
+                  }
+                } catch { showError("Gagal memperbarui dokumen AK1"); }
+              }}
+              className="ml-2 px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]"
+            >
+              Simpan
+            </button>
+          </>}>
+            <div className="grid grid-cols-1 gap-3">
+              <label className="text-sm text-[#374151]">Scan KTP
+                <input type="file" className="mt-1 w-full border rounded p-2" onChange={async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setRenewForm({ ...renewForm, ktp_file: "" }); return; } const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : ""; const pre = await presignUpload(`ak1/${uid}/ktp`, f.name, f.type || "application/octet-stream"); const resp = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); showError(`Upload gagal (${resp.status}): ${txt}`); return; } const objectUrl = pre.url.includes("?") ? pre.url.slice(0, pre.url.indexOf("?")) : pre.url; setRenewForm({ ...renewForm, ktp_file: objectUrl }); }} />
+              </label>
+              <label className="text-sm text-[#374151]">Ijazah
+                <input type="file" className="mt-1 w-full border rounded p-2" onChange={async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setRenewForm({ ...renewForm, ijazah_file: "" }); return; } const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : ""; const pre = await presignUpload(`ak1/${uid}/ijazah`, f.name, f.type || "application/octet-stream"); const resp = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); showError(`Upload gagal (${resp.status}): ${txt}`); return; } const objectUrl = pre.url.includes("?") ? pre.url.slice(0, pre.url.indexOf("?")) : pre.url; setRenewForm({ ...renewForm, ijazah_file: objectUrl }); }} />
+              </label>
+              <label className="text-sm text-[#374151]">Pas Foto
+                <input type="file" className="mt-1 w-full border rounded p-2" onChange={async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setRenewForm({ ...renewForm, pas_photo_file: "" }); return; } const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : ""; const pre = await presignUpload(`ak1/${uid}/pasfoto`, f.name, f.type || "application/octet-stream"); const resp = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); showError(`Upload gagal (${resp.status}): ${txt}`); return; } const objectUrl = pre.url.includes("?") ? pre.url.slice(0, pre.url.indexOf("?")) : pre.url; setRenewForm({ ...renewForm, pas_photo_file: objectUrl }); }} />
+              </label>
+              <label className="text-sm text-[#374151]">Sertifikat (Opsional)
+                <input type="file" className="mt-1 w-full border rounded p-2" onChange={async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setRenewForm({ ...renewForm, certificate_file: "" }); return; } const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : ""; const pre = await presignUpload(`ak1/${uid}/sertifikat`, f.name, f.type || "application/octet-stream"); const resp = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); showError(`Upload gagal (${resp.status}): ${txt}`); return; } const objectUrl = pre.url.includes("?") ? pre.url.slice(0, pre.url.indexOf("?")) : pre.url; setRenewForm({ ...renewForm, certificate_file: objectUrl }); }} />
+              </label>
+            </div>
+          </Modal>
           
           <Modal open={showDetailModal} title="Detail AK1" onClose={() => setShowDetailModal(false)} actions={<button onClick={() => setShowDetailModal(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>}>
             <div className="text-sm text-[#374151] space-y-2">
@@ -991,7 +1190,21 @@ export default function Ak1Page() {
           
           <Modal open={showVerifyModal} title="Verifikasi AK1" onClose={() => setShowVerifyModal(false)} actions={<>
             <button onClick={() => setShowVerifyModal(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Batal</button>
-            <button onClick={async () => { try { await verifyAk1(verifyPayload); setShowVerifyModal(false); showSuccess("AK1 diverifikasi"); } catch { showError("Gagal verifikasi AK1"); } }} className="ml-2 px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]">Simpan</button>
+            <button
+              onClick={async () => {
+                try {
+                  await verifyAk1({ ak1_document_id: verifyPayload.ak1_document_id, status: verifyPayload.status });
+                  setRows((prev) => prev.map((r) => (r.ak1_document_id === verifyPayload.ak1_document_id ? { ...r, status: verifyPayload.status } : r)));
+                  setShowVerifyModal(false);
+                  showSuccess("AK1 diverifikasi");
+                } catch {
+                  showError("Gagal verifikasi AK1");
+                }
+              }}
+              className="ml-2 px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]"
+            >
+              Simpan
+            </button>
           </>}>
             <div className="grid grid-cols-1 gap-3">
               <label className="text-sm text-[#374151]">Status
@@ -1000,18 +1213,17 @@ export default function Ak1Page() {
                   <option value="REJECTED">REJECTED</option>
                 </select>
               </label>
-              <label className="text-sm text-[#374151]">No Urut Pendaftaran
-                <input className="mt-1 w-full border rounded p-2" value={verifyPayload.no_urut_pendaftaran || ""} onChange={(e) => setVerifyPayload({ ...verifyPayload, no_urut_pendaftaran: e.target.value })} />
-              </label>
-              <label className="text-sm text-[#374151]">Tanggal Kartu Dibuat
-                <input type="date" className="mt-1 w-full border rounded p-2" value={verifyPayload.card_created_at || ""} onChange={(e) => setVerifyPayload({ ...verifyPayload, card_created_at: e.target.value })} />
-              </label>
-              <label className="text-sm text-[#374151]">Tanggal Kartu Kadaluarsa
-                <input type="date" className="mt-1 w-full border rounded p-2" value={verifyPayload.card_expired_at || ""} onChange={(e) => setVerifyPayload({ ...verifyPayload, card_expired_at: e.target.value })} />
-              </label>
-              <label className="text-sm text-[#374151]">File Kartu AK1
-                <input type="file" className="mt-1 w-full border rounded p-2" onChange={async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setVerifyPayload({ ...verifyPayload, file: undefined }); return; } const pre = await presignUpload("ak1_cards", f.name, f.type || "application/octet-stream"); const resp = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); showError(`Upload gagal (${resp.status}): ${txt}`); return; } const objectUrl = pre.url.includes("?") ? pre.url.slice(0, pre.url.indexOf("?")) : pre.url; setVerifyPayload({ ...verifyPayload, file: objectUrl }); }} />
-              </label>
+              <div className="text-sm text-[#374151] space-y-2">
+                <div>Nama: {(detailData?.candidate || profile)?.full_name || '-'}</div>
+                <div>NIK: {(detailData?.candidate || profile)?.nik || '-'}</div>
+                <div>Tempat/Tgl Lahir: {(detailData?.candidate || profile)?.place_of_birth || '-'} / {String((detailData?.candidate || profile)?.birthdate || '').slice(0, 10) || '-'}</div>
+                <hr className="my-2" />
+                <div>KTP: {detailData?.document?.ktp_file ? <a href={detailData.document.ktp_file} target="_blank" rel="noreferrer" className="text-[#355485] underline">Lihat</a> : '-'}</div>
+                <div>Ijazah: {detailData?.document?.ijazah_file ? <a href={detailData.document.ijazah_file} target="_blank" rel="noreferrer" className="text-[#355485] underline">Lihat</a> : '-'}</div>
+                <div>Pas Foto: {detailData?.document?.pas_photo_file ? <a href={detailData.document.pas_photo_file} target="_blank" rel="noreferrer" className="text-[#355485] underline">Lihat</a> : '-'}</div>
+                <div>Sertifikat: {detailData?.document?.certificate_file ? <a href={detailData.document.certificate_file} target="_blank" rel="noreferrer" className="text-[#355485] underline">Lihat</a> : '-'}</div>
+                <div>Kartu AK1: {detailData?.document?.card_file ? <a href={detailData.document.card_file} target="_blank" rel="noreferrer" className="text-[#355485] underline">Unduh Kartu</a> : '-'}</div>
+              </div>
             </div>
           </Modal>
         </div>
