@@ -104,8 +104,8 @@ export default function Navbar() {
               </div>
             </div>
 
-            <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-8">
+            <div className="hidden lg:block">
+              <div className="ml-6 lg:ml-10 flex items-baseline space-x-6 lg:space-x-8">
                 <Link href="/" className={isRoute("/") ? "text-primary font-medium transition-colors" : "text-gray-600 hover:text-primary transition-colors"}>Beranda</Link>
                 <Link href="/about" className={isRoute("/about") ? "text-primary font-medium transition-colors" : "text-gray-600 hover:text-primary transition-colors"}>Tentang Kami</Link>
                 <Link href="/jobs" className={isRoute("/jobs") ? "text-primary font-medium transition-colors" : "text-gray-600 hover:text-primary transition-colors"}>Lowongan</Link>
@@ -126,14 +126,14 @@ export default function Navbar() {
             </div>
 
             {isLoggedIn ? (
-              <div className="hidden md:flex items-center gap-4">
+              <div className="hidden lg:flex items-center gap-4">
                 <Link href="/dashboard" className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
                   <i className="ri-dashboard-line"></i>
                   Dashboard
                 </Link>
               </div>
             ) : (
-              <div className="hidden md:flex items-center gap-4">
+              <div className="hidden lg:flex items-center gap-4">
                 <button onClick={() => setOpenLogin(true)} className="text-primary hover:text-primary font-medium transition-colors">Masuk</button>
                 <button onClick={() => setOpenRegister(true)} className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
                   <i className="ri-user-add-line"></i>
@@ -142,7 +142,7 @@ export default function Navbar() {
               </div>
             )}
 
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <button aria-label="Menu" onClick={() => setOpenMobile(v => !v)} className="text-primary p-2">
                 <i className="ri-menu-line text-xl"></i>
               </button>
@@ -151,7 +151,7 @@ export default function Navbar() {
         </div>
       </nav>
       {openMobile && (
-        <div className="md:hidden fixed top-16 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow">
+        <div className="lg:hidden fixed top-16 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow">
           <div className="px-4 py-3 space-y-3">
             <Link href="/" onClick={() => setOpenMobile(false)} className="block text-primary font-medium">Beranda</Link>
             <Link href="/about" onClick={() => setOpenMobile(false)} className="block text-gray-700">Tentang Kami</Link>
