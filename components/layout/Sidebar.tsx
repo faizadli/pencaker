@@ -116,7 +116,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0 ${isMinimized ? "w-16" : "w-64"}`}
       >
-        <div className="flex items-center justify-between p-5 border-b border-secondary">
+        <div className="flex items-center justify-between p-5 border-b border-white/20">
           {isMinimized ? (
             <div className="w-full flex justify-center">
               <span className="text-2xl">💼</span>
@@ -126,7 +126,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
               DISNAKER<span className="font-normal text-sm">KabPaser</span>
             </h1>
           )}
-          <button onClick={() => setIsMobileOpen(false)} className="lg:hidden p-2 rounded hover:bg-secondary" aria-label="Tutup Sidebar">
+          <button onClick={() => setIsMobileOpen(false)} className="lg:hidden p-2 rounded hover:bg-white/10" aria-label="Tutup Sidebar">
             <i className="ri-close-line text-xl"></i>
           </button>
         </div>
@@ -139,7 +139,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
                 <li key={item.name}>
                   <Link
                     href={item.path}
-                    className={`flex items-center gap-3 w-full p-3 rounded-lg transition-colors ${isActive ? "bg-secondary font-semibold" : "hover:bg-secondary"}`}
+                    className={`flex items-center gap-3 w-full p-3 rounded-lg transition-colors ${isActive ? "bg-white/20 font-semibold" : "hover:bg-white/10"}`}
                     onClick={() => setIsMobileOpen(false)}
                   >
                     <i className={`${item.icon || 'ri-id-card-line'} text-lg`}></i>

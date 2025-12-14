@@ -6,6 +6,7 @@
   --primary: #2E742B;
   --secondary: #F4D348;
   --danger: #dc2626;
+  --rich: #111827;
 }
 
 @theme inline {
@@ -20,8 +21,9 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #171717;
+    --rich: #111827;
   }
 }
 
@@ -42,7 +44,7 @@ body {
 
 .content-rich {
   max-width: none;
-  color: var(--foreground);
+  color: var(--rich);
   line-height: 1.625;
   white-space: pre-line;
 }
@@ -68,4 +70,9 @@ body {
 .content-rich a {
   color: var(--primary);
   text-decoration: underline;
+}
+.content-rich p,
+.content-rich li,
+.content-rich span {
+  color: var(--rich);
 }
