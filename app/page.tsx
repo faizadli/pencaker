@@ -163,6 +163,36 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      <section className="bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] relative z-30 border-y border-white/10">
+        <div className="marquee overflow-hidden w-full">
+          <div className="marquee-track whitespace-nowrap">
+            <div className="marquee-item flex items-center gap-3 px-6 py-3 text-white text-base font-medium tracking-wide">
+              <i className="ri-information-line text-[var(--color-secondary)]"></i>
+              <span>
+                <strong className="text-[var(--color-secondary)]">ADIKARA</strong> berasal dari bahasa Sanskerta, terdiri dari kata adi yang berarti utama, luhur, atau unggul, dan kara yang berarti perbuatan atau tindakan. Secara makna, ADIKARA dapat diartikan sebagai tindakan yang mulia dan bermartabat, atau sikap unggul yang mencerminkan kehormatan, integritas, dan tanggung jawab. Dalam konteks nilai, organisasi, atau program, ADIKARA sering dimaknai sebagai: Menjunjung kehormatan dan martabat • Bertindak dengan integritas dan etika • Menjadi teladan dalam sikap dan kinerja • Mengutamakan tanggung jawab dan profesionalisme
+              </span>
+            </div>
+            <div className="marquee-item flex items-center gap-3 px-6 py-3 text-white text-base font-medium tracking-wide">
+              <i className="ri-information-line text-[var(--color-secondary)]"></i>
+              <span>
+                <strong className="text-[var(--color-secondary)]">ADIKARA</strong> berasal dari bahasa Sanskerta, terdiri dari kata adi yang berarti utama, luhur, atau unggul, dan kara yang berarti perbuatan atau tindakan. Secara makna, ADIKARA dapat diartikan sebagai tindakan yang mulia dan bermartabat, atau sikap unggul yang mencerminkan kehormatan, integritas, dan tanggung jawab. Dalam konteks nilai, organisasi, atau program, ADIKARA sering dimaknai sebagai: Menjunjung kehormatan dan martabat • Bertindak dengan integritas dan etika • Menjadi teladan dalam sikap dan kinerja • Mengutamakan tanggung jawab dan profesionalisme
+              </span>
+            </div>
+          </div>
+        </div>
+        <style jsx>{`
+          @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .marquee { position: relative; }
+          .marquee::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 64px; background: linear-gradient(to right, rgba(0,0,0,0.25), rgba(0,0,0,0)); z-index: 10; }
+          .marquee::after { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 64px; background: linear-gradient(to left, rgba(0,0,0,0.25), rgba(0,0,0,0)); z-index: 10; }
+          .marquee-track { display: inline-flex; width: max-content; animation: marquee 30s linear infinite; will-change: transform; }
+          .marquee-item { flex: 0 0 auto; }
+          .marquee-track:hover { animation-play-state: paused; }
+        `}</style>
+      </section>
 
       <section className="py-12 bg-gray-50 -mt-8 relative z-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">

@@ -220,6 +220,15 @@ export default function PengaturanPage() {
         else setBannerUrl(objectUrl);
         return;
       } catch {}
+      try {
+        const { url } = await presignUpload(folder, file.name, file.type);
+        await fetch(url, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
+        const objectUrl = url.includes("?") ? url.slice(0, url.indexOf("?")) : url;
+        setTempValue(objectUrl);
+        if (field === "logo") setLogoUrl(objectUrl);
+        else setBannerUrl(objectUrl);
+        return;
+      } catch {}
       const buf = await file.arrayBuffer();
       let base64 = "";
       const bytes = new Uint8Array(buf);
