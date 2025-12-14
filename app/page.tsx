@@ -4,12 +4,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { Input, SearchableSelect } from "../components/ui/field";
 import { listPublicJobs } from "../services/jobs";
+import { getHomeContent, getPublicSiteSettings } from "../services/site";
 import { getPublicCompanyById } from "../services/company";
 
 export default function HomePage() {
+  type SiteContentItem<T> = { id: string; page: "home" | "about"; section: string; data: T; status: "PUBLISHED" | "DRAFT"; sort_order: number };
+  type HomeContentResponse = {
+    news: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; isi?: string; ringkasan?: string; gambar?: string }>[];
+    faqs: SiteContentItem<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string }>[];
+    partners: SiteContentItem<{ name?: string; logo?: string }>[];
+    testimonials: SiteContentItem<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>[];
+    // stats removed from API; shown as dummy cards
+  };
+  type SiteSettingsShape = { banner_judul?: string; banner_subjudul?: string; banner_background_image?: string; instansi_nama?: string; instansi_logo?: string; instansi_alamat?: string; instansi_telepon?: string; instansi_email?: string; instansi_website?: string; instansi_jam_layanan?: string; instansi_facebook?: string; instansi_instagram?: string; instansi_youtube?: string };
   const [searchQuery, setSearchQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
-  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [activeFaq, setActiveFaq] = useState<string | null>(null);
 
   const [latestJobs, setLatestJobs] = useState<Array<{ id: string; posisi: string; perusahaan: string; logo: string; lokasi: string; tipe: string; sektor: string; pendidikan: string; tanggal: string }>>([]);
 
@@ -56,43 +66,86 @@ export default function HomePage() {
     load();
   }, []);
 
-  const newsList = [
-    { id: 1, judul: "Pelatihan Gratis Bidang Digital Dimulai Bulan Ini", tanggal: "10 Nov 2025", ringkasan: "ADIKARA membuka pendaftaran pelatihan web development, UI/UX, dan digital marketing untuk 500 peserta.", gambar: "https://picsum.photos/200" },
-    { id: 2, judul: "Job Fair Kabupaten Paser Hadirkan 50+ Perusahaan", tanggal: "8 Nov 2025", ringkasan: "Event bursa kerja akan digelar pada 15-17 November di Gedung Sabilulungan dengan 2,000 lowongan.", gambar: "https://picsum.photos/200" },
-  ];
+  const [banner, setBanner] = useState<{ title: string; subtitle: string; backgroundImage: string }>({ title: "ADIKARA", subtitle: "Aplikasi Data dan Informasi Ketenagakerjaan Area Regional Paser", backgroundImage: "/banner.jpeg" });
+  const [instansi, setInstansi] = useState<{ nama: string; logo: string; alamat: string; telepon: string; email: string; website: string; jam_layanan: string; facebook: string; instagram: string; youtube: string }>({ nama: "", logo: "", alamat: "", telepon: "", email: "", website: "", jam_layanan: "", facebook: "", instagram: "", youtube: "" });
+  const [newsList, setNewsList] = useState<Array<{ id: string; judul: string; tanggal: string; ringkasan: string; gambar: string }>>([]);
+  const [homeStats] = useState<Array<{ label: string; value: string | number; icon: string; color: string }>>([
+    { label: "Pencari Kerja Terdaftar", value: 1240, icon: "ri-user-search-line", color: "bg-blue-500" },
+    { label: "Perusahaan Terdaftar", value: 320, icon: "ri-building-line", color: "bg-emerald-500" },
+    { label: "Lowongan Aktif", value: 85, icon: "ri-briefcase-line", color: "bg-amber-500" },
+    { label: "Pelatihan Tersedia", value: 12, icon: "ri-graduation-cap-line", color: "bg-violet-500" },
+  ]);
+  const [testimonials, setTestimonials] = useState<Array<{ id: string; nama: string; pekerjaan: string; perusahaan: string; testimoni: string; foto: string }>>([]);
+  const [partners, setPartners] = useState<Array<{ id: string; name: string; logo: string }>>([]);
+  const [faqs, setFaqs] = useState<Array<{ id: string; q: string; a: string }>>([]);
 
-  const stats = { lowongan: 912, pencaker: 14230, perusahaan: 345, pelatihan: 28 };
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const s = await getPublicSiteSettings();
+        const cfg: SiteSettingsShape = (s as { data?: SiteSettingsShape }).data ?? (s as SiteSettingsShape);
+        setBanner({
+          title: String(cfg?.banner_judul || "ADIKARA"),
+          subtitle: String(cfg?.banner_subjudul || "Aplikasi Data dan Informasi Ketenagakerjaan Area Regional Paser"),
+          backgroundImage: String(cfg?.banner_background_image || "https://images.unsplash.com/photo-1556761175-b413da4baf72?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80"),
+        });
+        setInstansi({
+          nama: String(cfg?.instansi_nama || ""),
+          logo: String(cfg?.instansi_logo || ""),
+          alamat: String(cfg?.instansi_alamat || ""),
+          telepon: String(cfg?.instansi_telepon || ""),
+          email: String(cfg?.instansi_email || ""),
+          website: String(cfg?.instansi_website || ""),
+          jam_layanan: String(cfg?.instansi_jam_layanan || ""),
+          facebook: String(cfg?.instansi_facebook || ""),
+          instagram: String(cfg?.instansi_instagram || ""),
+          youtube: String(cfg?.instansi_youtube || ""),
+        });
+      } catch {}
+      try {
+        const hc: HomeContentResponse = await getHomeContent() as HomeContentResponse;
+        const news = Array.isArray(hc.news) ? hc.news : [];
+        setNewsList(news.map((n) => ({ id: String(n.id || Math.random()), judul: String(n.data?.judul || n.data?.title || ""), tanggal: String(n.data?.tanggal || ""), ringkasan: String(n.data?.isi || n.data?.ringkasan || ""), gambar: String(n.data?.gambar || "https://picsum.photos/800/320") })));
+        // stats removed from API; keep dummy cards
+        const testiItems = Array.isArray(hc.testimonials) ? hc.testimonials : [];
+        setTestimonials(testiItems.map((t) => ({ id: String(t.id || Math.random()), nama: String(t.data?.nama || ""), pekerjaan: String(t.data?.pekerjaan || ""), perusahaan: String(t.data?.perusahaan || ""), testimoni: String(t.data?.testimoni || ""), foto: String(t.data?.foto || "https://picsum.photos/200") })));
+        const partnerItems = Array.isArray(hc.partners) ? hc.partners : [];
+        setPartners(partnerItems.map((p) => ({ id: String(p.id || Math.random()), name: String(p.data?.name || ""), logo: String(p.data?.logo || "https://picsum.photos/200") })));
+        const faqItems = Array.isArray(hc.faqs) ? hc.faqs : [];
+        setFaqs(faqItems.map((f) => ({ id: String(f.id || Math.random()), q: String(f.data?.pertanyaan || f.data?.q || ""), a: String(f.data?.jawaban || f.data?.a || "") })));
+      } catch {}
+    };
+    loadContent();
+  }, []);
 
-  const testimonials = [
-    { id: 1, nama: "Rina Sari", pekerjaan: "Web Developer", perusahaan: "PT Tech Solution", testimoni: "Berhasil mendapatkan pekerjaan impian hanya dalam 2 minggu setelah mendaftar di ADIKARA Paser.", foto: "https://picsum.photos/200" },
-    { id: 2, nama: "Ahmad Fauzi", pekerjaan: "Teknisi Elektronik", perusahaan: "CV Elektro Mandiri", testimoni: "Pelatihan dari BLK sangat membantu saya meningkatkan skill dan mendapatkan pekerjaan tetap.", foto: "https://picsum.photos/200" },
-  ];
+  
 
-  const partners = [
-    { id: 1, name: "PT Astra International", logo: "https://picsum.photos/200" },
-    { id: 2, name: "Bank BJB", logo: "https://picsum.photos/200" },
-    { id: 3, name: "PT Unilever", logo: "https://picsum.photos/200" },
-    { id: 4, name: "PT Telkom Indonesia", logo: "https://picsum.photos/200" },
-  ];
+  
 
-  const faqs = [
-    { id: 1, q: "Apakah semua lowongan diverifikasi?", a: "Ya, semua lowongan diverifikasi oleh tim ADIKARA untuk memastikan keamanan dan keaslian informasi." },
-    { id: 2, q: "Bagaimana cara mendaftar sebagai pencari kerja?", a: "Anda bisa mendaftar online melalui menu 'Daftar Pencaker' atau datang langsung." },
-    { id: 3, q: "Apakah layanan ini gratis?", a: "Ya, seluruh layanan penempatan tenaga kerja, pelatihan BLK, dan pendaftaran pencari kerja gratis." },
-  ];
+  
 
-  const toggleFaq = (id: number) => setActiveFaq(activeFaq === id ? null : id);
+  
+
+  
+
+  const toggleFaq = (id: string) => setActiveFaq(activeFaq === id ? null : id);
 
   return (
     <div className="min-h-screen bg-white">
 
       <section className="relative bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-dark)] text-white py-20 px-4 sm:px-6 overflow-hidden">
         <div className="absolute inset-0 bg-black/20"></div>
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1556761175-b413da4baf72?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80')] bg-cover bg-center mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-cover bg-center " style={{ backgroundImage: `url(${banner.backgroundImage})` }}></div>
         <div className="max-w-6xl mx-auto text-center relative z-10">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            {instansi.logo ? (
+              <Image src={instansi.logo} alt={instansi.nama || "Logo Instansi"} width={40} height={40} className="w-10 h-10 rounded-lg object-contain border border-white/30" />
+            ) : null}
+            {instansi.nama ? (<span className="text-white/90 text-sm font-medium">{instansi.nama}</span>) : null}
+          </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
-            ADIKARA
-            <span className="block text-blue-100 text-xl md:text-2xl font-normal mt-2">Aplikasi Data dan Informasi Ketenagakerjaan Area Regional Paser</span>
+            {banner.title}
+            <span className="block text-blue-100 text-xl md:text-2xl font-normal mt-2">{banner.subtitle}</span>
           </h1>
           <p className="text-lg md:text-xl opacity-90 mb-8 max-w-3xl mx-auto leading-relaxed">
             Temukan lowongan kerja terbaru, ikuti pelatihan gratis, dan dapatkan dukungan karier dari pemerintah.
@@ -144,7 +197,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-primary mb-12">Statistik Layanan Disnaker</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            {[{ label: "Lowongan Aktif", value: new Intl.NumberFormat("en-US").format(stats.lowongan), icon: "ri-briefcase-line", color: "bg-blue-500" }, { label: "Pencari Kerja", value: new Intl.NumberFormat("en-US").format(stats.pencaker), icon: "ri-user-line", color: "bg-green-500" }, { label: "Perusahaan Mitra", value: stats.perusahaan, icon: "ri-building-line", color: "bg-purple-500" }, { label: "Program Pelatihan", value: stats.pelatihan, icon: "ri-book-line", color: "bg-orange-500" }].map((stat, i) => (
+            {homeStats.map((stat, i) => (
               <div key={i} className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 hover:shadow-xl transition-all">
                 <div className={`w-16 h-16 ${stat.color} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
                   <i className={`${stat.icon} text-white text-2xl`}></i>
@@ -364,27 +417,39 @@ export default function HomePage() {
               <div className="space-y-4 text-gray-600">
                 <div className="flex items-center gap-3">
                   <i className="ri-phone-line text-secondary"></i>
-                  <span>(022) 12345678</span>
+                  <span>{instansi.telepon || "-"}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <i className="ri-mail-line text-secondary"></i>
-                  <span>disnaker@kaltim.go.id</span>
+                  <span>{instansi.email || "-"}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <i className="ri-map-pin-line text-secondary"></i>
-                  <span>Jl. Merdeka No. 123, kaltim</span>
+                  <span>{instansi.alamat || "-"}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <i className="ri-time-line text-secondary"></i>
-                  <span>Senin - Jumat, 08.00 - 16.00 WIB</span>
-                </div>
+                {instansi.jam_layanan ? (
+                  <div className="flex items-center gap-3">
+                    <i className="ri-time-line text-secondary"></i>
+                    <span>{instansi.jam_layanan}</span>
+                  </div>
+                ) : null}
               </div>
               <div className="flex gap-4 mt-6">
-                {["facebook", "instagram", "youtube"].map((social) => (
-                  <a key={social} href="#" className="w-10 h-10 bg-gray-100 hover:bg-secondary text-gray-600 hover:text-white rounded-lg flex items-center justify-center transition-colors">
-                    <i className={`ri-${social}-line`}></i>
+                {instansi.facebook ? (
+                  <a href={instansi.facebook} className="w-10 h-10 bg-gray-100 hover:bg-secondary text-gray-600 hover:text-white rounded-lg flex items-center justify-center transition-colors" target="_blank" rel="noopener noreferrer">
+                    <i className="ri-facebook-line"></i>
                   </a>
-                ))}
+                ) : null}
+                {instansi.instagram ? (
+                  <a href={instansi.instagram} className="w-10 h-10 bg-gray-100 hover:bg-secondary text-gray-600 hover:text-white rounded-lg flex items-center justify-center transition-colors" target="_blank" rel="noopener noreferrer">
+                    <i className="ri-instagram-line"></i>
+                  </a>
+                ) : null}
+                {instansi.youtube ? (
+                  <a href={instansi.youtube} className="w-10 h-10 bg-gray-100 hover:bg-secondary text-gray-600 hover:text-white rounded-lg flex items-center justify-center transition-colors" target="_blank" rel="noopener noreferrer">
+                    <i className="ri-youtube-line"></i>
+                  </a>
+                ) : null}
               </div>
             </div>
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">

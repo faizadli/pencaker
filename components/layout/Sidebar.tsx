@@ -97,6 +97,11 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
       if (i.path === "/dashboard/lowongan") return permissionCodes.includes("lowongan.read") && (role !== "company" || companyApproved);
       if (i.path === "/dashboard/pencaker") return permissionCodes.includes("pencaker.read");
       if (i.path === "/dashboard/users") return permissionCodes.includes("users.read");
+      if (i.path === "/dashboard/konten") return permissionCodes.includes("konten.read");
+      if (i.path === "/dashboard/pengaturan") return permissionCodes.includes("pengaturan.read");
+      if (i.path === "/dashboard/pelatihan") return permissionCodes.includes("pelatihan.read");
+      if (i.path === "/dashboard/pengaduan") return permissionCodes.includes("pengaduan.read");
+      if (i.path === "/dashboard/laporan") return permissionCodes.includes("laporan.read");
       if (i.path === "/dashboard/ak1") return permissionCodes.includes("ak1.read");
       if (i.path === "/dashboard/akses") return permissionCodes.includes("akses.read");
       if (i.path === "/dashboard/lamaran") return role === "candidate";

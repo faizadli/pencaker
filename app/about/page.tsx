@@ -1,53 +1,55 @@
 "use client";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { getAboutContent, getPublicSiteSettings } from "../../services/site";
 
 export default function AboutPage() {
-  const teamMembers = [
+  const [teamMembers, setTeamMembers] = useState<Array<{ id: string; name: string; position: string; role: string; image: string }>>([
     {
-      id: 1,
+      id: "1",
       name: "Drs. H. Ahmad Syarifuloh, M.Si.",
       position: "Kepala Dinas",
       role: "Memimpin dan mengkoordinasikan seluruh kegiatan Dinas Ketenagakerjaan Kabupaten Paser",
       image: "https://picsum.photos/200/200?random=1",
     },
     {
-      id: 2,
+      id: "2",
       name: "Dra. Siti Maryam, M.M.",
       position: "Sekretaris",
       role: "Mengelola administrasi dan mendukung operasional tim manajemen",
       image: "https://picsum.photos/200/200?random=2",
     },
     {
-      id: 3,
+      id: "3",
       name: "Ir. Bambang Setiawan, M.T.",
       position: "Kepala Bidang Penempatan Tenaga Kerja",
       role: "Mengawasi program penempatan dan penyaluran tenaga kerja lokal maupun luar negeri",
       image: "https://picsum.photos/200/200?random=3",
     },
     {
-      id: 4,
+      id: "4",
       name: "Drs. Muhammad Rizki, M.Pd.",
       position: "Kepala Bidang Pelatihan Kerja",
       role: "Mengelola program pelatihan dan sertifikasi untuk meningkatkan kompetensi tenaga kerja",
       image: "https://picsum.photos/200/200?random=4",
     },
     {
-      id: 5,
+      id: "5",
       name: "Hj. Linda Sari, S.H., M.H.",
       position: "Kepala Bidang Hubungan Industrial",
       role: "Menangani masalah dan kerjasama antara pengusaha, pekerja, dan pemerintah",
       image: "https://picsum.photos/200/200?random=5",
     },
     {
-      id: 6,
+      id: "6",
       name: "Drs. Andi Wijaya, M.Si.",
       position: "Kepala Bidang Pengawasan Ketenagakerjaan",
       role: "Mengawasi pelaksanaan norma-norma ketenagakerjaan di perusahaan",
       image: "https://picsum.photos/200/200?random=6",
     },
-  ];
+  ]);
 
-  const achievements = [
+  const [achievements] = useState<Array<{ value: string; label: string; sublabel: string; bgColor: string }>>([
     {
       value: "2.500+",
       label: "Peserta Pelatihan",
@@ -72,9 +74,9 @@ export default function AboutPage() {
       sublabel: "Kerjasama Aktif",
       bgColor: "bg-orange-50",
     },
-  ];
+  ]);
 
-  const statistics = [
+  const [statistics] = useState<Array<{ icon: string; title?: string; value: string; label?: string; sublabel: string }>>([
     {
       icon: "ri-group-line",
       value: "278.482",
@@ -117,23 +119,66 @@ export default function AboutPage() {
       label: "PDRB",
       sublabel: "Tahun 2020",
     },
-  ];
+  ]);
 
-  const focusAreas = [
+  const [focusAreas, setFocusAreas] = useState<string[]>([
     "Perlindungan dan Sertifikasi Kompetensi",
     "Peningkatan Tenaga Kerja yang Tepat",
     "Kemitraan Pembangunan",
     "Optimalisasi Peran",
     "Advokasi Industri yang Harmonis",
-  ];
+  ]);
 
-  const missionPoints = [
+  const [missionPoints, setMissionPoints] = useState<string[]>([
     "Meningkatkan kualitas dan kompetensi tenaga kerja melalui pelatihan berkelanjutan",
     "Mewujudkan kesetaraan kerja dan perlindungan tenaga kerja yang adil",
     "Mengembangkan hubungan industrial yang harmonis antara pekerja dan pengusaha",
     "Melakukan pembinaan dan pengawasan ketenagakerjaan yang berkualitas",
     "Meningkatkan penyerapan tenaga kerja di berbagai sektor/perusahaan yang profesional",
-  ];
+  ]);
+  const [profileHtml, setProfileHtml] = useState<string>("");
+  const [contact, setContact] = useState<{ alamat: string; telepon: string; email: string; jam_layanan: string; facebook: string; instagram: string; youtube: string }>({ alamat: "", telepon: "", email: "", jam_layanan: "", facebook: "", instagram: "", youtube: "" });
+  type SiteSettingsShape = { instansi_alamat?: string; instansi_telepon?: string; instansi_email?: string; instansi_jam_layanan?: string; instansi_facebook?: string; instansi_instagram?: string; instansi_youtube?: string };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        type SiteContentItem<T> = { id: string; data: T };
+          type AboutContentResponse = {
+            profile: SiteContentItem<{ content_html?: string }>[];
+            focus_areas: SiteContentItem<{ text: string }>[];
+            vision: SiteContentItem<{ text: string }>[];
+            mission_points: SiteContentItem<{ text: string }>[];
+            team: SiteContentItem<{ name: string; position: string; role: string; image: string }>[];
+            // achievements/statistics removed from API; keep dummy
+          };
+          const ac = await getAboutContent() as AboutContentResponse;
+        const prof = Array.isArray(ac.profile) ? ac.profile : [];
+        setProfileHtml(String(prof[0]?.data?.content_html || ""));
+        const fa = Array.isArray(ac.focus_areas) ? ac.focus_areas : [];
+        setFocusAreas(fa.map((x) => String(x.data?.text || "")));
+        const ms = Array.isArray(ac.mission_points) ? ac.mission_points : [];
+        setMissionPoints(ms.map((x) => String(x.data?.text || "")));
+        const tm = Array.isArray(ac.team) ? ac.team : [];
+        setTeamMembers(tm.map((t) => ({ id: String(t.id || Math.random()), name: String(t.data?.name || ""), position: String(t.data?.position || ""), role: String(t.data?.role || ""), image: String(t.data?.image || "https://picsum.photos/200/200") })));
+        // achievements/statistics: leave default dummy
+      } catch {}
+      try {
+        const s = await getPublicSiteSettings();
+        const cfg: SiteSettingsShape = (s as { data?: SiteSettingsShape }).data ?? (s as SiteSettingsShape);
+        setContact({
+          alamat: String(cfg?.instansi_alamat || ""),
+          telepon: String(cfg?.instansi_telepon || ""),
+          email: String(cfg?.instansi_email || ""),
+          jam_layanan: String(cfg?.instansi_jam_layanan || ""),
+          facebook: String(cfg?.instansi_facebook || ""),
+          instagram: String(cfg?.instansi_instagram || ""),
+          youtube: String(cfg?.instansi_youtube || ""),
+        });
+      } catch {}
+    };
+    load();
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
@@ -157,12 +202,18 @@ export default function AboutPage() {
             <div className="lg:col-span-2">
               <h2 className="text-2xl font-bold text-primary mb-4">Profil ADIKARA</h2>
               <div className="space-y-3 text-gray-700 text-sm leading-relaxed">
-                <p>
-                  Dinas Ketenagakerjaan Kabupaten Paser merupakan instansi pemerintah yang bertanggung jawab dalam pengelolaan dan pengembangan ketenagakerjaan di wilayah Kabupaten Paser. Kami berkomitmen untuk meningkatkan kualitas tenaga kerja melalui berbagai program pelatihan, sertifikasi, dan penempatan kerja.
-                </p>
-                <p>
-                  Sejak berdiri tahun 2001, ADIKARA Paser telah berkomitmen dalam pengembangan sumber daya manusia dan mengutamakan kompetisi tenaga kerja lokal untuk membina pembuatan lowongan ekonomi daerah yang berkelanjutan.
-                </p>
+                {profileHtml ? (
+                  <div dangerouslySetInnerHTML={{ __html: profileHtml }} />
+                ) : (
+                  <>
+                    <p>
+                      Dinas Ketenagakerjaan Kabupaten Paser merupakan instansi pemerintah yang bertanggung jawab dalam pengelolaan dan pengembangan ketenagakerjaan di wilayah Kabupaten Paser. Kami berkomitmen untuk meningkatkan kualitas tenaga kerja melalui berbagai program pelatihan, sertifikasi, dan penempatan kerja.
+                    </p>
+                    <p>
+                      Sejak berdiri tahun 2001, ADIKARA Paser telah berkomitmen dalam pengembangan sumber daya manusia dan mengutamakan kompetisi tenaga kerja lokal untuk membina pembuatan lowongan ekonomi daerah yang berkelanjutan.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 
@@ -312,13 +363,7 @@ export default function AboutPage() {
                 <i className="ri-map-pin-line text-white text-2xl"></i>
               </div>
               <h3 className="font-bold text-primary mb-3">Alamat</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Jl. Jenderal Sudirman No. 123
-                <br />
-                Tanah Grogot, Kabupaten Paser
-                <br />
-                Kalimantan Timur
-              </p>
+              <p className="text-gray-600 text-sm leading-relaxed">{contact.alamat || "-"}</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
@@ -326,11 +371,9 @@ export default function AboutPage() {
               </div>
               <h3 className="font-bold text-primary mb-3">Telepon</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
-                (0543) 21010
+                {contact.telepon || "-"}
                 <br />
-                Senin - Jumat
-                <br />
-                08.00 - 16.00 WITA
+                {contact.jam_layanan || ""}
               </p>
             </div>
             <div className="text-center">
@@ -338,13 +381,26 @@ export default function AboutPage() {
                 <i className="ri-mail-line text-white text-2xl"></i>
               </div>
               <h3 className="font-bold text-primary mb-3">Email & Media</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                disnaker@paserkab.go.id
-                <br />
-                @disnakerPaser
-                <br />
-                /disnakerpaser
-              </p>
+              <div className="text-gray-600 text-sm leading-relaxed">
+                <p>{contact.email || "-"}</p>
+                <div className="flex items-center justify-center gap-3 mt-2">
+                  {contact.facebook ? (
+                    <a href={contact.facebook} className="text-primary hover:text-[var(--color-primary-dark)]" target="_blank" rel="noopener noreferrer">
+                      <i className="ri-facebook-line"></i>
+                    </a>
+                  ) : null}
+                  {contact.instagram ? (
+                    <a href={contact.instagram} className="text-primary hover:text-[var(--color-primary-dark)]" target="_blank" rel="noopener noreferrer">
+                      <i className="ri-instagram-line"></i>
+                    </a>
+                  ) : null}
+                  {contact.youtube ? (
+                    <a href={contact.youtube} className="text-primary hover:text-[var(--color-primary-dark)]" target="_blank" rel="noopener noreferrer">
+                      <i className="ri-youtube-line"></i>
+                    </a>
+                  ) : null}
+                </div>
+              </div>
             </div>
           </div>
         </div>

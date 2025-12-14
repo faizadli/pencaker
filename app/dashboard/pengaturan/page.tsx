@@ -2,66 +2,247 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Input, Textarea, SearchableSelect } from "../../../components/ui/field";
-import { presignUpload, upsertAk1Template, listAk1Templates, upsertAk1Layout, getAk1Layout } from "../../../services/ak1";
+import { presignUpload, upsertAk1Template, listAk1Templates, upsertAk1Layout, getAk1Layout, presignDownload } from "../../../services/ak1";
+import { getSiteSettings, upsertSiteSettings } from "../../../services/site";
+import { presignDisnakerProfileUpload } from "../../../services/profile";
 import type { Ak1Template } from "../../../services/ak1";
 import Card from "../../../components/ui/Card";
+import { useToast } from "../../../components/ui/Toast";
 
 export default function PengaturanPage() {
-  type Instansi = { nama: string; alamat: string; telepon: string; email: string; website: string; logo: string };
+  type Instansi = { nama: string; alamat: string; telepon: string; email: string; website: string; logo: string; jamLayanan: string; facebook: string; instagram: string; youtube: string };
   type Banner = { judul: string; subjudul: string; ctaText: string; ctaLink: string; backgroundImage: string };
   type Maintenance = { aktif: boolean; pesan: string; jadwal: string };
   type MasterData = { kecamatan: string[]; pendidikan: string[]; keahlian: string[] };
 
   const [instansi, setInstansi] = useState<Instansi>({
-    nama: "ADIKARA — Area Regional Paser",
-    alamat: "Jl. Merdeka No. 123, Bandung",
-    telepon: "(022) 12345678",
-    email: "disnaker@bandungkota.go.id",
-    website: "https://disnaker.bandungkota.go.id",
-    logo: "https://via.placeholder.com/120/355485/FFFFFF?text=ADIKARA",
+    nama: "",
+    alamat: "",
+    telepon: "",
+    email: "",
+    website: "",
+    logo: "",
+    jamLayanan: "",
+    facebook: "",
+    instagram: "",
+    youtube: "",
   });
   const [banner, setBanner] = useState<Banner>({
-    judul: "Layanan Penempatan Tenaga Kerja Gratis",
-    subjudul: "Daftar pencari kerja, cari lowongan, dan ikuti pelatihan secara online.",
-    ctaText: "Mulai Sekarang",
-    ctaLink: "/daftar",
-    backgroundImage: "https://source.unsplash.com/random/1200x400/?city,office",
+    judul: "",
+    subjudul: "",
+    ctaText: "",
+    ctaLink: "",
+    backgroundImage: "",
   });
-  const [maintenance, setMaintenance] = useState<Maintenance>({ aktif: false, pesan: "Sistem sedang dalam pemeliharaan. Akan kembali normal pada pukul 05.00 WIB.", jadwal: "15 Nov 2025, 02.00 - 05.00 WIB" });
-  const [kategoriPekerjaan, setKategoriPekerjaan] = useState<string[]>(["Teknologi Informasi", "Manufaktur", "Pertanian", "Jasa", "Konstruksi", "Perdagangan", "Pendidikan", "Kesehatan"]);
-  const [masterData, setMasterData] = useState<MasterData>({ kecamatan: ["Bandung Wetan", "Cicendo", "Sukajadi", "Bojongloa", "Arcamanik"], pendidikan: ["SD", "SMP", "SMA/SMK", "D1", "D2", "D3", "S1", "S2", "S3"], keahlian: ["Microsoft Office", "Desain Grafis", "Pemrograman", "Teknisi", "Bahasa Inggris", "Akuntansi"] });
+  const [maintenance, setMaintenance] = useState<Maintenance>({ aktif: false, pesan: "", jadwal: "" });
+  const [kategoriPekerjaan, setKategoriPekerjaan] = useState<string[]>([]);
+  const [masterData, setMasterData] = useState<MasterData>({ kecamatan: [], pendidikan: [], keahlian: [] });
 
   const [editField, setEditField] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState("");
   const [activeSection, setActiveSection] = useState<"instansi" | "banner" | "maintenance" | "kategori" | "master" | "ak1layout">("instansi");
+  const [logoUrl, setLogoUrl] = useState<string>("");
+  const [bannerUrl, setBannerUrl] = useState<string>("");
+  const { showSuccess, showError } = useToast();
+  const [settingsSubmitted, setSettingsSubmitted] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        type SiteSettingsShape = {
+          instansi_nama?: string;
+          instansi_alamat?: string;
+          instansi_telepon?: string;
+          instansi_email?: string;
+          instansi_website?: string;
+          instansi_logo?: string;
+          instansi_jam_layanan?: string;
+          instansi_facebook?: string;
+          instansi_instagram?: string;
+          instansi_youtube?: string;
+          banner_judul?: string;
+          banner_subjudul?: string;
+          banner_cta_text?: string;
+          banner_cta_link?: string;
+          banner_background_image?: string;
+          maintenance_aktif?: number;
+          maintenance_pesan?: string;
+          maintenance_jadwal?: string;
+          kategori_pekerjaan?: string;
+          master_kecamatan?: string;
+          master_pendidikan?: string;
+          master_keahlian?: string;
+        };
+        const s = await getSiteSettings();
+        const cfg: SiteSettingsShape = (s as { data?: SiteSettingsShape }).data ?? (s as SiteSettingsShape);
+        setInstansi({
+          nama: String(cfg?.instansi_nama || ""),
+          alamat: String(cfg?.instansi_alamat || ""),
+          telepon: String(cfg?.instansi_telepon || ""),
+          email: String(cfg?.instansi_email || ""),
+          website: String(cfg?.instansi_website || ""),
+          logo: String(cfg?.instansi_logo || ""),
+          jamLayanan: String(cfg?.instansi_jam_layanan || ""),
+          facebook: String(cfg?.instansi_facebook || ""),
+          instagram: String(cfg?.instansi_instagram || ""),
+          youtube: String(cfg?.instansi_youtube || ""),
+        });
+        setBanner({
+          judul: String(cfg?.banner_judul || ""),
+          subjudul: String(cfg?.banner_subjudul || ""),
+          ctaText: String(cfg?.banner_cta_text || ""),
+          ctaLink: String(cfg?.banner_cta_link || ""),
+          backgroundImage: String(cfg?.banner_background_image || ""),
+        });
+        setMaintenance({
+          aktif: Number(cfg?.maintenance_aktif || 0) === 1,
+          pesan: String(cfg?.maintenance_pesan || ""),
+          jadwal: String(cfg?.maintenance_jadwal || ""),
+        });
+        setKategoriPekerjaan(String(cfg?.kategori_pekerjaan || "").split(",").map((x) => x.trim()).filter(Boolean));
+        setMasterData({
+          kecamatan: String(cfg?.master_kecamatan || "").split(",").map((x) => x.trim()).filter(Boolean),
+          pendidikan: String(cfg?.master_pendidikan || "").split(",").map((x) => x.trim()).filter(Boolean),
+          keahlian: String(cfg?.master_keahlian || "").split(",").map((x) => x.trim()).filter(Boolean),
+        });
+        try {
+          const logoVal = String(cfg?.instansi_logo || "");
+          const bgVal = String(cfg?.banner_background_image || "");
+          if (logoVal) {
+            if (logoVal.startsWith("http")) setLogoUrl(logoVal);
+            else { try { const d = await presignDownload(logoVal); setLogoUrl(d.url); } catch {} }
+          }
+          if (bgVal) {
+            if (bgVal.startsWith("http")) setBannerUrl(bgVal);
+            else { try { const d = await presignDownload(bgVal); setBannerUrl(d.url); } catch {} }
+          }
+        } catch {}
+      } catch {}
+    })();
+  }, []);
 
   const handleEdit = (field: string, value: string | string[]) => {
     setEditField(field);
     setTempValue(Array.isArray(value) ? value.join(", ") : value);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editField) return;
+    setSettingsSubmitted(true);
+    const nextInstansi = { ...instansi };
+    const nextBanner = { ...banner };
+    const nextMaintenance = { ...maintenance };
+    let nextKategori = [...kategoriPekerjaan];
+    let nextMaster = { ...masterData };
+
     if (editField === "logo" || editField === "backgroundImage") {
-      if (tempValue) {
-        if (editField.startsWith("instansi.")) setInstansi({ ...instansi, logo: tempValue });
-        else setBanner({ ...banner, backgroundImage: tempValue });
-      }
+      if (!tempValue) { showError("File belum diunggah"); setSettingsSubmitted(false); return; }
+      if (editField === "logo") nextInstansi.logo = tempValue;
+      else nextBanner.backgroundImage = tempValue;
     } else if (["kecamatan", "pendidikan", "keahlian"].includes(editField)) {
       const items = tempValue.split(",").map((i) => i.trim()).filter(Boolean);
       const key = editField as keyof MasterData;
-      setMasterData({ ...masterData, [key]: items });
+      nextMaster = { ...nextMaster, [key]: items } as MasterData;
     } else if (editField === "kategoriPekerjaan") {
       const items = tempValue.split(",").map((i) => i.trim()).filter(Boolean);
-      setKategoriPekerjaan(items);
+      if (items.length === 0) { showError("Kategori tidak boleh kosong"); setSettingsSubmitted(false); return; }
+      nextKategori = items;
     } else {
       const keys = editField.split(".");
-      if (keys[0] === "instansi") setInstansi({ ...instansi, [keys[1] as keyof Instansi]: tempValue } as Instansi);
-      else if (keys[0] === "banner") setBanner({ ...banner, [keys[1] as keyof Banner]: tempValue } as Banner);
-      else if (keys[0] === "maintenance") setMaintenance({ ...maintenance, [keys[1] as keyof Maintenance]: tempValue } as Maintenance);
+      const val = String(tempValue || "").trim();
+      if (keys[0] === "instansi") {
+        const required = ["nama", "alamat", "telepon", "email", "website", "jamLayanan"];
+        if (required.includes(keys[1]) && !val) { showError("Field instansi wajib diisi"); setSettingsSubmitted(false); return; }
+        const k = keys[1] as keyof Instansi;
+        nextInstansi[k] = tempValue as Instansi[typeof k];
+      } else if (keys[0] === "banner") {
+        const required = ["judul", "ctaText", "ctaLink"];
+        if (required.includes(keys[1]) && !val) { showError("Field banner wajib diisi"); setSettingsSubmitted(false); return; }
+        const k = keys[1] as keyof Banner;
+        nextBanner[k] = tempValue as Banner[typeof k];
+      } else if (keys[0] === "maintenance") {
+        if (nextMaintenance.aktif && !val) { showError("Field maintenance wajib diisi"); setSettingsSubmitted(false); return; }
+        const k = keys[1];
+        if (k === "pesan" || k === "jadwal") {
+          (nextMaintenance as { pesan: string; jadwal: string })[k] = tempValue;
+        }
+      }
     }
+
+    setInstansi(nextInstansi);
+    setBanner(nextBanner);
+    setMaintenance(nextMaintenance);
+    setKategoriPekerjaan(nextKategori);
+    setMasterData(nextMaster);
     setEditField(null);
     setTempValue("");
+
+    try {
+      const payload = {
+        instansi_nama: nextInstansi.nama,
+        instansi_alamat: nextInstansi.alamat,
+        instansi_telepon: nextInstansi.telepon,
+        instansi_email: nextInstansi.email,
+        instansi_website: nextInstansi.website,
+        instansi_logo: nextInstansi.logo,
+        instansi_jam_layanan: nextInstansi.jamLayanan,
+        instansi_facebook: nextInstansi.facebook,
+        instansi_instagram: nextInstansi.instagram,
+        instansi_youtube: nextInstansi.youtube,
+        banner_judul: nextBanner.judul,
+        banner_subjudul: nextBanner.subjudul,
+        banner_cta_text: nextBanner.ctaText,
+        banner_cta_link: nextBanner.ctaLink,
+        banner_background_image: nextBanner.backgroundImage,
+        maintenance_aktif: nextMaintenance.aktif ? 1 : 0,
+        maintenance_pesan: nextMaintenance.pesan,
+        maintenance_jadwal: nextMaintenance.jadwal,
+        kategori_pekerjaan: nextKategori.join(","),
+        master_kecamatan: nextMaster.kecamatan.join(","),
+        master_pendidikan: nextMaster.pendidikan.join(","),
+        master_keahlian: nextMaster.keahlian.join(","),
+      } as Record<string, unknown>;
+      await upsertSiteSettings(payload);
+      showSuccess("Pengaturan disimpan");
+    } catch {}
+    setSettingsSubmitted(false);
+  };
+
+  const uploadAndSet = async (field: "logo" | "backgroundImage", file: File) => {
+    try {
+      const folder = field === "logo" ? "site-settings/logo" : "site-settings/banner";
+      try {
+        const { url } = await presignDisnakerProfileUpload(folder, file.name, file.type);
+        await fetch(url, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
+        const objectUrl = url.includes("?") ? url.slice(0, url.indexOf("?")) : url;
+        setTempValue(objectUrl);
+        if (field === "logo") setLogoUrl(objectUrl);
+        else setBannerUrl(objectUrl);
+        return;
+      } catch {}
+      const buf = await file.arrayBuffer();
+      let base64 = "";
+      const bytes = new Uint8Array(buf);
+      let binary = "";
+      for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+      base64 = btoa(binary);
+      const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+      const token = typeof window !== "undefined" ? (localStorage.getItem("token") || "") : "";
+      const resp = await fetch(`${BASE}/api/uploads/base64`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ folder, filename: file.name, content_type: file.type, file_content_base64: base64 }),
+      });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      const out = (data?.data || {}) as { url?: string; key?: string };
+      const finalUrl = String(out.url || "");
+      setTempValue(finalUrl);
+      if (finalUrl) {
+        if (field === "logo") setLogoUrl(finalUrl);
+        else setBannerUrl(finalUrl);
+      }
+    } catch {}
   };
 
   const sections = [
@@ -97,10 +278,10 @@ export default function PengaturanPage() {
             <Card header={<h3 className="text-lg font-semibold text-primary">Profil Instansi</h3>}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  {(["nama", "alamat", "telepon", "email", "website"] as (keyof Instansi)[]).map((key) => (
+                  {(["nama", "alamat", "telepon", "email", "website", "jamLayanan", "facebook", "instagram", "youtube"] as (keyof Instansi)[]).map((key) => (
                     <div key={key}>
                       <div className="flex justify-between items-center mb-2">
-                        <label className="text-sm font-medium text-gray-500 capitalize">{key === "nama" && "Nama Instansi"}{key === "alamat" && "Alamat"}{key === "telepon" && "Telepon"}{key === "email" && "Email"}{key === "website" && "Website"}</label>
+                        <label className="text-sm font-medium text-gray-500 capitalize">{key === "nama" && "Nama Instansi"}{key === "alamat" && "Alamat"}{key === "telepon" && "Telepon"}{key === "email" && "Email"}{key === "website" && "Website"}{key === "jamLayanan" && "Jam Layanan"}{key === "facebook" && "Link Facebook"}{key === "instagram" && "Link Instagram"}{key === "youtube" && "Link YouTube"}</label>
                         {editField !== `instansi.${key}` && (
                           <button onClick={() => handleEdit(`instansi.${key}`, instansi[key])} className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
                             <i className="ri-edit-line"></i>
@@ -110,7 +291,11 @@ export default function PengaturanPage() {
                       </div>
                       {editField === `instansi.${key}` ? (
                         <div className="space-y-2">
-                          <Input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)} className="w-full" />
+                          {key === "alamat" ? (
+                            <Textarea rows={4} value={tempValue} onChange={(e) => setTempValue(e.target.value)} className="w-full" required submitted={settingsSubmitted} />
+                          ) : (
+                            <Input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)} className="w-full" required submitted={settingsSubmitted} />
+                          )}
                           <div className="flex gap-2">
                             <button onClick={handleSave} className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                               <i className="ri-check-line"></i>
@@ -137,7 +322,7 @@ export default function PengaturanPage() {
                   </div>
                   {editField === "logo" ? (
                     <div className="space-y-4">
-                      <Input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)} placeholder="URL gambar logo" className="w-full" />
+                    <Input type="file" accept="image/*" label="Unggah Logo" submitted={settingsSubmitted} onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) uploadAndSet("logo", f); }} />
                       <div className="flex gap-2">
                         <button onClick={handleSave} className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                           <i className="ri-check-line"></i>
@@ -148,7 +333,13 @@ export default function PengaturanPage() {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center">
-                      <Image src={instansi.logo} alt="Logo Instansi" width={128} height={128} className="w-32 h-32 object-contain border border-gray-200 rounded-lg" />
+                      {logoUrl ? (
+                        <Image src={logoUrl} alt="Logo Instansi" width={128} height={128} className="w-32 h-32 object-contain border border-gray-200 rounded-lg" />
+                      ) : (
+                        <div className="w-32 h-32 flex items-center justify-center border border-gray-200 rounded-lg bg-gray-50 text-gray-400">
+                          <i className="ri-image-line text-2xl"></i>
+                        </div>
+                      )}
                       <p className="text-xs text-gray-500 mt-2">Preview Logo</p>
                     </div>
                   )}
@@ -160,10 +351,10 @@ export default function PengaturanPage() {
           {activeSection === "banner" && (
             <Card header={<h3 className="text-lg font-semibold text-primary">Banner Website</h3>}>
               <div className="mb-6">
-                <div className="w-full h-48 bg-cover bg-center rounded-lg mb-4 border border-gray-200" style={{ backgroundImage: `url(${banner.backgroundImage})` }}></div>
+                <div className="w-full h-48 bg-cover bg-center rounded-lg mb-4 border border-gray-200" style={{ backgroundImage: `url(${bannerUrl || banner.backgroundImage})` }}></div>
                 {editField === "backgroundImage" ? (
                   <div className="space-y-3">
-                    <Input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)} placeholder="Masukkan URL gambar banner" className="w-full" />
+                    <Input type="file" accept="image/*" label="Unggah Background" submitted={settingsSubmitted} onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) uploadAndSet("backgroundImage", f); }} />
                     <div className="flex gap-2">
                       <button onClick={handleSave} className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                         <i className="ri-check-line"></i>
@@ -193,7 +384,11 @@ export default function PengaturanPage() {
                     </div>
                     {editField === `banner.${key}` ? (
                       <div className="space-y-2">
-                        <Input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)} className="w-full" />
+                        {key === "subjudul" ? (
+                          <Textarea rows={4} value={tempValue} onChange={(e) => setTempValue(e.target.value)} className="w-full" required submitted={settingsSubmitted} />
+                        ) : (
+                          <Input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)} className="w-full" required submitted={settingsSubmitted} />
+                        )}
                         <div className="flex gap-2">
                           <button onClick={handleSave} className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                             <i className="ri-check-line"></i>
@@ -238,7 +433,11 @@ export default function PengaturanPage() {
                       </div>
                       {editField === `maintenance.${key}` ? (
                         <div className="space-y-2">
-                          <Input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)} className="w-full" />
+                          {key === "pesan" ? (
+                            <Textarea rows={4} value={tempValue} onChange={(e) => setTempValue(e.target.value)} className="w-full" required submitted={settingsSubmitted} />
+                          ) : (
+                            <Input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)} className="w-full" required submitted={settingsSubmitted} />
+                          )}
                           <div className="flex gap-2">
                             <button onClick={handleSave} className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                               <i className="ri-check-line"></i>
@@ -273,7 +472,7 @@ export default function PengaturanPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <Textarea value={tempValue} onChange={(e) => setTempValue(e.target.value)} rows={4} placeholder="Masukkan kategori pekerjaan, pisahkan dengan koma" className="w-full" />
+                  <Textarea value={tempValue} onChange={(e) => setTempValue(e.target.value)} rows={4} placeholder="Masukkan kategori pekerjaan, pisahkan dengan koma" className="w-full" required submitted={settingsSubmitted} />
                   <div className="flex gap-2">
                     <button onClick={handleSave} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                       <i className="ri-check-line"></i>
@@ -304,7 +503,7 @@ export default function PengaturanPage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <Textarea value={tempValue} onChange={(e) => setTempValue(e.target.value)} rows={4} placeholder={`Masukkan daftar ${key}, pisahkan dengan koma`} className="w-full" />
+                      <Textarea value={tempValue} onChange={(e) => setTempValue(e.target.value)} rows={4} placeholder={`Masukkan daftar ${key}, pisahkan dengan koma`} className="w-full" required submitted={settingsSubmitted} />
                       <div className="flex gap-2">
                         <button onClick={handleSave} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                           <i className="ri-check-line"></i>
@@ -352,6 +551,7 @@ function Ak1LayoutEditor() {
   
   const [resizeEdge, setResizeEdge] = useState<'l' | 'r' | 't' | 'b' | 'tl' | 'tr' | 'bl' | 'br' | null>(null);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const { showSuccess, showError } = useToast();
 
   useEffect(() => {
     const recalc = () => {
@@ -823,6 +1023,9 @@ function Ak1LayoutEditor() {
                   front_height: FRONT.h, 
                   coordinates: normalized 
                 }); 
+                showSuccess("Layout disimpan");
+              } catch {
+                showError("Gagal menyimpan layout");
               } finally { 
                 setSaving(false); 
               } 
@@ -836,6 +1039,7 @@ function Ak1LayoutEditor() {
               const data = await getAk1Layout(templateName || undefined); 
               const ly = (data?.data) || null; 
               if (ly) setFields(ly.coordinates || fields); 
+              showSuccess("Layout dimuat");
             }} 
             className="px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary text-sm font-medium"
           >
@@ -860,6 +1064,8 @@ function UploadTemplateInline({ onDone }: { onDone: () => void }) {
   const [name, setName] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const { showSuccess, showError } = useToast();
   
   return (
     <div className="space-y-4">
@@ -869,6 +1075,8 @@ function UploadTemplateInline({ onDone }: { onDone: () => void }) {
           value={name} 
           onChange={(e) => setName((e.target as HTMLInputElement).value)} 
           placeholder="Masukkan nama template"
+          required
+          submitted={submitted}
         />
         <Input 
           type="file" 
@@ -876,6 +1084,7 @@ function UploadTemplateInline({ onDone }: { onDone: () => void }) {
           hint="Format: SVG, PNG, atau JPG" 
           accept=".svg,.png,.jpg,.jpeg" 
           onChange={(e) => setFile((e.target as HTMLInputElement).files?.[0] || null)} 
+          submitted={submitted}
         />
       </div>
       
@@ -885,7 +1094,9 @@ function UploadTemplateInline({ onDone }: { onDone: () => void }) {
           className={`px-6 py-3 rounded-lg text-sm font-medium ${saving || !name || !file ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-primary text-white hover:bg-[var(--color-primary-dark)]'}`}
           onClick={async () => {
             try {
+              setSubmitted(true);
               setSaving(true);
+              if (!name || !file) { showError("Nama dan file wajib diisi"); return; }
               if (file) {
                 const pre = await presignUpload("ak1_templates", `${name}_front_${Date.now()}${file.name.substring(file.name.lastIndexOf('.'))}`, file.type || "application/octet-stream");
                 const put = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": file.type || "application/octet-stream" }, body: file });
@@ -896,6 +1107,9 @@ function UploadTemplateInline({ onDone }: { onDone: () => void }) {
               setName("");
               setFile(null);
               onDone();
+              showSuccess("Template ditambahkan");
+            } catch {
+              showError("Gagal menambahkan template");
             } finally {
               setSaving(false);
             }

@@ -1,60 +1,327 @@
 "use client";
-import { useState } from "react";
-import { Input, Textarea, SearchableSelect } from "../../../components/ui/field";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { Input, Textarea, SearchableSelect, TextEditor } from "../../../components/ui/field";
+import Modal from "../../../components/ui/Modal";
+import { presignUpload, presignDownload } from "../../../services/ak1";
 import StatCard from "../../../components/ui/StatCard";
 import Pagination from "../../../components/ui/Pagination";
 import Card from "../../../components/ui/Card";
-import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
+import { listSiteContents, upsertSiteContent, deleteSiteContent } from "../../../services/site";
+import { useToast } from "../../../components/ui/Toast";
+type SiteContentItem<T> = { id: string; data: T; status: "PUBLISHED" | "DRAFT" };
+type ListResponse<T> = { data: SiteContentItem<T>[] };
 
 export default function KontenPage() {
-  type Berita = { id: number; judul: string; tanggal: string; kategori: string; isi: string; status: "Publikasi" | "Draft" };
-  type Agenda = { id: number; acara: string; tanggal: string; waktu: string; lokasi: string; deskripsi: string; peserta: string; status: "Aktif" | "Pendaftaran" };
-  type Dokumen = { id: number; nama: string; tipe: string; ukuran: string; link: string; uploadDate: string };
-  type Faq = { id: number; pertanyaan: string; jawaban: string; kategori: string; status: "Publikasi" | "Draft" };
+  type Tab = "berita" | "faq" | "partners" | "testimonials" | "about";
+  type AboutSection = "about_profile" | "about_focus" | "about_mission" | "about_team";
+  type PubStatus = "Publikasi" | "Draft";
+  type Berita = { id: string; judul: string; tanggal: string; kategori: string; isi: string; status: "Publikasi" | "Draft" };
+  type Faq = { id: string; pertanyaan: string; jawaban: string; kategori: string; status: "Publikasi" | "Draft" };
+  type Partner = { id: string; name: string; logo: string; status: "Publikasi" | "Draft" };
+  type Testimonial = { id: string; nama: string; pekerjaan: string; perusahaan: string; testimoni: string; foto: string; status: "Publikasi" | "Draft" };
+  type AboutFocus = { id: string; text: string; status: "Publikasi" | "Draft" };
+  type AboutMission = { id: string; text: string; status: "Publikasi" | "Draft" };
+  type TeamMember = { id: string; name: string; position: string; role: string; image: string; status: "Publikasi" | "Draft" };
+  
 
-  const [activeTab, setActiveTab] = useState<"berita" | "agenda" | "dokumen" | "faq">("berita");
-  const [editId, setEditId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("berita");
+  const [contentModal, setContentModal] = useState<{ section: "partners" | "testimonials" | "news" | "faqs"; id?: string } | null>(null);
+  const [partnerLogoPreview, setPartnerLogoPreview] = useState<string>("");
+  const [testimonialPhotoPreview, setTestimonialPhotoPreview] = useState<string>("");
+  const [teamImagePreview, setTeamImagePreview] = useState<string>("");
+  const [aboutModal, setAboutModal] = useState<{ section: "profile" | "focus_areas" | "mission_points" | "team"; id?: string } | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [editBerita, setEditBerita] = useState<Berita | null>(null);
-  const [editAgenda, setEditAgenda] = useState<Agenda | null>(null);
   const [editFaq, setEditFaq] = useState<Faq | null>(null);
+  const [editPartner, setEditPartner] = useState<Partner | null>(null);
+  const [editTestimonial, setEditTestimonial] = useState<Testimonial | null>(null);
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const [profileHtml, setProfileHtml] = useState<string>("");
+  const [editFocus, setEditFocus] = useState<AboutFocus | null>(null);
+  const [editMission, setEditMission] = useState<AboutMission | null>(null);
+  const [editTeam, setEditTeam] = useState<TeamMember | null>(null);
+  
 
-  const [beritaList, setBeritaList] = useState<Berita[]>([
-    { id: 1, judul: "Pelatihan Digital Skill Gratis untuk Pencari Kerja", tanggal: "10 Nov 2025", kategori: "Pelatihan", isi: "...", status: "Publikasi" },
-    { id: 2, judul: "Job Fair Kota Bandung 2025 Dibuka untuk Umum", tanggal: "8 Nov 2025", kategori: "Event", isi: "...", status: "Publikasi" },
-    { id: 3, judul: "Panduan Permohonan Kartu Kuning Online", tanggal: "5 Nov 2025", kategori: "Informasi", isi: "...", status: "Draft" },
-  ]);
-  const [agendaList, setAgendaList] = useState<Agenda[]>([
-    { id: 1, acara: "Job Fair Kota Bandung", tanggal: "15 - 17 Nov 2025", waktu: "08.00 - 16.00", lokasi: "Gedung Sabilulungan", deskripsi: "...", peserta: "Terbuka untuk umum", status: "Aktif" },
-    { id: 2, acara: "Pelatihan Web Development Batch 4", tanggal: "20 - 25 Nov 2025", waktu: "09.00 - 15.00", lokasi: "BLK Kota Bandung", deskripsi: "...", peserta: "Pendaftaran dibuka hingga 18 Nov", status: "Pendaftaran" },
-  ]);
-  const [dokumenList] = useState<Dokumen[]>([
-    { id: 1, nama: "Formulir Permohonan Kartu Kuning (AK1)", tipe: "PDF", ukuran: "125 KB", link: "#", uploadDate: "10 Nov 2025" },
-    { id: 2, nama: "Surat Rekomendasi Penempatan", tipe: "DOCX", ukuran: "45 KB", link: "#", uploadDate: "8 Nov 2025" },
-    { id: 3, nama: "Laporan Tahunan Disnaker 2024", tipe: "PDF", ukuran: "2.3 MB", link: "#", uploadDate: "5 Jan 2025" },
-  ]);
-  const [faqList, setFaqList] = useState<Faq[]>([
-    { id: 1, pertanyaan: "Bagaimana cara mendaftar Kartu Kuning?", jawaban: "...", kategori: "Administrasi", status: "Publikasi" },
-    { id: 2, pertanyaan: "Apakah pelatihan dikenakan biaya?", jawaban: "...", kategori: "Pelatihan", status: "Publikasi" },
-    { id: 3, pertanyaan: "Bagaimana prosedur pengaduan PHK?", jawaban: "...", kategori: "Hukum", status: "Draft" },
-  ]);
+  const [beritaList, setBeritaList] = useState<Berita[]>([]);
+  const [faqList, setFaqList] = useState<Faq[]>([]);
+  const [partnersList, setPartnersList] = useState<Partner[]>([]);
+  const [testimonialsList, setTestimonialsList] = useState<Testimonial[]>([]);
+  const [focusList, setFocusList] = useState<AboutFocus[]>([]);
+  const [missionsList, setMissionsList] = useState<AboutMission[]>([]);
+  const [teamList, setTeamList] = useState<TeamMember[]>([]);
+  const { showSuccess, showError } = useToast();
+  const [contentSubmitted, setContentSubmitted] = useState(false);
+  
+  
 
-  const handleEdit = (section: "berita" | "agenda" | "faq", item: Berita | Agenda | Faq) => {
-    setEditId(`${section}-${item.id}`);
-    if (section === "berita") setEditBerita(item as Berita);
-    if (section === "agenda") setEditAgenda(item as Agenda);
-    if (section === "faq") setEditFaq(item as Faq);
+  useEffect(() => {
+    (async () => {
+      try {
+        const beritaResp = await listSiteContents({ page: "home", section: "news", published: false }) as ListResponse<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string }>;
+        const rows = Array.isArray(beritaResp.data) ? beritaResp.data : [];
+        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string }>) => ({ id: String(r.id), judul: String(r.data?.judul || r.data?.title || ""), tanggal: String(r.data?.tanggal || ""), kategori: String(r.data?.kategori || "Informasi"), isi: String(r.data?.isi || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"] })));
+      } catch {}
+      try {
+        const faqResp = await listSiteContents({ page: "home", section: "faqs", published: false }) as ListResponse<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string; kategori?: string }>;
+        const rows = Array.isArray(faqResp.data) ? faqResp.data : [];
+        setFaqList(rows.map((r: SiteContentItem<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string; kategori?: string }>) => ({ id: String(r.id), pertanyaan: String(r.data?.pertanyaan || r.data?.q || ""), jawaban: String(r.data?.jawaban || r.data?.a || ""), kategori: String(r.data?.kategori || "Umum"), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Faq["status"] })));
+      } catch {}
+      try {
+        const partnersResp = await listSiteContents({ page: "home", section: "partners", published: false }) as ListResponse<{ name?: string; logo?: string }>;
+        const rows = Array.isArray(partnersResp.data) ? partnersResp.data : [];
+        setPartnersList(rows.map((r: SiteContentItem<{ name?: string; logo?: string }>) => ({ id: String(r.id), name: String(r.data?.name || ""), logo: String(r.data?.logo || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Partner["status"] })));
+      } catch {}
+      try {
+        const testiResp = await listSiteContents({ page: "home", section: "testimonials", published: false }) as ListResponse<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>;
+        const rows = Array.isArray(testiResp.data) ? testiResp.data : [];
+        setTestimonialsList(rows.map((r: SiteContentItem<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>) => ({ id: String(r.id), nama: String(r.data?.nama || ""), pekerjaan: String(r.data?.pekerjaan || ""), perusahaan: String(r.data?.perusahaan || ""), testimoni: String(r.data?.testimoni || ""), foto: String(r.data?.foto || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Testimonial["status"] })));
+      } catch {}
+      // home stats removed
+      try {
+        const profileResp = await listSiteContents({ page: "about", section: "profile", published: false }) as ListResponse<{ content_html?: string }>;
+        const rows = Array.isArray(profileResp.data) ? profileResp.data : [];
+        const first = rows[0];
+        setProfileId(first ? String(first.id) : null);
+        setProfileHtml(first ? String(first.data?.content_html || "") : "");
+      } catch {}
+      try {
+        const focusResp = await listSiteContents({ page: "about", section: "focus_areas", published: false }) as ListResponse<{ text?: string }>;
+        const rows = Array.isArray(focusResp.data) ? focusResp.data : [];
+        setFocusList(rows.map((r: SiteContentItem<{ text?: string }>) => ({ id: String(r.id), text: String(r.data?.text || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as AboutFocus["status"] })));
+      } catch {}
+      try {
+        const missionResp = await listSiteContents({ page: "about", section: "mission_points", published: false }) as ListResponse<{ text?: string }>;
+        const rows = Array.isArray(missionResp.data) ? missionResp.data : [];
+        setMissionsList(rows.map((r: SiteContentItem<{ text?: string }>) => ({ id: String(r.id), text: String(r.data?.text || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as AboutMission["status"] })));
+      } catch {}
+      try {
+        const teamResp = await listSiteContents({ page: "about", section: "team", published: false }) as ListResponse<{ name?: string; position?: string; role?: string; image?: string }>;
+        const rows = Array.isArray(teamResp.data) ? teamResp.data : [];
+        setTeamList(rows.map((r: SiteContentItem<{ name?: string; position?: string; role?: string; image?: string }>) => ({ id: String(r.id), name: String(r.data?.name || ""), position: String(r.data?.position || ""), role: String(r.data?.role || ""), image: String(r.data?.image || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as TeamMember["status"] })));
+      } catch {}
+      // achievements/statistics removed
+    })();
+  }, []);
+
+  const handleAdd = (section: Tab) => {
+    if (section === "berita") {
+      const item: Berita = { id: "__new__", judul: "", tanggal: "", kategori: "Informasi", isi: "", status: "Draft" };
+      setEditBerita(item);
+      setContentModal({ section: "news", id: "__new__" });
+    } else if (section === "faq") {
+      const item: Faq = { id: "__new__", pertanyaan: "", jawaban: "", kategori: "Umum", status: "Draft" };
+      setEditFaq(item);
+      setContentModal({ section: "faqs", id: "__new__" });
+    } else if (section === "partners") {
+      const item: Partner = { id: "__new__", name: "", logo: "", status: "Draft" };
+      setEditPartner(item);
+      setPartnerLogoPreview("");
+      setContentModal({ section: "partners", id: "__new__" });
+    } else if (section === "testimonials") {
+      const item: Testimonial = { id: "__new__", nama: "", pekerjaan: "", perusahaan: "", testimoni: "", foto: "", status: "Draft" };
+      setEditTestimonial(item);
+      setTestimonialPhotoPreview("");
+      setContentModal({ section: "testimonials", id: "__new__" });
+    }
   };
 
-  const handleSave = (section: "berita" | "agenda" | "faq", id: number) => {
-    if (section === "berita" && editBerita) setBeritaList(beritaList.map((item) => (item.id === id ? { ...editBerita } : item)));
-    else if (section === "agenda" && editAgenda) setAgendaList(agendaList.map((item) => (item.id === id ? { ...editAgenda } : item)));
-    else if (section === "faq" && editFaq) setFaqList(faqList.map((item) => (item.id === id ? { ...editFaq } : item)));
-    setEditId(null);
+  const handleEdit = (
+    section: Tab,
+    item: Berita | Faq | Partner | Testimonial
+  ) => {
+    if (section === "berita") { setEditBerita(item as Berita); setContentModal({ section: "news", id: String(item.id) }); }
+    if (section === "faq") { setEditFaq(item as Faq); setContentModal({ section: "faqs", id: String(item.id) }); }
+    if (section === "partners") { setEditPartner(item as Partner); setContentModal({ section: "partners", id: String(item.id) }); try { const v = String((item as Partner).logo || ""); if (v) presignDownload(v).then((d) => setPartnerLogoPreview(d.url)).catch(() => {}); } catch {} }
+    if (section === "testimonials") { setEditTestimonial(item as Testimonial); setContentModal({ section: "testimonials", id: String(item.id) }); try { const v = String((item as Testimonial).foto || ""); if (v) presignDownload(v).then((d) => setTestimonialPhotoPreview(d.url)).catch(() => {}); } catch {} }
+    
+  };
+
+  const handleSave = async (section: Tab | AboutSection, id: string) => {
+    const upsertId = id === "__new__" ? undefined : id;
+    if (section === "berita" && editBerita) {
+      setContentSubmitted(true);
+      const htmlEmpty = String(editBerita.isi || "").replace(/<[^>]*>/g, "").trim() === "";
+      if (!String(editBerita.judul || "").trim() || htmlEmpty) { showError("Lengkapi judul dan isi berita"); return; }
+      setBeritaList(beritaList.map((item) => (item.id === id ? { ...editBerita } : item)));
+      try {
+        await upsertSiteContent({ id: upsertId, page: "home", section: "news", data: { judul: editBerita.judul, tanggal: editBerita.tanggal, kategori: editBerita.kategori, isi: editBerita.isi }, status: editBerita.status === "Publikasi" ? "PUBLISHED" : "DRAFT", sort_order: 0 });
+        const beritaResp = await listSiteContents({ page: "home", section: "news", published: false }) as ListResponse<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string }>;
+        const rows = Array.isArray(beritaResp.data) ? beritaResp.data : [];
+        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string }>) => ({ id: String(r.id), judul: String(r.data?.judul || r.data?.title || ""), tanggal: String(r.data?.tanggal || ""), kategori: String(r.data?.kategori || "Informasi"), isi: String(r.data?.isi || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"] })));
+        showSuccess("Berita disimpan");
+      } catch {}
+    } else if (section === "faq" && editFaq) {
+      setContentSubmitted(true);
+      if (!String(editFaq.pertanyaan || "").trim() || !String(editFaq.jawaban || "").trim()) { showError("Lengkapi pertanyaan dan jawaban"); return; }
+      setFaqList(faqList.map((item) => (item.id === id ? { ...editFaq } : item)));
+      try {
+        await upsertSiteContent({ id: upsertId, page: "home", section: "faqs", data: { pertanyaan: editFaq.pertanyaan, jawaban: editFaq.jawaban, kategori: editFaq.kategori }, status: editFaq.status === "Publikasi" ? "PUBLISHED" : "DRAFT", sort_order: 0 });
+        const faqResp = await listSiteContents({ page: "home", section: "faqs", published: false }) as ListResponse<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string; kategori?: string }>;
+        const rows = Array.isArray(faqResp.data) ? faqResp.data : [];
+        setFaqList(rows.map((r: SiteContentItem<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string; kategori?: string }>) => ({ id: String(r.id), pertanyaan: String(r.data?.pertanyaan || r.data?.q || ""), jawaban: String(r.data?.jawaban || r.data?.a || ""), kategori: String(r.data?.kategori || "Umum"), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Faq["status"] })));
+        showSuccess("FAQ disimpan");
+      } catch {}
+    } else if (section === "partners" && editPartner) {
+      setContentSubmitted(true);
+      if (!String(editPartner.name || "").trim()) { showError("Nama mitra wajib diisi"); return; }
+      try {
+        await upsertSiteContent({ id: upsertId, page: "home", section: "partners", data: { name: editPartner.name, logo: editPartner.logo }, status: editPartner.status === "Publikasi" ? "PUBLISHED" : "DRAFT", sort_order: 0 });
+        const partnersResp = await listSiteContents({ page: "home", section: "partners", published: false }) as ListResponse<{ name?: string; logo?: string }>;
+        const rows = Array.isArray(partnersResp.data) ? partnersResp.data : [];
+        setPartnersList(rows.map((r: SiteContentItem<{ name?: string; logo?: string }>) => ({ id: String(r.id), name: String(r.data?.name || ""), logo: String(r.data?.logo || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Partner["status"] })));
+        showSuccess("Mitra disimpan");
+      } catch {}
+      setContentModal(null);
+    } else if (section === "testimonials" && editTestimonial) {
+      setContentSubmitted(true);
+      if (!String(editTestimonial.nama || "").trim() || !String(editTestimonial.testimoni || "").trim()) { showError("Nama dan testimoni wajib diisi"); return; }
+      try {
+        await upsertSiteContent({ id: upsertId, page: "home", section: "testimonials", data: { nama: editTestimonial.nama, pekerjaan: editTestimonial.pekerjaan, perusahaan: editTestimonial.perusahaan, testimoni: editTestimonial.testimoni, foto: editTestimonial.foto }, status: editTestimonial.status === "Publikasi" ? "PUBLISHED" : "DRAFT", sort_order: 0 });
+        const testiResp = await listSiteContents({ page: "home", section: "testimonials", published: false }) as ListResponse<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>;
+        const rows = Array.isArray(testiResp.data) ? testiResp.data : [];
+        setTestimonialsList(rows.map((r: SiteContentItem<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>) => ({ id: String(r.id), nama: String(r.data?.nama || ""), pekerjaan: String(r.data?.pekerjaan || ""), perusahaan: String(r.data?.perusahaan || ""), testimoni: String(r.data?.testimoni || ""), foto: String(r.data?.foto || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Testimonial["status"] })));
+        showSuccess("Testimoni disimpan");
+      } catch {}
+      setContentModal(null);
+    } else if (section === "about_profile") {
+      const htmlEmpty = String(profileHtml || "").replace(/<[^>]*>/g, "").trim() === "";
+      if (htmlEmpty) { showError("Profil instansi wajib diisi"); return; }
+      try {
+        await upsertSiteContent({ id: profileId || upsertId, page: "about", section: "profile", data: { content_html: profileHtml }, status: "PUBLISHED", sort_order: 0 });
+        const profileResp = await listSiteContents({ page: "about", section: "profile", published: false }) as ListResponse<{ content_html?: string }>;
+        const rows = Array.isArray(profileResp.data) ? profileResp.data : [];
+        const first = rows[0];
+        setProfileId(first ? String(first.id) : null);
+        setProfileHtml(first ? String(first.data?.content_html || "") : "");
+        showSuccess("Profil disimpan");
+      } catch {}
+    } else if (section === "about_focus" && editFocus) {
+      if (!String(editFocus.text || "").trim()) { showError("Teks fokus wajib diisi"); return; }
+      setFocusList(focusList.map((item) => (item.id === id ? { ...editFocus } : item)));
+      try {
+        await upsertSiteContent({ id: upsertId, page: "about", section: "focus_areas", data: { text: editFocus.text }, status: editFocus.status === "Publikasi" ? "PUBLISHED" : "DRAFT", sort_order: 0 });
+        const focusResp = await listSiteContents({ page: "about", section: "focus_areas", published: false }) as ListResponse<{ text?: string }>;
+        const rows = Array.isArray(focusResp.data) ? focusResp.data : [];
+        setFocusList(rows.map((r: SiteContentItem<{ text?: string }>) => ({ id: String(r.id), text: String(r.data?.text || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as AboutFocus["status"] })));
+        showSuccess("Fokus disimpan");
+      } catch {}
+    } else if (section === "about_mission" && editMission) {
+      if (!String(editMission.text || "").trim()) { showError("Teks misi wajib diisi"); return; }
+      setMissionsList(missionsList.map((item) => (item.id === id ? { ...editMission } : item)));
+      try {
+        await upsertSiteContent({ id: upsertId, page: "about", section: "mission_points", data: { text: editMission.text }, status: editMission.status === "Publikasi" ? "PUBLISHED" : "DRAFT", sort_order: 0 });
+        const missionResp = await listSiteContents({ page: "about", section: "mission_points", published: false }) as ListResponse<{ text?: string }>;
+        const rows = Array.isArray(missionResp.data) ? missionResp.data : [];
+        setMissionsList(rows.map((r: SiteContentItem<{ text?: string }>) => ({ id: String(r.id), text: String(r.data?.text || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as AboutMission["status"] })));
+        showSuccess("Misi disimpan");
+      } catch {}
+    } else if (section === "about_team" && editTeam) {
+      if (!String(editTeam.name || "").trim() || !String(editTeam.position || "").trim() || !String(editTeam.role || "").trim()) { showError("Lengkapi nama, posisi, dan peran"); return; }
+      setTeamList(teamList.map((item) => (item.id === id ? { ...editTeam } : item)));
+      try {
+        await upsertSiteContent({ id: upsertId, page: "about", section: "team", data: { name: editTeam.name, position: editTeam.position, role: editTeam.role, image: editTeam.image }, status: editTeam.status === "Publikasi" ? "PUBLISHED" : "DRAFT", sort_order: 0 });
+        const teamResp = await listSiteContents({ page: "about", section: "team", published: false }) as ListResponse<{ name?: string; position?: string; role?: string; image?: string }>;
+        const rows = Array.isArray(teamResp.data) ? teamResp.data : [];
+        setTeamList(rows.map((r: SiteContentItem<{ name?: string; position?: string; role?: string; image?: string }>) => ({ id: String(r.id), name: String(r.data?.name || ""), position: String(r.data?.position || ""), role: String(r.data?.role || ""), image: String(r.data?.image || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as TeamMember["status"] })));
+        showSuccess("Anggota tim disimpan");
+      } catch {}
+    }
+    
     setEditBerita(null);
-    setEditAgenda(null);
     setEditFaq(null);
+    setEditPartner(null);
+    setEditTestimonial(null);
+    
+    setEditFocus(null);
+    setEditMission(null);
+    setEditTeam(null);
+    setContentSubmitted(false);
+    
+    
+  };
+
+  const uploadContentImage = async (section: "partners" | "testimonials" | "team", file: File) => {
+    try {
+      const folder = section === "partners" ? "site-contents/partners" : section === "testimonials" ? "site-contents/testimonials" : "site-contents/team";
+      const { url, key } = await presignUpload(folder, file.name, file.type);
+      await fetch(url, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
+      if (section === "partners" && editPartner) {
+        setEditPartner({ ...editPartner, logo: key });
+        try { const d = await presignDownload(key); setPartnerLogoPreview(d.url); } catch {}
+      }
+      if (section === "testimonials" && editTestimonial) {
+        setEditTestimonial({ ...editTestimonial, foto: key });
+        try { const d = await presignDownload(key); setTestimonialPhotoPreview(d.url); } catch {}
+      }
+      if (section === "team" && editTeam) {
+        setEditTeam({ ...editTeam, image: key });
+        try { const d = await presignDownload(key); setTeamImagePreview(d.url); } catch {}
+      }
+    } catch {}
+  };
+
+  const handleDelete = async (section: Tab | AboutSection, id: string) => {
+    try {
+      const secMap: Record<Tab | AboutSection, string> = {
+        berita: "news",
+        faq: "faqs",
+        partners: "partners",
+        testimonials: "testimonials",
+        about: "",
+        about_profile: "profile",
+        about_focus: "focus_areas",
+        about_mission: "mission_points",
+        about_team: "team",
+      };
+      const sec = secMap[section];
+      await deleteSiteContent(id, sec);
+      showSuccess("Data dihapus");
+    } catch {}
+    if (section === "berita") {
+      try {
+        const beritaResp = await listSiteContents({ page: "home", section: "news", published: false }) as ListResponse<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string }>;
+        const rows = Array.isArray(beritaResp.data) ? beritaResp.data : [];
+        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string }>) => ({ id: String(r.id), judul: String(r.data?.judul || r.data?.title || ""), tanggal: String(r.data?.tanggal || ""), kategori: String(r.data?.kategori || "Informasi"), isi: String(r.data?.isi || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"] })));
+      } catch {}
+    } else if (section === "faq") {
+      try {
+        const faqResp = await listSiteContents({ page: "home", section: "faqs", published: false }) as ListResponse<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string; kategori?: string }>;
+        const rows = Array.isArray(faqResp.data) ? faqResp.data : [];
+        setFaqList(rows.map((r: SiteContentItem<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string; kategori?: string }>) => ({ id: String(r.id), pertanyaan: String(r.data?.pertanyaan || r.data?.q || ""), jawaban: String(r.data?.jawaban || r.data?.a || ""), kategori: String(r.data?.kategori || "Umum"), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Faq["status"] })));
+      } catch {}
+    } else if (section === "partners") {
+      try {
+        const partnersResp = await listSiteContents({ page: "home", section: "partners", published: false }) as ListResponse<{ name?: string; logo?: string }>;
+        const rows = Array.isArray(partnersResp.data) ? partnersResp.data : [];
+        setPartnersList(rows.map((r: SiteContentItem<{ name?: string; logo?: string }>) => ({ id: String(r.id), name: String(r.data?.name || ""), logo: String(r.data?.logo || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Partner["status"] })));
+      } catch {}
+    } else if (section === "testimonials") {
+      try {
+        const testiResp = await listSiteContents({ page: "home", section: "testimonials", published: false }) as ListResponse<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>;
+        const rows = Array.isArray(testiResp.data) ? testiResp.data : [];
+        setTestimonialsList(rows.map((r: SiteContentItem<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>) => ({ id: String(r.id), nama: String(r.data?.nama || ""), pekerjaan: String(r.data?.pekerjaan || ""), perusahaan: String(r.data?.perusahaan || ""), testimoni: String(r.data?.testimoni || ""), foto: String(r.data?.foto || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Testimonial["status"] })));
+      } catch {}
+    } else if (section === "about_focus") {
+      try {
+        const focusResp = await listSiteContents({ page: "about", section: "focus_areas", published: false }) as ListResponse<{ text?: string }>;
+        const rows = Array.isArray(focusResp.data) ? focusResp.data : [];
+        setFocusList(rows.map((r: SiteContentItem<{ text?: string }>) => ({ id: String(r.id), text: String(r.data?.text || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as AboutFocus["status"] })));
+      } catch {}
+    } else if (section === "about_mission") {
+      try {
+        const missionResp = await listSiteContents({ page: "about", section: "mission_points", published: false }) as ListResponse<{ text?: string }>;
+        const rows = Array.isArray(missionResp.data) ? missionResp.data : [];
+        setMissionsList(rows.map((r: SiteContentItem<{ text?: string }>) => ({ id: String(r.id), text: String(r.data?.text || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as AboutMission["status"] })));
+      } catch {}
+    } else if (section === "about_team") {
+      try {
+        const teamResp = await listSiteContents({ page: "about", section: "team", published: false }) as ListResponse<{ name?: string; position?: string; role?: string; image?: string }>;
+        const rows = Array.isArray(teamResp.data) ? teamResp.data : [];
+        setTeamList(rows.map((r: SiteContentItem<{ name?: string; position?: string; role?: string; image?: string }>) => ({ id: String(r.id), name: String(r.data?.name || ""), position: String(r.data?.position || ""), role: String(r.data?.role || ""), image: String(r.data?.image || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as TeamMember["status"] })));
+      } catch {}
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -94,25 +361,26 @@ export default function KontenPage() {
         <div className="px-4 sm:px-6">
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-primary">Manajemen Konten Website</h1>
-            <p className="text-sm text-gray-500 mt-1">Kelola berita, agenda, dokumen publik, dan FAQ</p>
+            <p className="text-sm text-gray-500 mt-1">Kelola berita, FAQ, mitra, testimoni, dan halaman tentang</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard title="Total Berita" value={beritaList.length} change="+3" color="var(--color-secondary)" icon="ri-article-line" />
-            <StatCard title="Agenda Aktif" value={agendaList.filter((a) => a.status === "Aktif" || a.status === "Pendaftaran").length} change="2 berjalan" color="var(--color-primary)" icon="ri-calendar-line" />
-            <StatCard title="Dokumen Publik" value={dokumenList.length} change="+1" color="var(--color-foreground)" icon="ri-file-text-line" />
-            <StatCard title="FAQ Terbit" value={faqList.filter((f) => f.status === "Publikasi").length} change="Aktif" color="var(--color-danger)" icon="ri-question-line" />
+            <StatCard title="Total Berita" value={beritaList.length} change="" color="var(--color-secondary)" icon="ri-article-line" />
+            <StatCard title="FAQ Terbit" value={faqList.filter((f) => f.status === "Publikasi").length} change="" color="var(--color-danger)" icon="ri-question-line" />
+            <StatCard title="Mitra" value={partnersList.length} change="" color="var(--color-primary)" icon="ri-team-line" />
+            
           </div>
 
           <Card className="mb-6" >
             <div className="flex overflow-x-auto">
-                {[ 
-                { id: "berita", label: "📰 Berita & Artikel", icon: "ri-article-line" },
-                { id: "agenda", label: "📅 Agenda & Event", icon: "ri-calendar-line" },
-                { id: "dokumen", label: "📎 Dokumen Publik", icon: "ri-file-text-line" },
+              {[
+                { id: "berita", label: "📰 Berita", icon: "ri-article-line" },
                 { id: "faq", label: "❓ FAQ", icon: "ri-question-line" },
+                { id: "partners", label: "🤝 Mitra", icon: "ri-team-line" },
+                { id: "testimonials", label: "💬 Testimoni", icon: "ri-chat-1-line" },
+                { id: "about", label: "📄 Tentang", icon: "ri-file-user-line" },
               ].map((tab) => (
-                <button key={tab.id} onClick={() => { setActiveTab(tab.id as "berita" | "agenda" | "dokumen" | "faq"); setPage(1); }} className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id ? "text-primary border-b-2 border-primary" : "text-gray-500 hover:text-primary"}`}>
+                <button key={tab.id} onClick={() => { setActiveTab(tab.id as typeof activeTab); setPage(1); }} className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id ? "text-primary border-b-2 border-primary" : "text-gray-500 hover:text-primary"}`}>
                   <i className={tab.icon}></i>
                   {tab.label}
                 </button>
@@ -124,179 +392,296 @@ export default function KontenPage() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-primary">Berita & Artikel</h2>
-                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2">
+                <button onClick={() => handleAdd("berita")} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2">
                   <i className="ri-add-line"></i>
-                  Tambah Baru
+                  Tambah Berita
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {beritaList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((berita) => (
                 <div key={berita.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-                  {editId === `berita-${berita.id}` ? (
-                    <div className="p-6 space-y-4">
-                      <Input type="text" value={editBerita?.judul || ""} onChange={(e) => setEditBerita({ ...(editBerita as Berita), judul: e.target.value })} placeholder="Judul berita" className="w-full" />
-                      <Textarea value={editBerita?.isi || ""} onChange={(e) => setEditBerita({ ...(editBerita as Berita), isi: e.target.value })} rows={3} placeholder="Isi berita" className="w-full" />
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <SearchableSelect
-                          value={editBerita?.status || "Draft"}
-                          onChange={(v) => setEditBerita({ ...(editBerita as Berita), status: v as Berita["status"] })}
-                          className="rounded-lg"
-                          options={[
-                            { value: "Draft", label: "Draft" },
-                            { value: "Publikasi", label: "Publikasi" },
-                          ]}
-                        />
-                        <div className="flex gap-2">
-                          <button onClick={() => handleSave("berita", berita.id)} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
-                            <i className="ri-check-line"></i>
-                            Simpan
-                          </button>
-                          <button onClick={() => setEditId(null)} className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition">Batal</button>
+                  <div className="p-6">
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                      <div className="flex-1">
+                        <h3 className="font-bold text-primary text-lg">{berita.judul}</h3>
+                        <div className="flex items-center gap-3 mt-2 flex-wrap">
+                          <span className="text-sm text-gray-500">{berita.tanggal}</span>
+                          <span className={`px-2 py-1 text-xs rounded-full ${getKategoriColor(berita.kategori)}`}>{berita.kategori}</span>
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(berita.status)}`}>{berita.status}</span>
                         </div>
+                        <p className="text-sm text-gray-500 mt-3">{berita.isi}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleEdit("berita", berita)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1">
+                          <i className="ri-edit-line"></i>
+                          Edit
+                        </button>
+                        <button onClick={() => handleDelete("berita", berita.id)} className="px-3 py-2 text-sm border border-red-200 text-red-700 rounded-lg hover:bg-red-50 transition flex items-center gap-1"><i className="ri-delete-bin-line"></i>Hapus</button>
                       </div>
                     </div>
-                  ) : (
-                    <div className="p-6">
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-                        <div className="flex-1">
-                          <h3 className="font-bold text-primary text-lg">{berita.judul}</h3>
-                          <div className="flex items-center gap-3 mt-2 flex-wrap">
-                            <span className="text-sm text-gray-500">{berita.tanggal}</span>
-                            <span className={`px-2 py-1 text-xs rounded-full ${getKategoriColor(berita.kategori)}`}>{berita.kategori}</span>
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(berita.status)}`}>{berita.status}</span>
-                          </div>
-                          <p className="text-sm text-gray-500 mt-3">{berita.isi}</p>
-                        </div>
-                        <div className="flex gap-2">
-                      <button onClick={() => handleEdit("berita", berita)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1">
-                            <i className="ri-edit-line"></i>
-                            Edit
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
               ))}
               </div>
             </div>
           )}
 
-          {activeTab === "agenda" && (
+          {activeTab === "about" && (
+            <div className="space-y-6">
+              <Card header={<h2 className="text-lg font-semibold text-primary">Profil</h2>}>
+                <div className="flex justify-between items-center mb-4">
+                  <p className="text-sm text-gray-600">Konten HTML profil instansi</p>
+                  <button onClick={() => setAboutModal({ section: "profile", id: profileId || undefined })} className="px-3 py-2 bg-primary text-white rounded-lg text-sm"><i className="ri-edit-line"></i> Edit</button>
+                </div>
+                <div className="prose max-w-none text-sm" dangerouslySetInnerHTML={{ __html: profileHtml || "" }} />
+              </Card>
+
+              <Card header={<h2 className="text-lg font-semibold text-primary">Fokus</h2>}>
+                <div className="flex justify-between items-center mb-4">
+                  <p className="text-sm text-gray-600">Daftar area fokus</p>
+                  <button onClick={() => { const item: AboutFocus = { id: "__new__", text: "", status: "Draft" }; setEditFocus(item); setAboutModal({ section: "focus_areas", id: "__new__" }); }} className="px-3 py-2 bg-primary text-white rounded-lg text-sm"><i className="ri-add-line"></i> Tambah</button>
+                </div>
+                <div className="space-y-3">
+                  {focusList.map((f) => (
+                    <div key={f.id} className="p-4 bg-white rounded-lg border flex justify-between items-start gap-3">
+                      <div>
+                        <p className="text-sm text-primary">{f.text}</p>
+                        <span className={`mt-2 inline-block px-2 py-1 rounded ${getStatusColor(f.status)}`}>{f.status}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => { setEditFocus(f); setAboutModal({ section: "focus_areas", id: f.id }); }} className="px-2 py-1 border rounded text-sm"><i className="ri-edit-line"></i></button>
+                        <button onClick={() => handleDelete("about_focus", f.id)} className="px-2 py-1 border rounded text-sm text-red-700"><i className="ri-delete-bin-line"></i></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              <Card header={<h2 className="text-lg font-semibold text-primary">Misi</h2>}>
+                <div className="flex justify-between items-center mb-4">
+                  <p className="text-sm text-gray-600">Poin misi</p>
+                  <button onClick={() => { const item: AboutMission = { id: "__new__", text: "", status: "Draft" }; setEditMission(item); setAboutModal({ section: "mission_points", id: "__new__" }); }} className="px-3 py-2 bg-primary text-white rounded-lg text-sm"><i className="ri-add-line"></i> Tambah</button>
+                </div>
+                <div className="space-y-3">
+                  {missionsList.map((m) => (
+                    <div key={m.id} className="p-4 bg-white rounded-lg border flex justify-between items-start gap-3">
+                      <div>
+                        <p className="text-sm text-primary">{m.text}</p>
+                        <span className={`mt-2 inline-block px-2 py-1 rounded ${getStatusColor(m.status)}`}>{m.status}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => { setEditMission(m); setAboutModal({ section: "mission_points", id: m.id }); }} className="px-2 py-1 border rounded text-sm"><i className="ri-edit-line"></i></button>
+                        <button onClick={() => handleDelete("about_mission", m.id)} className="px-2 py-1 border rounded text-sm text-red-700"><i className="ri-delete-bin-line"></i></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              <Card header={<h2 className="text-lg font-semibold text-primary">Tim</h2>}>
+                <div className="flex justify-between items-center mb-4">
+                  <p className="text-sm text-gray-600">Anggota tim</p>
+                  <button onClick={() => { const item: TeamMember = { id: "__new__", name: "", position: "", role: "", image: "", status: "Draft" }; setEditTeam(item); setAboutModal({ section: "team", id: "__new__" }); }} className="px-3 py-2 bg-primary text-white rounded-lg text-sm"><i className="ri-add-line"></i> Tambah</button>
+                </div>
+                <div className="space-y-3">
+                  {teamList.map((t) => (
+                    <div key={t.id} className="p-4 bg-white rounded-lg border flex justify-between items-start gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-primary">{t.name}</p>
+                        <p className="text-xs text-gray-600">{t.position} • {t.role}</p>
+                        <span className={`mt-2 inline-block px-2 py-1 rounded ${getStatusColor(t.status)}`}>{t.status}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => { setEditTeam(t); setAboutModal({ section: "team", id: t.id }); }} className="px-2 py-1 border rounded text-sm"><i className="ri-edit-line"></i></button>
+                        <button onClick={() => handleDelete("about_team", t.id)} className="px-2 py-1 border rounded text-sm text-red-700"><i className="ri-delete-bin-line"></i></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              
+
+              {aboutModal && (
+                <Modal open={true} size={aboutModal.section === "profile" ? "xl" : "md"} title={`${aboutModal.id === "__new__" ? "Tambah" : "Edit"} Tentang: ${aboutModal.section}`} onClose={() => setAboutModal(null)} actions={
+                  <>
+                    <button onClick={() => {
+                      if (aboutModal.section === "profile") {
+                        handleSave("about_profile", (aboutModal.id || profileId || "__new__"));
+                      } else if (aboutModal.section === "focus_areas" && editFocus) {
+                        handleSave("about_focus", (aboutModal.id || editFocus.id));
+                      } else if (aboutModal.section === "mission_points" && editMission) {
+                        handleSave("about_mission", (aboutModal.id || editMission.id));
+                      } else if (aboutModal.section === "team" && editTeam) {
+                        handleSave("about_team", (aboutModal.id || editTeam.id));
+                      }
+                      setAboutModal(null);
+                    }} className="px-3 py-2 bg-primary text-white rounded-lg"><i className="ri-check-line"></i> Simpan</button>
+                    <button onClick={() => setAboutModal(null)} className="px-3 py-2 border rounded-lg">Batal</button>
+                  </>
+                }>
+                  {aboutModal.section === "profile" && (
+                    <TextEditor value={profileHtml} onChange={(v) => setProfileHtml(v)} placeholder="Tulis profil instansi..." />
+                  )}
+                  {aboutModal.section === "focus_areas" && editFocus && (
+                    <div className="space-y-3">
+                      <Input type="text" value={editFocus.text} onChange={(e) => setEditFocus((prev) => (prev ? { ...prev, text: e.target.value } : prev))} className="w-full" />
+                      <SearchableSelect value={editFocus.status} onChange={(v) => setEditFocus((prev) => (prev ? { ...prev, status: v as PubStatus } : prev))} options={[{ value: "Draft", label: "Draft" }, { value: "Publikasi", label: "Publikasi" }]} />
+                    </div>
+                  )}
+                  {aboutModal.section === "mission_points" && editMission && (
+                    <div className="space-y-3">
+                      <Input type="text" value={editMission.text} onChange={(e) => setEditMission((prev) => (prev ? { ...prev, text: e.target.value } : prev))} className="w-full" />
+                      <SearchableSelect value={editMission.status} onChange={(v) => setEditMission((prev) => (prev ? { ...prev, status: v as PubStatus } : prev))} options={[{ value: "Draft", label: "Draft" }, { value: "Publikasi", label: "Publikasi" }]} />
+                    </div>
+                  )}
+                  {aboutModal.section === "team" && editTeam && (
+                    <div className="space-y-3">
+                      <Input type="text" value={editTeam.name} onChange={(e) => setEditTeam((prev) => (prev ? { ...prev, name: e.target.value } : prev))} className="w-full" />
+                      <Input type="text" value={editTeam.position} onChange={(e) => setEditTeam((prev) => (prev ? { ...prev, position: e.target.value } : prev))} className="w-full" />
+                      <Input type="text" value={editTeam.role} onChange={(e) => setEditTeam((prev) => (prev ? { ...prev, role: e.target.value } : prev))} className="w-full" />
+                      <Input type="file" accept="image/*" label="Foto Anggota" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) uploadContentImage("team", f); }} />
+                      {teamImagePreview && (<Image src={teamImagePreview} alt="Foto Anggota" width={96} height={96} className="w-24 h-24 object-cover border rounded" />)}
+                      <SearchableSelect value={editTeam.status} onChange={(v) => setEditTeam((prev) => (prev ? { ...prev, status: v as PubStatus } : prev))} options={[{ value: "Draft", label: "Draft" }, { value: "Publikasi", label: "Publikasi" }]} />
+                    </div>
+                  )}
+                  
+                </Modal>
+              )}
+            </div>
+          )}
+          
+
+          {activeTab === "partners" && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-primary">Agenda & Event</h2>
-                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-primary">Mitra</h2>
+                <button onClick={() => handleAdd("partners")} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2">
                   <i className="ri-add-line"></i>
-                  Tambah Agenda
+                  Tambah Mitra
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {agendaList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((ag) => (
-                <div key={ag.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-                  {editId === `agenda-${ag.id}` ? (
-                    <div className="p-6 space-y-4">
-                      <Input type="text" value={editAgenda?.acara || ""} onChange={(e) => setEditAgenda({ ...(editAgenda as Agenda), acara: e.target.value })} placeholder="Nama acara" className="w-full" />
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input type="text" value={editAgenda?.tanggal || ""} onChange={(e) => setEditAgenda({ ...(editAgenda as Agenda), tanggal: e.target.value })} placeholder="Tanggal" />
-                        <Input type="text" value={editAgenda?.lokasi || ""} onChange={(e) => setEditAgenda({ ...(editAgenda as Agenda), lokasi: e.target.value })} placeholder="Lokasi" />
-                      </div>
-                      <Textarea value={editAgenda?.deskripsi || ""} onChange={(e) => setEditAgenda({ ...(editAgenda as Agenda), deskripsi: e.target.value })} rows={2} placeholder="Deskripsi acara" className="w-full" />
-                      <div className="flex gap-2">
-                        <button onClick={() => handleSave("agenda", ag.id)} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
-                          <i className="ri-check-line"></i>
-                          Simpan
-                        </button>
-                        <button onClick={() => setEditId(null)} className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition">Batal</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-6">
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-                        <div className="flex-1">
-                          <h3 className="font-bold text-primary text-lg">{ag.acara}</h3>
-                          <div className="flex items-center gap-3 mt-2 flex-wrap">
-                            <span className="text-sm text-gray-500"><i className="ri-calendar-line mr-1"></i>{ag.tanggal}</span>
-                            <span className="text-sm text-gray-500"><i className="ri-time-line mr-1"></i>{ag.waktu}</span>
-                            <span className="text-sm text-gray-500"><i className="ri-map-pin-line mr-1"></i>{ag.lokasi}</span>
+                {partnersList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((p) => (
+                  <div key={p.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                      <div className="p-6">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-primary text-lg">{p.name}</h3>
+                            <div className="flex items-center gap-3 mt-3">
+                              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(p.status)}`}>{p.status}</span>
+                            </div>
+                            <p className="text-xs text-gray-400 mt-2">{p.logo}</p>
                           </div>
-                          <p className="text-sm text-gray-500 mt-3">{ag.deskripsi}</p>
-                          <p className="text-xs text-gray-400 mt-2">{ag.peserta}</p>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ag.status)}`}>{ag.status}</span>
-                          <button onClick={() => handleEdit("agenda", ag)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1">
-                            <i className="ri-edit-line"></i>
-                            Edit
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === "dokumen" && (
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-primary">Dokumen Publik</h2>
-                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2">
-                  <i className="ri-upload-line"></i>
-                  Unggah Dokumen
-                </button>
-              </div>
-
-              <Card className="overflow-hidden">
-                <Table>
-                  <TableHead>
-                    <tr>
-                      <TH>Nama Dokumen</TH>
-                      <TH>Tipe</TH>
-                      <TH>Ukuran</TH>
-                      <TH>Tanggal</TH>
-                      <TH>Aksi</TH>
-                    </tr>
-                  </TableHead>
-                  <TableBody>
-                    {dokumenList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((doc) => (
-                      <TableRow key={doc.id}>
-                        <TD>
-                          <div className="flex items-center gap-3">
-                            <i className={`ri-file-${doc.tipe.toLowerCase()}-line text-lg text-blue-500`}></i>
-                            <span className="font-medium text-primary">{doc.nama}</span>
-                          </div>
-                        </TD>
-                        <TD><span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">{doc.tipe}</span></TD>
-                        <TD className="text-gray-500">{doc.ukuran}</TD>
-                        <TD className="text-gray-500">{doc.uploadDate}</TD>
-                        <TD>
                           <div className="flex gap-2">
-                            <button className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
-                              <i className="ri-download-line"></i>
-                              Unduh
-                            </button>
-                            <button className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1">
-                              <i className="ri-delete-bin-line"></i>
-                              Hapus
-                            </button>
+                            <button onClick={() => handleEdit("partners", p)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1"><i className="ri-edit-line"></i>Edit</button>
+                            <button onClick={() => handleDelete("partners", p.id)} className="px-3 py-2 text-sm border border-red-200 text-red-700 rounded-lg hover:bg-red-50 transition flex items-center gap-1"><i className="ri-delete-bin-line"></i>Hapus</button>
                           </div>
-                        </TD>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
+                        </div>
+                      </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
+
+          {activeTab === "testimonials" && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-primary">Testimoni</h2>
+                <button onClick={() => handleAdd("testimonials")} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2"><i className="ri-add-line"></i>Tambah Testimoni</button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {testimonialsList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((t) => (
+                  <div key={t.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                      <div className="p-6">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-primary text-lg">{t.nama}</h3>
+                            <p className="text-sm text-gray-500 mt-1">{t.pekerjaan} • {t.perusahaan}</p>
+                            <p className="text-sm text-gray-500 mt-3">{t.testimoni}</p>
+                            <div className="flex items-center gap-3 mt-3">
+                              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(t.status)}`}>{t.status}</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => handleEdit("testimonials", t)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1"><i className="ri-edit-line"></i>Edit</button>
+                            <button onClick={() => handleDelete("testimonials", t.id)} className="px-3 py-2 text-sm border border-red-200 text-red-700 rounded-lg hover:bg-red-50 transition flex items-center gap-1"><i className="ri-delete-bin-line"></i>Hapus</button>
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {contentModal && (
+            <Modal open={true} size={contentModal.section === "news" ? "xl" : "md"} title={`${contentModal.id === "__new__" ? "Tambah" : "Edit"} ${contentModal.section === "partners" ? "Mitra" : contentModal.section === "testimonials" ? "Testimoni" : contentModal.section === "news" ? "Berita" : "FAQ"}`} onClose={() => setContentModal(null)} actions={
+              <>
+                <button onClick={() => {
+                  setContentSubmitted(true);
+                  if (contentModal.section === "partners" && editPartner) {
+                    handleSave("partners", (contentModal.id || editPartner.id));
+                  } else if (contentModal.section === "testimonials" && editTestimonial) {
+                    handleSave("testimonials", (contentModal.id || editTestimonial.id));
+                  } else if (contentModal.section === "news" && editBerita) {
+                    handleSave("berita", (contentModal.id || editBerita.id));
+                  } else if (contentModal.section === "faqs" && editFaq) {
+                    handleSave("faq", (contentModal.id || editFaq.id));
+                  }
+                  setContentModal(null);
+                }} className="px-3 py-2 bg-primary text-white rounded-lg"><i className="ri-check-line"></i> Simpan</button>
+                <button onClick={() => setContentModal(null)} className="px-3 py-2 border rounded-lg">Batal</button>
+              </>
+            }>
+              {contentModal.section === "partners" && editPartner && (
+                <div className="space-y-3">
+                  <Input type="text" value={editPartner.name} onChange={(e) => setEditPartner({ ...editPartner, name: e.target.value })} placeholder="Nama mitra" className="w-full" required submitted={contentSubmitted} />
+                  <Input type="file" accept="image/*" label="Logo Mitra" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) uploadContentImage("partners", f); }} />
+                  {partnerLogoPreview && (<Image src={partnerLogoPreview} alt="Logo Mitra" width={96} height={96} className="w-24 h-24 object-contain border rounded" />)}
+                  <SearchableSelect value={editPartner.status} onChange={(v) => setEditPartner({ ...editPartner, status: v as Partner["status"] })} options={[{ value: "Draft", label: "Draft" }, { value: "Publikasi", label: "Publikasi" }]} required submitted={contentSubmitted} />
+                </div>
+              )}
+              {contentModal.section === "testimonials" && editTestimonial && (
+                <div className="space-y-3">
+                  <Input type="text" value={editTestimonial.nama} onChange={(e) => setEditTestimonial({ ...editTestimonial, nama: e.target.value })} placeholder="Nama" className="w-full" required submitted={contentSubmitted} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <Input type="text" value={editTestimonial.pekerjaan} onChange={(e) => setEditTestimonial({ ...editTestimonial, pekerjaan: e.target.value })} placeholder="Pekerjaan" />
+                    <Input type="text" value={editTestimonial.perusahaan} onChange={(e) => setEditTestimonial({ ...editTestimonial, perusahaan: e.target.value })} placeholder="Perusahaan" />
+                  </div>
+                  <Textarea value={editTestimonial.testimoni} onChange={(e) => setEditTestimonial({ ...editTestimonial, testimoni: e.target.value })} rows={3} placeholder="Testimoni" className="w-full" required submitted={contentSubmitted} />
+                  <Input type="file" accept="image/*" label="Foto Testimoni" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) uploadContentImage("testimonials", f); }} />
+                  {testimonialPhotoPreview && (<Image src={testimonialPhotoPreview} alt="Foto" width={96} height={96} className="w-24 h-24 object-cover border rounded" />)}
+                  <SearchableSelect value={editTestimonial.status} onChange={(v) => setEditTestimonial({ ...editTestimonial, status: v as Testimonial["status"] })} options={[{ value: "Draft", label: "Draft" }, { value: "Publikasi", label: "Publikasi" }]} required submitted={contentSubmitted} />
+                </div>
+              )}
+              {contentModal.section === "news" && editBerita && (
+                <div className="space-y-3">
+                  <Input type="text" value={editBerita.judul} onChange={(e) => setEditBerita({ ...(editBerita as Berita), judul: e.target.value })} placeholder="Judul berita" className="w-full" required submitted={contentSubmitted} />
+                  <TextEditor value={editBerita.isi} onChange={(v) => setEditBerita({ ...(editBerita as Berita), isi: v })} placeholder="Isi konten berita..." required submitted={contentSubmitted} />
+                  <SearchableSelect value={editBerita.status} onChange={(v) => setEditBerita({ ...(editBerita as Berita), status: v as Berita["status"] })} options={[{ value: "Draft", label: "Draft" }, { value: "Publikasi", label: "Publikasi" }]} />
+                </div>
+              )}
+              {contentModal.section === "faqs" && editFaq && (
+                <div className="space-y-3">
+                  <Input type="text" value={editFaq.pertanyaan} onChange={(e) => setEditFaq({ ...(editFaq as Faq), pertanyaan: e.target.value })} placeholder="Pertanyaan" className="w-full" required submitted={contentSubmitted} />
+                  <Textarea value={editFaq.jawaban} onChange={(e) => setEditFaq({ ...(editFaq as Faq), jawaban: e.target.value })} rows={4} placeholder="Jawaban" className="w-full" required submitted={contentSubmitted} />
+                  <SearchableSelect value={editFaq.status} onChange={(v) => setEditFaq({ ...(editFaq as Faq), status: v as Faq["status"] })} options={[{ value: "Draft", label: "Draft" }, { value: "Publikasi", label: "Publikasi" }]} required submitted={contentSubmitted} />
+                </div>
+              )}
+              
+            </Modal>
+          )}
+
+          
+
 
           {activeTab === "faq" && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-primary">FAQ (Pertanyaan Umum)</h2>
-                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2">
+                <button onClick={() => handleAdd("faq")} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2">
                   <i className="ri-add-line"></i>
                   Tambah FAQ
                 </button>
@@ -304,47 +689,23 @@ export default function KontenPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {faqList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((f) => (
                 <div key={f.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-                  {editId === `faq-${f.id}` ? (
-                    <div className="p-6 space-y-4">
-                      <Input type="text" value={editFaq?.pertanyaan || ""} onChange={(e) => setEditFaq({ ...(editFaq as Faq), pertanyaan: e.target.value })} placeholder="Pertanyaan" className="w-full" />
-                      <Textarea value={editFaq?.jawaban || ""} onChange={(e) => setEditFaq({ ...(editFaq as Faq), jawaban: e.target.value })} rows={3} placeholder="Jawaban" className="w-full" />
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <SearchableSelect
-                          value={editFaq?.status || "Draft"}
-                          onChange={(v) => setEditFaq({ ...(editFaq as Faq), status: v as Faq["status"] })}
-                          className="rounded-lg"
-                          options={[
-                            { value: "Draft", label: "Draft" },
-                            { value: "Publikasi", label: "Publikasi" },
-                          ]}
-                        />
-                        <div className="flex gap-2">
-                        <button onClick={() => handleSave("faq", f.id)} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
-                            <i className="ri-check-line"></i>
-                            Simpan
-                          </button>
-                          <button onClick={() => setEditId(null)} className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition">Batal</button>
+                  <div className="p-6">
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-primary text-lg">{f.pertanyaan}</h3>
+                        <p className="text-sm text-gray-500 mt-3">{f.jawaban}</p>
+                        <div className="flex items-center gap-3 mt-3">
+                          <span className={`px-2 py-1 text-xs rounded-full ${getKategoriColor(f.kategori)}`}>{f.kategori}</span>
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(f.status)}`}>{f.status}</span>
                         </div>
                       </div>
+                      <button onClick={() => handleEdit("faq", f)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1">
+                        <i className="ri-edit-line"></i>
+                        Edit
+                      </button>
+                      <button onClick={() => handleDelete("faq", f.id)} className="px-3 py-2 text-sm border border-red-200 text-red-700 rounded-lg hover:bg-red-50 transition flex items-center gap-1"><i className="ri-delete-bin-line"></i>Hapus</button>
                     </div>
-                  ) : (
-                    <div className="p-6">
-                      <div className="flex justify-between items-start gap-4">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-primary text-lg">{f.pertanyaan}</h3>
-                          <p className="text-sm text-gray-500 mt-3">{f.jawaban}</p>
-                          <div className="flex items-center gap-3 mt-3">
-                            <span className={`px-2 py-1 text-xs rounded-full ${getKategoriColor(f.kategori)}`}>{f.kategori}</span>
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(f.status)}`}>{f.status}</span>
-                          </div>
-                        </div>
-                        <button onClick={() => handleEdit("faq", f)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1">
-                          <i className="ri-edit-line"></i>
-                          Edit
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
               ))}
               </div>
@@ -352,7 +713,13 @@ export default function KontenPage() {
           )}
 
           <div className="mt-4">
-            <Pagination page={page} pageSize={pageSize} total={(activeTab === "berita" ? beritaList.length : activeTab === "agenda" ? agendaList.length : activeTab === "dokumen" ? dokumenList.length : faqList.length)} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
+            <Pagination page={page} pageSize={pageSize} total={(
+              activeTab === "berita" ? beritaList.length :
+              activeTab === "faq" ? faqList.length :
+              activeTab === "partners" ? partnersList.length :
+              activeTab === "testimonials" ? testimonialsList.length :
+              1
+            )} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
           </div>
         </div>
       </main>
