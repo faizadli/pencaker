@@ -98,8 +98,7 @@ export default function Navbar() {
                   <i className="ri-building-line text-white text-lg"></i>
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-primary">DISNAKER</h1>
-                  <p className="text-xs text-gray-500 -mt-1">Kabupaten kaltim</p>
+                  <h1 className="text-xl font-bold text-primary">ADIKARA</h1>
                 </div>
               </div>
             </div>

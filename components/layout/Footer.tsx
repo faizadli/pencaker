@@ -16,16 +16,12 @@ export default function Footer() {
                   <i className="ri-building-line text-white text-lg"></i>
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg">DISNAKER</h4>
-                  <p className="text-xs text-gray-300">Kota kaltim</p>
+                  <h4 className="font-bold text-lg">ADIKARA</h4>
+                  <p className="text-xs text-gray-300">Aplikasi Data dan Informasi Ketenagakerjaan • Area Regional Paser</p>
                 </div>
               </div>
               <p className="text-sm text-gray-300 leading-relaxed">
-                Dinas Tenaga Kerja Kota kaltim
-                <br />
-                Jl. Merdeka No. 123, kaltim
-                <br />
-                Jawa Barat, Indonesia
+                ADIKARA — Menjunjung kehormatan dan martabat, bertindak dengan integritas dan etika, menjadi teladan dalam sikap dan kinerja, mengutamakan tanggung jawab dan profesionalisme.
               </p>
             </div>
 

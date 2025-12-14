@@ -1,29 +1,70 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Input, SearchableSelect } from "../components/ui/field";
+import { listPublicJobs } from "../services/jobs";
+import { getPublicCompanyById } from "../services/company";
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
-  const latestJobs = [
-    { id: 1, posisi: "Frontend Developer", perusahaan: "PT Solusi Digital", logo: "https://picsum.photos/200", lokasi: "kaltim", tipe: "Full-time", sektor: "Teknologi", pendidikan: "S1", tanggal: "15 Nov 2025" },
-    { id: 2, posisi: "Operator Produksi", perusahaan: "CV Makmur Abadi", logo: "https://picsum.photos/200", lokasi: "Bekasi", tipe: "Shift", sektor: "Manufaktur", pendidikan: "SMK", tanggal: "14 Nov 2025" },
-    { id: 3, posisi: "Petugas Lapangan", perusahaan: "UD Tani Maju", logo: "https://picsum.photos/200", lokasi: "Temanggung", tipe: "Kontrak", sektor: "Pertanian", pendidikan: "D3", tanggal: "13 Nov 2025" },
-  ];
+  const [latestJobs, setLatestJobs] = useState<Array<{ id: string; posisi: string; perusahaan: string; logo: string; lokasi: string; tipe: string; sektor: string; pendidikan: string; tanggal: string }>>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const resp = await listPublicJobs({ limit: 3 });
+        const raw = (resp as unknown) as { data?: unknown };
+        const arr = Array.isArray(raw.data) ? (raw.data as unknown[]) : Array.isArray(resp as unknown[]) ? (resp as unknown[]) : [];
+        const cards = await Promise.all(arr.slice(0, 3).map(async (r) => {
+          const obj = r as Record<string, unknown>;
+          const curr = typeof obj["id"] === "string" ? (obj["id"] as string) : undefined;
+          const jobsId = typeof obj["jobs_id"] === "string" ? (obj["jobs_id"] as string) : undefined;
+          const jobId = typeof obj["job_id"] === "string" ? (obj["job_id"] as string) : undefined;
+          const id = (curr || jobsId || jobId) || "";
+          const companyId = String(obj["company_id"] || "");
+          let logo = "";
+          try {
+            if (companyId) {
+              const cdata = await getPublicCompanyById(companyId);
+              const base = (cdata as { data?: unknown }).data ?? cdata;
+              logo = ((base as { company_logo?: string }).company_logo || "");
+            }
+          } catch {}
+          const posisi = String(obj["job_title"] || "-");
+          const perusahaan = String(obj["company_name"] || companyId || "-");
+          const lokasi = String(obj["work_setup"] || "-");
+          const tipe = String(obj["job_type"] || "-");
+          const sektor = String(obj["category"] || "-");
+          const pendidikan = String(obj["education_required"] || "-");
+          const tanggalSrc = String((obj["updated_at"] || obj["createdAt"] || obj["created_at"] || "") as string);
+          let tanggal = "-";
+          if (tanggalSrc) {
+            const d = new Date(tanggalSrc);
+            if (!Number.isNaN(d.getTime())) tanggal = d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+          }
+          return { id: String(id || Math.random()), posisi, perusahaan, logo, lokasi, tipe, sektor, pendidikan, tanggal };
+        }));
+        setLatestJobs(cards);
+      } catch {
+        setLatestJobs([]);
+      }
+    };
+    load();
+  }, []);
 
   const newsList = [
-    { id: 1, judul: "Pelatihan Gratis Bidang Digital Dimulai Bulan Ini", tanggal: "10 Nov 2025", ringkasan: "Disnaker membuka pendaftaran pelatihan web development, UI/UX, dan digital marketing untuk 500 peserta.", gambar: "https://picsum.photos/200" },
-    { id: 2, judul: "Job Fair Kota kaltim Hadirkan 50+ Perusahaan", tanggal: "8 Nov 2025", ringkasan: "Event bursa kerja akan digelar pada 15-17 November di Gedung Sabilulungan dengan 2,000 lowongan.", gambar: "https://picsum.photos/200" },
+    { id: 1, judul: "Pelatihan Gratis Bidang Digital Dimulai Bulan Ini", tanggal: "10 Nov 2025", ringkasan: "ADIKARA membuka pendaftaran pelatihan web development, UI/UX, dan digital marketing untuk 500 peserta.", gambar: "https://picsum.photos/200" },
+    { id: 2, judul: "Job Fair Kabupaten Paser Hadirkan 50+ Perusahaan", tanggal: "8 Nov 2025", ringkasan: "Event bursa kerja akan digelar pada 15-17 November di Gedung Sabilulungan dengan 2,000 lowongan.", gambar: "https://picsum.photos/200" },
   ];
 
   const stats = { lowongan: 912, pencaker: 14230, perusahaan: 345, pelatihan: 28 };
 
   const testimonials = [
-    { id: 1, nama: "Rina Sari", pekerjaan: "Web Developer", perusahaan: "PT Tech Solution", testimoni: "Berhasil mendapatkan pekerjaan impian hanya dalam 2 minggu setelah mendaftar di Disnaker kaltim.", foto: "https://picsum.photos/200" },
+    { id: 1, nama: "Rina Sari", pekerjaan: "Web Developer", perusahaan: "PT Tech Solution", testimoni: "Berhasil mendapatkan pekerjaan impian hanya dalam 2 minggu setelah mendaftar di ADIKARA Paser.", foto: "https://picsum.photos/200" },
     { id: 2, nama: "Ahmad Fauzi", pekerjaan: "Teknisi Elektronik", perusahaan: "CV Elektro Mandiri", testimoni: "Pelatihan dari BLK sangat membantu saya meningkatkan skill dan mendapatkan pekerjaan tetap.", foto: "https://picsum.photos/200" },
   ];
 
@@ -35,7 +76,7 @@ export default function HomePage() {
   ];
 
   const faqs = [
-    { id: 1, q: "Apakah semua lowongan diverifikasi?", a: "Ya, semua lowongan diverifikasi oleh tim Disnaker untuk memastikan keamanan dan keaslian informasi." },
+    { id: 1, q: "Apakah semua lowongan diverifikasi?", a: "Ya, semua lowongan diverifikasi oleh tim ADIKARA untuk memastikan keamanan dan keaslian informasi." },
     { id: 2, q: "Bagaimana cara mendaftar sebagai pencari kerja?", a: "Anda bisa mendaftar online melalui menu 'Daftar Pencaker' atau datang langsung." },
     { id: 3, q: "Apakah layanan ini gratis?", a: "Ya, seluruh layanan penempatan tenaga kerja, pelatihan BLK, dan pendaftaran pencari kerja gratis." },
   ];
@@ -45,13 +86,13 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
 
-      <section className="relative bg-gradient-to-r from-primary to-secondary text-white py-20 px-4 sm:px-6 overflow-hidden">
+      <section className="relative bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-dark)] text-white py-20 px-4 sm:px-6 overflow-hidden">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1556761175-b413da4baf72?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80')] bg-cover bg-center mix-blend-overlay"></div>
         <div className="max-w-6xl mx-auto text-center relative z-10">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
-            Portal Layanan Tenaga Kerja
-            <span className="block text-blue-100 text-xl md:text-2xl font-normal mt-2">Dinas Tenaga Kerja Kota kaltim</span>
+            ADIKARA
+            <span className="block text-blue-100 text-xl md:text-2xl font-normal mt-2">Aplikasi Data dan Informasi Ketenagakerjaan Area Regional Paser</span>
           </h1>
           <p className="text-lg md:text-xl opacity-90 mb-8 max-w-3xl mx-auto leading-relaxed">
             Temukan lowongan kerja terbaru, ikuti pelatihan gratis, dan dapatkan dukungan karier dari pemerintah.
@@ -132,7 +173,13 @@ export default function HomePage() {
             {latestJobs.map((job) => (
               <div key={job.id} className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl border border-gray-200 transition-all group">
                 <div className="flex items-start gap-4 mb-4">
-                  <Image src={job.logo} alt={job.perusahaan} width={56} height={56} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
+                  {job.logo ? (
+                    <Image src={job.logo} alt={job.perusahaan} width={56} height={56} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <i className="ri-building-line text-gray-400 text-xl"></i>
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-primary text-lg group-hover:text-primary transition-colors truncate">{job.posisi}</h3>
                     <p className="text-gray-600 truncate">{job.perusahaan}</p>
@@ -195,7 +242,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 bg-gradient-to-br from-primary to-secondary text-white">
+      <section className="py-16 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">Program Pelatihan BLK</h2>
           <p className="mb-8 opacity-90 max-w-2xl mx-auto text-lg">Tingkatkan keterampilan Anda dengan pelatihan gratis dari Balai Latihan Kerja</p>
@@ -265,7 +312,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-primary mb-4">Pertanyaan yang Sering Diajukan</h2>
-            <p className="text-gray-600 text-lg">Temukan jawaban untuk pertanyaan umum seputar layanan Disnaker</p>
+            <p className="text-gray-600 text-lg">Temukan jawaban untuk pertanyaan umum seputar layanan ADIKARA</p>
           </div>
           <div className="space-y-4">
             {faqs.map((faq) => (

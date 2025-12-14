@@ -3,8 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --primary: #2E742B;
+  /* ADIKARA Palette */
+  --primary-700: #2E742B;
+  --primary-600: #419823;
+  --primary-500: #48A32A;
+  --primary: var(--primary-600);
   --secondary: #F4D348;
+  --accent: #F66338;
   --danger: #dc2626;
   --rich: #111827;
 }
@@ -12,8 +17,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary-light: var(--primary-500);
   --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-700);
   --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
   --color-danger: var(--danger);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

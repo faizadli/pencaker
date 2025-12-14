@@ -61,6 +61,8 @@ function DashboardPageComponent() {
   };
   const primaryColor = getCssVar('--color-primary');
   const secondaryColor = getCssVar('--color-secondary');
+  const primaryLight = getCssVar('--color-primary-light');
+  const primaryDark = getCssVar('--color-primary-dark');
   const foregroundColor = getCssVar('--color-foreground');
   const gridColor = hexToRgba(foregroundColor, 0.12);
 
@@ -136,7 +138,7 @@ function DashboardPageComponent() {
   const barData = {
     labels: monthLabels,
     datasets: [
-      { label: "Lowongan Disetujui", data: jobsPerMonth, backgroundColor: secondaryColor, borderColor: primaryColor, borderWidth: 1 },
+      { label: "Lowongan Disetujui", data: jobsPerMonth, backgroundColor: hexToRgba(primaryLight, 0.85), hoverBackgroundColor: hexToRgba(primaryColor, 0.95), borderColor: primaryDark, borderWidth: 1 },
     ],
   };
 
@@ -155,10 +157,17 @@ function DashboardPageComponent() {
     });
     const labels = Object.keys(byCat);
     const data = labels.map((l) => byCat[l]);
-    const colors = [secondaryColor, primaryColor, foregroundColor, primaryColor, secondaryColor, foregroundColor]; 
+    const colors = [
+      hexToRgba(primaryLight, 0.85),
+      hexToRgba(primaryColor, 0.85),
+      hexToRgba(primaryDark, 0.85),
+      hexToRgba(primaryLight, 0.6),
+      hexToRgba(primaryColor, 0.6),
+      hexToRgba(primaryDark, 0.6),
+    ];
     const bg = labels.map((_, i) => colors[i % colors.length]);
     return { labels, datasets: [{ data, backgroundColor: bg }] };
-  }, [jobRows, secondaryColor, primaryColor, foregroundColor]);
+  }, [jobRows, primaryLight, primaryColor, primaryDark]);
 
   const pieOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { color: foregroundColor } }, title: { display: true, text: "Distribusi Lowongan per Kategori", font: { size: 14, weight: "bold" }, color: primaryColor } } } as const;
 
@@ -185,10 +194,10 @@ function DashboardPageComponent() {
       else if (g === "perempuan" || g === "female" || g === "p") female[idx]++;
     });
     return { labels, datasets: [
-      { label: "Laki-laki", data: male, backgroundColor: primaryColor },
-      { label: "Perempuan", data: female, backgroundColor: secondaryColor },
+      { label: "Laki-laki", data: male, backgroundColor: hexToRgba(primaryDark, 0.85) },
+      { label: "Perempuan", data: female, backgroundColor: hexToRgba(primaryLight, 0.85) },
     ] };
-  }, [candRows, primaryColor, secondaryColor]);
+  }, [candRows, primaryLight, primaryDark]);
 
   const expiringJobs = useMemo(() => {
     const now = new Date();
@@ -331,7 +340,7 @@ function DashboardPageComponent() {
           )}
 
           {canSeeOverview && (
-          <div className="bg-gradient-to-r from-primary to-secondary text-white p-6 rounded-xl shadow-md">
+          <div className="bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white p-6 rounded-xl shadow-md">
             <div className="flex items-start gap-3">
               <div className="p-2 bg-white/20 rounded-lg">
                 <i className="ri-lightbulb-line text-lg"></i>

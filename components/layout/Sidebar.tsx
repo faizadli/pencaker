@@ -123,7 +123,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
             </div>
           ) : (
             <h1 className="text-xl font-bold">
-              DISNAKER<span className="font-normal text-sm">KabPaser</span>
+              ADIKARA<span className="font-normal text-sm">Paser</span>
             </h1>
           )}
           <button onClick={() => setIsMobileOpen(false)} className="lg:hidden p-2 rounded hover:bg-white/10" aria-label="Tutup Sidebar">
@@ -179,7 +179,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
                   <span>{(userName || (role === "company" ? "Perusahaan" : role === "disnaker" ? "Disnaker" : "User")).split(" ").map(w => w[0]).join("") || "U"}</span>
                 )}
               </div>
-              <span className="hidden md:inline text-sm font-medium">{userName || (role === "company" ? "Perusahaan" : role === "disnaker" ? "Admin Disnaker" : role === "super_admin" ? "Super Admin" : "Pengguna")}</span>
+              <span className="hidden md:inline text-sm font-medium">{userName || (role === "company" ? "Perusahaan" : role === "disnaker" ? "Admin ADIKARA" : role === "super_admin" ? "Super Admin" : "Pengguna")}</span>
               <i className={`ri-arrow-down-s-line text-gray-500 text-sm transition-transform ${dropdownOpen ? "rotate-180" : ""}`}></i>
             </button>
 

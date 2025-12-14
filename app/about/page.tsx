@@ -141,7 +141,7 @@ export default function AboutPage() {
       {/* Hero Section */}
       <section className="relative bg-primary text-white py-16 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">Tentang DISNAKER Paser</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-3">Tentang ADIKARA</h1>
           <p className="text-base md:text-lg opacity-95 leading-relaxed">
             Dinas Ketenagakerjaan Kabupaten Paser - Berkomitmen Mewujudkan Tenaga Kerja
             <br />yang Kompeten dan Berdaya Saing
@@ -155,13 +155,13 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Profile Text */}
             <div className="lg:col-span-2">
-              <h2 className="text-2xl font-bold text-primary mb-4">Profil DISNAKER Paser</h2>
+              <h2 className="text-2xl font-bold text-primary mb-4">Profil ADIKARA</h2>
               <div className="space-y-3 text-gray-700 text-sm leading-relaxed">
                 <p>
                   Dinas Ketenagakerjaan Kabupaten Paser merupakan instansi pemerintah yang bertanggung jawab dalam pengelolaan dan pengembangan ketenagakerjaan di wilayah Kabupaten Paser. Kami berkomitmen untuk meningkatkan kualitas tenaga kerja melalui berbagai program pelatihan, sertifikasi, dan penempatan kerja.
                 </p>
                 <p>
-                  Sejak berdiri tahun 2001, DISNAKER Paser telah berkomitmen dalam pengembangan sumber daya manusia dan mengutamakan kompetisi tenaga kerja lokal untuk membina pembuatan lowongan ekonomi daerah yang berkelanjutan.
+                  Sejak berdiri tahun 2001, ADIKARA Paser telah berkomitmen dalam pengembangan sumber daya manusia dan mengutamakan kompetisi tenaga kerja lokal untuk membina pembuatan lowongan ekonomi daerah yang berkelanjutan.
                 </p>
               </div>
             </div>
@@ -189,7 +189,7 @@ export default function AboutPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-primary mb-2">Visi & Misi</h2>
-            <p className="text-gray-600 text-sm">Arah dan tujuan strategis DISNAKER Kabupaten Paser</p>
+            <p className="text-gray-600 text-sm">Arah dan tujuan strategis ADIKARA Kabupaten Paser</p>
           </div>
 
           {/* Vision */}
@@ -262,7 +262,7 @@ export default function AboutPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold mb-2">Kabupaten Paser dalam Angka</h2>
-            <p className="text-blue-100 text-sm">Profil dan potensi wilayah kerja DISNAKER Paser</p>
+            <p className="text-blue-100 text-sm">Profil dan potensi wilayah kerja ADIKARA Paser</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {statistics.map((stat, index) => (
@@ -285,7 +285,7 @@ export default function AboutPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-primary mb-2">Pencapaian Kami</h2>
-            <p className="text-gray-600 text-sm">Komitmen DISNAKER Paser dalam pengembangan ketenagakerjaan</p>
+            <p className="text-gray-600 text-sm">Komitmen ADIKARA Paser dalam pengembangan ketenagakerjaan</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {achievements.map((achievement, index) => (
@@ -304,7 +304,7 @@ export default function AboutPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-primary mb-2">Kontak Kami</h2>
-            <p className="text-gray-600 text-sm">Hubungi DISNAKER Paser untuk informasi lebih lanjut</p>
+            <p className="text-gray-600 text-sm">Hubungi ADIKARA Paser untuk informasi lebih lanjut</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">

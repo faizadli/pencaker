@@ -13,12 +13,12 @@ export default function PengaturanPage() {
   type MasterData = { kecamatan: string[]; pendidikan: string[]; keahlian: string[] };
 
   const [instansi, setInstansi] = useState<Instansi>({
-    nama: "Dinas Tenaga Kerja Kota Bandung",
+    nama: "ADIKARA — Area Regional Paser",
     alamat: "Jl. Merdeka No. 123, Bandung",
     telepon: "(022) 12345678",
     email: "disnaker@bandungkota.go.id",
     website: "https://disnaker.bandungkota.go.id",
-    logo: "https://via.placeholder.com/120/355485/FFFFFF?text=DISNAKER",
+    logo: "https://via.placeholder.com/120/355485/FFFFFF?text=ADIKARA",
   });
   const [banner, setBanner] = useState<Banner>({
     judul: "Layanan Penempatan Tenaga Kerja Gratis",

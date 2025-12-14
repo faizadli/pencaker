@@ -42,14 +42,14 @@ export default function LaporanPage() {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   };
   const primary = getCssVar('--color-primary');
-  const secondary = getCssVar('--color-secondary');
+  const primaryLight = getCssVar('--color-primary-light');
+  const primaryDark = getCssVar('--color-primary-dark');
   const foreground = getCssVar('--color-foreground');
-  const danger = getCssVar('--danger');
 
-  const barData = { labels: monthlyData.labels, datasets: [{ label: "Jumlah Pendaftar Pencari Kerja", data: monthlyData.data, backgroundColor: secondary, borderColor: primary, borderWidth: 1 }] };
-  const barOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: "Tren Pendaftaran Pencari Kerja (2025)", font: { size: 14, weight: "bold" }, color: primary } }, scales: { y: { beginAtZero: true, grid: { color: hexToRgba(foreground || primary, 0.2) }, ticks: { color: foreground } }, x: { grid: { display: false }, ticks: { color: foreground } } } } as const;
+  const barData = { labels: monthlyData.labels, datasets: [{ label: "Jumlah Pendaftar Pencari Kerja", data: monthlyData.data, backgroundColor: hexToRgba(primaryLight, 0.85), hoverBackgroundColor: hexToRgba(primary, 0.95), borderColor: primaryDark, borderWidth: 1 }] };
+  const barOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: "Tren Pendaftaran Pencari Kerja (2025)", font: { size: 14, weight: "bold" }, color: primary } }, scales: { y: { beginAtZero: true, grid: { color: hexToRgba(foreground || primary, 0.12) }, ticks: { color: foreground } }, x: { grid: { display: false }, ticks: { color: foreground } } } } as const;
 
-  const sectorData = { labels: ["IT & Digital", "Manufaktur", "Pertanian", "Jasa", "Konstruksi"], datasets: [{ data: [28, 22, 16, 14, 12], backgroundColor: [secondary, foreground, primary, primary, danger] }] };
+  const sectorData = { labels: ["IT & Digital", "Manufaktur", "Pertanian", "Jasa", "Konstruksi"], datasets: [{ data: [28, 22, 16, 14, 12], backgroundColor: [hexToRgba(primaryLight, 0.85), hexToRgba(primary, 0.85), hexToRgba(primaryDark, 0.85), hexToRgba(primaryLight, 0.6), hexToRgba(primary, 0.6)] }] };
   const pieOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { color: foreground } }, title: { display: true, text: "Distribusi Penempatan Kerja per Sektor", font: { size: 14, weight: "bold" }, color: primary } } } as const;
 
   const handleExportPDF = () => showError("Fitur export PDF akan segera tersedia.");
@@ -120,7 +120,7 @@ export default function LaporanPage() {
             </Table>
           </Card>
 
-          <div className="text-white p-6 rounded-xl shadow-md mb-8" style={{ background: `linear-gradient(to right, ${primary}, ${secondary})` }}>
+          <div className="text-white p-6 rounded-xl shadow-md mb-8" style={{ background: `linear-gradient(to right, ${primary}, ${primaryDark})` }}>
             <div className="flex items-start gap-3"><div className="p-2 bg-white/20 rounded-lg"><i className="ri-lightbulb-line text-lg"></i></div><div className="flex-1"><h3 className="text-lg font-semibold mb-3">Kesimpulan Laporan</h3><ul className="text-sm space-y-2 opacity-95"><li className="flex items-center gap-2"><div className="w-1 h-1 bg-white rounded-full"></div><span>Jumlah pencari kerja meningkat 14% dibanding tahun lalu.</span></li><li className="flex items-center gap-2"><div className="w-1 h-1 bg-white rounded-full"></div><span>Sektor IT menjadi penyumbang terbesar penempatan kerja (28%).</span></li><li className="flex items-center gap-2"><div className="w-1 h-1 bg-white rounded-full"></div><span>Efektivitas penanganan pengaduan mencapai 92% terselesaikan tepat waktu.</span></li><li className="flex items-center gap-2"><div className="w-1 h-1 bg-white rounded-full"></div><span>Diperlukan peningkatan kerja sama dengan industri manufaktur dan pertanian.</span></li></ul></div></div>
           </div>
 
