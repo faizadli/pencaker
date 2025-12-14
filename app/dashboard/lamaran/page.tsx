@@ -177,30 +177,30 @@ export default function LamaranPage() {
   const paginated = useMemo(() => filtered.slice((page - 1) * pageSize, page * pageSize), [filtered, page, pageSize]);
 
   return (
-    <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
+    <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
       <div className="px-4 sm:px-6">
         {loading && (
           <div className="flex items-center justify-center h-[40vh]">
-            <div className="flex items-center gap-3 text-[#355485]">
-              <div className="w-5 h-5 border-2 border-[#355485] border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex items-center gap-3 text-primary">
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
               <span className="text-sm font-medium">Memuat data lamaran...</span>
             </div>
           </div>
         )}
 
         <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Lamaran Saya</h1>
-          <p className="text-sm text-[#6b7280] mt-1">Pantau status lamaran pekerjaan yang diajukan</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-primary">Lamaran Saya</h1>
+          <p className="text-sm text-gray-500 mt-1">Pantau status lamaran pekerjaan yang diajukan</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <StatCard title="Total Lamaran" value={rows.length} change="" color="#4f90c6" icon="ri-send-plane-2-line" />
-          <StatCard title="Diproses" value={rows.filter((r) => ["pending","test","interview"].includes(String(r.status||"").toLowerCase())).length} change="" color="#355485" icon="ri-time-line" />
-          <StatCard title="Diterima" value={rows.filter((r) => String(r.status||"").toLowerCase()==="approve").length} change="" color="#90b6d5" icon="ri-checkbox-circle-line" />
-          <StatCard title="Ditolak" value={rows.filter((r) => String(r.status||"").toLowerCase()==="rejected").length} change="" color="#2a436c" icon="ri-close-circle-line" />
+          <StatCard title="Total Lamaran" value={rows.length} change="" color="var(--color-secondary)" icon="ri-send-plane-2-line" />
+          <StatCard title="Diproses" value={rows.filter((r) => ["pending","test","interview"].includes(String(r.status||"").toLowerCase())).length} change="" color="var(--color-primary)" icon="ri-time-line" />
+          <StatCard title="Diterima" value={rows.filter((r) => String(r.status||"").toLowerCase()==="approve").length} change="" color="var(--color-foreground)" icon="ri-checkbox-circle-line" />
+          <StatCard title="Ditolak" value={rows.filter((r) => String(r.status||"").toLowerCase()==="rejected").length} change="" color="var(--color-danger)" icon="ri-close-circle-line" />
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] mb-6">
+        <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <Input icon="ri-search-line" type="text" placeholder="Cari catatan, perusahaan, atau ID lowongan" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full py-3" />
@@ -215,28 +215,28 @@ export default function LamaranPage() {
         {viewMode === "grid" ? (
           <CardGrid>
             {paginated.map((r) => (
-              <div key={`card-${r.id}`} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
+              <div key={`card-${r.id}`} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-bold text-[#2a436c] text-sm leading-tight truncate">{r.job_title}</p>
-                      <p className="text-xs text-[#6b7280] truncate">{r.company_name}</p>
+                      <p className="font-bold text-primary text-sm leading-tight truncate">{r.job_title}</p>
+                      <p className="text-xs text-gray-500 truncate">{r.company_name}</p>
                     </div>
                     <span className={`px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0 ${getStatusColor(statusLabel(r.status))}`}>{statusLabel(r.status)}</span>
                   </div>
                 </div>
                 <div className="p-4 space-y-3">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#374151]">Tanggal</span>
-                    <span className="font-medium text-[#111827]">{formatDate(r.application_date)}</span>
+                    <span className="text-gray-700">Tanggal</span>
+                    <span className="font-medium text-gray-900">{formatDate(r.application_date)}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#374151]">Jadwal</span>
-                    <span className="font-medium text-[#111827]">{`${formatDate(r.schedule_start)} - ${formatDate(r.schedule_end)}`}</span>
+                    <span className="text-gray-700">Jadwal</span>
+                    <span className="font-medium text-gray-900">{`${formatDate(r.schedule_start)} - ${formatDate(r.schedule_end)}`}</span>
                   </div>
                 </div>
-                <div className="p-4 border-t border-[#e5e7eb]">
-                  <div className="text-sm text-[#6b7280]">{r.note || "-"}</div>
+                <div className="p-4 border-t border-gray-200">
+                  <div className="text-sm text-gray-500">{r.note || "-"}</div>
                 </div>
               </div>
             ))}
@@ -258,37 +258,37 @@ export default function LamaranPage() {
                 {paginated.map((r) => (
                   <TableRow key={r.id}>
                     <TD>{formatDate(r.application_date)}</TD>
-                    <TD className="text-[#111827]">{r.job_title}</TD>
-                    <TD className="text-[#111827]">{r.company_name}</TD>
+                    <TD className="text-gray-900">{r.job_title}</TD>
+                    <TD className="text-gray-900">{r.company_name}</TD>
                     <TD>
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(statusLabel(r.status))}`}>{statusLabel(r.status)}</span>
                     </TD>
                     <TD>
-                      <div className="text-xs text-[#6b7280]">
+                      <div className="text-xs text-gray-500">
                         <div>{formatDate(r.schedule_start)}</div>
                         <div>{formatDate(r.schedule_end)}</div>
                       </div>
                     </TD>
-                    <TD className="text-[#6b7280] text-sm">{r.note || "-"}</TD>
+                    <TD className="text-gray-500 text-sm">{r.note || "-"}</TD>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
             <div className="sm:hidden p-3 space-y-3">
               {paginated.map((r) => (
-                <div key={`m-${r.id}`} className="border border-[#e5e7eb] rounded-lg p-3">
+                <div key={`m-${r.id}`} className="border border-gray-200 rounded-lg p-3">
                   <div className="flex items-start justify-between">
                     <div className="min-w-0">
-                      <p className="font-semibold text-[#2a436c] truncate">{r.job_title}</p>
-                      <p className="text-xs text-[#6b7280] truncate">{r.company_name}</p>
+                      <p className="font-semibold text-primary truncate">{r.job_title}</p>
+                      <p className="text-xs text-gray-500 truncate">{r.company_name}</p>
                     </div>
                     <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(statusLabel(r.status))}`}>{statusLabel(r.status)}</span>
                   </div>
-                  <div className="mt-2 text-xs text-[#6b7280]">
+                  <div className="mt-2 text-xs text-gray-500">
                     <div>{formatDate(r.application_date)}</div>
                     <div>{formatDate(r.schedule_start)} - {formatDate(r.schedule_end)}</div>
                   </div>
-                  <div className="mt-2 text-sm text-[#6b7280]">{r.note || "-"}</div>
+                  <div className="mt-2 text-sm text-gray-500">{r.note || "-"}</div>
                 </div>
               ))}
             </div>
@@ -300,7 +300,7 @@ export default function LamaranPage() {
         </div>
 
         {filtered.length === 0 && (
-          <div className="text-center py-8 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
+          <div className="text-center py-8 bg-white rounded-xl shadow-md border border-gray-200">
             <i className="ri-send-plane-2-line text-4xl text-gray-300 mb-3"></i>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Belum ada lamaran</h3>
             <p className="text-gray-600 mb-4">Mulai melamar lowongan dari halaman Lowongan</p>

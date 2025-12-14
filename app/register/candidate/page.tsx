@@ -328,24 +328,24 @@ export default function RegisterCandidate() {
   }, [profile.kecamatan, districts]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f3f6fb] px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8 py-8">
       <div className="w-full max-w-4xl lg:max-w-5xl">
         <div className="text-center mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#2a436c]">Pendaftaran Pencari Kerja</h1>
-          <p className="text-sm text-[#6b7280] mt-1">Daftarkan akun Anda untuk mengakses profil dan layanan AK1</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-primary">Pendaftaran Pencari Kerja</h1>
+          <p className="text-sm text-gray-500 mt-1">Daftarkan akun Anda untuk mengakses profil dan layanan AK1</p>
         </div>
-        <div className="bg-white border border-[#e5e7eb] rounded-2xl shadow-xl overflow-hidden mx-2 sm:mx-0">
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden mx-2 sm:mx-0">
           <div className="px-4 sm:px-8 lg:px-10 pt-6">
             <div className="flex flex-nowrap items-center justify-center gap-6 sm:gap-10 overflow-x-auto">
               {[{label:'Akun',icon:'ri-user-line',n:1},{label:'Profil',icon:'ri-profile-line',n:2},{label:'AK1',icon:'ri-file-text-line',n:3},{label:'Selesai',icon:'ri-checkbox-circle-line',n:4}].map((s,idx)=> (
                 <div key={s.n} className="flex items-center gap-6">
-                  <div className={`flex items-center gap-2 ${step===s.n? 'text-[#355485]':'text-[#6b7280]'}`}>
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-base ${step===s.n? 'bg-[#e5eef7] border border-[#355485]':'bg-[#f3f4f6] border border-[#e5e7eb]'}`}>
+                  <div className={`flex items-center gap-2 ${step===s.n? 'text-primary':'text-gray-500'}`}>
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-base ${step===s.n? 'bg-primary/10 border border-primary':'bg-gray-100 border border-gray-200'}`}>
                       <i className={s.icon}></i>
                     </div>
                     <span className="text-sm font-medium hidden sm:block">{s.label}</span>
                   </div>
-                  {idx<3 && <div className={`hidden sm:block w-16 h-0.5 ${step> s.n? 'bg-[#355485]':'bg-[#e5e7eb]'} rounded`}></div>}
+                  {idx<3 && <div className={`hidden sm:block w-16 h-0.5 ${step> s.n? 'bg-primary':'bg-gray-200'} rounded`}></div>}
                 </div>
               ))}
             </div>
@@ -353,28 +353,28 @@ export default function RegisterCandidate() {
 
           {step === 1 && (
             <form onSubmit={submitAccount} className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-6">
-              <h2 className="text-lg font-semibold text-[#2a436c]">Data Akun</h2>
+              <h2 className="text-lg font-semibold text-primary">Data Akun</h2>
               {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{error}</div>}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-[#6b7280] mb-2">Email (Opsional)</label>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-500 mb-2">Email (Opsional)</label>
                 <Input icon="ri-mail-line" type="email" id="email" name="email" value={account.email} onChange={(e) => { setAccount({ ...account, email: e.target.value }); }} className="w-full rounded-lg" placeholder="admin@contoh.com" required={false} />
               </div>
               <div>
-                <label htmlFor="no_handphone" className="block text-sm font-medium text-[#6b7280] mb-2">Nomor Handphone</label>
+                <label htmlFor="no_handphone" className="block text-sm font-medium text-gray-500 mb-2">Nomor Handphone</label>
                 <Input icon="ri-phone-line" type="tel" id="no_handphone" name="no_handphone" value={account.no_handphone} onChange={(e) => { setAccount({ ...account, no_handphone: e.target.value }); }} className="w-full rounded-lg" placeholder="08xxxxxxxxxx" required />
               </div>
               
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-[#6b7280] mb-2">Password</label>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-500 mb-2">Password</label>
                 <Input icon="ri-lock-2-line" type="password" id="password" name="password" value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} className="w-full rounded-lg" placeholder="Minimal 8 karakter" required />
               </div>
               <div>
-                <label htmlFor="confirm" className="block text-sm font-medium text-[#6b7280] mb-2">Konfirmasi Password</label>
+                <label htmlFor="confirm" className="block text-sm font-medium text-gray-500 mb-2">Konfirmasi Password</label>
                 <Input icon="ri-lock-2-line" type="password" id="confirm" name="confirm" value={account.confirm} onChange={(e) => setAccount({ ...account, confirm: e.target.value })} className="w-full rounded-lg" placeholder="Ulangi password" required />
               </div>
               <div className="flex items-center justify-between">
-                <div className="text-xs text-[#9ca3af]">Sudah punya akun? <a href="/login" className="text-[#355485] hover:underline font-medium">Masuk di sini</a></div>
-                <button type="submit" disabled={loading} className="px-5 py-2.5 rounded-xl bg-[#355485] text-white hover:bg-[#2a436c] flex items-center gap-2">
+                <div className="text-xs text-gray-400">Sudah punya akun? <a href="/login" className="text-primary hover:underline font-medium">Masuk di sini</a></div>
+                <button type="submit" disabled={loading} className="px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-600 flex items-center gap-2">
                   {loading ? (<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Memproses...</>) : (<><span>Lanjut</span><i className="ri-arrow-right-line"></i></>)}
                 </button>
               </div>
@@ -383,7 +383,7 @@ export default function RegisterCandidate() {
 
           {step === 2 && (
             <form onSubmit={submitProfile} className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5">
-              <h2 className="text-lg font-semibold text-[#2a436c] flex items-center gap-2"><i className="ri-profile-line"></i><span>Data Profil</span></h2>
+              <h2 className="text-lg font-semibold text-primary flex items-center gap-2"><i className="ri-profile-line"></i><span>Data Profil</span></h2>
               {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{error}</div>}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input label="Nama Lengkap" value={profile.full_name} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} required />
@@ -407,15 +407,15 @@ export default function RegisterCandidate() {
                 <Input label="CV (PDF)" type="file" onChange={(e) => setCvFile((e.target as HTMLInputElement).files?.[0] || null)} />
               </div>
               <div className="flex items-center justify-between">
-                <button type="button" className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#355485] flex items-center gap-2" onClick={() => setStep(1)}><i className="ri-arrow-left-line"></i><span>Kembali</span></button>
-                <button type="submit" disabled={loading} className="px-5 py-2.5 rounded-xl bg-[#355485] text-white hover:bg-[#2a436c] flex items-center gap-2"><span>Lanjut</span><i className="ri-arrow-right-line"></i></button>
+                <button type="button" className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-primary flex items-center gap-2" onClick={() => setStep(1)}><i className="ri-arrow-left-line"></i><span>Kembali</span></button>
+                <button type="submit" disabled={loading} className="px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-600 flex items-center gap-2"><span>Lanjut</span><i className="ri-arrow-right-line"></i></button>
               </div>
             </form>
           )}
 
           {step === 3 && (
             <div className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5">
-              <h2 className="text-lg font-semibold text-[#2a436c]">AK1</h2>
+              <h2 className="text-lg font-semibold text-primary">AK1</h2>
               {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{error}</div>}
               <SegmentedToggle options={[{ value: "ya", label: "Sudah punya" }, { value: "tidak", label: "Belum punya" }]} value={hasAk1Card} onChange={(v) => setHasAk1Card(v)} />
               {hasAk1Card === "ya" ? (
@@ -424,7 +424,7 @@ export default function RegisterCandidate() {
                   <Input label="Nomor Pendaftaran Pencari Kerja" value={ak1NoReg} onChange={(e) => setAk1NoReg(e.target.value)} />
                   <Input label="Tanggal Kartu Dibuat" type="date" value={ak1CreatedAt} onChange={(e) => setAk1CreatedAt(e.target.value)} />
                   <Input label="Tanggal Kartu Kadaluarsa" type="date" value={ak1ExpiredAt} onChange={(e) => setAk1ExpiredAt(e.target.value)} />
-                  <p className="text-xs text-[#6b7280]">Isi data kartu jika Anda sudah memiliki kartu AK1.</p>
+                  <p className="text-xs text-gray-500">Isi data kartu jika Anda sudah memiliki kartu AK1.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
@@ -432,14 +432,14 @@ export default function RegisterCandidate() {
                   <Input label="Ijazah" type="file" onChange={(e) => uploadFile("ijazah", (e.target as HTMLInputElement).files?.[0] || undefined)} />
                   <Input label="Pas Foto" type="file" onChange={(e) => uploadFile("pas_photo", (e.target as HTMLInputElement).files?.[0] || undefined)} />
                   <Input label="Sertifikat (Opsional)" type="file" onChange={(e) => uploadFile("certificate", (e.target as HTMLInputElement).files?.[0] || undefined)} />
-                  <p className="text-xs text-[#6b7280]">Jika belum memiliki AK1, unggah dokumen untuk verifikasi Disnaker.</p>
+                  <p className="text-xs text-gray-500">Jika belum memiliki AK1, unggah dokumen untuk verifikasi Disnaker.</p>
                 </div>
               )}
               <div className="flex items-center justify-between">
-                <button type="button" className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#355485] flex items-center gap-2" onClick={() => setStep(2)}><i className="ri-arrow-left-line"></i><span>Kembali</span></button>
+                <button type="button" className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-primary flex items-center gap-2" onClick={() => setStep(2)}><i className="ri-arrow-left-line"></i><span>Kembali</span></button>
                 <div className="flex items-center gap-2">
-                  <button type="button" className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#355485]" onClick={() => setStep(4)}>Lewati</button>
-                  <button type="button" disabled={!canSaveAk1 || loading} onClick={submitAk1} className={`px-5 py-2.5 rounded-xl flex items-center gap-2 ${canSaveAk1 ? "bg-[#355485] text-white hover:bg-[#2a436c]" : "bg-gray-200 text-gray-500"}`}><span>Lanjut</span><i className="ri-arrow-right-line"></i></button>
+                  <button type="button" className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-primary" onClick={() => setStep(4)}>Lewati</button>
+                  <button type="button" disabled={!canSaveAk1 || loading} onClick={submitAk1} className={`px-5 py-2.5 rounded-xl flex items-center gap-2 ${canSaveAk1 ? "bg-primary text-white hover:bg-primary-600" : "bg-gray-200 text-gray-500"}`}><span>Lanjut</span><i className="ri-arrow-right-line"></i></button>
                 </div>
               </div>
             </div>
@@ -447,11 +447,11 @@ export default function RegisterCandidate() {
 
           {step === 4 && (
             <div className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5">
-              <h2 className="text-lg font-semibold text-[#2a436c]">Registrasi Selesai</h2>
+              <h2 className="text-lg font-semibold text-primary">Registrasi Selesai</h2>
               {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{error}</div>}
-              <p className="text-sm text-[#6b7280]">Tekan tombol di bawah untuk membuat akun dan menyimpan profil.</p>
+              <p className="text-sm text-gray-500">Tekan tombol di bawah untuk membuat akun dan menyimpan profil.</p>
               <div className="flex items-center gap-2">
-                <button type="button" disabled={loading || finalized} onClick={finalize} className={`px-5 py-2.5 rounded-xl flex items-center gap-2 ${loading || finalized ? "bg-gray-200 text-gray-500" : "bg-[#355485] text-white hover:bg-[#2a436c]"}`}>
+                <button type="button" disabled={loading || finalized} onClick={finalize} className={`px-5 py-2.5 rounded-xl flex items-center gap-2 ${loading || finalized ? "bg-gray-200 text-gray-500" : "bg-primary text-white hover:bg-primary-600"}`}>
                   {loading ? (<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span>Memproses...</span></>) : finalized ? (<span>Selesai</span>) : (<span>Buat Akun</span>)}
                 </button>
               </div>

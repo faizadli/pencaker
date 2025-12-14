@@ -63,21 +63,21 @@ export default function PengaduanPage() {
 
   return (
     <>
-      <main className={`transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64`}>
+      <main className={`transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64`}>
         <div className="px-4 sm:px-6">
           <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Layanan Pengaduan Ketenagakerjaan</h1>
-            <p className="text-sm text-[#6b7280] mt-1">Kelola laporan pengaduan dari pekerja, pantau status, dan catat tindak lanjut</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-primary">Layanan Pengaduan Ketenagakerjaan</h1>
+            <p className="text-sm text-gray-500 mt-1">Kelola laporan pengaduan dari pekerja, pantau status, dan catat tindak lanjut</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard title="Total Pengaduan" value={pengaduanList.length} change="+5" color="#4f90c6" icon="ri-customer-service-line" />
-            <StatCard title="Menunggu" value={pengaduanList.filter((p) => p.status === "Pending").length} change="Perlu tindakan" color="#355485" icon="ri-time-line" />
-            <StatCard title="Diproses" value={pengaduanList.filter((p) => p.status === "Proses").length} change="Sedang ditangani" color="#90b6d5" icon="ri-refresh-line" />
-            <StatCard title="Selesai" value={pengaduanList.filter((p) => p.status === "Selesai").length} change="+2" color="#2a436c" icon="ri-checkbox-circle-line" />
+            <StatCard title="Total Pengaduan" value={pengaduanList.length} change="+5" color="var(--color-secondary)" icon="ri-customer-service-line" />
+            <StatCard title="Menunggu" value={pengaduanList.filter((p) => p.status === "Pending").length} change="Perlu tindakan" color="var(--color-foreground)" icon="ri-time-line" />
+            <StatCard title="Diproses" value={pengaduanList.filter((p) => p.status === "Proses").length} change="Sedang ditangani" color="var(--color-primary)" icon="ri-refresh-line" />
+            <StatCard title="Selesai" value={pengaduanList.filter((p) => p.status === "Selesai").length} change="+2" color="var(--color-primary)" icon="ri-checkbox-circle-line" />
           </div>
 
-          <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] mb-6">
+          <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <Input icon="ri-search-line" type="text" placeholder="Cari pelapor, jenis, atau perusahaan..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full py-3" />
@@ -91,7 +91,7 @@ export default function PengaduanPage() {
                   options={[{ value: "grid", icon: "ri-grid-line" }, { value: "table", icon: "ri-list-check" }]}
                 />
 
-                <button className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center gap-2"><i className="ri-add-line"></i>Laporkan</button>
+                <button className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center justify-center gap-2"><i className="ri-add-line"></i>Laporkan</button>
               </div>
             </div>
           </div>
@@ -99,12 +99,12 @@ export default function PengaduanPage() {
           {viewMode === "grid" ? (
             <CardGrid>
               {paginatedPengaduan.map((p) => (
-                <div key={p.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
+                <div key={p.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-[#2a436c] text-sm leading-tight truncate">#{p.id} - {p.jenis}</h3>
-                        <p className="text-xs text-[#6b7280] truncate">{p.pelapor} • {p.tanggal}</p>
+                        <h3 className="font-bold text-primary text-sm leading-tight truncate">#{p.id} - {p.jenis}</h3>
+                        <p className="text-xs text-gray-500 truncate">{p.pelapor} • {p.tanggal}</p>
                       </div>
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${getStatusColor(p.status)}`}>{p.status}</span>
                     </div>
@@ -115,19 +115,19 @@ export default function PengaduanPage() {
                   </div>
 
                   <div className="p-4 space-y-3">
-                    <div className="flex items-center justify-between text-sm"><span className="text-[#374151]">Perusahaan</span><span className="font-medium text-right text-[#111827]">{p.perusahaan}</span></div>
-                    <div className="flex items-center justify-between text-sm"><span className="text-[#374151]">Lokasi</span><span className="font-medium text-[#111827]">{p.lokasi}</span></div>
-                    <div className="text-sm"><p className="text-[#6b7280] mb-1">Deskripsi:</p><p className="text-[#2a436c] line-clamp-2 italic">{p.deskripsi}</p></div>
+                    <div className="flex items-center justify-between text-sm"><span className="text-gray-700">Perusahaan</span><span className="font-medium text-right text-gray-900">{p.perusahaan}</span></div>
+                    <div className="flex items-center justify-between text-sm"><span className="text-gray-700">Lokasi</span><span className="font-medium text-gray-900">{p.lokasi}</span></div>
+                    <div className="text-sm"><p className="text-gray-500 mb-1">Deskripsi:</p><p className="text-primary line-clamp-2 italic">{p.deskripsi}</p></div>
                   </div>
 
-                  <div className="p-4 border-t border-[#e5e7eb] bg-[#f9fafb]">
-                    <p className="text-xs text-[#6b7280] mb-1">Tindak Lanjut:</p>
-                    <p className="text-sm text-[#2a436c] line-clamp-2">{p.tindakLanjut || "Belum ada catatan tindak lanjut."}</p>
+                  <div className="p-4 border-t border-gray-200 bg-gray-50">
+                    <p className="text-xs text-gray-500 mb-1">Tindak Lanjut:</p>
+                    <p className="text-sm text-primary line-clamp-2">{p.tindakLanjut || "Belum ada catatan tindak lanjut."}</p>
                   </div>
 
-                  <div className="p-4 border-t border-[#e5e7eb]">
+                  <div className="p-4 border-t border-gray-200">
                     <div className="flex gap-2">
-                      <button onClick={() => handleEditNote(p.id)} className="flex-1 px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition flex items-center justify-center gap-1"><i className="ri-edit-line"></i>Edit Catatan</button>
+                      <button onClick={() => handleEditNote(p.id)} className="flex-1 px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-primary transition flex items-center justify-center gap-1"><i className="ri-edit-line"></i>Edit Catatan</button>
                       <SearchableSelect value={p.status} onChange={(v) => handleUpdateStatus(p.id, v)} className="text-sm" options={[{ value: "Pending", label: "Pending" }, { value: "Proses", label: "Proses" }, { value: "Selesai", label: "Selesai" }]} />
                     </div>
                   </div>
@@ -150,14 +150,14 @@ export default function PengaduanPage() {
                 <TableBody>
                   {paginatedPengaduan.map((p) => (
                     <TableRow key={p.id}>
-                      <TD><span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-[#111827]">#{p.id}</span></TD>
-                      <TD><div><p className="font-medium text-[#111827]">{p.pelapor}</p><p className="text-xs text-[#4b5563]">{p.tanggal}</p></div></TD>
+                      <TD><span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-gray-900">#{p.id}</span></TD>
+                      <TD><div><p className="font-medium text-gray-900">{p.pelapor}</p><p className="text-xs text-gray-600">{p.tanggal}</p></div></TD>
                       <TD><span className={`px-2 py-1 text-xs rounded-full ${getJenisColor(p.jenis)}`}>{p.jenis}</span></TD>
-                      <TD className="text-[#6b7280]">{p.perusahaan}</TD>
+                      <TD className="text-gray-500">{p.perusahaan}</TD>
                       <TD><span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(p.status)}`}>{p.status}</span></TD>
                       <TD>
                         <div className="flex gap-2">
-                          <button onClick={() => handleEditNote(p.id)} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Edit</button>
+                          <button onClick={() => handleEditNote(p.id)} className="px-3 py-1 text-xs bg-secondary text-white rounded hover:bg-primary transition">Edit</button>
                           <SearchableSelect value={p.status} onChange={(v) => handleUpdateStatus(p.id, v)} className="text-xs px-2 py-1" options={[{ value: "Pending", label: "Pending" }, { value: "Proses", label: "Proses" }, { value: "Selesai", label: "Selesai" }]} />
                         </div>
                       </TD>
@@ -175,9 +175,9 @@ export default function PengaduanPage() {
           {editNote.id && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-                <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-semibold text-[#2a436c]">Edit Catatan Tindak Lanjut</h3><button onClick={() => setEditNote({ id: null, value: "" })} className="text-gray-500 hover:text-gray-700"><i className="ri-close-line text-lg"></i></button></div>
+                <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-semibold text-primary">Edit Catatan Tindak Lanjut</h3><button onClick={() => setEditNote({ id: null, value: "" })} className="text-gray-500 hover:text-gray-700"><i className="ri-close-line text-lg"></i></button></div>
                 <Textarea value={editNote.value} onChange={(e) => setEditNote({ ...editNote, value: e.target.value })} rows={4} className="mb-4" placeholder="Catat tindakan yang telah dilakukan..." />
-                <div className="flex justify-end gap-3"><button onClick={() => setEditNote({ id: null, value: "" })} className="px-4 py-2 border border-[#e5e7eb] text-gray-700 rounded-lg hover:bg-gray-50 transition">Batal</button><button onClick={() => handleSaveNote(editNote.id)} className="px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">Simpan</button></div>
+                <div className="flex justify-end gap-3"><button onClick={() => setEditNote({ id: null, value: "" })} className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition">Batal</button><button onClick={() => handleSaveNote(editNote.id)} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition">Simpan</button></div>
               </div>
             </div>
           )}

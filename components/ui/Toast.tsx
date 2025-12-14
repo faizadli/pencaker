@@ -35,10 +35,10 @@ export default function ToastProvider({ children }: { children: React.ReactNode 
           className: "rounded-lg shadow-lg",
           style: { fontSize: "1rem", padding: "14px 16px", minWidth: "320px" },
           success: {
-            style: { background: "#16a34a", color: "#ffffff" },
+            style: { background: "var(--color-primary)", color: "white" },
           },
           error: {
-            style: { background: "#dc2626", color: "#ffffff" },
+            style: { background: "var(--color-danger)", color: "white" },
           },
         }}
       />

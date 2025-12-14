@@ -10,7 +10,7 @@ export function Table({ children, className }: { children: React.ReactNode; clas
 }
 
 export function TableHead({ children }: { children: React.ReactNode }) {
-  return <thead className="bg-[#cbdde9] text-[#2a436c]">{children}</thead>;
+  return <thead className="bg-secondary/20 text-primary">{children}</thead>;
 }
 
 export function TableBody({ children }: { children: React.ReactNode }) {
@@ -18,7 +18,7 @@ export function TableBody({ children }: { children: React.ReactNode }) {
 }
 
 export function TableRow({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <tr className={`border-b border-[#e5e7eb] hover:bg-[#f9fafb] ${className || ""}`}>{children}</tr>;
+  return <tr className={`border-b border-gray-200 hover:bg-gray-50 ${className || ""}`}>{children}</tr>;
 }
 
 export function TH({ children, className }: { children: React.ReactNode; className?: string }) {

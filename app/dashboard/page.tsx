@@ -50,6 +50,20 @@ function DashboardPageComponent() {
     if (role) loadPerms();
   }, [role]);
 
+  const getCssVar = (name: string) => (typeof window !== "undefined" ? getComputedStyle(document.documentElement).getPropertyValue(name).trim() : "");
+  const hexToRgba = (hex: string, alpha = 1) => {
+    const h = hex.replace('#', '');
+    const bigint = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+  const primaryColor = getCssVar('--color-primary');
+  const secondaryColor = getCssVar('--color-secondary');
+  const foregroundColor = getCssVar('--color-foreground');
+  const gridColor = hexToRgba(foregroundColor, 0.12);
+
   const isDisnaker = role === "disnaker";
   const isCompany = role === "company";
   const isCandidate = role === "candidate";
@@ -122,15 +136,15 @@ function DashboardPageComponent() {
   const barData = {
     labels: monthLabels,
     datasets: [
-      { label: "Lowongan Disetujui", data: jobsPerMonth, backgroundColor: "#4f90c6", borderColor: "#355485", borderWidth: 1 },
+      { label: "Lowongan Disetujui", data: jobsPerMonth, backgroundColor: secondaryColor, borderColor: primaryColor, borderWidth: 1 },
     ],
   };
 
   const barOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false }, title: { display: true, text: `Lowongan Disetujui per Bulan (${new Date().getFullYear()})`, font: { size: 14, weight: "bold" }, color: "#2a436c" } },
-    scales: { y: { beginAtZero: true, grid: { color: "#e5e7eb" }, ticks: { color: "#6b7280" } }, x: { grid: { display: false }, ticks: { color: "#6b7280" } } },
+    plugins: { legend: { display: false }, title: { display: true, text: `Lowongan Disetujui per Bulan (${new Date().getFullYear()})`, font: { size: 14, weight: "bold" }, color: primaryColor } },
+    scales: { y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: foregroundColor } }, x: { grid: { display: false }, ticks: { color: foregroundColor } } },
   } as const;
 
   const sectorData = useMemo(() => {
@@ -141,12 +155,12 @@ function DashboardPageComponent() {
     });
     const labels = Object.keys(byCat);
     const data = labels.map((l) => byCat[l]);
-    const colors = ["#4f90c6", "#90b6d5", "#cbdde9", "#355485", "#2a436c", "#6b7280", "#111827"]; 
+    const colors = [secondaryColor, primaryColor, foregroundColor, primaryColor, secondaryColor, foregroundColor]; 
     const bg = labels.map((_, i) => colors[i % colors.length]);
     return { labels, datasets: [{ data, backgroundColor: bg }] };
-  }, [jobRows]);
+  }, [jobRows, secondaryColor, primaryColor, foregroundColor]);
 
-  const pieOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { color: "#6b7280" } }, title: { display: true, text: "Distribusi Lowongan per Kategori", font: { size: 14, weight: "bold" }, color: "#2a436c" } } } as const;
+  const pieOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { color: foregroundColor } }, title: { display: true, text: "Distribusi Lowongan per Kategori", font: { size: 14, weight: "bold" }, color: primaryColor } } } as const;
 
   const demographicsData = useMemo(() => {
     const labels = ["18-25", "26-35", "36-45", "46+"];
@@ -171,10 +185,10 @@ function DashboardPageComponent() {
       else if (g === "perempuan" || g === "female" || g === "p") female[idx]++;
     });
     return { labels, datasets: [
-      { label: "Laki-laki", data: male, backgroundColor: "#4f90c6" },
-      { label: "Perempuan", data: female, backgroundColor: "#90b6d5" },
+      { label: "Laki-laki", data: male, backgroundColor: primaryColor },
+      { label: "Perempuan", data: female, backgroundColor: secondaryColor },
     ] };
-  }, [candRows]);
+  }, [candRows, primaryColor, secondaryColor]);
 
   const expiringJobs = useMemo(() => {
     const now = new Date();
@@ -196,38 +210,38 @@ function DashboardPageComponent() {
   const demographicOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { labels: { color: "#6b7280" } }, title: { display: true, text: "Distribusi Pencari Kerja Berdasarkan Usia & Gender", font: { size: 14, weight: "bold" }, color: "#2a436c" } },
-    scales: { y: { beginAtZero: true, grid: { color: "#e5e7eb" }, ticks: { color: "#6b7280" } }, x: { grid: { display: false }, ticks: { color: "#6b7280" } } },
+    plugins: { legend: { labels: { color: foregroundColor } }, title: { display: true, text: "Distribusi Pencari Kerja Berdasarkan Usia & Gender", font: { size: 14, weight: "bold" }, color: primaryColor } },
+    scales: { y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: foregroundColor } }, x: { grid: { display: false }, ticks: { color: foregroundColor } } },
   } as const;
 
   return (
     <>
-      <main className={`transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64`}>
+      <main className={`transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64`}>
         <div className="px-4 sm:px-6">
           {loading && (
             <div className="flex items-center justify-center h-[40vh]">
-              <div className="flex items-center gap-3 text-[#355485]">
-                <div className="w-5 h-5 border-2 border-[#355485] border-t-transparent rounded-full animate-spin"></div>
+              <div className="flex items-center gap-3 text-primary">
+                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-sm font-medium">Memuat ringkasan dashboard...</span>
               </div>
             </div>
           )}
           {isCandidate && (
             <div className="mb-6">
-              <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Dashboard Pencaker</h1>
-              <p className="text-sm text-[#6b7280] mt-1">Lihat profil, status AK1, dan rekomendasi lowongan</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-primary">Dashboard Pencaker</h1>
+              <p className="text-sm text-gray-500 mt-1">Lihat profil, status AK1, dan rekomendasi lowongan</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-                <StatCard title="Status AK1" value="Aktif" change="Valid 6 bulan" color="#4f90c6" icon="ri-id-card-line" />
-                <StatCard title="Lamaran Terkirim" value={5} change="Minggu ini" color="#355485" icon="ri-send-plane-2-line" />
-                <StatCard title="Wawancara Terjadwal" value={2} change="Jadwal terbaru" color="#90b6d5" icon="ri-calendar-check-line" />
+                <StatCard title="Status AK1" value="Aktif" change="Valid 6 bulan" color={secondaryColor} icon="ri-id-card-line" />
+                <StatCard title="Lamaran Terkirim" value={5} change="Minggu ini" color={primaryColor} icon="ri-send-plane-2-line" />
+                <StatCard title="Wawancara Terjadwal" value={2} change="Jadwal terbaru" color={foregroundColor} icon="ri-calendar-check-line" />
               </div>
               <Card
                 className="mt-8"
-                header={<h2 className="text-lg font-semibold text-[#2a436c]">Rekomendasi Lowongan</h2>}
+                header={<h2 className="text-lg font-semibold text-primary">Rekomendasi Lowongan</h2>}
               >
-                <ul className="space-y-3 text-sm text-[#2a436c]">
-                  <li className="flex justify-between"><span>Frontend Developer - PT Solusi Digital</span><Link href="/jobs" className="text-[#355485]">Lihat</Link></li>
-                  <li className="flex justify-between"><span>Teknisi Jaringan - CV Makmur Abadi</span><Link href="/jobs" className="text-[#355485]">Lihat</Link></li>
+                <ul className="space-y-3 text-sm text-primary">
+                  <li className="flex justify-between"><span>Frontend Developer - PT Solusi Digital</span><Link href="/jobs" className="text-primary">Lihat</Link></li>
+                  <li className="flex justify-between"><span>Teknisi Jaringan - CV Makmur Abadi</span><Link href="/jobs" className="text-primary">Lihat</Link></li>
                 </ul>
               </Card>
             </div>
@@ -235,20 +249,20 @@ function DashboardPageComponent() {
 
           {isCompany && (
             <div className="mb-6">
-              <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Dashboard Perusahaan</h1>
-              <p className="text-sm text-[#6b7280] mt-1">Kelola lowongan, pantau pelamar, dan verifikasi</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-primary">Dashboard Perusahaan</h1>
+              <p className="text-sm text-gray-500 mt-1">Kelola lowongan, pantau pelamar, dan verifikasi</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-                <StatCard title="Lowongan Aktif" value={8} change="+2 minggu ini" color="#4f90c6" icon="ri-briefcase-line" />
-                <StatCard title="Total Pelamar" value={134} change="+27" color="#355485" icon="ri-user-line" />
-                <StatCard title="Menunggu Verifikasi" value={3} change="Perlu tindakan" color="#90b6d5" icon="ri-time-line" />
+                <StatCard title="Lowongan Aktif" value={8} change="+2 minggu ini" color={secondaryColor} icon="ri-briefcase-line" />
+                <StatCard title="Total Pelamar" value={134} change="+27" color={primaryColor} icon="ri-user-line" />
+                <StatCard title="Menunggu Verifikasi" value={3} change="Perlu tindakan" color={foregroundColor} icon="ri-time-line" />
               </div>
               <Card
                 className="mt-8"
-                header={<h2 className="text-lg font-semibold text-[#2a436c]">Aktivitas Terbaru</h2>}
+                header={<h2 className="text-lg font-semibold text-primary">Aktivitas Terbaru</h2>}
               >
-                <ul className="space-y-3 text-sm text-[#2a436c]">
-                  <li className="flex justify-between"><span>Lamaran baru untuk &quot;Frontend Developer&quot;</span><a href="/dashboard/lowongan" className="text-[#355485]">Kelola</a></li>
-                  <li className="flex justify-between"><span>Lowongan &quot;Operator&quot; menunggu verifikasi</span><a href="/dashboard/lowongan" className="text-[#355485]">Tinjau</a></li>
+                <ul className="space-y-3 text-sm text-primary">
+                  <li className="flex justify-between"><span>Lamaran baru untuk &quot;Frontend Developer&quot;</span><a href="/dashboard/lowongan" className="text-primary">Kelola</a></li>
+                  <li className="flex justify-between"><span>Lowongan &quot;Operator&quot; menunggu verifikasi</span><a href="/dashboard/lowongan" className="text-primary">Tinjau</a></li>
                 </ul>
               </Card>
             </div>
@@ -256,16 +270,16 @@ function DashboardPageComponent() {
 
           {isDisnaker && (
             <div className="mb-6">
-              <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Dashboard Overview</h1>
-              <p className="text-sm text-[#6b7280] mt-1">Ringkasan statistik dan aktivitas terkini sistem</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-primary">Dashboard Overview</h1>
+              <p className="text-sm text-gray-500 mt-1">Ringkasan statistik dan aktivitas terkini sistem</p>
             </div>
           )}
 
           {canSeeOverview && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {canReadPencaker && <StatCard title="Pencari Kerja" value={stats.jobSeekers} change="Total terdata" color="#4f90c6" icon="ri-user-line" />}
-              {canReadLowongan && <StatCard title="Lowongan Aktif" value={stats.activeJobs} change="Status approved" color="#355485" icon="ri-briefcase-line" />}
-              {canReadPerusahaan && <StatCard title="Perusahaan" value={stats.companies} change="Total terdata" color="#90b6d5" icon="ri-building-line" />}
+              {canReadPencaker && <StatCard title="Pencari Kerja" value={stats.jobSeekers} change="Total terdata" color={secondaryColor} icon="ri-user-line" />}
+              {canReadLowongan && <StatCard title="Lowongan Aktif" value={stats.activeJobs} change="Status approved" color={primaryColor} icon="ri-briefcase-line" />}
+              {canReadPerusahaan && <StatCard title="Perusahaan" value={stats.companies} change="Total terdata" color={foregroundColor} icon="ri-building-line" />}
             </div>
           )}
 
@@ -289,23 +303,23 @@ function DashboardPageComponent() {
           {(canReadPencaker || canReadLowongan) && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {canReadPencaker && (
-            <Card header={<h2 className="text-lg font-semibold text-[#2a436c]">Distribusi Pencari Kerja</h2>}>
+            <Card header={<h2 className="text-lg font-semibold text-primary">Distribusi Pencari Kerja</h2>}>
               <div className="h-64 sm:h-80">
                 <Bar data={demographicsData} options={demographicOptions} />
               </div>
             </Card>
             )}
             {canReadLowongan && (
-            <Card header={<div className="flex items-center justify-between"><h2 className="text-lg font-semibold text-[#2a436c]">Lowongan Hampir Tutup</h2><span className="text-xs text-[#6b7280] bg-[#f9fafb] px-2 py-1 rounded">{expiringJobs.length} lowongan</span></div>}>
+            <Card header={<div className="flex items-center justify-between"><h2 className="text-lg font-semibold text-primary">Lowongan Hampir Tutup</h2><span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">{expiringJobs.length} lowongan</span></div>}>
               <div className="space-y-3">
                 {expiringJobs.length === 0 && (
-                  <p className="text-sm text-[#6b7280]">Belum ada lowongan yang mendekati batas waktu.</p>
+                  <p className="text-sm text-gray-500">Belum ada lowongan yang mendekati batas waktu.</p>
                 )}
                 {expiringJobs.map((job, idx) => (
-                  <div key={`${job.title}-${idx}`} className="flex items-center justify-between p-3 border border-[#e5e7eb] rounded-lg hover:bg-[#f9fafb] transition-colors">
+                  <div key={`${job.title}-${idx}`} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-[#2a436c] truncate">{job.title}</p>
-                      <p className="text-sm text-[#6b7280] truncate">{job.company}</p>
+                      <p className="font-medium text-primary truncate">{job.title}</p>
+                      <p className="text-sm text-gray-500 truncate">{job.company}</p>
                     </div>
                     <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full whitespace-nowrap">{job.badge}</span>
                   </div>
@@ -317,7 +331,7 @@ function DashboardPageComponent() {
           )}
 
           {canSeeOverview && (
-          <div className="bg-gradient-to-r from-[#355485] to-[#4f90c6] text-white p-6 rounded-xl shadow-md">
+          <div className="bg-gradient-to-r from-primary to-secondary text-white p-6 rounded-xl shadow-md">
             <div className="flex items-start gap-3">
               <div className="p-2 bg-white/20 rounded-lg">
                 <i className="ri-lightbulb-line text-lg"></i>

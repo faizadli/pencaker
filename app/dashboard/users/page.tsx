@@ -171,24 +171,24 @@ export default function UsersPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
         <div className="px-4 sm:px-6">
 
           {loading && (
             <div className="flex items-center justify-center h-[40vh]">
-              <div className="flex items-center gap-3 text-[#355485]">
-                <div className="w-5 h-5 border-2 border-[#355485] border-t-transparent rounded-full animate-spin"></div>
+              <div className="flex items-center gap-3 text-primary">
+                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-sm font-medium">Memuat data pengguna...</span>
               </div>
             </div>
           )}
 
           <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Pengguna & Hak Akses</h1>
-            <p className="text-sm text-[#6b7280] mt-1">Kelola admin, atur role, dan kontrol akses sistem</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-primary">Manajemen Pengguna & Hak Akses</h1>
+            <p className="text-sm text-gray-500 mt-1">Kelola admin, atur role, dan kontrol akses sistem</p>
           </div>
 
-          <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] mb-6">
+          <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <Input icon="ri-search-line" type="text" placeholder="Cari nama atau email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full py-3" />
@@ -197,7 +197,7 @@ export default function UsersPage() {
                 <SearchableSelect value={roleFilter} onChange={(v) => setRoleFilter(v)} options={[{ value: "all", label: "Semua Role" }, ...roles.map((r) => ({ value: r, label: r }))]} />
                 <SearchableSelect value={statusFilter} onChange={(v) => setStatusFilter(v)} options={[{ value: "all", label: "Semua Status" }, { value: "Aktif", label: "Aktif" }, { value: "Nonaktif", label: "Nonaktif" }]} />
                 {permissionCodes.includes("users.create") && (
-                  <button onClick={handleAdd} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center gap-2">
+                  <button onClick={handleAdd} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center justify-center gap-2">
                     <i className="ri-add-line"></i>
                     Tambah
                   </button>
@@ -222,8 +222,8 @@ export default function UsersPage() {
                   <TableRow key={user.id} className="">
                     <TD>
                       <div>
-                        <p className="font-medium text-[#111827]">{user.nama}</p>
-                        <p className="text-xs text-[#9ca3af]">{user.email}</p>
+                        <p className="font-medium text-gray-900">{user.nama}</p>
+                        <p className="text-xs text-gray-400">{user.email}</p>
                       </div>
                     </TD>
                     <TD>
@@ -232,11 +232,11 @@ export default function UsersPage() {
                     <TD>
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.status)}`}>{user.status}</span>
                     </TD>
-                    <TD className="text-[#6b7280] text-sm">{user.terakhirLogin}</TD>
+                    <TD className="text-gray-500 text-sm">{user.terakhirLogin}</TD>
                     <TD>
                       <div className="flex gap-2">
                         {permissionCodes.includes("users.update") && (
-                          <button onClick={() => handleEdit(user)} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition flex items-center gap-1">
+                          <button onClick={() => handleEdit(user)} className="px-3 py-1 text-xs bg-secondary text-white rounded hover:bg-primary transition flex items-center gap-1">
                             <i className="ri-edit-line"></i>
                             Edit
                           </button>
@@ -256,22 +256,22 @@ export default function UsersPage() {
             <div className="sm:hidden">
               <div className="p-3 space-y-3">
                 {filteredUsers.map((user) => (
-                  <div key={`m-${user.id}`} className="border border-[#e5e7eb] rounded-lg p-3">
+                  <div key={`m-${user.id}`} className="border border-gray-200 rounded-lg p-3">
                     <div className="flex items-start justify-between">
                       <div className="min-w-0">
-                        <p className="font-semibold text-[#2a436c] truncate">{user.nama}</p>
+                        <p className="font-semibold text-primary truncate">{user.nama}</p>
                         
-                        <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
+                        <p className="text-xs text-gray-400 truncate">{user.email}</p>
                       </div>
                       <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getRoleColor(user.role)}`}>{user.role}</span>
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(user.status)}`}>{user.status}</span>
-                      <span className="text-[11px] text-[#6b7280]">{user.terakhirLogin}</span>
+                      <span className="text-[11px] text-gray-500">{user.terakhirLogin}</span>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       {permissionCodes.includes("users.update") && (
-                        <button onClick={() => handleEdit(user)} className="px-3 py-2 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">
+                        <button onClick={() => handleEdit(user)} className="px-3 py-2 text-xs bg-secondary text-white rounded hover:bg-primary transition">
                           Edit
                         </button>
                       )}
@@ -301,8 +301,8 @@ export default function UsersPage() {
             size="md"
             actions={(
               <>
-                <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Batal</button>
-                <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]">Simpan</button>
+                <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Batal</button>
+                <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary">Simpan</button>
               </>
             )}
           >

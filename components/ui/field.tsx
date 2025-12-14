@@ -31,20 +31,20 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
     };
     return (
       <div className="w-full">
-        {label && <label className="block mb-1 text-sm font-medium text-[#2a436c]">{label}</label>}
+        {label && <label className="block mb-1 text-sm font-medium text-primary">{label}</label>}
         <div className="relative w-full">
           <input ref={setFileRef} {...{ ...rest, value: undefined, required: isRequired, onChange: handleFileChange }} className="sr-only" />
-          <div className={`flex items-center gap-3 w-full px-3 h-11 border ${showError ? "border-red-400" : "border-[#d1d5db]"} rounded-xl bg-white focus-within:ring-2 focus-within:ring-[#355485] focus-within:border-transparent ${className || ""}`}>
-            <i className={`${icon || "ri-upload-2-line"} text-[#6b7280]`}></i>
-            <button type="button" onClick={() => localFileRef.current?.click()} className="px-3 py-2 rounded-lg bg-[#355485] text-white text-sm hover:bg-[#2a436c]">
+          <div className={`flex items-center gap-3 w-full px-3 h-11 border ${showError ? "border-red-400" : "border-gray-300"} rounded-xl bg-white focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent ${className || ""}`}>
+            <i className={`${icon || "ri-upload-2-line"} text-gray-500`}></i>
+            <button type="button" onClick={() => localFileRef.current?.click()} className="px-3 py-2 rounded-lg bg-primary text-white text-sm hover:bg-primary">
               Pilih File
             </button>
-            <span className="text-sm text-[#374151] truncate flex-1">{fileName || "Belum ada file"}</span>
+            <span className="text-sm text-gray-700 truncate flex-1">{fileName || "Belum ada file"}</span>
           </div>
         </div>
-        {fileName && <p className="mt-1 text-xs text-[#374151] truncate">{fileName}</p>}
+        {fileName && <p className="mt-1 text-xs text-gray-700 truncate">{fileName}</p>}
         {errorText && <p className="mt-1 text-xs text-red-600">{errorText}</p>}
-        {hint && !errorText && <p className="mt-1 text-xs text-[#6b7280]">{hint}</p>}
+        {hint && !errorText && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
       </div>
     );
   }
@@ -65,17 +65,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
   
   return (
     <div className="w-full">
-      {label && <label className="block mb-1 text-sm font-medium text-[#2a436c]">{label}</label>}
+      {label && <label className="block mb-1 text-sm font-medium text-primary">{label}</label>}
       <div className="relative w-full">
-        {icon && <i className={`${icon} absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]`}></i>}
+        {icon && <i className={`${icon} absolute left-3 top-1/2 -translate-y-1/2 text-gray-500`}></i>}
         <input
           ref={ref}
           {...{ ...inputProps, required: isRequired }}
-          className={`w-full ${icon ? "pl-10" : "pl-3"} pr-4 py-3 h-11 border ${showError ? "border-red-400" : "border-[#d1d5db]"} rounded-xl focus:ring-2 focus:ring-[#355485] focus:border-transparent placeholder:text-[#6b7280] bg-white text-[#111827] text-sm text-left ${className || ""}`}
+          className={`w-full ${icon ? "pl-10" : "pl-3"} pr-4 py-3 h-11 border ${showError ? "border-red-400" : "border-gray-300"} rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-500 bg-white text-gray-900 text-sm text-left ${className || ""}`}
         />
       </div>
       {errorText && <p className="mt-1 text-xs text-red-600">{errorText}</p>}
-      {hint && !errorText && <p className="mt-1 text-xs text-[#6b7280]">{hint}</p>}
+      {hint && !errorText && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
     </div>
   );
 });
@@ -100,14 +100,14 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   
   return (
     <div className="w-full">
-      {label && <label className="block mb-1 text-sm font-medium text-[#2a436c]">{label}</label>}
+      {label && <label className="block mb-1 text-sm font-medium text-primary">{label}</label>}
       <textarea
         ref={ref}
         {...{ ...textareaProps, required: isRequired }}
-        className={`w-full px-3 py-3 border ${showError ? "border-red-400" : "border-[#d1d5db]"} rounded-xl focus:ring-2 focus:ring-[#355485] focus:border-transparent placeholder:text-[#6b7280] bg-white text-[#111827] text-left ${className || ""}`}
+        className={`w-full px-3 py-3 border ${showError ? "border-red-400" : "border-gray-300"} rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-500 bg-white text-gray-900 text-left ${className || ""}`}
       />
       {errorText && <p className="mt-1 text-xs text-red-600">{errorText}</p>}
-      {hint && !errorText && <p className="mt-1 text-xs text-[#6b7280]">{hint}</p>}
+      {hint && !errorText && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
     </div>
   );
 });
@@ -193,27 +193,27 @@ export function SearchableSelect({ options, value, onChange, placeholder = "Pili
 
   return (
     <div className={`w-full sm:w-auto sm:min-w-[9rem] shrink-0 ${className || ""}`}> 
-      {label && <label className="block mb-1 text-sm font-medium text-[#2a436c]">{label}</label>}
+      {label && <label className="block mb-1 text-sm font-medium text-primary">{label}</label>}
       <div className="w-full">
         <div ref={containerRef} className="relative w-full">
-          <button type="button" disabled={disabled} onClick={() => setOpen((v) => { const nv = !v; return nv; })} className={`w-full pl-3 pr-9 py-3 h-11 border ${showError ? "border-red-400" : "border-[#d1d5db]"} rounded-xl bg-white text-left text-[#111827] text-sm focus:ring-2 focus:ring-[#355485] focus:border-transparent ${disabled ? "opacity-60 cursor-not-allowed" : ""} whitespace-nowrap overflow-hidden`}>
-            {selected ? <span className="block truncate max-w-full">{selected.label}</span> : <span className="text-[#6b7280] block truncate max-w-full">{placeholder}</span>}
+          <button type="button" disabled={disabled} onClick={() => setOpen((v) => { const nv = !v; return nv; })} className={`w-full pl-3 pr-9 py-3 h-11 border ${showError ? "border-red-400" : "border-gray-300"} rounded-xl bg-white text-left text-gray-900 text-sm focus:ring-2 focus:ring-primary focus:border-transparent ${disabled ? "opacity-60 cursor-not-allowed" : ""} whitespace-nowrap overflow-hidden`}>
+            {selected ? <span className="block truncate max-w-full">{selected.label}</span> : <span className="text-gray-500 block truncate max-w-full">{placeholder}</span>}
           </button>
-          <i className={`ri-arrow-down-s-line absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] ${open ? "rotate-180" : ""}`}></i>
+          <i className={`ri-arrow-down-s-line absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 ${open ? "rotate-180" : ""}`}></i>
         </div>
         {errorText && <p className="mt-1 text-xs text-red-600">{errorText}</p>}
-        {hint && !errorText && <p className="mt-1 text-xs text-[#6b7280]">{hint}</p>}
+        {hint && !errorText && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
       </div>
       {open && menuStyle && (
-        <div ref={menuRef} style={{ position: "fixed", top: menuStyle.top, left: menuStyle.left, width: menuStyle.width, maxHeight: menuStyle.maxHeight, zIndex: 1000 }} className="bg-white border border-[#e5e7eb] rounded-lg shadow-lg">
-          <div className="p-2 border-b border-[#e5e7eb]">
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Cari opsi..." className="w-full px-3 py-2 border border-[#d1d5db] rounded-lg focus:ring-2 focus:ring-[#355485] focus:border-transparent placeholder:text-[#6b7280] bg-white text-[#111827]" />
+        <div ref={menuRef} style={{ position: "fixed", top: menuStyle.top, left: menuStyle.left, width: menuStyle.width, maxHeight: menuStyle.maxHeight, zIndex: 1000 }} className="bg-white border border-gray-200 rounded-lg shadow-lg">
+          <div className="p-2 border-b border-gray-200">
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Cari opsi..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-500 bg-white text-gray-900" />
           </div>
           <ul className="max-h-[300px] overflow-auto">
-            {filtered.length === 0 && <li className="px-3 py-2 text-sm text-[#6b7280]">Tidak ada hasil</li>}
+            {filtered.length === 0 && <li className="px-3 py-2 text-sm text-gray-500">Tidak ada hasil</li>}
             {filtered.map((o) => (
               <li key={o.value}>
-                <button type="button" onClick={() => { onChange(o.value); setOpen(false); setQuery(""); }} className={`w-full text-left px-3 py-2 text-sm hover:bg-[#f9fafb] ${o.value === value ? "bg-[#e5eef7] text-[#2a436c] font-medium" : "text-[#111827]"}`}>
+                <button type="button" onClick={() => { onChange(o.value); setOpen(false); setQuery(""); }} className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${o.value === value ? "bg-secondary/20 text-primary font-medium" : "text-gray-900"}`}>
                   {o.label}
                 </button>
               </li>
@@ -235,14 +235,14 @@ type SegmentedToggleProps = {
 };
 export function SegmentedToggle({ options, value, onChange, className, disabled }: SegmentedToggleProps) {
   return (
-    <div className={`flex items-stretch border border-[#e5e7eb] rounded-xl overflow-hidden w-full sm:w-auto sm:min-w-[9rem] shrink-0 h-full ${className || ""} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}>
+    <div className={`flex items-stretch border border-gray-200 rounded-xl overflow-hidden w-full sm:w-auto sm:min-w-[9rem] shrink-0 h-full ${className || ""} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}>
       {options.map((opt) => (
         <button
           key={opt.value}
           type="button"
           disabled={disabled}
           onClick={() => onChange(opt.value)}
-          className={`flex-1 px-4 py-3 flex items-center justify-center whitespace-nowrap ${value === opt.value ? "bg-[#355485] text-white" : "bg-white text-gray-600"}`}
+          className={`flex-1 px-4 py-3 flex items-center justify-center whitespace-nowrap ${value === opt.value ? "bg-primary text-white" : "bg-white text-gray-600"}`}
         >
           {opt.icon && <i className={opt.icon}></i>}
           {opt.label && <span>{opt.label}</span>}
@@ -316,7 +316,7 @@ export function TextEditor({ value, onChange, placeholder = "Tulis deskripsi..."
     if (editor.getHTML() !== html) editor.commands.setContent(html, { emitUpdate: false });
   }, [value, editor]);
 
-  const btn = (active: boolean) => `${active ? "bg-[#e5eef7] text-[#2a436c]" : "bg-white text-[#374151]"} border border-[#e5e7eb] px-2 py-1 rounded-lg text-sm hover:bg-[#f3f4f6] transition-colors`;
+  const btn = (active: boolean) => `${active ? "bg-secondary/20 text-primary" : "bg-white text-gray-700"} border border-gray-200 px-2 py-1 rounded-lg text-sm hover:bg-gray-50 transition-colors`;
 
   const handleBold = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -378,9 +378,9 @@ export function TextEditor({ value, onChange, placeholder = "Tulis deskripsi..."
 
   return (
     <div className={`w-full ${className || ""}`}>
-      {label && <label className="block mb-1 text-sm font-medium text-[#2a436c]">{label}</label>}
-      <div className={`border ${showError ? "border-red-400" : isFocused ? "border-[#355485]" : "border-[#d1d5db]"} rounded-xl bg-white overflow-hidden transition-colors ${isFocused ? "ring-2 ring-[#355485]" : ""}`}> 
-        <div className="flex flex-wrap gap-2 p-2 border-b border-[#e5e7eb]">
+      {label && <label className="block mb-1 text-sm font-medium text-primary">{label}</label>}
+      <div className={`border ${showError ? "border-red-400" : isFocused ? "border-primary" : "border-gray-300"} rounded-xl bg-white overflow-hidden transition-colors ${isFocused ? "ring-2 ring-primary" : ""}`}> 
+        <div className="flex flex-wrap gap-2 p-2 border-b border-gray-200">
           <button type="button" disabled={!editor || disabled} onMouseDown={handleBold} className={btn(editor?.isActive("bold") || false)} title="Bold">
             <i className="ri-bold"></i>
           </button>
@@ -390,7 +390,7 @@ export function TextEditor({ value, onChange, placeholder = "Tulis deskripsi..."
           <button type="button" disabled={!editor || disabled} onMouseDown={handleUnderline} className={btn(editor?.isActive("underline") || false)} title="Underline">
             <i className="ri-underline"></i>
           </button>
-          <div className="w-px bg-[#e5e7eb]"></div>
+          <div className="w-px bg-gray-200"></div>
           <button type="button" disabled={!editor || disabled} onMouseDown={handleBulletList} className={btn(editor?.isActive("bulletList") || false)} title="Bullet List (Dots)">
             <i className="ri-list-unordered"></i>
           </button>
@@ -404,12 +404,12 @@ export function TextEditor({ value, onChange, placeholder = "Tulis deskripsi..."
         <div className={`${disabled ? "opacity-60" : ""}`}>
           <EditorContent
             editor={editor}
-            className="min-h-40 p-3 text-sm text-[#111827] [&_.ProseMirror]:outline-none [&_.ProseMirror]:border-none [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:ml-6 [&_.ProseMirror_ol]:ml-6"
+            className="min-h-40 p-3 text-sm text-gray-900 [&_.ProseMirror]:outline-none [&_.ProseMirror]:border-none [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:ml-6 [&_.ProseMirror_ol]:ml-6"
           />
         </div>
       </div>
       {errorText && <p className="mt-1 text-xs text-red-600">{errorText}</p>}
-      {hint && !errorText && <p className="mt-1 text-xs text-[#6b7280]">{hint}</p>}
+      {hint && !errorText && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
     </div>
   );
 }

@@ -52,9 +52,9 @@ export default function CompanyLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f9fafb] px-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-[#e5e7eb] overflow-hidden">
-        <div className="bg-[#355485] text-white py-6 px-8 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+        <div className="bg-primary text-white py-6 px-8 text-center">
           <h1 className="text-2xl font-bold">Perusahaan</h1>
           <p className="text-sm opacity-90">Sistem Penempatan Tenaga Kerja</p>
         </div>
@@ -67,19 +67,19 @@ export default function CompanyLogin() {
           <SegmentedToggle value={usePhone ? "phone" : "email"} onChange={(v) => setUsePhone(v === "phone")} options={[{ label: "Email", value: "email" }, { label: "Nomor HP", value: "phone" }]} />
           {!usePhone && (
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#6b7280] mb-2">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-500 mb-2">Email</label>
               <Input icon="ri-mail-line" type="text" id="email" name="email" value={form.email} onChange={handleChange} className="w-full rounded-lg" placeholder="perusahaan@example.com" required />
             </div>
           )}
           {usePhone && (
             <div>
-              <label htmlFor="no_handphone" className="block text-sm font-medium text-[#6b7280] mb-2">Nomor Handphone</label>
+              <label htmlFor="no_handphone" className="block text-sm font-medium text-gray-500 mb-2">Nomor Handphone</label>
               <Input icon="ri-phone-line" type="tel" id="no_handphone" name="no_handphone" value={form.no_handphone} onChange={handleChange} className="w-full rounded-lg" placeholder="08xxxxxxxxxx" required />
             </div>
           )}
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-[#6b7280] mb-2">Password</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-500 mb-2">Password</label>
             <Input
               icon="ri-lock-2-line"
               type="password"
@@ -93,7 +93,7 @@ export default function CompanyLogin() {
             />
           </div>
 
-          <button type="submit" disabled={loading} className="w-full bg-[#355485] hover:bg-[#2a436c] text-white font-medium py-2.5 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+          <button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary-600 text-white font-medium py-2.5 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -105,8 +105,8 @@ export default function CompanyLogin() {
           </button>
         </form>
 
-        <div className="bg-[#f9fafb] px-8 py-4 text-center border-t border-[#e5e7eb]">
-          <p className="text-xs text-[#9ca3af]">© 2025 Dinas Tenaga Kerja. Hak Cipta Dilindungi.</p>
+        <div className="bg-gray-50 px-8 py-4 text-center border-t border-gray-200">
+          <p className="text-xs text-gray-400">© 2025 Dinas Tenaga Kerja. Hak Cipta Dilindungi.</p>
         </div>
       </div>
     </div>

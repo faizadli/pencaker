@@ -99,26 +99,26 @@ export default function AksesPage() {
   };
 
   return (
-    <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
+    <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
       <div className="px-4 sm:px-6">
         <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Akses</h1>
-          <p className="text-sm text-[#6b7280] mt-1">Atur hak akses per role</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-primary">Manajemen Akses</h1>
+          <p className="text-sm text-gray-500 mt-1">Atur hak akses per role</p>
         </div>
         {!permsLoaded && (
           <div className="flex items-center justify-center h-[40vh]">
-            <div className="flex items-center gap-3 text-[#355485]">
-              <div className="w-5 h-5 border-2 border-[#355485] border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex items-center gap-3 text-primary">
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
               <span className="text-sm font-medium">Memuat data akses...</span>
             </div>
           </div>
         )}
         {permsLoaded && permissionCodes.includes("akses.read") && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card header={<h3 className="text-lg font-semibold text-[#2a436c]">Role</h3>}>
+          <Card header={<h3 className="text-lg font-semibold text-primary">Role</h3>}>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#6b7280] mb-2">Pilih Role</label>
+                <label className="block text-sm font-medium text-gray-500 mb-2">Pilih Role</label>
                 <SearchableSelect
                   value={selectedRole}
                   onChange={setSelectedRole}
@@ -128,13 +128,13 @@ export default function AksesPage() {
               </div>
               <div className="space-y-4 mt-2">
                 {groupedPerms.map(([group, items]) => (
-                  <div key={group} className="border border-[#e5e7eb] rounded-lg p-4">
+                  <div key={group} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-semibold text-[#2a436c]">{groupLabels[group] || group.charAt(0).toUpperCase() + group.slice(1)}</h4>
+                      <h4 className="text-sm font-semibold text-primary">{groupLabels[group] || group.charAt(0).toUpperCase() + group.slice(1)}</h4>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {items.map((p) => (
-                        <label key={p.code} className="flex items-center gap-2 text-sm text-[#111827]">
+                        <label key={p.code} className="flex items-center gap-2 text-sm text-gray-900">
                           <input type="checkbox" checked={selectedPerms.includes(p.code)} onChange={() => togglePerm(p.code)} />
                           <span>{p.label}</span>
                         </label>
@@ -143,20 +143,20 @@ export default function AksesPage() {
                   </div>
                 ))}
               </div>
-              <button onClick={handleAssign} disabled={!selectedRole || loadingAssign} className="px-6 py-3 bg-[#355485] hover:bg-[#2a436c] text-white rounded-xl text-sm transition-all">
+              <button onClick={handleAssign} disabled={!selectedRole || loadingAssign} className="px-6 py-3 bg-primary hover:bg-primary text-white rounded-xl text-sm transition-all">
                 Simpan Akses
               </button>
             </div>
           </Card>
 
-          <Card header={<h3 className="text-lg font-semibold text-[#2a436c]">Buat Role Baru</h3>}>
+          <Card header={<h3 className="text-lg font-semibold text-primary">Buat Role Baru</h3>}>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#6b7280] mb-2">Nama Role</label>
+                <label className="block text-sm font-medium text-gray-500 mb-2">Nama Role</label>
                 <Input type="text" value={newRole.name} onChange={(e) => setNewRole({ ...newRole, name: e.target.value })} className="w-full rounded-lg" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#6b7280] mb-2">Deskripsi</label>
+                <label className="block text-sm font-medium text-gray-500 mb-2">Deskripsi</label>
                 <Input type="text" value={newRole.description} onChange={(e) => setNewRole({ ...newRole, description: e.target.value })} className="w-full rounded-lg" />
               </div>
               <button onClick={handleCreateRole} className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm transition-all">Buat Role</button>

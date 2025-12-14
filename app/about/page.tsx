@@ -139,7 +139,7 @@ export default function AboutPage() {
     <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
-      <section className="relative bg-[#2a436c] text-white py-16 px-4 sm:px-6">
+      <section className="relative bg-primary text-white py-16 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-bold mb-3">Tentang DISNAKER Paser</h1>
           <p className="text-base md:text-lg opacity-95 leading-relaxed">
@@ -155,7 +155,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Profile Text */}
             <div className="lg:col-span-2">
-              <h2 className="text-2xl font-bold text-[#2a436c] mb-4">Profil DISNAKER Paser</h2>
+              <h2 className="text-2xl font-bold text-primary mb-4">Profil DISNAKER Paser</h2>
               <div className="space-y-3 text-gray-700 text-sm leading-relaxed">
                 <p>
                   Dinas Ketenagakerjaan Kabupaten Paser merupakan instansi pemerintah yang bertanggung jawab dalam pengelolaan dan pengembangan ketenagakerjaan di wilayah Kabupaten Paser. Kami berkomitmen untuk meningkatkan kualitas tenaga kerja melalui berbagai program pelatihan, sertifikasi, dan penempatan kerja.
@@ -168,11 +168,11 @@ export default function AboutPage() {
 
             {/* Right Column - Focus Areas */}
             <div className="bg-blue-50 p-6 rounded-lg">
-              <h3 className="text-lg font-bold text-[#2a436c] mb-4">Fokus Utama Kami</h3>
+              <h3 className="text-lg font-bold text-primary mb-4">Fokus Utama Kami</h3>
               <div className="space-y-3">
                 {focusAreas.map((area, index) => (
                   <div key={index} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#4a6fa5] text-white flex items-center justify-center flex-shrink-0 font-semibold text-sm">
+                    <div className="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center flex-shrink-0 font-semibold text-sm">
                       {index + 1}
                     </div>
                     <p className="text-gray-700 text-sm pt-1">{area}</p>
@@ -188,7 +188,7 @@ export default function AboutPage() {
       <section className="py-12 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-[#2a436c] mb-2">Visi & Misi</h2>
+            <h2 className="text-2xl font-bold text-primary mb-2">Visi & Misi</h2>
             <p className="text-gray-600 text-sm">Arah dan tujuan strategis DISNAKER Kabupaten Paser</p>
           </div>
 
@@ -231,7 +231,7 @@ export default function AboutPage() {
       <section className="py-12 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-[#2a436c] mb-2">Struktur Organisasi</h2>
+            <h2 className="text-2xl font-bold text-primary mb-2">Struktur Organisasi</h2>
             <p className="text-gray-600 text-sm">Tim profesional yang berkomitmen melayani di Kabupaten Paser</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -246,7 +246,7 @@ export default function AboutPage() {
                     className="w-full h-full rounded-full object-cover border-4 border-gray-200"
                   />
                 </div>
-                <h3 className="font-bold text-sm text-[#2a436c] mb-2">{member.name}</h3>
+                <h3 className="font-bold text-sm text-primary mb-2">{member.name}</h3>
                 <div className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full mb-2 font-medium">
                   {member.position}
                 </div>
@@ -258,7 +258,7 @@ export default function AboutPage() {
       </section>
 
       {/* Statistics - Kabupaten Paser */}
-      <section className="py-12 bg-[#2a436c] text-white">
+      <section className="py-12 bg-primary text-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold mb-2">Kabupaten Paser dalam Angka</h2>
@@ -284,7 +284,7 @@ export default function AboutPage() {
       <section className="py-12 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-[#2a436c] mb-2">Pencapaian Kami</h2>
+            <h2 className="text-2xl font-bold text-primary mb-2">Pencapaian Kami</h2>
             <p className="text-gray-600 text-sm">Komitmen DISNAKER Paser dalam pengembangan ketenagakerjaan</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -303,15 +303,15 @@ export default function AboutPage() {
       <section className="py-12 bg-gray-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-[#2a436c] mb-2">Kontak Kami</h2>
+            <h2 className="text-2xl font-bold text-primary mb-2">Kontak Kami</h2>
             <p className="text-gray-600 text-sm">Hubungi DISNAKER Paser untuk informasi lebih lanjut</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
-              <div className="w-16 h-16 bg-[#4a6fa5] rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
                 <i className="ri-map-pin-line text-white text-2xl"></i>
               </div>
-              <h3 className="font-bold text-[#2a436c] mb-3">Alamat</h3>
+              <h3 className="font-bold text-primary mb-3">Alamat</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
                 Jl. Jenderal Sudirman No. 123
                 <br />
@@ -321,10 +321,10 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-[#4a6fa5] rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
                 <i className="ri-phone-line text-white text-2xl"></i>
               </div>
-              <h3 className="font-bold text-[#2a436c] mb-3">Telepon</h3>
+              <h3 className="font-bold text-primary mb-3">Telepon</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
                 (0543) 21010
                 <br />
@@ -334,10 +334,10 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-[#4a6fa5] rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
                 <i className="ri-mail-line text-white text-2xl"></i>
               </div>
-              <h3 className="font-bold text-[#2a436c] mb-3">Email & Media</h3>
+              <h3 className="font-bold text-primary mb-3">Email & Media</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
                 disnaker@paserkab.go.id
                 <br />

@@ -195,11 +195,11 @@ export default function PelamarLowonganPage() {
   };
 
   return (
-    <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
+    <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
       <div className="px-4 sm:px-6">
         <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Pelamar Lowongan</h1>
-          <p className="text-sm text-[#6b7280] mt-1">{jobTitle ? jobTitle : jobId}</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-primary">Pelamar Lowongan</h1>
+          <p className="text-sm text-gray-500 mt-1">{jobTitle ? jobTitle : jobId}</p>
         </div>
 
         <Card className="overflow-hidden">
@@ -217,26 +217,26 @@ export default function PelamarLowonganPage() {
             <TableBody>
               {rows.map((r) => (
                 <TableRow key={r.id}>
-                  <TD className="text-[#2a436c]">{r.name}</TD>
-                  <TD className="text-[#111827]">{typeof r.age === "number" ? `${r.age} th` : "-"}</TD>
-                  <TD className="text-[#6b7280]">{r.kecamatan || "-"}</TD>
-                <TD className="text-[#6b7280]">{r.kelurahan || "-"}</TD>
+                  <TD className="text-primary">{r.name}</TD>
+                  <TD className="text-gray-900">{typeof r.age === "number" ? `${r.age} th` : "-"}</TD>
+                  <TD className="text-gray-500">{r.kecamatan || "-"}</TD>
+                <TD className="text-gray-500">{r.kelurahan || "-"}</TD>
                 <TD>
-                  <span className="inline-block px-2 py-0.5 text-xs rounded bg-[#f1f5f9] text-[#355485]">
+                  <span className="inline-block px-2 py-0.5 text-xs rounded bg-gray-100 text-primary">
                     {statusOptions.find((o) => o.value === (r.status || ""))?.label || "-"}
                   </span>
                 </TD>
                 <TD>
                   <div className="flex gap-2">
-                    <button onClick={() => openDetail(r)} className="px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">Detail</button>
-                    <button onClick={() => openEdit(r)} className="px-3 py-1 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition">Edit</button>
+                    <button onClick={() => openDetail(r)} className="px-3 py-1 text-xs bg-secondary text-white rounded hover:bg-primary transition">Detail</button>
+                    <button onClick={() => openEdit(r)} className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-primary transition">Edit</button>
                   </div>
                 </TD>
                 </TableRow>
               ))}
               {rows.length === 0 && (
                 <TableRow>
-                  <TD colSpan={6} className="text-[#6b7280]">Belum ada pelamar</TD>
+                  <TD colSpan={6} className="text-gray-500">Belum ada pelamar</TD>
                 </TableRow>
               )}
             </TableBody>
@@ -250,7 +250,7 @@ export default function PelamarLowonganPage() {
           size="lg"
           actions={
             <>
-              <button onClick={() => { setShowDetailModal(false); setSelected(null); setDetailProfile(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>
+              <button onClick={() => { setShowDetailModal(false); setSelected(null); setDetailProfile(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Tutup</button>
             </>
           }
         >
@@ -263,93 +263,93 @@ export default function PelamarLowonganPage() {
                     {typeof detailProfile.photo_profile === "string" && detailProfile.photo_profile ? (
                       <Image src={String(detailProfile.photo_profile)} alt="Foto Profil" width={64} height={64} unoptimized className="w-16 h-16 rounded-full object-cover border" />
                     ) : (
-                      <div className="w-16 h-16 rounded-full bg-[#e5e7eb] flex items-center justify-center text-[#6b7280] text-xs">No Photo</div>
+                      <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">No Photo</div>
                     )}
                     <div className="flex-1">
-                      <div className="text-base font-semibold text-[#2a436c]">{String((detailProfile ? (detailProfile as Record<string, unknown>)["full_name"] : undefined) || selected.name || "-")}</div>
+                      <div className="text-base font-semibold text-primary">{String((detailProfile ? (detailProfile as Record<string, unknown>)["full_name"] : undefined) || selected.name || "-")}</div>
                       <div className="flex gap-2 mt-1">
-                        <span className="inline-block px-2 py-0.5 text-xs rounded bg-[#f1f5f9] text-[#355485]">{String(detailProfile.gender || "-")}</span>
-                        <span className="inline-block px-2 py-0.5 text-xs rounded bg-[#f1f5f9] text-[#355485]">{detailProfile.birthdate ? `${calcAge(String(detailProfile.birthdate)) || "-"} th` : "-"}</span>
+                        <span className="inline-block px-2 py-0.5 text-xs rounded bg-gray-100 text-primary">{String(detailProfile.gender || "-")}</span>
+                        <span className="inline-block px-2 py-0.5 text-xs rounded bg-gray-100 text-primary">{detailProfile.birthdate ? `${calcAge(String(detailProfile.birthdate)) || "-"} th` : "-"}</span>
                       </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white rounded-lg p-4 border">
-                      <div className="text-xs text-[#6b7280] mb-2">Data Pribadi</div>
+                      <div className="text-xs text-gray-500 mb-2">Data Pribadi</div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <div className="text-xs text-[#6b7280]">NIK</div>
-                          <div className="text-sm text-[#111827]">{String(detailProfile.nik || "-")}</div>
+                          <div className="text-xs text-gray-500">NIK</div>
+                          <div className="text-sm text-gray-900">{String(detailProfile.nik || "-")}</div>
                         </div>
                         <div>
-                          <div className="text-xs text-[#6b7280]">Tempat Lahir</div>
-                          <div className="text-sm text-[#111827]">{String(detailProfile.place_of_birth || "-")}</div>
+                          <div className="text-xs text-gray-500">Tempat Lahir</div>
+                          <div className="text-sm text-gray-900">{String(detailProfile.place_of_birth || "-")}</div>
                         </div>
                         <div>
-                          <div className="text-xs text-[#6b7280]">Tanggal Lahir</div>
-                          <div className="text-sm text-[#111827]">{detailProfile.birthdate ? new Date(String(detailProfile.birthdate)).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "-"}</div>
+                          <div className="text-xs text-gray-500">Tanggal Lahir</div>
+                          <div className="text-sm text-gray-900">{detailProfile.birthdate ? new Date(String(detailProfile.birthdate)).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "-"}</div>
                         </div>
                         <div>
-                          <div className="text-xs text-[#6b7280]">No. Handphone</div>
-                          <div className="text-sm text-[#111827]">{String(detailProfile.no_handphone || "-")}</div>
+                          <div className="text-xs text-gray-500">No. Handphone</div>
+                          <div className="text-sm text-gray-900">{String(detailProfile.no_handphone || "-")}</div>
                         </div>
                       </div>
                     </div>
                     <div className="bg-white rounded-lg p-4 border">
-                      <div className="text-xs text-[#6b7280] mb-2">Alamat</div>
+                      <div className="text-xs text-gray-500 mb-2">Alamat</div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <div className="text-xs text-[#6b7280]">Kecamatan</div>
-                          <div className="text-sm text-[#111827]">{String(detailProfile.kecamatan || "-")}</div>
+                          <div className="text-xs text-gray-500">Kecamatan</div>
+                          <div className="text-sm text-gray-900">{String(detailProfile.kecamatan || "-")}</div>
                         </div>
                         <div>
-                          <div className="text-xs text-[#6b7280]">Kelurahan</div>
-                          <div className="text-sm text-[#111827]">{String(detailProfile.kelurahan || "-")}</div>
+                          <div className="text-xs text-gray-500">Kelurahan</div>
+                          <div className="text-sm text-gray-900">{String(detailProfile.kelurahan || "-")}</div>
                         </div>
                         <div className="md:col-span-2">
-                          <div className="text-xs text-[#6b7280]">Alamat</div>
-                          <div className="text-sm text-[#111827]">{String(detailProfile.address || "-")}</div>
+                          <div className="text-xs text-gray-500">Alamat</div>
+                          <div className="text-sm text-gray-900">{String(detailProfile.address || "-")}</div>
                         </div>
                         <div>
-                          <div className="text-xs text-[#6b7280]">Kode Pos</div>
-                          <div className="text-sm text-[#111827]">{String(detailProfile.postal_code || "-")}</div>
+                          <div className="text-xs text-gray-500">Kode Pos</div>
+                          <div className="text-sm text-gray-900">{String(detailProfile.postal_code || "-")}</div>
                         </div>
                       </div>
                     </div>
                     <div className="bg-white rounded-lg p-4 border">
-                      <div className="text-xs text-[#6b7280] mb-2">Pendidikan</div>
+                      <div className="text-xs text-gray-500 mb-2">Pendidikan</div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <div className="text-xs text-[#6b7280]">Pendidikan Terakhir</div>
-                          <div className="text-sm text-[#111827]">{String(detailProfile.last_education || "-")}</div>
+                          <div className="text-xs text-gray-500">Pendidikan Terakhir</div>
+                          <div className="text-sm text-gray-900">{String(detailProfile.last_education || "-")}</div>
                         </div>
                         <div>
-                          <div className="text-xs text-[#6b7280]">Tahun Lulus</div>
-                          <div className="text-sm text-[#111827]">{String(detailProfile.graduation_year || "-")}</div>
+                          <div className="text-xs text-gray-500">Tahun Lulus</div>
+                          <div className="text-sm text-gray-900">{String(detailProfile.graduation_year || "-")}</div>
                         </div>
                         <div className="md:col-span-2">
-                          <div className="text-xs text-[#6b7280]">Status Perkawinan</div>
-                          <div className="text-sm text-[#111827]">{String(detailProfile.status_perkawinan || "-")}</div>
+                          <div className="text-xs text-gray-500">Status Perkawinan</div>
+                          <div className="text-sm text-gray-900">{String(detailProfile.status_perkawinan || "-")}</div>
                         </div>
                       </div>
                     </div>
                     <div className="bg-white rounded-lg p-4 border">
-                      <div className="text-xs text-[#6b7280] mb-2">Dokumen</div>
+                      <div className="text-xs text-gray-500 mb-2">Dokumen</div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <div className="text-xs text-[#6b7280]">Foto Profil</div>
+                          <div className="text-xs text-gray-500">Foto Profil</div>
                           {typeof detailProfile.photo_profile === "string" && detailProfile.photo_profile ? (
-                            <a href={String(detailProfile.photo_profile)} target="_blank" rel="noopener noreferrer" className="text-[#355485] text-sm">Lihat</a>
+                            <a href={String(detailProfile.photo_profile)} target="_blank" rel="noopener noreferrer" className="text-primary text-sm">Lihat</a>
                           ) : (
-                            <div className="text-sm text-[#111827]">-</div>
+                            <div className="text-sm text-gray-900">-</div>
                           )}
                         </div>
                         <div>
-                          <div className="text-xs text-[#6b7280]">File CV</div>
+                          <div className="text-xs text-gray-500">File CV</div>
                           {typeof detailProfile.cv_file === "string" && detailProfile.cv_file ? (
-                            <a href={String(detailProfile.cv_file)} target="_blank" rel="noopener noreferrer" className="text-[#355485] text-sm">Unduh</a>
+                            <a href={String(detailProfile.cv_file)} target="_blank" rel="noopener noreferrer" className="text-primary text-sm">Unduh</a>
                           ) : (
-                            <div className="text-sm text-[#111827]">-</div>
+                            <div className="text-sm text-gray-900">-</div>
                           )}
                         </div>
                       </div>
@@ -368,8 +368,8 @@ export default function PelamarLowonganPage() {
           size="lg"
           actions={
             <>
-              <button onClick={() => { setShowEditModal(false); setSelected(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Batal</button>
-              <button onClick={saveEdit} disabled={Boolean(saving)} className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]">{saving ? "Menyimpan..." : "Simpan"}</button>
+              <button onClick={() => { setShowEditModal(false); setSelected(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Batal</button>
+              <button onClick={saveEdit} disabled={Boolean(saving)} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary">{saving ? "Menyimpan..." : "Simpan"}</button>
             </>
           }
         >
@@ -377,7 +377,7 @@ export default function PelamarLowonganPage() {
             <div className="grid grid-cols-1 gap-3">
               <div className="bg-white rounded-lg p-4 border grid grid-cols-1 gap-4">
                 <div>
-                  <div className="text-sm text-[#6b7280] mb-1">Status</div>
+                  <div className="text-sm text-gray-500 mb-1">Status</div>
                   <SearchableSelect
                     options={statusOptions}
                     value={editStatus || "pending"}
@@ -389,12 +389,12 @@ export default function PelamarLowonganPage() {
               </div>
               {(editStatus === "test" || editStatus === "interview") && (
                 <div className="bg-white rounded-lg p-4 border">
-                  <div className="text-sm text-[#6b7280] mb-1">Catatan</div>
+                  <div className="text-sm text-gray-500 mb-1">Catatan</div>
                   <textarea
                     value={editNote || ""}
                     onChange={(e) => setEditNote(e.target.value)}
                     rows={4}
-                    className="w-full border border-[#e5e7eb] rounded px-3 py-2 text-sm resize-y text-[#111827] bg-white placeholder-[#9ca3af]"
+                    className="w-full border border-gray-200 rounded px-3 py-2 text-sm resize-y text-gray-900 bg-white placeholder-gray-400"
                     placeholder="Tambahkan catatan..."
                   />
                 </div>
@@ -402,11 +402,11 @@ export default function PelamarLowonganPage() {
               {(editStatus === "test" || editStatus === "interview") && (
                 <div className="bg-white rounded-lg p-4 border grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <div className="text-sm text-[#6b7280] mb-1">Jadwal Mulai</div>
+                    <div className="text-sm text-gray-500 mb-1">Jadwal Mulai</div>
                     <Input type="datetime-local" value={editStart ? new Date(editStart).toISOString().slice(0, 16) : ""} onChange={(e) => setEditStart(e.target.value ? new Date(e.target.value).toISOString() : null)} className="w-full px-2 py-2 text-sm" />
                   </div>
                   <div>
-                    <div className="text-sm text-[#6b7280] mb-1">Jadwal Selesai</div>
+                    <div className="text-sm text-gray-500 mb-1">Jadwal Selesai</div>
                     <Input type="datetime-local" value={editEnd ? new Date(editEnd).toISOString().slice(0, 16) : ""} onChange={(e) => setEditEnd(e.target.value ? new Date(e.target.value).toISOString() : null)} className="w-full px-2 py-2 text-sm" />
                   </div>
                 </div>

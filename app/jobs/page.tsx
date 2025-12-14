@@ -154,13 +154,13 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-white">
 
-      <section className="relative bg-[#2a436c] text-white py-12 sm:py-16 px-4 sm:px-6">
+      <section className="relative bg-primary text-white py-12 sm:py-16 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3">Temukan Lowongan Kerja</h1>
           <p className="text-sm sm:text-base md:text-lg opacity-95 leading-relaxed">Jelajahi berbagai peluang karir dari perusahaan terpercaya</p>
           <div className="mt-6 max-w-2xl mx-auto flex gap-3">
             <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari posisi, perusahaan, atau kata kunci..." className="flex-1 min-w-0" />
-            <button className="px-4 sm:px-5 py-3 bg-white text-[#2a436c] rounded-xl font-medium hover:bg-blue-50 w-auto">Cari</button>
+            <button className="px-4 sm:px-5 py-3 bg-white text-primary rounded-xl font-medium hover:bg-blue-50 w-auto">Cari</button>
           </div>
         </div>
       </section>
@@ -169,13 +169,13 @@ export default function JobsPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-4 gap-8">
           <aside className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-base font-semibold text-[#2a436c] mb-4">Filter Lowongan</h3>
+              <h3 className="text-base font-semibold text-primary mb-4">Filter Lowongan</h3>
               <div className="space-y-4">
                 <SearchableSelect label="Kecamatan" options={[{ value: "", label: "Semua Kecamatan" }, ...kecamatanOptions]} value={kecamatan} onChange={(v) => { setKecamatan(v); setKelurahan(""); }} />
                 <SearchableSelect label="Kelurahan" options={[{ value: "", label: "Semua Kelurahan" }, ...kelurahanOptions]} value={kelurahan} onChange={setKelurahan} />
                 <SearchableSelect label="Tipe Pekerjaan" options={[{ value: "", label: "Semua Tipe" }, ...types]} value={type} onChange={setType} />
                 <SearchableSelect label="Pendidikan" options={[{ value: "", label: "Semua Pendidikan" }, ...educations]} value={education} onChange={setEducation} />
-                <button onClick={resetFilter} className="w-full px-4 py-2 bg-[#f3f4f6] text-[#2a436c] rounded-lg hover:bg-[#e5e7eb]">Reset Filter</button>
+                <button onClick={resetFilter} className="w-full px-4 py-2 bg-gray-100 text-primary rounded-lg hover:bg-gray-200">Reset Filter</button>
               </div>
             </div>
           </aside>
@@ -183,24 +183,24 @@ export default function JobsPage() {
           <main className="lg:col-span-3">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-bold text-[#2a436c]">Lowongan Tersedia</h2>
-                <p className="text-sm text-[#6b7280]">Menampilkan {filtered.length} dari {jobs.length} lowongan</p>
+                <h2 className="text-lg font-bold text-primary">Lowongan Tersedia</h2>
+                <p className="text-sm text-gray-500">Menampilkan {filtered.length} dari {jobs.length} lowongan</p>
               </div>
-              <span className="text-xs text-[#6b7280] bg-[#f9fafb] px-2 py-1 rounded">Diperbarui hari ini</span>
+              <span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">Diperbarui hari ini</span>
             </div>
 
             {loading && (
               <div className="text-center py-8">
-                <i className="ri-loader-4-line animate-spin text-2xl text-[#6b7280]"></i>
+                <i className="ri-loader-4-line animate-spin text-2xl text-gray-500"></i>
               </div>
             )}
 
             {!loading && filtered.length === 0 && (
-              <div className="text-center py-8 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
+              <div className="text-center py-8 bg-white rounded-xl shadow-md border border-gray-200">
                 <i className="ri-briefcase-line text-4xl text-gray-300 mb-3"></i>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Tidak ada lowongan ditemukan</h3>
                 <p className="text-gray-600 mb-4">Coba ubah kata kunci pencarian atau filter</p>
-                <button onClick={() => { setSearch(""); resetFilter(); }} className="px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">Reset Pencarian</button>
+                <button onClick={() => { setSearch(""); resetFilter(); }} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition">Reset Pencarian</button>
               </div>
             )}
 
@@ -247,9 +247,9 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
           <Image src={logo || `https://picsum.photos/64?random=${encodeURIComponent(job.id || job.job_title || "default")}`} alt={company || "Perusahaan"} width={48} height={48} className="w-12 h-12 object-cover" />
         </div>
         <div className="min-w-0">
-          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-[#2a436c] truncate">{job.job_title}</h3>
-          <p className="text-xs sm:text-sm text-[#6b7280] mt-0.5 break-words">{company} • {job.work_setup || "Lokasi tidak tersedia"}</p>
-          <div className="mt-2 text-[11px] sm:text-xs text-[#6b7280] flex flex-wrap items-center gap-2 sm:gap-3">
+          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-primary truncate">{job.job_title}</h3>
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5 break-words">{company} • {job.work_setup || "Lokasi tidak tersedia"}</p>
+          <div className="mt-2 text-[11px] sm:text-xs text-gray-500 flex flex-wrap items-center gap-2 sm:gap-3">
             {job.category && (
               <span className="flex items-center gap-1"><i className="ri-briefcase-line"></i>{job.category}</span>
             )}
@@ -269,15 +269,15 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
           {skills.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-2 max-h-20 overflow-y-auto">
               {skills.map((s, i) => (
-                <span key={`${s}-${i}`} className="px-2 py-1 text-xs bg-[#f3f4f6] text-[#355485] rounded-full">{s}</span>
+                <span key={`${s}-${i}`} className="px-2 py-1 text-xs bg-gray-100 text-primary rounded-full">{s}</span>
               ))}
             </div>
           )}
         </div>
       </div>
       <div className="flex flex-col items-start sm:items-end gap-2 shrink-0 mt-1 sm:mt-0 w-full sm:w-auto">
-        {featured && <span className="px-2 py-1 text-xs bg-[#e5eef7] text-[#355485] rounded-full">Unggulan</span>}
-        <span className={`px-2 py-1 text-[11px] sm:text-xs rounded-full ${closed ? "bg-red-50 text-red-600" : "bg-[#f3f4f6] text-[#6b7280]"}`}>{closed ? "Tutup" : "Tutup pada"} {dateLabel}</span>
+        {featured && <span className="px-2 py-1 text-xs bg-secondary/20 text-primary rounded-full">Unggulan</span>}
+        <span className={`px-2 py-1 text-[11px] sm:text-xs rounded-full ${closed ? "bg-red-50 text-red-600" : "bg-gray-100 text-gray-500"}`}>{closed ? "Tutup" : "Tutup pada"} {dateLabel}</span>
       </div>
     </div>
   );

@@ -94,8 +94,8 @@ export default function CompanyDetailPage() {
   if (loading) return (
     <main className="min-h-screen bg-white">
       <div className="px-4 sm:px-6 flex items-center justify-center h-[60vh]">
-        <div className="flex items-center gap-3 text-[#355485]">
-          <div className="w-5 h-5 border-2 border-[#355485] border-t-transparent rounded-full animate-spin"></div>
+        <div className="flex items-center gap-3 text-primary">
+          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
           <span className="text-sm font-medium">Memuat detail perusahaan...</span>
         </div>
       </div>
@@ -107,7 +107,7 @@ export default function CompanyDetailPage() {
       <div className="px-4 sm:px-6 max-w-4xl mx-auto">
         <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl">{error || "Perusahaan tidak ditemukan"}</div>
         <div className="mt-4">
-          <Link href="/jobs" className="px-4 py-2 bg-[#355485] text-white rounded-lg">Kembali ke Lowongan</Link>
+          <Link href="/jobs" className="px-4 py-2 bg-primary text-white rounded-lg">Kembali ke Lowongan</Link>
         </div>
       </div>
     </main>
@@ -115,7 +115,7 @@ export default function CompanyDetailPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <section className="bg-[#2a436c] text-white py-10">
+      <section className="bg-primary text-white py-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-start gap-4">
             <Image src={logoSrc} alt={company.company_name} width={72} height={72} className="w-18 h-18 rounded-xl object-cover" />
@@ -135,28 +135,28 @@ export default function CompanyDetailPage() {
       <section className="py-10 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 gap-8">
           <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-              <h2 className="text-lg font-semibold text-[#2a436c] mb-3">Tentang Perusahaan</h2>
+            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-primary mb-3">Tentang Perusahaan</h2>
               <div className="space-y-4">
-                {company.address && <p className="text-sm text-[#374151]">Alamat: {company.address}</p>}
-                <p className="mt-2 text-sm text-[#374151] leading-relaxed whitespace-pre-line">{company.about_company || "-"}</p>
+                {company.address && <p className="text-sm text-gray-700">Alamat: {company.address}</p>}
+                <p className="mt-2 text-sm text-gray-700 leading-relaxed whitespace-pre-line">{company.about_company || "-"}</p>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-              <h2 className="text-lg font-semibold text-[#2a436c] mb-3">Lowongan Aktif</h2>
+            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-primary mb-3">Lowongan Aktif</h2>
               {jobs.length === 0 ? (
-                <p className="text-sm text-[#6b7280]">Tidak ada lowongan aktif dari perusahaan ini.</p>
+                <p className="text-sm text-gray-500">Tidak ada lowongan aktif dari perusahaan ini.</p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {jobs.map((j, i) => (
                     <Link key={j.id || `${j.job_title}-${i}`} href={`/jobs/${encodeURIComponent(String(j.id || ""))}`} className="block">
-                      <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] p-4 hover:shadow-md transition-shadow">
-                        <h3 className="font-semibold text-[#2a436c] text-sm truncate">{j.job_title}</h3>
-                        <p className="text-xs text-[#6b7280] truncate">{company.company_name}</p>
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                        <h3 className="font-semibold text-primary text-sm truncate">{j.job_title}</h3>
+                        <p className="text-xs text-gray-500 truncate">{company.company_name}</p>
                         <div className="mt-2 flex gap-2 flex-wrap">
-                          {j.job_type && <span className="px-2 py-1 text-[11px] bg-[#f3f4f6] text-[#355485] rounded-full">{j.job_type}</span>}
-                          {j.education_required && <span className="px-2 py-1 text-[11px] bg-[#f3f4f6] text-[#355485] rounded-full">{j.education_required}</span>}
+                          {j.job_type && <span className="px-2 py-1 text-[11px] bg-gray-100 text-primary rounded-full">{j.job_type}</span>}
+                          {j.education_required && <span className="px-2 py-1 text-[11px] bg-gray-100 text-primary rounded-full">{j.education_required}</span>}
                         </div>
                       </div>
                     </Link>

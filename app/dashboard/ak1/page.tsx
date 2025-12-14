@@ -269,9 +269,9 @@ export default function Ak1Page() {
   if (!guardReady) {
     return (
       <>
-        <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
+        <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
           <div className="px-4 sm:px-6">
-            <div className="py-20 flex items-center justify-center text-[#6b7280]">Memeriksa akses…</div>
+            <div className="py-20 flex items-center justify-center text-gray-500">Memeriksa akses…</div>
           </div>
         </main>
       </>
@@ -280,12 +280,12 @@ export default function Ak1Page() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
         <div className="px-4 sm:px-6">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Kartu Kuning (AK1)</h1>
-              <p className="text-sm text-[#6b7280] mt-1">Kelola pengajuan AK1 dan verifikasi</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-primary">Kartu Kuning (AK1)</h1>
+              <p className="text-sm text-gray-500 mt-1">Kelola pengajuan AK1 dan verifikasi</p>
             </div>
           </div>
 
@@ -296,15 +296,15 @@ export default function Ak1Page() {
                 <div>
                   <p className="font-semibold">Profil belum lengkap</p>
                   <p className="text-sm">Lengkapi nama lengkap, NIK, tempat/tanggal lahir, jenis kelamin, status perkawinan, alamat, dan kode pos di halaman Profil.</p>
-                  <a href="/dashboard/profile" className="inline-block mt-2 px-3 py-2 bg-[#355485] text-white rounded-lg">Ke Halaman Profil</a>
+                  <a href="/dashboard/profile" className="inline-block mt-2 px-3 py-2 bg-primary text-white rounded-lg">Ke Halaman Profil</a>
                 </div>
               </div>
             </div>
           )}
 
           {!loading && role === "candidate" && !doc && (
-            <Card className="mb-6" header={<h2 className="text-lg font-semibold text-[#2a436c]">Status AK1</h2>}>
-              <p className="text-sm text-[#374151]">Belum ada pengajuan AK1 untuk akun ini.</p>
+            <Card className="mb-6" header={<h2 className="text-lg font-semibold text-primary">Status AK1</h2>}>
+              <p className="text-sm text-gray-700">Belum ada pengajuan AK1 untuk akun ini.</p>
             </Card>
           )}
 
@@ -327,11 +327,11 @@ export default function Ak1Page() {
                 if (!hasCard) {
                   if (permissions.includes("ak1.generate")) {
                     return (
-                      <Card className="mb-6" header={<h2 className="text-lg font-semibold text-[#2a436c]">Dokumen diterima — siap generate</h2>}>
-                        <p className="text-sm text-[#374151]">Semua dokumen telah diunggah. Anda dapat membuat kartu AK1 sekarang.</p>
+                      <Card className="mb-6" header={<h2 className="text-lg font-semibold text-primary">Dokumen diterima — siap generate</h2>}>
+                        <p className="text-sm text-gray-700">Semua dokumen telah diunggah. Anda dapat membuat kartu AK1 sekarang.</p>
                         <div className="mt-3">
                           <button
-                            className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]"
+                            className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary"
                             onClick={async () => {
                               try {
                                 const cid = String(rows[0]?.candidate_id || doc?.candidate_id || "");
@@ -365,22 +365,22 @@ export default function Ak1Page() {
                     );
                   }
                   return (
-                    <Card className="mb-6" header={<h2 className="text-lg font-semibold text-[#2a436c]">Menunggu Generate</h2>}>
-                      <p className="text-sm text-[#374151]">Dokumen Anda sudah diterima. Petugas akan melakukan generate kartu AK1.</p>
+                    <Card className="mb-6" header={<h2 className="text-lg font-semibold text-primary">Menunggu Generate</h2>}>
+                      <p className="text-sm text-gray-700">Dokumen Anda sudah diterima. Petugas akan melakukan generate kartu AK1.</p>
                     </Card>
                   );
                 }
                 return (
-                  <Card className="mb-6" header={<h2 className="text-lg font-semibold text-[#2a436c]">Status Kartu AK1</h2>}>
+                  <Card className="mb-6" header={<h2 className="text-lg font-semibold text-primary">Status Kartu AK1</h2>}>
                     <div className="flex items-center gap-3">
                       <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(ui)}`}>{expired ? "Kadaluarsa" : ui}</span>
                       {doc?.card_file ? (
-                        <button className="text-[#355485] underline" onClick={async () => { const d = await presignDownload(String(doc?.card_file)); window.open(d.url, "_blank"); }}>Unduh Kartu</button>
+                        <button className="text-primary underline" onClick={async () => { const d = await presignDownload(String(doc?.card_file)); window.open(d.url, "_blank"); }}>Unduh Kartu</button>
                       ) : null}
                     </div>
                     {expired && (
                       <div className="mt-3 flex gap-2">
-                        <button className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]" onClick={() => { setRenewForm({ ktp_file: String(doc?.ktp_file || ""), ijazah_file: String(doc?.ijazah_file || ""), pas_photo_file: String(doc?.pas_photo_file || ""), certificate_file: String(doc?.certificate_file || "") }); setShowRenewModal(true); }}>Perpanjang Kartu</button>
+                        <button className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary" onClick={() => { setRenewForm({ ktp_file: String(doc?.ktp_file || ""), ijazah_file: String(doc?.ijazah_file || ""), pas_photo_file: String(doc?.pas_photo_file || ""), certificate_file: String(doc?.certificate_file || "") }); setShowRenewModal(true); }}>Perpanjang Kartu</button>
                       </div>
                     )}
                   </Card>
@@ -392,12 +392,12 @@ export default function Ak1Page() {
           {(role !== "candidate" || !!doc) && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <StatCard title="Total Pengajuan" value={filteredAk1.length} change="" color="#4f90c6" icon="ri-id-card-line" />
-                <StatCard title="Aktif" value={filteredAk1.filter((r) => r.uiStatus === 'Aktif').length} change="" color="#355485" icon="ri-checkbox-circle-line" />
-                <StatCard title="Menunggu" value={filteredAk1.filter((r) => r.uiStatus === 'Menunggu Verifikasi').length} change="" color="#90b6d5" icon="ri-time-line" />
-                <StatCard title="Ditolak" value={filteredAk1.filter((r) => r.uiStatus === 'Ditolak').length} change="" color="#2a436c" icon="ri-close-circle-line" />
+                <StatCard title="Total Pengajuan" value={filteredAk1.length} change="" color="var(--color-secondary)" icon="ri-id-card-line" />
+                <StatCard title="Aktif" value={filteredAk1.filter((r) => r.uiStatus === 'Aktif').length} change="" color="var(--color-primary)" icon="ri-checkbox-circle-line" />
+                <StatCard title="Menunggu" value={filteredAk1.filter((r) => r.uiStatus === 'Menunggu Verifikasi').length} change="" color="var(--color-foreground)" icon="ri-time-line" />
+                <StatCard title="Ditolak" value={filteredAk1.filter((r) => r.uiStatus === 'Ditolak').length} change="" color="var(--color-primary)" icon="ri-close-circle-line" />
               </div>
-              <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] mb-6">
+              <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1">
                     <Input icon="ri-search-line" type="text" placeholder="Cari nama atau NIK..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full py-3" />
@@ -405,41 +405,41 @@ export default function Ak1Page() {
                   <div className="flex flex-col sm:flex-row gap-2 items-stretch">
                     <SearchableSelect value={statusFilter} onChange={(v) => setStatusFilter(v)} options={[{ value: "all", label: "Semua Status" }, { value: "Aktif", label: "Aktif" }, { value: "Menunggu Verifikasi", label: "Menunggu" }, { value: "Ditolak", label: "Ditolak" }]} />
                     <SegmentedToggle value={viewMode} onChange={(v) => setViewMode(v as "grid" | "table")} options={[{ value: "grid", icon: "ri-grid-line" }, { value: "table", icon: "ri-list-check" }]} />
-                    <button onClick={() => setShowInfo(true)} className="px-3 py-2 rounded-lg bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#355485] text-sm">Info</button>
+                    <button onClick={() => setShowInfo(true)} className="px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary text-sm">Info</button>
                   </div>
                 </div>
               </div>
               <Card
-                header={<h2 className="text-lg font-semibold text-[#2a436c]">Data AK1</h2>}
+                header={<h2 className="text-lg font-semibold text-primary">Data AK1</h2>}
                 className="overflow-hidden"
               >
               {viewMode === "grid" ? (
                 <CardGrid>
                   {paginatedAk1.map((r) => (
-                    <div key={`ak1-${r.candidate_id}-${r.nik}`} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
-                      <div className="p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
+                    <div key={`ak1-${r.candidate_id}-${r.nik}`} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+                      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="font-bold text-[#2a436c] text-sm leading-tight truncate">{r.full_name || '-'}</p>
-                            <p className="text-xs text-[#6b7280] truncate">{r.nik || '-'}</p>
+                            <p className="font-bold text-primary text-sm leading-tight truncate">{r.full_name || '-'}</p>
+                            <p className="text-xs text-gray-500 truncate">{r.nik || '-'}</p>
                           </div>
                           {(() => { const ui = apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi'; return (<span className={`px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0 ${getStatusColor(ui)}`}>{ui}</span>); })()}
                         </div>
                       </div>
                       <div className="p-4">
                         <div className="flex items-center justify-between gap-2">
-                          <div className="text-xs text-[#4b5563]">
+                          <div className="text-xs text-gray-600">
                             {r.file ? (
-                              <button className="text-[#355485] underline" onClick={async () => { const d = await presignDownload(r.file as string); window.open(d.url, "_blank"); }}>Unduh Kartu</button>
+                              <button className="text-primary underline" onClick={async () => { const d = await presignDownload(r.file as string); window.open(d.url, "_blank"); }}>Unduh Kartu</button>
                             ) : (
                               <span>-</span>
                             )}
                           </div>
                           <div className="flex gap-2">
-                            <button className="px-3 py-1 text-xs rounded bg-[#4f90c6] text-white hover:bg-[#355485]" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
+                            <button className="px-3 py-1 text-xs rounded bg-secondary text-white hover:bg-primary" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
                             {permissions.includes("ak1.verify") && r.file && ((apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi') === 'Menunggu Verifikasi') && (
                               <button
-                                className="px-3 py-1 text-xs rounded bg-[#355485] text-white hover:bg-[#2a436c]"
+                                className="px-3 py-1 text-xs rounded bg-primary text-white hover:bg-primary"
                                 onClick={async () => {
                                   const d = await getAk1Document(undefined, r.candidate_id);
                                   const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate };
@@ -453,7 +453,7 @@ export default function Ak1Page() {
                             )}
                             {permissions.includes("ak1.generate") && !r.file && (
                               <button
-                                className="px-3 py-1 text-xs rounded bg-[#4f90c6] text-white hover:bg-[#3a719f]"
+                                className="px-3 py-1 text-xs rounded bg-secondary text-white hover:bg-primary"
                                 onClick={async () => {
                                   try {
                                     setGenMeta({ ak1_document_id: r.ak1_document_id, candidate_id: r.candidate_id, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
@@ -533,22 +533,22 @@ export default function Ak1Page() {
                   <TableBody>
                     {paginatedAk1.map((r) => (
                       <TableRow key={`${r.candidate_id}-${r.nik}`}>
-                        <TD className="text-[#111827]">{r.full_name || '-'}</TD>
-                        <TD className="text-[#111827]">{r.nik || '-'}</TD>
+                        <TD className="text-gray-900">{r.full_name || '-'}</TD>
+                        <TD className="text-gray-900">{r.nik || '-'}</TD>
                         <TD>{(() => { const ui = apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi'; return (<span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ui)}`}>{ui}</span>); })()}</TD>
                         <TD>
                           {r.file ? (
-                            <button className="text-[#355485] underline" onClick={async () => { const d = await presignDownload(r.file as string); window.open(d.url, "_blank"); }}>Unduh</button>
+                            <button className="text-primary underline" onClick={async () => { const d = await presignDownload(r.file as string); window.open(d.url, "_blank"); }}>Unduh</button>
                           ) : (
                             '-'
                           )}
                         </TD>
                         <TD>
                           <div className="flex gap-2">
-                            <button className="px-3 py-1 text-xs rounded bg-[#4f90c6] text-white hover:bg-[#355485]" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
+                            <button className="px-3 py-1 text-xs rounded bg-secondary text-white hover:bg-primary" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
                             {permissions.includes("ak1.verify") && r.file && ((apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi') === 'Menunggu Verifikasi') && (
                               <button
-                                className="px-3 py-1 text-xs rounded bg-[#355485] text-white hover:bg-[#2a436c]"
+                                className="px-3 py-1 text-xs rounded bg-primary text-white hover:bg-primary"
                                 onClick={async () => {
                                   const d = await getAk1Document(undefined, r.candidate_id);
                                   const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate };
@@ -562,7 +562,7 @@ export default function Ak1Page() {
                             )}
                             {permissions.includes("ak1.generate") && !r.file && (
                               <button
-                                className="px-3 py-1 text-xs rounded bg-[#4f90c6] text-white hover:bg-[#3a719f]"
+                                className="px-3 py-1 text-xs rounded bg-secondary text-white hover:bg-primary"
                                 onClick={async () => {
                                   try {
                                     setGenMeta({ ak1_document_id: r.ak1_document_id, candidate_id: r.candidate_id, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
@@ -629,19 +629,19 @@ export default function Ak1Page() {
                 </Table>
                 <div className="sm:hidden p-3 space-y-3">
                   {paginatedAk1.map((r, idx) => (
-                    <div key={`m-${r.candidate_id}-${r.nik}-${idx}`} className="border border-[#e5e7eb] rounded-lg p-3">
+                    <div key={`m-${r.candidate_id}-${r.nik}-${idx}`} className="border border-gray-200 rounded-lg p-3">
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
-                          <p className="font-semibold text-[#2a436c] truncate">{r.full_name || '-'}</p>
-                          <p className="text-xs text-[#6b7280] truncate">{r.nik || '-'}</p>
+                          <p className="font-semibold text-primary truncate">{r.full_name || '-'}</p>
+                          <p className="text-xs text-gray-500 truncate">{r.nik || '-'}</p>
                         </div>
                         {(() => { const ui = apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi'; return (<span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(ui)}`}>{ui}</span>); })()}
                       </div>
                       <div className="mt-3 flex gap-2">
-                        <button className="flex-1 px-3 py-2 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
+                        <button className="flex-1 px-3 py-2 text-xs bg-secondary text-white rounded hover:bg-primary transition" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
                         {permissions.includes("ak1.verify") && r.file && ((apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi') === 'Menunggu Verifikasi') && (
                           <button
-                            className="flex-1 px-3 py-2 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition"
+                            className="flex-1 px-3 py-2 text-xs bg-primary text-white rounded hover:bg-primary transition"
                             onClick={async () => {
                               const d = await getAk1Document(undefined, r.candidate_id);
                               const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate };
@@ -654,7 +654,7 @@ export default function Ak1Page() {
                           </button>
                         )}
                         {permissions.includes("ak1.generate") && !r.file && (
-                          <button className="flex-1 px-3 py-2 text-xs bg-[#7c3aed] text-white rounded hover:bg-[#5b21b6] transition" onClick={async () => {
+                          <button className="flex-1 px-3 py-2 text-xs bg-secondary text-white rounded hover:bg-primary transition" onClick={async () => {
                             try {
                               setGenMeta({ ak1_document_id: r.ak1_document_id, candidate_id: r.candidate_id, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
                               setGenCandidate({ full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate } as CandidateProfileLite);
@@ -690,12 +690,12 @@ export default function Ak1Page() {
             </>
           )}
 
-          <Modal open={showInfo} title="Tentang AK1" onClose={() => setShowInfo(false)} actions={<button onClick={() => setShowInfo(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>}>
-            <p className="text-sm text-[#6b7280]">Setelah dokumen diunggah dan profil lengkap, AK1 akan diverifikasi oleh petugas Disnaker. Jika disetujui, kartu dapat diunduh di halaman ini.</p>
+          <Modal open={showInfo} title="Tentang AK1" onClose={() => setShowInfo(false)} actions={<button onClick={() => setShowInfo(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Tutup</button>}>
+            <p className="text-sm text-gray-500">Setelah dokumen diunggah dan profil lengkap, AK1 akan diverifikasi oleh petugas Disnaker. Jika disetujui, kartu dapat diunduh di halaman ini.</p>
           </Modal>
           
           <Modal open={showGenerateModal} title="Generate Kartu AK1" size="full" onClose={() => setShowGenerateModal(false)} actions={<> 
-            <button onClick={() => setShowGenerateModal(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>
+            <button onClick={() => setShowGenerateModal(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Tutup</button>
             <button
               onClick={async () => {
                 try {
@@ -952,7 +952,7 @@ export default function Ak1Page() {
                   setRows(items.map((d) => ({ full_name: d.full_name, nik: d.nik, place_of_birth: d.place_of_birth, birthdate: d.birthdate, status: d.status, file: d.file || null, candidate_id: d.candidate_id, ak1_document_id: d.id })));
                 } catch { showError("Gagal generate PDF AK1"); }
               }}
-              className="ml-2 px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]"
+              className="ml-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary"
             >
               Simpan & Verifikasi
             </button>
@@ -960,15 +960,15 @@ export default function Ak1Page() {
             <div>
               <div className="space-y-6">
                 <div className="grid grid-cols-1 gap-3">
-                  <label className="text-sm text-[#374151]">No Urut Pendaftaran
+                  <label className="text-sm text-gray-700">No Urut Pendaftaran
                     <Input type="text" className="mt-1 w-full" value={genMeta.no_urut_pendaftaran || ''} onChange={(e) => setGenMeta({ ...genMeta, no_urut_pendaftaran: (e.target as HTMLInputElement).value })} />
                   </label>
-                  <label className="text-sm text-[#374151]">Tanggal Kadaluarsa
+                  <label className="text-sm text-gray-700">Tanggal Kadaluarsa
                     <Input type="date" className="mt-1 w-full" value={genMeta.card_expired_at || ''} onChange={(e) => setGenMeta({ ...genMeta, card_expired_at: (e.target as HTMLInputElement).value })} />
                   </label>
                 </div>
                 <div>
-                  <div className="text-xs text-[#6b7280] mb-2">Preview Kartu (depan)</div>
+                  <div className="text-xs text-gray-500 mb-2">Preview Kartu (depan)</div>
                   <div ref={frontContainerRef} className="w-full overflow-auto">
                     <div className="relative" style={{ width: FRONT_BASE.w * frontScale, height: FRONT_BASE.h * frontScale }}>
                       <div ref={frontRef} className="relative border-2 border-black bg-white" style={{ width: FRONT_BASE.w, height: FRONT_BASE.h, transform: `scale(${frontScale})`, transformOrigin: 'top left' }}>
@@ -1017,7 +1017,7 @@ export default function Ak1Page() {
                                   return d;
                                 })();
                                 const txt = mappedVal || key;
-                                const fill = '#000000';
+                                const fill = 'black';
                                 const weight = 400;
                                 return (
                                   <g key={`f-${i}`}>
@@ -1043,11 +1043,11 @@ export default function Ak1Page() {
                                 })();
                                 return (
                                   <g key={`f-${i}`} transform={`translate(${x}, ${y})`}>
-                                    <rect width={w} height={h} fill="#ffffff" stroke="#000000" strokeWidth={1} />
+                                    <rect width={w} height={h} fill="white" stroke="black" strokeWidth={1} />
                                     {photoUrl ? (
                                       <image href={photoUrl} width={w} height={h} preserveAspectRatio="xMidYMid slice" />
                                     ) : (
-                                      <text x={w / 2} y={h / 2} textAnchor="middle" fontFamily="Arial, sans-serif" fontSize={14} fill="#6b7280" fontWeight={700}>{mKey || String(f.token)}</text>
+                                      <text x={w / 2} y={h / 2} textAnchor="middle" fontFamily="Arial, sans-serif" fontSize={14} fill="gray" fontWeight={700}>{mKey || String(f.token)}</text>
                                     )}
                                   </g>
                                 );
@@ -1085,12 +1085,12 @@ export default function Ak1Page() {
                                     {Array.from({ length: count }).map((_, idx) => {
                                       const ch = (digits[idx] || '').trim();
                                       const isEmpty = ch.length === 0;
-                                      const fill = isEmpty ? '#6b7280' : '#000000';
+                                      const fill = isEmpty ? 'gray' : 'black';
                                       const txt = isEmpty ? '•' : ch;
                                       const weight = isEmpty ? 700 : 400;
                                       return (
                                         <g key={`box-${i}-${idx}`} transform={`translate(${startX + idx * (cellW + gap)}, ${startY})`}>
-                                          <rect width={cellW} height={cellH} fill="#ffffff" stroke="#000000" strokeWidth={1} />
+                                          <rect width={cellW} height={cellH} fill="white" stroke="black" strokeWidth={1} />
                                           <text x={cellW / 2} y={cellH / 2 + 2} textAnchor="middle" fontFamily="Arial, sans-serif" fontSize={sizeTxt} fill={fill} fontWeight={weight}>{txt}</text>
                                         </g>
                                       );
@@ -1113,7 +1113,7 @@ export default function Ak1Page() {
           </Modal>
 
           <Modal open={showRenewModal} title="Perpanjang Kartu AK1" onClose={() => setShowRenewModal(false)} actions={<>
-            <button onClick={() => setShowRenewModal(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Batal</button>
+            <button onClick={() => setShowRenewModal(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Batal</button>
             <button
               onClick={async () => {
                 try {
@@ -1153,43 +1153,43 @@ export default function Ak1Page() {
                   }
                 } catch { showError("Gagal memperbarui dokumen AK1"); }
               }}
-              className="ml-2 px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]"
+              className="ml-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary"
             >
               Simpan
             </button>
           </>}>
             <div className="grid grid-cols-1 gap-3">
-              <label className="text-sm text-[#374151]">Scan KTP
+              <label className="text-sm text-gray-700">Scan KTP
                 <input type="file" className="mt-1 w-full border rounded p-2" onChange={async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setRenewForm({ ...renewForm, ktp_file: "" }); return; } const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : ""; const pre = await presignUpload(`ak1/${uid}/ktp`, f.name, f.type || "application/octet-stream"); const resp = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); showError(`Upload gagal (${resp.status}): ${txt}`); return; } const objectUrl = pre.url.includes("?") ? pre.url.slice(0, pre.url.indexOf("?")) : pre.url; setRenewForm({ ...renewForm, ktp_file: objectUrl }); }} />
               </label>
-              <label className="text-sm text-[#374151]">Ijazah
+              <label className="text-sm text-gray-700">Ijazah
                 <input type="file" className="mt-1 w-full border rounded p-2" onChange={async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setRenewForm({ ...renewForm, ijazah_file: "" }); return; } const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : ""; const pre = await presignUpload(`ak1/${uid}/ijazah`, f.name, f.type || "application/octet-stream"); const resp = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); showError(`Upload gagal (${resp.status}): ${txt}`); return; } const objectUrl = pre.url.includes("?") ? pre.url.slice(0, pre.url.indexOf("?")) : pre.url; setRenewForm({ ...renewForm, ijazah_file: objectUrl }); }} />
               </label>
-              <label className="text-sm text-[#374151]">Pas Foto
+              <label className="text-sm text-gray-700">Pas Foto
                 <input type="file" className="mt-1 w-full border rounded p-2" onChange={async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setRenewForm({ ...renewForm, pas_photo_file: "" }); return; } const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : ""; const pre = await presignUpload(`ak1/${uid}/pasfoto`, f.name, f.type || "application/octet-stream"); const resp = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); showError(`Upload gagal (${resp.status}): ${txt}`); return; } const objectUrl = pre.url.includes("?") ? pre.url.slice(0, pre.url.indexOf("?")) : pre.url; setRenewForm({ ...renewForm, pas_photo_file: objectUrl }); }} />
               </label>
-              <label className="text-sm text-[#374151]">Sertifikat (Opsional)
+              <label className="text-sm text-gray-700">Sertifikat (Opsional)
                 <input type="file" className="mt-1 w-full border rounded p-2" onChange={async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) { setRenewForm({ ...renewForm, certificate_file: "" }); return; } const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : ""; const pre = await presignUpload(`ak1/${uid}/sertifikat`, f.name, f.type || "application/octet-stream"); const resp = await fetch(pre.url, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f }); if (!resp.ok) { const txt = await resp.text(); showError(`Upload gagal (${resp.status}): ${txt}`); return; } const objectUrl = pre.url.includes("?") ? pre.url.slice(0, pre.url.indexOf("?")) : pre.url; setRenewForm({ ...renewForm, certificate_file: objectUrl }); }} />
               </label>
             </div>
           </Modal>
           
-          <Modal open={showDetailModal} title="Detail AK1" onClose={() => setShowDetailModal(false)} actions={<button onClick={() => setShowDetailModal(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>}>
-            <div className="text-sm text-[#374151] space-y-2">
+          <Modal open={showDetailModal} title="Detail AK1" onClose={() => setShowDetailModal(false)} actions={<button onClick={() => setShowDetailModal(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Tutup</button>}>
+            <div className="text-sm text-gray-700 space-y-2">
               <div>Nama: {(detailData?.candidate || profile)?.full_name || '-'}</div>
               <div>NIK: {(detailData?.candidate || profile)?.nik || '-'}</div>
               <div>Tempat/Tgl Lahir: {(detailData?.candidate || profile)?.place_of_birth || '-'} / {String((detailData?.candidate || profile)?.birthdate || '').slice(0, 10) || '-'}</div>
               <hr className="my-2" />
-              <div>KTP: {detailData?.document?.ktp_file ? <a href={detailData.document.ktp_file} target="_blank" rel="noreferrer" className="text-[#355485] underline">Lihat</a> : '-'}</div>
-              <div>Ijazah: {detailData?.document?.ijazah_file ? <a href={detailData.document.ijazah_file} target="_blank" rel="noreferrer" className="text-[#355485] underline">Lihat</a> : '-'}</div>
-              <div>Pas Foto: {detailData?.document?.pas_photo_file ? <a href={detailData.document.pas_photo_file} target="_blank" rel="noreferrer" className="text-[#355485] underline">Lihat</a> : '-'}</div>
-              <div>Sertifikat: {detailData?.document?.certificate_file ? <a href={detailData.document.certificate_file} target="_blank" rel="noreferrer" className="text-[#355485] underline">Lihat</a> : '-'}</div>
-              <div>Kartu AK1: {detailData?.document?.card_file ? <a href={detailData.document.card_file} target="_blank" rel="noreferrer" className="text-[#355485] underline">Unduh Kartu</a> : '-'}</div>
+              <div>KTP: {detailData?.document?.ktp_file ? <a href={detailData.document.ktp_file} target="_blank" rel="noreferrer" className="text-primary underline">Lihat</a> : '-'}</div>
+              <div>Ijazah: {detailData?.document?.ijazah_file ? <a href={detailData.document.ijazah_file} target="_blank" rel="noreferrer" className="text-primary underline">Lihat</a> : '-'}</div>
+              <div>Pas Foto: {detailData?.document?.pas_photo_file ? <a href={detailData.document.pas_photo_file} target="_blank" rel="noreferrer" className="text-primary underline">Lihat</a> : '-'}</div>
+              <div>Sertifikat: {detailData?.document?.certificate_file ? <a href={detailData.document.certificate_file} target="_blank" rel="noreferrer" className="text-primary underline">Lihat</a> : '-'}</div>
+              <div>Kartu AK1: {detailData?.document?.card_file ? <a href={detailData.document.card_file} target="_blank" rel="noreferrer" className="text-primary underline">Unduh Kartu</a> : '-'}</div>
             </div>
           </Modal>
           
           <Modal open={showVerifyModal} title="Verifikasi AK1" onClose={() => setShowVerifyModal(false)} actions={<>
-            <button onClick={() => setShowVerifyModal(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Batal</button>
+            <button onClick={() => setShowVerifyModal(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Batal</button>
             <button
               onClick={async () => {
                 try {
@@ -1201,28 +1201,28 @@ export default function Ak1Page() {
                   showError("Gagal verifikasi AK1");
                 }
               }}
-              className="ml-2 px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]"
+              className="ml-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary"
             >
               Simpan
             </button>
           </>}>
             <div className="grid grid-cols-1 gap-3">
-              <label className="text-sm text-[#374151]">Status
+              <label className="text-sm text-gray-700">Status
                 <select className="mt-1 w-full border rounded p-2" value={verifyPayload.status} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setVerifyPayload({ ...verifyPayload, status: e.target.value as "APPROVED" | "REJECTED" })}>
                   <option value="APPROVED">APPROVED</option>
                   <option value="REJECTED">REJECTED</option>
                 </select>
               </label>
-              <div className="text-sm text-[#374151] space-y-2">
+              <div className="text-sm text-gray-700 space-y-2">
                 <div>Nama: {(detailData?.candidate || profile)?.full_name || '-'}</div>
                 <div>NIK: {(detailData?.candidate || profile)?.nik || '-'}</div>
                 <div>Tempat/Tgl Lahir: {(detailData?.candidate || profile)?.place_of_birth || '-'} / {String((detailData?.candidate || profile)?.birthdate || '').slice(0, 10) || '-'}</div>
                 <hr className="my-2" />
-                <div>KTP: {detailData?.document?.ktp_file ? <a href={detailData.document.ktp_file} target="_blank" rel="noreferrer" className="text-[#355485] underline">Lihat</a> : '-'}</div>
-                <div>Ijazah: {detailData?.document?.ijazah_file ? <a href={detailData.document.ijazah_file} target="_blank" rel="noreferrer" className="text-[#355485] underline">Lihat</a> : '-'}</div>
-                <div>Pas Foto: {detailData?.document?.pas_photo_file ? <a href={detailData.document.pas_photo_file} target="_blank" rel="noreferrer" className="text-[#355485] underline">Lihat</a> : '-'}</div>
-                <div>Sertifikat: {detailData?.document?.certificate_file ? <a href={detailData.document.certificate_file} target="_blank" rel="noreferrer" className="text-[#355485] underline">Lihat</a> : '-'}</div>
-                <div>Kartu AK1: {detailData?.document?.card_file ? <a href={detailData.document.card_file} target="_blank" rel="noreferrer" className="text-[#355485] underline">Unduh Kartu</a> : '-'}</div>
+                <div>KTP: {detailData?.document?.ktp_file ? <a href={detailData.document.ktp_file} target="_blank" rel="noreferrer" className="text-primary underline">Lihat</a> : '-'}</div>
+                <div>Ijazah: {detailData?.document?.ijazah_file ? <a href={detailData.document.ijazah_file} target="_blank" rel="noreferrer" className="text-primary underline">Lihat</a> : '-'}</div>
+                <div>Pas Foto: {detailData?.document?.pas_photo_file ? <a href={detailData.document.pas_photo_file} target="_blank" rel="noreferrer" className="text-primary underline">Lihat</a> : '-'}</div>
+                <div>Sertifikat: {detailData?.document?.certificate_file ? <a href={detailData.document.certificate_file} target="_blank" rel="noreferrer" className="text-primary underline">Lihat</a> : '-'}</div>
+                <div>Kartu AK1: {detailData?.document?.card_file ? <a href={detailData.document.card_file} target="_blank" rel="noreferrer" className="text-primary underline">Unduh Kartu</a> : '-'}</div>
               </div>
             </div>
           </Modal>

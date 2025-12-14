@@ -164,21 +164,21 @@ export default function PencakerPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
         <div className="px-4 sm:px-6">
           <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Pencari Kerja</h1>
-            <p className="text-sm text-[#6b7280] mt-1">Kelola data pencari kerja dan verifikasi Kartu Kuning (AK1)</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-primary">Manajemen Pencari Kerja</h1>
+            <p className="text-sm text-gray-500 mt-1">Kelola data pencari kerja dan verifikasi Kartu Kuning (AK1)</p>
           </div>
 
-          <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] mb-6">
+          <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <Input icon="ri-search-line" type="text" placeholder="Cari nama atau NIK..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full py-3" />
               </div>
               <div className="flex flex-col sm:flex-row gap-2 items-stretch">
                 {permissions.includes("pencaker.create") && (
-                  <button onClick={() => { setEditingCandidateId(null); setFormCandidate({ full_name: "", birthdate: "", place_of_birth: "", nik: "", kecamatan: "", kelurahan: "", address: "", postal_code: "", gender: "", no_handphone: "", photo_profile: "", last_education: "", graduation_year: 0, status_perkawinan: "", cv_file: "" }); setUserEmail(""); setUserPassword(""); setShowFormModal(true); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center">+ Tambah</button>
+                  <button onClick={() => { setEditingCandidateId(null); setFormCandidate({ full_name: "", birthdate: "", place_of_birth: "", nik: "", kecamatan: "", kelurahan: "", address: "", postal_code: "", gender: "", no_handphone: "", photo_profile: "", last_education: "", graduation_year: 0, status_perkawinan: "", cv_file: "" }); setUserEmail(""); setUserPassword(""); setShowFormModal(true); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center justify-center">+ Tambah</button>
                 )}
               </div>
             </div>
@@ -186,64 +186,64 @@ export default function PencakerPage() {
 
           <CardGrid>
             {paginatedPencakers.map((p) => (
-              <div key={p.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
-                <div className="p-4 sm:p-6 border-b border-[#e5e7eb] bg-[#f9fafb]">
+              <div key={p.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                <div className="p-4 sm:p-6 border-b border-gray-200 bg-gray-50">
                   <div className="flex flex-col gap-4">
                     <Image src={p.foto} alt={p.nama} width={64} height={64} className="w-16 h-16 rounded-full object-cover flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                         <div className="flex items-start gap-2 min-w-0">
-                          <h3 className="text-lg font-bold text-[#2a436c] truncate">{p.nama}</h3>
+                          <h3 className="text-lg font-bold text-primary truncate">{p.nama}</h3>
                         </div>
                       </div>
                       <div className="mt-2 text-sm space-y-2">
                         <div>
-                          <div className="text-[#6b7280]">NIK</div>
-                          <div className="text-[#111827] font-medium">{p.nik}</div>
+                          <div className="text-gray-500">NIK</div>
+                          <div className="text-gray-900 font-medium">{p.nik}</div>
                         </div>
                         <div>
-                          <div className="text-[#6b7280]">Tempat, Tanggal Lahir</div>
-                          <div className="text-[#111827] font-medium">{p.ttl}</div>
+                          <div className="text-gray-500">Tempat, Tanggal Lahir</div>
+                          <div className="text-gray-900 font-medium">{p.ttl}</div>
                         </div>
                         <div>
-                          <div className="text-[#6b7280]">Jenis Kelamin</div>
-                          <div className="text-[#111827] font-medium">{p.jenisKelamin}</div>
+                          <div className="text-gray-500">Jenis Kelamin</div>
+                          <div className="text-gray-900 font-medium">{p.jenisKelamin}</div>
                         </div>
                       </div>
                       <div className="grid grid-cols-1 gap-2 mt-3 text-sm">
                         <div className="space-y-1">
                           <div>
-                            <div className="text-[#6b7280]">Pendidikan</div>
-                            <div className="text-[#111827] font-medium">{p.pendidikan}</div>
+                            <div className="text-gray-500">Pendidikan</div>
+                            <div className="text-gray-900 font-medium">{p.pendidikan}</div>
                           </div>
                         </div>
                         <div className="space-y-1">
                           <div>
-                            <div className="text-[#6b7280]">Telepon</div>
-                            <div className="text-[#111827] font-medium">{p.telepon}</div>
+                            <div className="text-gray-500">Telepon</div>
+                            <div className="text-gray-900 font-medium">{p.telepon}</div>
                           </div>
                           <div>
-                            <div className="text-[#6b7280]">Email</div>
-                            <div className="text-[#111827] font-medium">{p.email}</div>
+                            <div className="text-gray-500">Email</div>
+                            <div className="text-gray-900 font-medium">{p.email}</div>
                           </div>
                         </div>
                       </div>
                       <div className="text-sm mt-2">
-                        <div className="text-[#6b7280]">Alamat</div>
-                        <div className="text-[#111827]">{p.alamat}</div>
+                        <div className="text-gray-500">Alamat</div>
+                        <div className="text-gray-900">{p.alamat}</div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-4 border-t border-[#e5e7eb]">
+                <div className="p-4 border-t border-gray-200">
                   <div className="flex gap-2">
-                    <button onClick={() => { setReviewCandidate(p); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition">
+                    <button onClick={() => { setReviewCandidate(p); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-primary transition">
                       <i className="ri-eye-line mr-1"></i>
                       Detail
                     </button>
                     {permissions.includes("pencaker.update") && (
-                      <button onClick={() => { setEditingCandidateId(p.id); const src = rawCandidates.find((c) => c.id === p.id); if (src) setFormCandidate({ user_id: src.user_id, full_name: src.full_name || "", birthdate: src.birthdate || "", place_of_birth: src.place_of_birth || "", nik: src.nik || "", kecamatan: src.kecamatan || "", kelurahan: src.kelurahan || "", address: src.address || "", postal_code: src.postal_code || "", gender: src.gender || "", no_handphone: src.no_handphone || "", photo_profile: src.photo_profile || "", last_education: src.last_education || "", graduation_year: Number(src.graduation_year || 0), status_perkawinan: src.status_perkawinan || "", cv_file: undefined }); setShowFormModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">
+                      <button onClick={() => { setEditingCandidateId(p.id); const src = rawCandidates.find((c) => c.id === p.id); if (src) setFormCandidate({ user_id: src.user_id, full_name: src.full_name || "", birthdate: src.birthdate || "", place_of_birth: src.place_of_birth || "", nik: src.nik || "", kecamatan: src.kecamatan || "", kelurahan: src.kelurahan || "", address: src.address || "", postal_code: src.postal_code || "", gender: src.gender || "", no_handphone: src.no_handphone || "", photo_profile: src.photo_profile || "", last_education: src.last_education || "", graduation_year: Number(src.graduation_year || 0), status_perkawinan: src.status_perkawinan || "", cv_file: undefined }); setShowFormModal(true); }} className="flex-1 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary transition">
                         <i className="ri-pencil-line mr-1"></i>
                         Edit
                       </button>
@@ -269,7 +269,7 @@ export default function PencakerPage() {
             size="lg"
             actions={
               <>
-                <button onClick={() => { setShowReviewModal(false); setReviewCandidate(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>
+                <button onClick={() => { setShowReviewModal(false); setReviewCandidate(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Tutup</button>
               </>
             }
           >
@@ -280,51 +280,51 @@ export default function PencakerPage() {
                     <Image src={reviewCandidate.foto || "https://picsum.photos/200"} alt={reviewCandidate.nama} width={96} height={96} className="w-24 h-24 rounded-full object-cover" />
                   </div>
                   <div>
-                    <div className="text-sm text-[#6b7280]">Nama</div>
-                    <div className="font-semibold text-[#2a436c]">{reviewCandidate.nama}</div>
-                    <div className="mt-2 text-sm text-[#6b7280]">NIK</div>
-                    <div className="font-medium text-[#111827]">{reviewCandidate.nik}</div>
+                    <div className="text-sm text-gray-500">Nama</div>
+                    <div className="font-semibold text-primary">{reviewCandidate.nama}</div>
+                    <div className="mt-2 text-sm text-gray-500">NIK</div>
+                    <div className="font-medium text-gray-900">{reviewCandidate.nik}</div>
                   </div>
                 </div>
 
                 <div className="bg-white rounded-lg p-4 border grid grid-cols-1 gap-4">
                   <div>
-                    <div className="text-sm text-[#6b7280]">Tempat, Tanggal Lahir</div>
-                    <div className="font-medium text-[#111827]">{reviewCandidate.ttl}</div>
+                    <div className="text-sm text-gray-500">Tempat, Tanggal Lahir</div>
+                    <div className="font-medium text-gray-900">{reviewCandidate.ttl}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-[#6b7280]">Jenis Kelamin</div>
-                    <div className="font-medium text-[#111827]">{reviewCandidate.jenisKelamin}</div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border grid grid-cols-1 gap-4">
-                  <div>
-                    <div className="text-sm text-[#6b7280]">Pendidikan</div>
-                    <div className="font-medium text-[#111827]">{reviewCandidate.pendidikan}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-[#6b7280]">Telepon</div>
-                    <div className="font-medium text-[#111827]">{reviewCandidate.telepon}</div>
+                    <div className="text-sm text-gray-500">Jenis Kelamin</div>
+                    <div className="font-medium text-gray-900">{reviewCandidate.jenisKelamin}</div>
                   </div>
                 </div>
 
                 <div className="bg-white rounded-lg p-4 border grid grid-cols-1 gap-4">
                   <div>
-                    <div className="text-sm text-[#6b7280]">Email</div>
-                    <div className="font-medium text-[#111827]">{reviewCandidate.email}</div>
+                    <div className="text-sm text-gray-500">Pendidikan</div>
+                    <div className="font-medium text-gray-900">{reviewCandidate.pendidikan}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-[#6b7280]">Alamat</div>
-                    <div className="font-medium text-[#111827] whitespace-pre-wrap">{reviewCandidate.alamat}</div>
+                    <div className="text-sm text-gray-500">Telepon</div>
+                    <div className="font-medium text-gray-900">{reviewCandidate.telepon}</div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-4 border grid grid-cols-1 gap-4">
+                  <div>
+                    <div className="text-sm text-gray-500">Email</div>
+                    <div className="font-medium text-gray-900">{reviewCandidate.email}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Alamat</div>
+                    <div className="font-medium text-gray-900 whitespace-pre-wrap">{reviewCandidate.alamat}</div>
                   </div>
                 </div>
 
                 <Card
                   header={
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-[#2a436c]">Riwayat Pelatihan</h4>
-                      <span className="text-xs text-[#6b7280] bg-[#f9fafb] px-2 py-1 rounded">{reviewCandidate.pelatihan.length} pelatihan</span>
+                      <h4 className="font-semibold text-primary">Riwayat Pelatihan</h4>
+                      <span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">{reviewCandidate.pelatihan.length} pelatihan</span>
                     </div>
                   }
                 >
@@ -341,9 +341,9 @@ export default function PencakerPage() {
                       <TableBody>
                         {reviewCandidate.pelatihan.map((pt, idx) => (
                           <TableRow key={`${pt.id}-${idx}`}>
-                            <TD className="text-[#111827]">{idx + 1}</TD>
-                            <TD className="font-medium text-[#111827]">{pt.nama}</TD>
-                            <TD className="text-[#4b5563]">{pt.tanggal}</TD>
+                            <TD className="text-gray-900">{idx + 1}</TD>
+                            <TD className="font-medium text-gray-900">{pt.nama}</TD>
+                            <TD className="text-gray-600">{pt.tanggal}</TD>
                             <TD>
                               <span className={`inline-block px-2 py-1 text-xs rounded-full ${pt.status === "Selesai" ? "bg-blue-100 text-blue-800" : pt.status === "Berlangsung" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>{pt.status}</span>
                             </TD>
@@ -352,7 +352,7 @@ export default function PencakerPage() {
                       </TableBody>
                     </Table>
                   ) : (
-                    <p className="text-sm text-[#9ca3af] italic">Belum ada pelatihan.</p>
+                    <p className="text-sm text-gray-400 italic">Belum ada pelatihan.</p>
                   )}
                 </Card>
               </div>
@@ -366,7 +366,7 @@ export default function PencakerPage() {
             size="lg"
             actions={
               <>
-                <button onClick={() => { setShowFormModal(false); setEditingCandidateId(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Batal</button>
+                <button onClick={() => { setShowFormModal(false); setEditingCandidateId(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Batal</button>
                 <button
                   onClick={async () => {
                     try {
@@ -423,7 +423,7 @@ export default function PencakerPage() {
                       showError("Gagal menyimpan data pencaker");
                     }
                   }}
-                  className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]"
+                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary"
                 >Simpan</button>
               </>
             }

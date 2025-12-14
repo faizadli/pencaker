@@ -150,8 +150,8 @@ export default function JobDetailPage() {
   if (loading) return (
     <main className="min-h-screen bg-white">
       <div className="px-4 sm:px-6 flex items-center justify-center h-[60vh]">
-        <div className="flex items-center gap-3 text-[#355485]">
-          <div className="w-5 h-5 border-2 border-[#355485] border-t-transparent rounded-full animate-spin"></div>
+        <div className="flex items-center gap-3 text-primary">
+          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
           <span className="text-sm font-medium">Memuat detail lowongan...</span>
         </div>
       </div>
@@ -163,7 +163,7 @@ export default function JobDetailPage() {
       <div className="px-4 sm:px-6 max-w-4xl mx-auto">
         <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl">{error || "Lowongan tidak ditemukan"}</div>
         <div className="mt-4">
-          <Link href="/jobs" className="px-4 py-2 bg-[#355485] text-white rounded-lg">Kembali ke Lowongan</Link>
+          <Link href="/jobs" className="px-4 py-2 bg-primary text-white rounded-lg">Kembali ke Lowongan</Link>
         </div>
       </div>
     </main>
@@ -173,7 +173,7 @@ export default function JobDetailPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <section className="bg-[#2a436c] text-white py-10">
+      <section className="bg-primary text-white py-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-start gap-4">
             <Image src={companyLogo || `https://picsum.photos/96?random=${encodeURIComponent(job.id || job.job_title || "default")}`} alt={company || "Perusahaan"} width={72} height={72} className="w-18 h-18 rounded-xl object-cover" />
@@ -195,45 +195,45 @@ export default function JobDetailPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="bg-white rounded-lg border border-[#e5e7eb] p-3">
-                <div className="text-[11px] text-[#6b7280]">Hari Lagi</div>
-                <div className="text-sm font-semibold text-[#2a436c]">{typeof daysLeft === "number" && daysLeft > 0 ? `${daysLeft}` : "-"}</div>
+              <div className="bg-white rounded-lg border border-gray-200 p-3">
+                <div className="text-[11px] text-gray-500">Hari Lagi</div>
+                <div className="text-sm font-semibold text-primary">{typeof daysLeft === "number" && daysLeft > 0 ? `${daysLeft}` : "-"}</div>
               </div>
-              <div className="bg-white rounded-lg border border-[#e5e7eb] p-3">
-                <div className="text-[11px] text-[#6b7280]">Tipe Kerja</div>
-                <div className="text-sm font-semibold text-[#2a436c]">{job.job_type || "-"}</div>
+              <div className="bg-white rounded-lg border border-gray-200 p-3">
+                <div className="text-[11px] text-gray-500">Tipe Kerja</div>
+                <div className="text-sm font-semibold text-primary">{job.job_type || "-"}</div>
               </div>
-              <div className="bg-white rounded-lg border border-[#e5e7eb] p-3">
-                <div className="text-[11px] text-[#6b7280]">Pengalaman</div>
-                <div className="text-sm font-semibold text-[#2a436c]">{job.experience_required || "-"}</div>
+              <div className="bg-white rounded-lg border border-gray-200 p-3">
+                <div className="text-[11px] text-gray-500">Pengalaman</div>
+                <div className="text-sm font-semibold text-primary">{job.experience_required || "-"}</div>
               </div>
-              <div className="bg-white rounded-lg border border-[#e5e7eb] p-3">
-                <div className="text-[11px] text-[#6b7280]">Status</div>
-                <div className="text-sm font-semibold text-[#2a436c]">{statusLabel}</div>
+              <div className="bg-white rounded-lg border border-gray-200 p-3">
+                <div className="text-[11px] text-gray-500">Status</div>
+                <div className="text-sm font-semibold text-primary">{statusLabel}</div>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-              <h2 className="text-lg font-semibold text-[#2a436c] mb-3">Detail Pekerjaan</h2>
+            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-primary mb-3">Detail Pekerjaan</h2>
               <div className="space-y-4">
                 <div className="content-rich" dangerouslySetInnerHTML={{ __html: job.job_description }} />
               </div>
             </div>
             {job.skills_required && (
-              <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-                <h2 className="text-lg font-semibold text-[#2a436c] mb-3">Kualifikasi & Keahlian</h2>
+              <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-primary mb-3">Kualifikasi & Keahlian</h2>
                 <div className="flex flex-wrap gap-2">
                   {job.skills_required.split(",").map((sk, i) => (
-                    <span key={`${i}-${sk.trim()}`} className="px-2 py-1 text-xs bg-[#f3f4f6] text-[#355485] rounded-full">{sk.trim()}</span>
+                    <span key={`${i}-${sk.trim()}`} className="px-2 py-1 text-xs bg-gray-100 text-primary rounded-full">{sk.trim()}</span>
                   ))}
                 </div>
               </div>
             )}
           </div>
           <aside className="space-y-6">
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-4">
-              <div className="text-sm text-[#2a436c]">Gaji Per Bulan</div>
-              <div className="text-xl font-bold text-[#2a436c]">{salary}</div>
-              <div className="text-xs text-[#6b7280] mt-1">Tutup pada {deadlineLabel}</div>
+            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-4">
+              <div className="text-sm text-primary">Gaji Per Bulan</div>
+              <div className="text-xl font-bold text-primary">{salary}</div>
+              <div className="text-xs text-gray-500 mt-1">Tutup pada {deadlineLabel}</div>
               <button
                 onClick={() => {
                   const role = typeof window !== "undefined" ? (localStorage.getItem("role") || "") : "";
@@ -242,33 +242,33 @@ export default function JobDetailPage() {
                   if (!candidateId || !job?.id || !job?.company_id) { alert("Profil pencaker belum lengkap atau data lowongan tidak valid"); return; }
                   setConfirmOpen(true);
                 }}
-                className="mt-3 w-full px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c]"
+                className="mt-3 w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary"
               >
                 Lamar Sekarang
               </button>
             </div>
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-              <h3 className="text-base font-semibold text-[#2a436c] mb-3">Tentang Perusahaan</h3>
-              <p className="text-sm text-[#374151]">{company}</p>
+            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+              <h3 className="text-base font-semibold text-primary mb-3">Tentang Perusahaan</h3>
+              <p className="text-sm text-gray-700">{company}</p>
               <div className="mt-2 space-y-1">
                 {job.company_address && (
-                  <p className="text-xs text-[#6b7280]">{job.company_address}</p>
+                  <p className="text-xs text-gray-500">{job.company_address}</p>
                 )}
                 {(job.company_kecamatan || job.company_kelurahan) && (
-                  <p className="text-xs text-[#6b7280]">{[job.company_kelurahan, job.company_kecamatan].filter(Boolean).join(", ")}</p>
+                  <p className="text-xs text-gray-500">{[job.company_kelurahan, job.company_kecamatan].filter(Boolean).join(", ")}</p>
                 )}
                 {job.company_id && (
                   <div className="pt-2">
-                    <Link href={`/companies/${encodeURIComponent(String(job.company_id))}`} className="mt-3 w-full px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-center block">Lihat Profil Perusahaan</Link>
+                    <Link href={`/companies/${encodeURIComponent(String(job.company_id))}`} className="mt-3 w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary text-center block">Lihat Profil Perusahaan</Link>
                   </div>
                 )}
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-md border border-[#e5e7eb] p-6">
-              <h3 className="text-base font-semibold text-[#2a436c] mb-3">Fasilitas</h3>
+            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+              <h3 className="text-base font-semibold text-primary mb-3">Fasilitas</h3>
               <div className="space-y-2">
                 {["WFH/Hybrid", "Asuransi Kesehatan", "Training Skill", "Bonus Tahunan", "Perlengkapan Kerja"].map((f, i) => (
-                  <div key={`fac-${i}`} className="px-2 py-1 text-sm bg-[#f3f4f6] text-[#355485] rounded-lg">{f}</div>
+                  <div key={`fac-${i}`} className="px-2 py-1 text-sm bg-gray-100 text-primary rounded-lg">{f}</div>
                 ))}
               </div>
             </div>
@@ -283,7 +283,7 @@ export default function JobDetailPage() {
         size="sm"
         actions={
           <>
-            <button onClick={() => setConfirmOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Batal</button>
+            <button onClick={() => setConfirmOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Batal</button>
             <button
               onClick={async () => {
                 if (!job?.id || !job?.company_id || !candidateId) { setConfirmOpen(false); return; }
@@ -301,14 +301,14 @@ export default function JobDetailPage() {
                 }
               }}
               disabled={applying}
-              className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]"
+              className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary"
             >
               {applying ? "Mengirim..." : "Ya, Lamar"}
             </button>
           </>
         }
       >
-        <div className="text-sm text-[#374151]">Apakah Anda yakin ingin melamar lowongan ini?</div>
+        <div className="text-sm text-gray-700">Apakah Anda yakin ingin melamar lowongan ini?</div>
       </Modal>
 
       <Modal
@@ -318,12 +318,12 @@ export default function JobDetailPage() {
         size="sm"
         actions={
           <>
-            <button onClick={() => setLoginOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>
-            <button onClick={() => { setLoginOpen(false); router.push("/login/candidate"); }} className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]">Login Kandidat</button>
+            <button onClick={() => setLoginOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Tutup</button>
+            <button onClick={() => { setLoginOpen(false); router.push("/login/candidate"); }} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary">Login Kandidat</button>
           </>
         }
       >
-        <div className="text-sm text-[#374151]">Anda harus login sebagai Kandidat untuk melamar lowongan ini.</div>
+        <div className="text-sm text-gray-700">Anda harus login sebagai Kandidat untuk melamar lowongan ini.</div>
       </Modal>
 
       <Modal
@@ -333,27 +333,27 @@ export default function JobDetailPage() {
         size="sm"
         actions={
           <>
-            <button onClick={() => setSuccessOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>
-            <button onClick={() => router.push("/dashboard/lamaran")} className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]">Lihat Status Lamaran</button>
+            <button onClick={() => setSuccessOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Tutup</button>
+            <button onClick={() => router.push("/dashboard/lamaran")} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary">Lihat Status Lamaran</button>
           </>
         }
       >
-        <div className="text-sm text-[#374151]">Lamaran Anda telah terkirim. Anda dapat melihat statusnya di halaman Dashboard → Lamaran Saya.</div>
+        <div className="text-sm text-gray-700">Lamaran Anda telah terkirim. Anda dapat melihat statusnya di halaman Dashboard → Lamaran Saya.</div>
       </Modal>
 
       {similar.length > 0 && (
         <section className="py-10 bg-white">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <h2 className="text-lg font-semibold text-[#2a436c] mb-4">Lowongan Lainnya dari Perusahaan Ini</h2>
+            <h2 className="text-lg font-semibold text-primary mb-4">Lowongan Lainnya dari Perusahaan Ini</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {similar.map((sj, i) => (
                 <Link key={sj.id || `${sj.job_title}-${i}`} href={`/jobs/${encodeURIComponent(String(sj.id || ""))}`} className="block">
-                  <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] p-4 hover:shadow-md transition-shadow">
-                    <h3 className="font-semibold text-[#2a436c] text-sm truncate">{sj.job_title}</h3>
-                    <p className="text-xs text-[#6b7280] truncate">{sj.company_name || sj.company_id}</p>
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                    <h3 className="font-semibold text-primary text-sm truncate">{sj.job_title}</h3>
+                    <p className="text-xs text-gray-500 truncate">{sj.company_name || sj.company_id}</p>
                     <div className="mt-2 flex gap-2 flex-wrap">
-                      {sj.job_type && <span className="px-2 py-1 text-[11px] bg-[#f3f4f6] text-[#355485] rounded-full">{sj.job_type}</span>}
-                      {sj.education_required && <span className="px-2 py-1 text-[11px] bg-[#f3f4f6] text-[#355485] rounded-full">{sj.education_required}</span>}
+                      {sj.job_type && <span className="px-2 py-1 text-[11px] bg-gray-100 text-primary rounded-full">{sj.job_type}</span>}
+                      {sj.education_required && <span className="px-2 py-1 text-[11px] bg-gray-100 text-primary rounded-full">{sj.education_required}</span>}
                     </div>
                   </div>
                 </Link>

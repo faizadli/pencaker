@@ -112,11 +112,11 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
       )}
 
       <aside
-        className={`fixed top-0 left-0 z-50 h-screen bg-[#355485] text-white transition-transform duration-300 lg:transition-all flex flex-col
+        className={`fixed top-0 left-0 z-50 h-screen bg-primary text-white transition-transform duration-300 lg:transition-all flex flex-col
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0 ${isMinimized ? "w-16" : "w-64"}`}
       >
-        <div className="flex items-center justify-between p-5 border-b border-[#4f90c6]">
+        <div className="flex items-center justify-between p-5 border-b border-secondary">
           {isMinimized ? (
             <div className="w-full flex justify-center">
               <span className="text-2xl">💼</span>
@@ -126,7 +126,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
               DISNAKER<span className="font-normal text-sm">KabPaser</span>
             </h1>
           )}
-          <button onClick={() => setIsMobileOpen(false)} className="lg:hidden p-2 rounded hover:bg-[#4f90c6]" aria-label="Tutup Sidebar">
+          <button onClick={() => setIsMobileOpen(false)} className="lg:hidden p-2 rounded hover:bg-secondary" aria-label="Tutup Sidebar">
             <i className="ri-close-line text-xl"></i>
           </button>
         </div>
@@ -139,7 +139,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
                 <li key={item.name}>
                   <Link
                     href={item.path}
-                    className={`flex items-center gap-3 w-full p-3 rounded-lg transition-colors ${isActive ? "bg-[#4f90c6] font-semibold" : "hover:bg-[#4f90c6]"}`}
+                    className={`flex items-center gap-3 w-full p-3 rounded-lg transition-colors ${isActive ? "bg-secondary font-semibold" : "hover:bg-secondary"}`}
                     onClick={() => setIsMobileOpen(false)}
                   >
                     <i className={`${item.icon || 'ri-id-card-line'} text-lg`}></i>
@@ -153,26 +153,26 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
       </aside>
 
       <header
-        className={`fixed top-0 right-0 left-0 z-40 bg-white shadow-sm border-b border-[#e5e7eb] px-4 py-3 transition-all duration-300 flex items-center gap-4
+        className={`fixed top-0 right-0 left-0 z-40 bg-white shadow-sm border-b border-gray-200 px-4 py-3 transition-all duration-300 flex items-center gap-4
         ${isMinimized ? "lg:left-16" : "lg:left-64"} min-h-16`}
       >
-        <button onClick={() => setIsMobileOpen(true)} className="lg:hidden p-2 text-[#6b7280]" aria-label="Toggle Sidebar">
+        <button onClick={() => setIsMobileOpen(true)} className="lg:hidden p-2 text-gray-500" aria-label="Toggle Sidebar">
           <i className="ri-menu-line text-xl"></i>
         </button>
 
         <div className="hidden sm:flex flex-grow max-w-[300px]">
-          <Input icon="ri-search-2-line" placeholder="Cari data..." className="bg-[#f9fafb]" />
+          <Input icon="ri-search-2-line" placeholder="Cari data..." className="bg-gray-50" />
         </div>
 
         <div className="flex items-center gap-3 sm:gap-6 ml-auto">
-          <button className="relative text-[#6b7280] hover:text-[#355485]" aria-label="Notifikasi">
+          <button className="relative text-gray-500 hover:text-primary" aria-label="Notifikasi">
             <i className="ri-notification-2-line text-xl"></i>
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
           </button>
 
           <div className="relative">
-            <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-2 text-[#6b7280] hover:text-[#355485]">
-              <div className="w-8 h-8 rounded-full overflow-hidden bg-[#4f90c6] flex items-center justify-center text-white text-sm font-medium">
+            <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-2 text-gray-500 hover:text-primary">
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-secondary flex items-center justify-center text-white text-sm font-medium">
                 {userAvatar ? (
                   <Image src={userAvatar} alt={userName || "User"} width={32} height={32} className="w-8 h-8 object-cover" unoptimized />
                 ) : (
@@ -184,18 +184,18 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
             </button>
 
             {dropdownOpen && (
-              <ul className="absolute right-0 mt-2 w-48 bg-white border border-[#e5e7eb] rounded-lg shadow-lg py-1 z-50">
+              <ul className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
                 <li>
-                  <Link href="/dashboard/profile" className="flex items-center gap-3 px-4 py-2 hover:bg-[#f9fafb] text-[#6b7280] text-sm">
+                  <Link href="/dashboard/profile" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-gray-500 text-sm">
                     <i className="ri-user-settings-line"></i> Profil Saya
                   </Link>
                 </li>
                 <li>
-                  <Link href="/dashboard/pengaturan" className="flex items-center gap-3 px-4 py-2 hover:bg-[#f9fafb] text-[#6b7280] text-sm">
+                  <Link href="/dashboard/pengaturan" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-gray-500 text-sm">
                     <i className="ri-settings-2-line"></i> Pengaturan
                   </Link>
                 </li>
-                <hr className="my-1 border-[#e5e7eb]" />
+                <hr className="my-1 border-gray-200" />
                 <li>
                   <button onClick={() => logout()} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-red-50 text-red-600 text-sm">
                     <i className="ri-logout-box-r-line"></i> Keluar

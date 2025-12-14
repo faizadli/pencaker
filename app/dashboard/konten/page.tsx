@@ -90,18 +90,18 @@ export default function KontenPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
         <div className="px-4 sm:px-6">
           <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Konten Website</h1>
-            <p className="text-sm text-[#6b7280] mt-1">Kelola berita, agenda, dokumen publik, dan FAQ</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-primary">Manajemen Konten Website</h1>
+            <p className="text-sm text-gray-500 mt-1">Kelola berita, agenda, dokumen publik, dan FAQ</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard title="Total Berita" value={beritaList.length} change="+3" color="#4f90c6" icon="ri-article-line" />
-            <StatCard title="Agenda Aktif" value={agendaList.filter((a) => a.status === "Aktif" || a.status === "Pendaftaran").length} change="2 berjalan" color="#355485" icon="ri-calendar-line" />
-            <StatCard title="Dokumen Publik" value={dokumenList.length} change="+1" color="#90b6d5" icon="ri-file-text-line" />
-            <StatCard title="FAQ Terbit" value={faqList.filter((f) => f.status === "Publikasi").length} change="Aktif" color="#2a436c" icon="ri-question-line" />
+            <StatCard title="Total Berita" value={beritaList.length} change="+3" color="var(--color-secondary)" icon="ri-article-line" />
+            <StatCard title="Agenda Aktif" value={agendaList.filter((a) => a.status === "Aktif" || a.status === "Pendaftaran").length} change="2 berjalan" color="var(--color-primary)" icon="ri-calendar-line" />
+            <StatCard title="Dokumen Publik" value={dokumenList.length} change="+1" color="var(--color-foreground)" icon="ri-file-text-line" />
+            <StatCard title="FAQ Terbit" value={faqList.filter((f) => f.status === "Publikasi").length} change="Aktif" color="var(--color-danger)" icon="ri-question-line" />
           </div>
 
           <Card className="mb-6" >
@@ -112,7 +112,7 @@ export default function KontenPage() {
                 { id: "dokumen", label: "📎 Dokumen Publik", icon: "ri-file-text-line" },
                 { id: "faq", label: "❓ FAQ", icon: "ri-question-line" },
               ].map((tab) => (
-                <button key={tab.id} onClick={() => { setActiveTab(tab.id as "berita" | "agenda" | "dokumen" | "faq"); setPage(1); }} className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id ? "text-[#355485] border-b-2 border-[#355485]" : "text-[#6b7280] hover:text-[#2a436c]"}`}>
+                <button key={tab.id} onClick={() => { setActiveTab(tab.id as "berita" | "agenda" | "dokumen" | "faq"); setPage(1); }} className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id ? "text-primary border-b-2 border-primary" : "text-gray-500 hover:text-primary"}`}>
                   <i className={tab.icon}></i>
                   {tab.label}
                 </button>
@@ -123,15 +123,15 @@ export default function KontenPage() {
           {activeTab === "berita" && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-[#2a436c]">Berita & Artikel</h2>
-                <button className="px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-primary">Berita & Artikel</h2>
+                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center gap-2">
                   <i className="ri-add-line"></i>
                   Tambah Baru
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {beritaList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((berita) => (
-                <div key={berita.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
+                <div key={berita.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                   {editId === `berita-${berita.id}` ? (
                     <div className="p-6 space-y-4">
                       <Input type="text" value={editBerita?.judul || ""} onChange={(e) => setEditBerita({ ...(editBerita as Berita), judul: e.target.value })} placeholder="Judul berita" className="w-full" />
@@ -151,7 +151,7 @@ export default function KontenPage() {
                             <i className="ri-check-line"></i>
                             Simpan
                           </button>
-                          <button onClick={() => setEditId(null)} className="px-4 py-2 border border-[#e5e7eb] text-gray-700 rounded-lg hover:bg-gray-50 transition">Batal</button>
+                          <button onClick={() => setEditId(null)} className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition">Batal</button>
                         </div>
                       </div>
                     </div>
@@ -159,16 +159,16 @@ export default function KontenPage() {
                     <div className="p-6">
                       <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                         <div className="flex-1">
-                          <h3 className="font-bold text-[#2a436c] text-lg">{berita.judul}</h3>
+                          <h3 className="font-bold text-primary text-lg">{berita.judul}</h3>
                           <div className="flex items-center gap-3 mt-2 flex-wrap">
-                            <span className="text-sm text-[#6b7280]">{berita.tanggal}</span>
+                            <span className="text-sm text-gray-500">{berita.tanggal}</span>
                             <span className={`px-2 py-1 text-xs rounded-full ${getKategoriColor(berita.kategori)}`}>{berita.kategori}</span>
                             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(berita.status)}`}>{berita.status}</span>
                           </div>
-                          <p className="text-sm text-[#6b7280] mt-3">{berita.isi}</p>
+                          <p className="text-sm text-gray-500 mt-3">{berita.isi}</p>
                         </div>
                         <div className="flex gap-2">
-                      <button onClick={() => handleEdit("berita", berita)} className="px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition flex items-center gap-1">
+                      <button onClick={() => handleEdit("berita", berita)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-primary transition flex items-center gap-1">
                             <i className="ri-edit-line"></i>
                             Edit
                           </button>
@@ -185,15 +185,15 @@ export default function KontenPage() {
           {activeTab === "agenda" && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-[#2a436c]">Agenda & Event</h2>
-                <button className="px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-primary">Agenda & Event</h2>
+                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center gap-2">
                   <i className="ri-add-line"></i>
                   Tambah Agenda
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {agendaList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((ag) => (
-                <div key={ag.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
+                <div key={ag.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                   {editId === `agenda-${ag.id}` ? (
                     <div className="p-6 space-y-4">
                       <Input type="text" value={editAgenda?.acara || ""} onChange={(e) => setEditAgenda({ ...(editAgenda as Agenda), acara: e.target.value })} placeholder="Nama acara" className="w-full" />
@@ -207,25 +207,25 @@ export default function KontenPage() {
                           <i className="ri-check-line"></i>
                           Simpan
                         </button>
-                        <button onClick={() => setEditId(null)} className="px-4 py-2 border border-[#e5e7eb] text-gray-700 rounded-lg hover:bg-gray-50 transition">Batal</button>
+                        <button onClick={() => setEditId(null)} className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition">Batal</button>
                       </div>
                     </div>
                   ) : (
                     <div className="p-6">
                       <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                         <div className="flex-1">
-                          <h3 className="font-bold text-[#2a436c] text-lg">{ag.acara}</h3>
+                          <h3 className="font-bold text-primary text-lg">{ag.acara}</h3>
                           <div className="flex items-center gap-3 mt-2 flex-wrap">
-                            <span className="text-sm text-[#6b7280]"><i className="ri-calendar-line mr-1"></i>{ag.tanggal}</span>
-                            <span className="text-sm text-[#6b7280]"><i className="ri-time-line mr-1"></i>{ag.waktu}</span>
-                            <span className="text-sm text-[#6b7280]"><i className="ri-map-pin-line mr-1"></i>{ag.lokasi}</span>
+                            <span className="text-sm text-gray-500"><i className="ri-calendar-line mr-1"></i>{ag.tanggal}</span>
+                            <span className="text-sm text-gray-500"><i className="ri-time-line mr-1"></i>{ag.waktu}</span>
+                            <span className="text-sm text-gray-500"><i className="ri-map-pin-line mr-1"></i>{ag.lokasi}</span>
                           </div>
-                          <p className="text-sm text-[#6b7280] mt-3">{ag.deskripsi}</p>
-                          <p className="text-xs text-[#9ca3af] mt-2">{ag.peserta}</p>
+                          <p className="text-sm text-gray-500 mt-3">{ag.deskripsi}</p>
+                          <p className="text-xs text-gray-400 mt-2">{ag.peserta}</p>
                         </div>
                         <div className="flex flex-col items-end gap-2">
                           <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ag.status)}`}>{ag.status}</span>
-                          <button onClick={() => handleEdit("agenda", ag)} className="px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition flex items-center gap-1">
+                          <button onClick={() => handleEdit("agenda", ag)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-primary transition flex items-center gap-1">
                             <i className="ri-edit-line"></i>
                             Edit
                           </button>
@@ -242,8 +242,8 @@ export default function KontenPage() {
           {activeTab === "dokumen" && (
             <div>
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-[#2a436c]">Dokumen Publik</h2>
-                <button className="px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-primary">Dokumen Publik</h2>
+                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center gap-2">
                   <i className="ri-upload-line"></i>
                   Unggah Dokumen
                 </button>
@@ -265,13 +265,13 @@ export default function KontenPage() {
                       <TableRow key={doc.id}>
                         <TD>
                           <div className="flex items-center gap-3">
-                            <i className={`ri-file-${doc.tipe.toLowerCase()}-line text-lg text-[#4f90c6]`}></i>
-                            <span className="font-medium text-[#2a436c]">{doc.nama}</span>
+                            <i className={`ri-file-${doc.tipe.toLowerCase()}-line text-lg text-blue-500`}></i>
+                            <span className="font-medium text-primary">{doc.nama}</span>
                           </div>
                         </TD>
                         <TD><span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">{doc.tipe}</span></TD>
-                        <TD className="text-[#6b7280]">{doc.ukuran}</TD>
-                        <TD className="text-[#6b7280]">{doc.uploadDate}</TD>
+                        <TD className="text-gray-500">{doc.ukuran}</TD>
+                        <TD className="text-gray-500">{doc.uploadDate}</TD>
                         <TD>
                           <div className="flex gap-2">
                             <button className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
@@ -295,15 +295,15 @@ export default function KontenPage() {
           {activeTab === "faq" && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-[#2a436c]">FAQ (Pertanyaan Umum)</h2>
-                <button className="px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-primary">FAQ (Pertanyaan Umum)</h2>
+                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center gap-2">
                   <i className="ri-add-line"></i>
                   Tambah FAQ
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {faqList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((f) => (
-                <div key={f.id} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden">
+                <div key={f.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                   {editId === `faq-${f.id}` ? (
                     <div className="p-6 space-y-4">
                       <Input type="text" value={editFaq?.pertanyaan || ""} onChange={(e) => setEditFaq({ ...(editFaq as Faq), pertanyaan: e.target.value })} placeholder="Pertanyaan" className="w-full" />
@@ -323,7 +323,7 @@ export default function KontenPage() {
                             <i className="ri-check-line"></i>
                             Simpan
                           </button>
-                          <button onClick={() => setEditId(null)} className="px-4 py-2 border border-[#e5e7eb] text-gray-700 rounded-lg hover:bg-gray-50 transition">Batal</button>
+                          <button onClick={() => setEditId(null)} className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition">Batal</button>
                         </div>
                       </div>
                     </div>
@@ -331,14 +331,14 @@ export default function KontenPage() {
                     <div className="p-6">
                       <div className="flex justify-between items-start gap-4">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-[#2a436c] text-lg">{f.pertanyaan}</h3>
-                          <p className="text-sm text-[#6b7280] mt-3">{f.jawaban}</p>
+                          <h3 className="font-semibold text-primary text-lg">{f.pertanyaan}</h3>
+                          <p className="text-sm text-gray-500 mt-3">{f.jawaban}</p>
                           <div className="flex items-center gap-3 mt-3">
                             <span className={`px-2 py-1 text-xs rounded-full ${getKategoriColor(f.kategori)}`}>{f.kategori}</span>
                             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(f.status)}`}>{f.status}</span>
                           </div>
                         </div>
-                        <button onClick={() => handleEdit("faq", f)} className="px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition flex items-center gap-1">
+                        <button onClick={() => handleEdit("faq", f)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-primary transition flex items-center gap-1">
                           <i className="ri-edit-line"></i>
                           Edit
                         </button>

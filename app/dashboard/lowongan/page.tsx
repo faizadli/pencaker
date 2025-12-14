@@ -435,29 +435,29 @@ export default function LowonganPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-[#f9fafb] pt-5 pb-8 lg:ml-64">
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
         <div className="px-4 sm:px-6">
           {loading && (
             <div className="flex items-center justify-center h-[40vh]">
-              <div className="flex items-center gap-3 text-[#355485]">
-                <div className="w-5 h-5 border-2 border-[#355485] border-t-transparent rounded-full animate-spin"></div>
+              <div className="flex items-center gap-3 text-primary">
+                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-sm font-medium">Memuat data lowongan...</span>
               </div>
             </div>
           )}
           <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#2a436c]">Manajemen Lowongan Pekerjaan</h1>
-            <p className="text-sm text-[#6b7280] mt-1">Kelola lowongan aktif, ajukan baru, dan pantau proses rekrutmen</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-primary">Manajemen Lowongan Pekerjaan</h1>
+            <p className="text-sm text-gray-500 mt-1">Kelola lowongan aktif, ajukan baru, dan pantau proses rekrutmen</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard title="Total Lowongan" value={lowonganList.length} change="+8%" color="#4f90c6" icon="ri-briefcase-line" />
-            <StatCard title="Aktif" value={filteredLowongan.filter((j) => j.status === "Aktif").length} change="+3" color="#355485" icon="ri-checkbox-circle-line" />
-            <StatCard title="Menunggu" value={filteredLowongan.filter((j) => j.status === "Menunggu Verifikasi").length} change="Perlu tinjauan" color="#90b6d5" icon="ri-time-line" />
-            <StatCard title="Ditolak" value={filteredLowongan.filter((j) => j.status === "Ditolak").length} change="Total ditolak" color="#2a436c" icon="ri-close-circle-line" />
+            <StatCard title="Total Lowongan" value={lowonganList.length} change="+8%" color="var(--color-secondary)" icon="ri-briefcase-line" />
+            <StatCard title="Aktif" value={filteredLowongan.filter((j) => j.status === "Aktif").length} change="+3" color="var(--color-primary)" icon="ri-checkbox-circle-line" />
+            <StatCard title="Menunggu" value={filteredLowongan.filter((j) => j.status === "Menunggu Verifikasi").length} change="Perlu tinjauan" color="var(--color-foreground)" icon="ri-time-line" />
+            <StatCard title="Ditolak" value={filteredLowongan.filter((j) => j.status === "Ditolak").length} change="Total ditolak" color="var(--color-danger)" icon="ri-close-circle-line" />
           </div>
 
-          <div className="bg-white p-4 rounded-xl shadow-md border border-[#e5e7eb] mb-6">
+          <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <Input icon="ri-search-line" type="text" placeholder="Cari posisi atau perusahaan..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full py-3" />
@@ -472,7 +472,7 @@ export default function LowonganPage() {
                 />
 
                 {canCreate && (
-                <button onClick={() => { setEditingId(null); setNewJob(EMPTY_NEW_JOB); setShowForm(true); setSubmittedJob(false); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] text-sm transition flex items-center justify-center gap-2">
+                <button onClick={() => { setEditingId(null); setNewJob(EMPTY_NEW_JOB); setShowForm(true); setSubmittedJob(false); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center justify-center gap-2">
                   <i className="ri-add-line"></i>
                   Tambah
                 </button>)}
@@ -482,8 +482,8 @@ export default function LowonganPage() {
 
           <Modal open={showForm} title={editingId ? "Ubah Lowongan" : "Ajukan Lowongan"} onClose={() => { setShowForm(false); setEditingId(null); setNewJob(EMPTY_NEW_JOB); }} size="xl" actions={
             <>
-              <button onClick={() => { setShowForm(false); setEditingId(null); setNewJob(EMPTY_NEW_JOB); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Batal</button>
-              <button onClick={handleAddJob} className="px-4 py-2 rounded-lg bg-[#355485] text-white hover:bg-[#2a436c]">Simpan</button>
+              <button onClick={() => { setShowForm(false); setEditingId(null); setNewJob(EMPTY_NEW_JOB); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Batal</button>
+              <button onClick={handleAddJob} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary">Simpan</button>
             </>
           }>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -512,7 +512,7 @@ export default function LowonganPage() {
             size="lg"
             actions={
               <>
-                <button onClick={() => { setShowReviewModal(false); setReviewJob(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#355485]">Tutup</button>
+                <button onClick={() => { setShowReviewModal(false); setReviewJob(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Tutup</button>
                 {reviewJob && reviewJob.status === "Menunggu Verifikasi" && canVerify && (
                   <>
                     <button onClick={() => { if (reviewJob) { handleApprove(reviewJob.id); setShowReviewModal(false); setReviewJob(null); } }} className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">Setujui</button>
@@ -525,50 +525,50 @@ export default function LowonganPage() {
             {reviewJob && (
               <div className="grid grid-cols-1 gap-3">
                 <div className="bg-white rounded-lg p-4 border">
-                  <div className="text-sm text-[#6b7280]">Posisi</div>
-                  <div className="font-semibold text-[#2a436c]">{reviewJob.posisi}</div>
+                  <div className="text-sm text-gray-500">Posisi</div>
+                  <div className="font-semibold text-primary">{reviewJob.posisi}</div>
                 </div>
                 <div className="bg-white rounded-lg p-4 border">
-                  <div className="text-sm text-[#6b7280]">Perusahaan</div>
-                  <div className="font-semibold text-[#2a436c]">{reviewJob.perusahaan}</div>
+                  <div className="text-sm text-gray-500">Perusahaan</div>
+                  <div className="font-semibold text-primary">{reviewJob.perusahaan}</div>
                 </div>
                 <div className="bg-white rounded-lg p-4 border grid grid-cols-2 gap-4">
                   <div>
-                    <div className="text-sm text-[#6b7280]">Lokasi</div>
-                    <div className="font-medium text-[#111827]">{reviewJob.lokasi || "-"}</div>
+                    <div className="text-sm text-gray-500">Lokasi</div>
+                    <div className="font-medium text-gray-900">{reviewJob.lokasi || "-"}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-[#6b7280]">Tipe</div>
-                    <div className="font-medium text-[#111827]">{reviewJob.tipe || "-"}</div>
+                    <div className="text-sm text-gray-500">Tipe</div>
+                    <div className="font-medium text-gray-900">{reviewJob.tipe || "-"}</div>
                   </div>
                 </div>
                 <div className="bg-white rounded-lg p-4 border grid grid-cols-2 gap-4">
                   <div>
-                    <div className="text-sm text-[#6b7280]">Tayang</div>
-                    <div className="font-medium text-[#111827]">{reviewJob.tanggalTayang || "-"}</div>
+                    <div className="text-sm text-gray-500">Tayang</div>
+                    <div className="font-medium text-gray-900">{reviewJob.tanggalTayang || "-"}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-[#6b7280]">Batas Akhir</div>
-                    <div className="font-medium text-[#111827]">{reviewJob.batasAkhir || "-"}</div>
+                    <div className="text-sm text-gray-500">Batas Akhir</div>
+                    <div className="font-medium text-gray-900">{reviewJob.batasAkhir || "-"}</div>
                   </div>
                 </div>
                 <div className="bg-white rounded-lg p-4 border">
-                  <div className="text-sm text-[#6b7280] mb-1">Deskripsi</div>
+                  <div className="text-sm text-gray-500 mb-1">Deskripsi</div>
                   <div className="content-rich" dangerouslySetInnerHTML={{ __html: reviewJob.deskripsi }} />
                 </div>
                 
                 <div className="bg-white rounded-lg p-4 border grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <div className="text-sm text-[#6b7280]">Pengalaman</div>
-                    <div className="font-medium text-[#111827]">{reviewJob.experience_required || "-"}</div>
+                    <div className="text-sm text-gray-500">Pengalaman</div>
+                    <div className="font-medium text-gray-900">{reviewJob.experience_required || "-"}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-[#6b7280]">Pendidikan</div>
-                    <div className="font-medium text-[#111827]">{reviewJob.education_required || "-"}</div>
+                    <div className="text-sm text-gray-500">Pendidikan</div>
+                    <div className="font-medium text-gray-900">{reviewJob.education_required || "-"}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-[#6b7280]">Keahlian</div>
-                    <div className="font-medium text-[#111827]">{reviewJob.skills_required || "-"}</div>
+                    <div className="text-sm text-gray-500">Keahlian</div>
+                    <div className="font-medium text-gray-900">{reviewJob.skills_required || "-"}</div>
                   </div>
                 </div>
               </div>
@@ -578,56 +578,56 @@ export default function LowonganPage() {
           {viewMode === "grid" ? (
             <CardGrid>
               {paginatedLowongan.map((job, idx) => (
-                <div key={`${job.id || `${job.companyId}-${job.posisi}-${job.batasAkhir}`}-${job.status}-${idx}`} className="bg-white rounded-xl shadow-md border border-[#e5e7eb] overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="block p-4 border-b border-[#e5e7eb] bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9]">
+                <div key={`${job.id || `${job.companyId}-${job.posisi}-${job.batasAkhir}`}-${job.status}-${idx}`} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="block p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="min-w-0">
-                        <h3 className="font-bold text-[#2a436c] text-sm leading-tight">{job.posisi}</h3>
-                        <p className="text-xs text-[#6b7280]">{job.perusahaan}</p>
+                        <h3 className="font-bold text-primary text-sm leading-tight">{job.posisi}</h3>
+                        <p className="text-xs text-gray-500">{job.perusahaan}</p>
                       </div>
                       <span className={`px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0 ${getStatusColor(job.status)}`}>{job.status}</span>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className={`px-2 py-1 text-xs rounded-full ${getTipeColor(job.tipe as UITipe)}`}>{job.tipe}</span>
-                      <span className="text-xs text-[#6b7280] bg-gray-100 px-2 py-1 rounded">{job.lokasi}</span>
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{job.lokasi}</span>
                     </div>
                   </div>
 
                   <div className="block p-4 space-y-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-[#374151]">Tayang</span>
-                      <span className="font-medium text-[#111827]">{job.tanggalTayang}</span>
+                      <span className="text-gray-700">Tayang</span>
+                      <span className="font-medium text-gray-900">{job.tanggalTayang}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-[#374151]">Batas Akhir</span>
-                      <span className="font-medium text-[#111827]">{job.batasAkhir}</span>
+                      <span className="text-gray-700">Batas Akhir</span>
+                      <span className="font-medium text-gray-900">{job.batasAkhir}</span>
                     </div>
                   </div>
 
-                  <div className="block p-4 border-t border-[#e5e7eb] bg-[#f9fafb]">
+                  <div className="block p-4 border-t border-gray-200 bg-gray-50">
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div>
-                        <p className="text-lg font-bold text-[#2a436c]">{appCounts[job.id]?.total ?? 0}</p>
-                        <p className="text-xs text-[#6b7280]">Pelamar</p>
+                        <p className="text-lg font-bold text-primary">{appCounts[job.id]?.total ?? 0}</p>
+                        <p className="text-xs text-gray-500">Pelamar</p>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-[#2a436c]">{appCounts[job.id]?.processed ?? 0}</p>
-                        <p className="text-xs text-[#6b7280]">Diproses</p>
+                        <p className="text-lg font-bold text-primary">{appCounts[job.id]?.processed ?? 0}</p>
+                        <p className="text-xs text-gray-500">Diproses</p>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-[#2a436c]">{appCounts[job.id]?.approved ?? 0}</p>
-                        <p className="text-xs text-[#6b7280]">Diterima</p>
+                        <p className="text-lg font-bold text-primary">{appCounts[job.id]?.approved ?? 0}</p>
+                        <p className="text-xs text-gray-500">Diterima</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-4 border-t border-[#e5e7eb]">
+                  <div className="p-4 border-t border-gray-200">
                     <div className="flex gap-2">
-                      <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-[#4f90c6] text-white rounded-lg hover:bg-[#355485] transition flex items-center justify-center gap-2">
+                      <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-primary transition flex items-center justify-center gap-2">
                         <i className="ri-eye-line"></i>
                         <span>{job.status === "Menunggu Verifikasi" && canVerify ? "Review & Konfirmasi" : "Detail"}</span>
                       </button>
-                      <Link href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`} className="flex-1 px-3 py-2 text-sm bg-[#7c3aed] text-white rounded-lg hover:bg-[#5b21b6] transition flex items-center justify-center gap-2" title="Pelamar">
+                      <Link href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`} className="flex-1 px-3 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2" title="Pelamar">
                         <i className="ri-user-search-line"></i>
                         <span>Pelamar</span>
                       </Link>
@@ -652,7 +652,7 @@ export default function LowonganPage() {
                             });
                             setShowForm(true);
                           }}
-                          className="flex-1 px-3 py-2 text-sm bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition flex items-center justify-center gap-2"
+                          className="flex-1 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary transition flex items-center justify-center gap-2"
                           title="Edit"
                         >
                           <i className="ri-edit-line"></i>
@@ -682,28 +682,28 @@ export default function LowonganPage() {
                     <TableRow key={`${job.id || `${job.companyId}-${job.posisi}-${job.batasAkhir}`}-${job.status}-${idx}`}>
                       <TD>
                         <div>
-                          <span className="font-medium text-[#111827] hover:text-[#355485]">{job.posisi}</span>
-                          <p className="text-xs text-[#4b5563]">{job.tipe}</p>
+                          <span className="font-medium text-gray-900 hover:text-primary">{job.posisi}</span>
+                          <p className="text-xs text-gray-600">{job.tipe}</p>
                         </div>
                       </TD>
-                      <TD className="text-[#111827]">{job.perusahaan}</TD>
+                      <TD className="text-gray-900">{job.perusahaan}</TD>
                       <TD>
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded text-[#6b7280]">{job.lokasi}</span>
+                        <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-500">{job.lokasi}</span>
                       </TD>
                       <TD>
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(job.status)}`}>{job.status}</span>
                       </TD>
                       <TD>
                         <div className="text-center">
-                          <p className="font-bold text-[#2a436c]">{appCounts[job.id]?.total ?? 0}</p>
+                          <p className="font-bold text-primary">{appCounts[job.id]?.total ?? 0}</p>
                         </div>
                       </TD>
                       <TD>
                         <div className="flex gap-2">
-                          <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-1 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">
+                          <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-1 text-xs bg-secondary text-white rounded hover:bg-primary transition">
                             {job.status === "Menunggu Verifikasi" && canVerify ? "Review & Konfirmasi" : "Detail"}
                           </button>
-                          <Link href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`} className="flex-1 px-3 py-1 text-xs bg-[#7c3aed] text-white rounded hover:bg-[#5b21b6] transition">
+                          <Link href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`} className="flex-1 px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
                             Pelamar
                           </Link>
                         </div>
@@ -714,25 +714,25 @@ export default function LowonganPage() {
               </Table>
               <div className="sm:hidden p-3 space-y-3">
                 {paginatedLowongan.map((job, idx) => (
-                  <div key={`m-${job.id || `${job.companyId}-${job.posisi}-${job.batasAkhir}`}-${job.status}-${idx}`} className="border border-[#e5e7eb] rounded-lg p-3">
+                  <div key={`m-${job.id || `${job.companyId}-${job.posisi}-${job.batasAkhir}`}-${job.status}-${idx}`} className="border border-gray-200 rounded-lg p-3">
                     <div className="block">
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
-                          <p className="font-semibold text-[#2a436c] truncate">{job.posisi}</p>
-                          <p className="text-xs text-[#6b7280] truncate">{job.perusahaan}</p>
+                          <p className="font-semibold text-primary truncate">{job.posisi}</p>
+                          <p className="text-xs text-gray-500 truncate">{job.perusahaan}</p>
                         </div>
                         <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(job.status)}`}>{job.status}</span>
                       </div>
                       <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        <span className="text-[11px] text-[#6b7280] bg-gray-100 px-2 py-1 rounded">{job.lokasi}</span>
+                        <span className="text-[11px] text-gray-500 bg-gray-100 px-2 py-1 rounded">{job.lokasi}</span>
                         <span className={`text-[11px] px-2 py-1 rounded ${getTipeColor(job.tipe as UITipe)}`}>{job.tipe}</span>
                       </div>
                     </div>
                     <div className="mt-3 flex gap-2">
-                      <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-xs bg-[#4f90c6] text-white rounded hover:bg-[#355485] transition">
+                      <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-xs bg-secondary text-white rounded hover:bg-primary transition">
                         {job.status === "Menunggu Verifikasi" && canVerify ? "Review" : "Detail"}
                       </button>
-                      <Link href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`} className="flex-1 px-3 py-2 text-xs bg-[#7c3aed] text-white rounded hover:bg-[#5b21b6] transition">
+                      <Link href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`} className="flex-1 px-3 py-2 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
                         Pelamar
                       </Link>
                       {canEdit && (
@@ -756,7 +756,7 @@ export default function LowonganPage() {
                             });
                             setShowForm(true);
                           }}
-                          className="flex-1 px-3 py-2 text-xs bg-[#355485] text-white rounded hover:bg-[#2a436c] transition"
+                          className="flex-1 px-3 py-2 text-xs bg-primary text-white rounded hover:bg-primary transition"
                         >
                           Edit
                         </button>
@@ -773,11 +773,11 @@ export default function LowonganPage() {
           </div>
 
           {filteredLowongan.length === 0 && (
-            <div className="text-center py-8 bg-white rounded-xl shadow-md border border-[#e5e7eb]">
+            <div className="text-center py-8 bg-white rounded-xl shadow-md border border-gray-200">
               <i className="ri-briefcase-line text-4xl text-gray-300 mb-3"></i>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Tidak ada lowongan ditemukan</h3>
               <p className="text-gray-600 mb-4">Coba ubah kata kunci pencarian atau filter</p>
-              <button onClick={() => { setSearchTerm(""); setStatusFilter("all"); }} className="px-4 py-2 bg-[#355485] text-white rounded-lg hover:bg-[#2a436c] transition">Reset Pencarian</button>
+              <button onClick={() => { setSearchTerm(""); setStatusFilter("all"); }} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition">Reset Pencarian</button>
             </div>
           )}
         </div>
