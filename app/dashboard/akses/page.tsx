@@ -143,7 +143,7 @@ export default function AksesPage() {
                   </div>
                 ))}
               </div>
-              <button onClick={handleAssign} disabled={!selectedRole || loadingAssign} className="px-6 py-3 bg-primary hover:bg-primary text-white rounded-xl text-sm transition-all">
+              <button onClick={handleAssign} disabled={!selectedRole || loadingAssign} className="px-6 py-3 bg-primary hover:bg-[var(--color-primary-dark)] text-white rounded-xl text-sm transition-all">
                 Simpan Akses
               </button>
             </div>
@@ -159,7 +159,7 @@ export default function AksesPage() {
                 <label className="block text-sm font-medium text-gray-500 mb-2">Deskripsi</label>
                 <Input type="text" value={newRole.description} onChange={(e) => setNewRole({ ...newRole, description: e.target.value })} className="w-full rounded-lg" />
               </div>
-              <button onClick={handleCreateRole} className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm transition-all">Buat Role</button>
+              <button onClick={handleCreateRole} className="px-6 py-3 bg-primary hover:bg-[var(--color-primary-dark)] text-white rounded-xl text-sm transition-all">Buat Role</button>
             </div>
           </Card>
         </div>

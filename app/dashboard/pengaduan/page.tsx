@@ -91,7 +91,7 @@ export default function PengaduanPage() {
                   options={[{ value: "grid", icon: "ri-grid-line" }, { value: "table", icon: "ri-list-check" }]}
                 />
 
-                <button className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center justify-center gap-2"><i className="ri-add-line"></i>Laporkan</button>
+                <button className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center gap-2"><i className="ri-add-line"></i>Laporkan</button>
               </div>
             </div>
           </div>
@@ -127,7 +127,7 @@ export default function PengaduanPage() {
 
                   <div className="p-4 border-t border-gray-200">
                     <div className="flex gap-2">
-                      <button onClick={() => handleEditNote(p.id)} className="flex-1 px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-primary transition flex items-center justify-center gap-1"><i className="ri-edit-line"></i>Edit Catatan</button>
+                      <button onClick={() => handleEditNote(p.id)} className="flex-1 px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center justify-center gap-1"><i className="ri-edit-line"></i>Edit Catatan</button>
                       <SearchableSelect value={p.status} onChange={(v) => handleUpdateStatus(p.id, v)} className="text-sm" options={[{ value: "Pending", label: "Pending" }, { value: "Proses", label: "Proses" }, { value: "Selesai", label: "Selesai" }]} />
                     </div>
                   </div>
@@ -157,7 +157,7 @@ export default function PengaduanPage() {
                       <TD><span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(p.status)}`}>{p.status}</span></TD>
                       <TD>
                         <div className="flex gap-2">
-                          <button onClick={() => handleEditNote(p.id)} className="px-3 py-1 text-xs bg-secondary text-white rounded hover:bg-primary transition">Edit</button>
+                          <button onClick={() => handleEditNote(p.id)} className="px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition">Edit</button>
                           <SearchableSelect value={p.status} onChange={(v) => handleUpdateStatus(p.id, v)} className="text-xs px-2 py-1" options={[{ value: "Pending", label: "Pending" }, { value: "Proses", label: "Proses" }, { value: "Selesai", label: "Selesai" }]} />
                         </div>
                       </TD>
@@ -177,7 +177,7 @@ export default function PengaduanPage() {
               <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
                 <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-semibold text-primary">Edit Catatan Tindak Lanjut</h3><button onClick={() => setEditNote({ id: null, value: "" })} className="text-gray-500 hover:text-gray-700"><i className="ri-close-line text-lg"></i></button></div>
                 <Textarea value={editNote.value} onChange={(e) => setEditNote({ ...editNote, value: e.target.value })} rows={4} className="mb-4" placeholder="Catat tindakan yang telah dilakukan..." />
-                <div className="flex justify-end gap-3"><button onClick={() => setEditNote({ id: null, value: "" })} className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition">Batal</button><button onClick={() => handleSaveNote(editNote.id)} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition">Simpan</button></div>
+                <div className="flex justify-end gap-3"><button onClick={() => setEditNote({ id: null, value: "" })} className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition">Batal</button><button onClick={() => handleSaveNote(editNote.id)} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition">Simpan</button></div>
               </div>
             </div>
           )}

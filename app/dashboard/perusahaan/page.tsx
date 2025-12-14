@@ -268,7 +268,7 @@ export default function PerusahaanPage() {
                 />
 
                 {canCreate && (
-                  <button onClick={() => { setEditingCompanyId(null); setEditingCompanyUserId(null); setUserEmailCompany(""); setUserPasswordCompany(""); setFormCompany({ company_name: "", company_logo: "", no_handphone: "", kecamatan: "", kelurahan: "", address: "", website: "", about_company: "" }); setShowFormModal(true); setSubmittedCompany(false); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center justify-center">+ Tambah</button>
+                  <button onClick={() => { setEditingCompanyId(null); setEditingCompanyUserId(null); setUserEmailCompany(""); setUserPasswordCompany(""); setFormCompany({ company_name: "", company_logo: "", no_handphone: "", kecamatan: "", kelurahan: "", address: "", website: "", about_company: "" }); setShowFormModal(true); setSubmittedCompany(false); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center">+ Tambah</button>
                 )}
               </div>
             </div>
@@ -308,12 +308,12 @@ export default function PerusahaanPage() {
 
                   <div className="p-4 border-t border-gray-200">
                     <div className="flex gap-2">
-                      <button onClick={() => { setReviewCompany(p); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-primary transition">
+                      <button onClick={() => { setReviewCompany(p); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition">
                         <i className="ri-eye-line mr-1"></i>
                         Detail
                       </button>
                       {canUpdate && (
-                        <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", kecamatan: p.kecamatan || "", kelurahan: p.kelurahan || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); setSubmittedCompany(false); }} className="flex-1 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary transition">
+                        <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", kecamatan: p.kecamatan || "", kelurahan: p.kelurahan || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); setSubmittedCompany(false); }} className="flex-1 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition">
                           <i className="ri-pencil-line mr-1"></i>
                           Edit
                         </button>
@@ -364,9 +364,9 @@ export default function PerusahaanPage() {
                       </TD>
                       <TD>
                         <div className="flex gap-2">
-                          <button onClick={() => { setReviewCompany(p); setShowReviewModal(true); }} className="px-3 py-1 text-xs bg-secondary text-white rounded hover:bg-primary transition">Detail</button>
+                          <button onClick={() => { setReviewCompany(p); setShowReviewModal(true); }} className="px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition">Detail</button>
                           {canUpdate && (
-                            <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", kecamatan: p.kecamatan || "", kelurahan: p.kelurahan || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-primary transition">Edit</button>
+                            <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", kecamatan: p.kecamatan || "", kelurahan: p.kelurahan || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition">Edit</button>
                           )}
                         </div>
                       </TD>
@@ -392,9 +392,9 @@ export default function PerusahaanPage() {
                       <span className="truncate">{p.address}</span>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
-                      <button onClick={() => { setReviewCompany(p); setShowReviewModal(true); }} className="px-3 py-2 text-xs bg-secondary text-white rounded hover:bg-primary transition">Detail</button>
+                      <button onClick={() => { setReviewCompany(p); setShowReviewModal(true); }} className="px-3 py-2 text-xs bg-secondary text-white rounded hover:brightness-95 transition">Detail</button>
                       {canUpdate && (
-                        <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", kecamatan: p.kecamatan || "", kelurahan: p.kelurahan || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="px-3 py-2 text-xs bg-primary text-white rounded hover:bg-primary transition">Edit</button>
+                        <button onClick={() => { setEditingCompanyId(p.id); setEditingCompanyUserId(p.user_id); setFormCompany({ company_name: p.company_name || "", company_logo: p.company_logo || "", no_handphone: p.no_handphone || "", kecamatan: p.kecamatan || "", kelurahan: p.kelurahan || "", address: p.address || "", website: p.website || "", about_company: p.about_company || "" }); setShowFormModal(true); }} className="px-3 py-2 text-xs bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition">Edit</button>
                       )}
                     </div>
                   </div>
@@ -543,7 +543,7 @@ export default function PerusahaanPage() {
               <i className="ri-building-line text-4xl text-gray-300 mb-3"></i>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Tidak ada data perusahaan</h3>
               <p className="text-gray-600 mb-4">Coba ubah kata kunci pencarian atau filter</p>
-              <button onClick={() => { setSearchTerm(""); setStatusFilter("all"); }} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition">Reset Pencarian</button>
+              <button onClick={() => { setSearchTerm(""); setStatusFilter("all"); }} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition">Reset Pencarian</button>
             </div>
           )}
         </div>

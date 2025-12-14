@@ -448,7 +448,7 @@ export default function ProfilePage() {
                   )}    
                 </div>
                 <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                  <button onClick={handleSaveProfile} className="w-full sm:w-auto px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+                  <button onClick={handleSaveProfile} className="w-full sm:w-auto px-6 py-3 bg-primary hover:bg-[var(--color-primary-dark)] text-white rounded-xl text-sm transition-all flex items-center justify-center gap-2">
                     <i className="ri-save-line"></i>
                     Simpan Perubahan
                   </button>
@@ -480,7 +480,7 @@ export default function ProfilePage() {
                       <Input type="password" value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl" />
                     </div>
                   </div>
-                  <button type="submit" className="px-6 py-3 bg-primary hover:bg-primary text-white rounded-xl text-sm transition-all flex items-center gap-2">
+                  <button type="submit" className="px-6 py-3 bg-primary hover:bg-[var(--color-primary-dark)] text-white rounded-xl text-sm transition-all flex items-center gap-2">
                     <i className="ri-save-line"></i>
                     Simpan Kata Sandi
                   </button>

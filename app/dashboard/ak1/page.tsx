@@ -331,7 +331,7 @@ export default function Ak1Page() {
                         <p className="text-sm text-gray-700">Semua dokumen telah diunggah. Anda dapat membuat kartu AK1 sekarang.</p>
                         <div className="mt-3">
                           <button
-                            className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary"
+                            className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
                             onClick={async () => {
                               try {
                                 const cid = String(rows[0]?.candidate_id || doc?.candidate_id || "");
@@ -380,7 +380,7 @@ export default function Ak1Page() {
                     </div>
                     {expired && (
                       <div className="mt-3 flex gap-2">
-                        <button className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary" onClick={() => { setRenewForm({ ktp_file: String(doc?.ktp_file || ""), ijazah_file: String(doc?.ijazah_file || ""), pas_photo_file: String(doc?.pas_photo_file || ""), certificate_file: String(doc?.certificate_file || "") }); setShowRenewModal(true); }}>Perpanjang Kartu</button>
+                        <button className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]" onClick={() => { setRenewForm({ ktp_file: String(doc?.ktp_file || ""), ijazah_file: String(doc?.ijazah_file || ""), pas_photo_file: String(doc?.pas_photo_file || ""), certificate_file: String(doc?.certificate_file || "") }); setShowRenewModal(true); }}>Perpanjang Kartu</button>
                       </div>
                     )}
                   </Card>
@@ -436,10 +436,10 @@ export default function Ak1Page() {
                             )}
                           </div>
                           <div className="flex gap-2">
-                            <button className="px-3 py-1 text-xs rounded bg-secondary text-white hover:bg-primary" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
+                            <button className="px-3 py-1 text-xs rounded bg-secondary text-white hover:brightness-95" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
                             {permissions.includes("ak1.verify") && r.file && ((apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi') === 'Menunggu Verifikasi') && (
                               <button
-                                className="px-3 py-1 text-xs rounded bg-primary text-white hover:bg-primary"
+                                className="px-3 py-1 text-xs rounded bg-primary text-white hover:bg-[var(--color-primary-dark)]"
                                 onClick={async () => {
                                   const d = await getAk1Document(undefined, r.candidate_id);
                                   const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate };
@@ -453,7 +453,7 @@ export default function Ak1Page() {
                             )}
                             {permissions.includes("ak1.generate") && !r.file && (
                               <button
-                                className="px-3 py-1 text-xs rounded bg-secondary text-white hover:bg-primary"
+                                className="px-3 py-1 text-xs rounded bg-secondary text-white hover:brightness-95"
                                 onClick={async () => {
                                   try {
                                     setGenMeta({ ak1_document_id: r.ak1_document_id, candidate_id: r.candidate_id, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
@@ -545,10 +545,10 @@ export default function Ak1Page() {
                         </TD>
                         <TD>
                           <div className="flex gap-2">
-                            <button className="px-3 py-1 text-xs rounded bg-secondary text-white hover:bg-primary" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
+                            <button className="px-3 py-1 text-xs rounded bg-secondary text-white hover:brightness-95" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
                             {permissions.includes("ak1.verify") && r.file && ((apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi') === 'Menunggu Verifikasi') && (
                               <button
-                                className="px-3 py-1 text-xs rounded bg-primary text-white hover:bg-primary"
+                                className="px-3 py-1 text-xs rounded bg-primary text-white hover:bg-[var(--color-primary-dark)]"
                                 onClick={async () => {
                                   const d = await getAk1Document(undefined, r.candidate_id);
                                   const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate };
@@ -562,7 +562,7 @@ export default function Ak1Page() {
                             )}
                             {permissions.includes("ak1.generate") && !r.file && (
                               <button
-                                className="px-3 py-1 text-xs rounded bg-secondary text-white hover:bg-primary"
+                                className="px-3 py-1 text-xs rounded bg-secondary text-white hover:brightness-95"
                                 onClick={async () => {
                                   try {
                                     setGenMeta({ ak1_document_id: r.ak1_document_id, candidate_id: r.candidate_id, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
@@ -638,10 +638,10 @@ export default function Ak1Page() {
                         {(() => { const ui = apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi'; return (<span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(ui)}`}>{ui}</span>); })()}
                       </div>
                       <div className="mt-3 flex gap-2">
-                        <button className="flex-1 px-3 py-2 text-xs bg-secondary text-white rounded hover:bg-primary transition" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
+                        <button className="flex-1 px-3 py-2 text-xs bg-secondary text-white rounded hover:brightness-95 transition" onClick={async () => { const d = await getAk1Document(undefined, r.candidate_id); const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate }; setDetailData({ candidate: cand, document: d.data || null }); setShowDetailModal(true); }}>Detail</button>
                         {permissions.includes("ak1.verify") && r.file && ((apiToUIStatusAk1[String(r.status || '').toUpperCase()] || 'Menunggu Verifikasi') === 'Menunggu Verifikasi') && (
                           <button
-                            className="flex-1 px-3 py-2 text-xs bg-primary text-white rounded hover:bg-primary transition"
+                            className="flex-1 px-3 py-2 text-xs bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition"
                             onClick={async () => {
                               const d = await getAk1Document(undefined, r.candidate_id);
                               const cand: CandidateProfileLite = { full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate };
@@ -654,7 +654,7 @@ export default function Ak1Page() {
                           </button>
                         )}
                         {permissions.includes("ak1.generate") && !r.file && (
-                          <button className="flex-1 px-3 py-2 text-xs bg-secondary text-white rounded hover:bg-primary transition" onClick={async () => {
+                          <button className="flex-1 px-3 py-2 text-xs bg-secondary text-white rounded hover:brightness-95 transition" onClick={async () => {
                             try {
                               setGenMeta({ ak1_document_id: r.ak1_document_id, candidate_id: r.candidate_id, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
                               setGenCandidate({ full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate } as CandidateProfileLite);
@@ -952,7 +952,7 @@ export default function Ak1Page() {
                   setRows(items.map((d) => ({ full_name: d.full_name, nik: d.nik, place_of_birth: d.place_of_birth, birthdate: d.birthdate, status: d.status, file: d.file || null, candidate_id: d.candidate_id, ak1_document_id: d.id })));
                 } catch { showError("Gagal generate PDF AK1"); }
               }}
-              className="ml-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary"
+              className="ml-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
             >
               Simpan & Verifikasi
             </button>
@@ -1153,7 +1153,7 @@ export default function Ak1Page() {
                   }
                 } catch { showError("Gagal memperbarui dokumen AK1"); }
               }}
-              className="ml-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary"
+              className="ml-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
             >
               Simpan
             </button>
@@ -1201,7 +1201,7 @@ export default function Ak1Page() {
                   showError("Gagal verifikasi AK1");
                 }
               }}
-              className="ml-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary"
+              className="ml-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
             >
               Simpan
             </button>

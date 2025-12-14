@@ -112,7 +112,7 @@ export default function PengaturanPage() {
                         <div className="space-y-2">
                           <Input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)} className="w-full" />
                           <div className="flex gap-2">
-                            <button onClick={handleSave} className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                            <button onClick={handleSave} className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                               <i className="ri-check-line"></i>
                               Simpan
                             </button>
@@ -139,7 +139,7 @@ export default function PengaturanPage() {
                     <div className="space-y-4">
                       <Input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)} placeholder="URL gambar logo" className="w-full" />
                       <div className="flex gap-2">
-                        <button onClick={handleSave} className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                        <button onClick={handleSave} className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                           <i className="ri-check-line"></i>
                           Simpan
                         </button>
@@ -165,7 +165,7 @@ export default function PengaturanPage() {
                   <div className="space-y-3">
                     <Input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)} placeholder="Masukkan URL gambar banner" className="w-full" />
                     <div className="flex gap-2">
-                      <button onClick={handleSave} className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                      <button onClick={handleSave} className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                         <i className="ri-check-line"></i>
                         Simpan
                       </button>
@@ -195,7 +195,7 @@ export default function PengaturanPage() {
                       <div className="space-y-2">
                         <Input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)} className="w-full" />
                         <div className="flex gap-2">
-                          <button onClick={handleSave} className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                          <button onClick={handleSave} className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                             <i className="ri-check-line"></i>
                             Simpan
                           </button>
@@ -240,7 +240,7 @@ export default function PengaturanPage() {
                         <div className="space-y-2">
                           <Input type="text" value={tempValue} onChange={(e) => setTempValue(e.target.value)} className="w-full" />
                           <div className="flex gap-2">
-                            <button onClick={handleSave} className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                            <button onClick={handleSave} className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                               <i className="ri-check-line"></i>
                               Simpan
                             </button>
@@ -275,7 +275,7 @@ export default function PengaturanPage() {
                 <div className="space-y-4">
                   <Textarea value={tempValue} onChange={(e) => setTempValue(e.target.value)} rows={4} placeholder="Masukkan kategori pekerjaan, pisahkan dengan koma" className="w-full" />
                   <div className="flex gap-2">
-                    <button onClick={handleSave} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                    <button onClick={handleSave} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                       <i className="ri-check-line"></i>
                       Simpan
                     </button>
@@ -306,7 +306,7 @@ export default function PengaturanPage() {
                     <div className="space-y-4">
                       <Textarea value={tempValue} onChange={(e) => setTempValue(e.target.value)} rows={4} placeholder={`Masukkan daftar ${key}, pisahkan dengan koma`} className="w-full" />
                       <div className="flex gap-2">
-                        <button onClick={handleSave} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                        <button onClick={handleSave} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                           <i className="ri-check-line"></i>
                           Simpan
                         </button>
@@ -648,7 +648,7 @@ function Ak1LayoutEditor() {
         {templateName && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <button className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary text-sm font-medium" onClick={() => setFields((prev) => [...prev, { token: "new_field", x: 200, y: 200, size: 18, w: 128, h: 32, kind: 'text' }])}>
+            <button className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)] text-sm font-medium" onClick={() => setFields((prev) => [...prev, { token: "new_field", x: 200, y: 200, size: 18, w: 128, h: 32, kind: 'text' }])}>
               <i className="ri-add-line mr-2"></i>
               Tambah Koordinat
             </button>
@@ -827,7 +827,7 @@ function Ak1LayoutEditor() {
                 setSaving(false); 
               } 
             }} 
-            className={`px-6 py-3 rounded-lg text-sm font-medium ${saving ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-primary text-white hover:bg-primary-600"}`}
+            className={`px-6 py-3 rounded-lg text-sm font-medium ${saving ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-primary text-white hover:bg-[var(--color-primary-dark)]"}`}
           >
             {saving ? "Menyimpan..." : "Simpan Layout"}
           </button>
@@ -882,7 +882,7 @@ function UploadTemplateInline({ onDone }: { onDone: () => void }) {
       <div className="flex justify-end">
         <button 
           disabled={saving || !name || !file} 
-          className={`px-6 py-3 rounded-lg text-sm font-medium ${saving || !name || !file ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-primary text-white hover:bg-primary-600'}`}
+          className={`px-6 py-3 rounded-lg text-sm font-medium ${saving || !name || !file ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-primary text-white hover:bg-[var(--color-primary-dark)]'}`}
           onClick={async () => {
             try {
               setSaving(true);

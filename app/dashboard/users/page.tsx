@@ -197,7 +197,7 @@ export default function UsersPage() {
                 <SearchableSelect value={roleFilter} onChange={(v) => setRoleFilter(v)} options={[{ value: "all", label: "Semua Role" }, ...roles.map((r) => ({ value: r, label: r }))]} />
                 <SearchableSelect value={statusFilter} onChange={(v) => setStatusFilter(v)} options={[{ value: "all", label: "Semua Status" }, { value: "Aktif", label: "Aktif" }, { value: "Nonaktif", label: "Nonaktif" }]} />
                 {permissionCodes.includes("users.create") && (
-                  <button onClick={handleAdd} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center justify-center gap-2">
+                  <button onClick={handleAdd} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center gap-2">
                     <i className="ri-add-line"></i>
                     Tambah
                   </button>
@@ -236,7 +236,7 @@ export default function UsersPage() {
                     <TD>
                       <div className="flex gap-2">
                         {permissionCodes.includes("users.update") && (
-                          <button onClick={() => handleEdit(user)} className="px-3 py-1 text-xs bg-secondary text-white rounded hover:bg-primary transition flex items-center gap-1">
+                          <button onClick={() => handleEdit(user)} className="px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition flex items-center gap-1">
                             <i className="ri-edit-line"></i>
                             Edit
                           </button>
@@ -271,7 +271,7 @@ export default function UsersPage() {
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       {permissionCodes.includes("users.update") && (
-                        <button onClick={() => handleEdit(user)} className="px-3 py-2 text-xs bg-secondary text-white rounded hover:bg-primary transition">
+                        <button onClick={() => handleEdit(user)} className="px-3 py-2 text-xs bg-secondary text-white rounded hover:brightness-95 transition">
                           Edit
                         </button>
                       )}
@@ -302,7 +302,7 @@ export default function UsersPage() {
             actions={(
               <>
                 <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Batal</button>
-                <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary">Simpan</button>
+                <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]">Simpan</button>
               </>
             )}
           >

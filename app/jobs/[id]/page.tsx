@@ -242,7 +242,7 @@ export default function JobDetailPage() {
                   if (!candidateId || !job?.id || !job?.company_id) { alert("Profil pencaker belum lengkap atau data lowongan tidak valid"); return; }
                   setConfirmOpen(true);
                 }}
-                className="mt-3 w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary"
+                className="mt-3 w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)]"
               >
                 Lamar Sekarang
               </button>
@@ -301,7 +301,7 @@ export default function JobDetailPage() {
                 }
               }}
               disabled={applying}
-              className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary"
+              className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
             >
               {applying ? "Mengirim..." : "Ya, Lamar"}
             </button>
@@ -319,7 +319,7 @@ export default function JobDetailPage() {
         actions={
           <>
             <button onClick={() => setLoginOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Tutup</button>
-            <button onClick={() => { setLoginOpen(false); router.push("/login/candidate"); }} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary">Login Kandidat</button>
+            <button onClick={() => { setLoginOpen(false); router.push("/login/candidate"); }} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]">Login Kandidat</button>
           </>
         }
       >
@@ -334,7 +334,7 @@ export default function JobDetailPage() {
         actions={
           <>
             <button onClick={() => setSuccessOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Tutup</button>
-            <button onClick={() => router.push("/dashboard/lamaran")} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary">Lihat Status Lamaran</button>
+            <button onClick={() => router.push("/dashboard/lamaran")} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]">Lihat Status Lamaran</button>
           </>
         }
       >

@@ -472,7 +472,7 @@ export default function LowonganPage() {
                 />
 
                 {canCreate && (
-                <button onClick={() => { setEditingId(null); setNewJob(EMPTY_NEW_JOB); setShowForm(true); setSubmittedJob(false); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center justify-center gap-2">
+                <button onClick={() => { setEditingId(null); setNewJob(EMPTY_NEW_JOB); setShowForm(true); setSubmittedJob(false); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center gap-2">
                   <i className="ri-add-line"></i>
                   Tambah
                 </button>)}
@@ -483,7 +483,7 @@ export default function LowonganPage() {
           <Modal open={showForm} title={editingId ? "Ubah Lowongan" : "Ajukan Lowongan"} onClose={() => { setShowForm(false); setEditingId(null); setNewJob(EMPTY_NEW_JOB); }} size="xl" actions={
             <>
               <button onClick={() => { setShowForm(false); setEditingId(null); setNewJob(EMPTY_NEW_JOB); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Batal</button>
-              <button onClick={handleAddJob} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary">Simpan</button>
+              <button onClick={handleAddJob} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]">Simpan</button>
             </>
           }>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -515,7 +515,7 @@ export default function LowonganPage() {
                 <button onClick={() => { setShowReviewModal(false); setReviewJob(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Tutup</button>
                 {reviewJob && reviewJob.status === "Menunggu Verifikasi" && canVerify && (
                   <>
-                    <button onClick={() => { if (reviewJob) { handleApprove(reviewJob.id); setShowReviewModal(false); setReviewJob(null); } }} className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">Setujui</button>
+                    <button onClick={() => { if (reviewJob) { handleApprove(reviewJob.id); setShowReviewModal(false); setReviewJob(null); } }} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]">Setujui</button>
                     <button onClick={() => { if (reviewJob) { handleReject(reviewJob.id); setShowReviewModal(false); setReviewJob(null); } }} className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Tolak</button>
                   </>
                 )}
@@ -623,7 +623,7 @@ export default function LowonganPage() {
 
                   <div className="p-4 border-t border-gray-200">
                     <div className="flex gap-2">
-                      <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-primary transition flex items-center justify-center gap-2">
+                      <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center justify-center gap-2">
                         <i className="ri-eye-line"></i>
                         <span>{job.status === "Menunggu Verifikasi" && canVerify ? "Review & Konfirmasi" : "Detail"}</span>
                       </button>
@@ -652,7 +652,7 @@ export default function LowonganPage() {
                             });
                             setShowForm(true);
                           }}
-                          className="flex-1 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary transition flex items-center justify-center gap-2"
+                            className="flex-1 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center justify-center gap-2"
                           title="Edit"
                         >
                           <i className="ri-edit-line"></i>
@@ -700,7 +700,7 @@ export default function LowonganPage() {
                       </TD>
                       <TD>
                         <div className="flex gap-2">
-                          <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-1 text-xs bg-secondary text-white rounded hover:bg-primary transition">
+                          <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition">
                             {job.status === "Menunggu Verifikasi" && canVerify ? "Review & Konfirmasi" : "Detail"}
                           </button>
                           <Link href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`} className="flex-1 px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
@@ -729,7 +729,7 @@ export default function LowonganPage() {
                       </div>
                     </div>
                     <div className="mt-3 flex gap-2">
-                      <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-xs bg-secondary text-white rounded hover:bg-primary transition">
+                      <button onClick={() => { setReviewJob(job); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-xs bg-secondary text-white rounded hover:brightness-95 transition">
                         {job.status === "Menunggu Verifikasi" && canVerify ? "Review" : "Detail"}
                       </button>
                       <Link href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`} className="flex-1 px-3 py-2 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
@@ -756,7 +756,7 @@ export default function LowonganPage() {
                             });
                             setShowForm(true);
                           }}
-                          className="flex-1 px-3 py-2 text-xs bg-primary text-white rounded hover:bg-primary transition"
+                              className="flex-1 px-3 py-2 text-xs bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition"
                         >
                           Edit
                         </button>
@@ -777,7 +777,7 @@ export default function LowonganPage() {
               <i className="ri-briefcase-line text-4xl text-gray-300 mb-3"></i>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Tidak ada lowongan ditemukan</h3>
               <p className="text-gray-600 mb-4">Coba ubah kata kunci pencarian atau filter</p>
-              <button onClick={() => { setSearchTerm(""); setStatusFilter("all"); }} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition">Reset Pencarian</button>
+              <button onClick={() => { setSearchTerm(""); setStatusFilter("all"); }} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition">Reset Pencarian</button>
             </div>
           )}
         </div>

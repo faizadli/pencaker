@@ -73,7 +73,7 @@ export default function PelatihanPage() {
                   options={[{ value: "grid", icon: "ri-grid-line" }, { value: "table", icon: "ri-list-check" }]}
                 />
 
-                <button className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center justify-center gap-2">
+                <button className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center gap-2">
                   <i className="ri-add-line"></i>
                   Tambah
                 </button>
@@ -118,7 +118,7 @@ export default function PelatihanPage() {
                         <p className="text-xs text-gray-500">Peserta</p>
                       </div>
                       <div className="flex gap-2">
-                        <button className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-primary transition flex items-center gap-1"><i className="ri-eye-line"></i>Detail</button>
+                        <button className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1"><i className="ri-eye-line"></i>Detail</button>
                         <button className="px-3 py-2 text-sm border border-gray-200 text-gray-500 rounded-lg hover:bg-gray-50 transition"><i className="ri-edit-line"></i></button>
                       </div>
                     </div>
@@ -154,7 +154,7 @@ export default function PelatihanPage() {
                       <TD><div className="text-center"><p className="font-bold text-primary">{prog.peserta.length}</p><p className="text-xs text-gray-500">dari {prog.kuota}</p></div></TD>
                       <TD>
                         <div className="flex gap-2">
-                          <button className="px-3 py-1 text-xs bg-secondary text-white rounded hover:bg-primary transition">Detail</button>
+                          <button className="px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition">Detail</button>
                           <button className="px-2 py-1 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50 transition">Edit</button>
                         </div>
                       </TD>
@@ -174,7 +174,7 @@ export default function PelatihanPage() {
               <i className="ri-book-line text-4xl text-gray-300 mb-3"></i>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Tidak ada program pelatihan</h3>
               <p className="text-gray-600 mb-4">Coba ubah kata kunci pencarian atau filter</p>
-              <button onClick={() => { setSearchTerm(""); setStatusFilter("all"); }} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition">Reset Pencarian</button>
+              <button onClick={() => { setSearchTerm(""); setStatusFilter("all"); }} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition">Reset Pencarian</button>
             </div>
           )}
         </div>

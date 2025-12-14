@@ -124,7 +124,7 @@ export default function KontenPage() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-primary">Berita & Artikel</h2>
-                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center gap-2">
+                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2">
                   <i className="ri-add-line"></i>
                   Tambah Baru
                 </button>
@@ -147,7 +147,7 @@ export default function KontenPage() {
                           ]}
                         />
                         <div className="flex gap-2">
-                          <button onClick={() => handleSave("berita", berita.id)} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                          <button onClick={() => handleSave("berita", berita.id)} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                             <i className="ri-check-line"></i>
                             Simpan
                           </button>
@@ -168,7 +168,7 @@ export default function KontenPage() {
                           <p className="text-sm text-gray-500 mt-3">{berita.isi}</p>
                         </div>
                         <div className="flex gap-2">
-                      <button onClick={() => handleEdit("berita", berita)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-primary transition flex items-center gap-1">
+                      <button onClick={() => handleEdit("berita", berita)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1">
                             <i className="ri-edit-line"></i>
                             Edit
                           </button>
@@ -186,7 +186,7 @@ export default function KontenPage() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-primary">Agenda & Event</h2>
-                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center gap-2">
+                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2">
                   <i className="ri-add-line"></i>
                   Tambah Agenda
                 </button>
@@ -203,7 +203,7 @@ export default function KontenPage() {
                       </div>
                       <Textarea value={editAgenda?.deskripsi || ""} onChange={(e) => setEditAgenda({ ...(editAgenda as Agenda), deskripsi: e.target.value })} rows={2} placeholder="Deskripsi acara" className="w-full" />
                       <div className="flex gap-2">
-                        <button onClick={() => handleSave("agenda", ag.id)} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                        <button onClick={() => handleSave("agenda", ag.id)} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                           <i className="ri-check-line"></i>
                           Simpan
                         </button>
@@ -225,7 +225,7 @@ export default function KontenPage() {
                         </div>
                         <div className="flex flex-col items-end gap-2">
                           <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ag.status)}`}>{ag.status}</span>
-                          <button onClick={() => handleEdit("agenda", ag)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-primary transition flex items-center gap-1">
+                          <button onClick={() => handleEdit("agenda", ag)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1">
                             <i className="ri-edit-line"></i>
                             Edit
                           </button>
@@ -243,7 +243,7 @@ export default function KontenPage() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold text-primary">Dokumen Publik</h2>
-                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center gap-2">
+                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2">
                   <i className="ri-upload-line"></i>
                   Unggah Dokumen
                 </button>
@@ -296,7 +296,7 @@ export default function KontenPage() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-primary">FAQ (Pertanyaan Umum)</h2>
-                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center gap-2">
+                <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2">
                   <i className="ri-add-line"></i>
                   Tambah FAQ
                 </button>
@@ -319,7 +319,7 @@ export default function KontenPage() {
                           ]}
                         />
                         <div className="flex gap-2">
-                          <button onClick={() => handleSave("faq", f.id)} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                        <button onClick={() => handleSave("faq", f.id)} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
                             <i className="ri-check-line"></i>
                             Simpan
                           </button>
@@ -338,7 +338,7 @@ export default function KontenPage() {
                             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(f.status)}`}>{f.status}</span>
                           </div>
                         </div>
-                        <button onClick={() => handleEdit("faq", f)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-primary transition flex items-center gap-1">
+                        <button onClick={() => handleEdit("faq", f)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1">
                           <i className="ri-edit-line"></i>
                           Edit
                         </button>

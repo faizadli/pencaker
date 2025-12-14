@@ -228,8 +228,8 @@ export default function PelamarLowonganPage() {
                 </TD>
                 <TD>
                   <div className="flex gap-2">
-                    <button onClick={() => openDetail(r)} className="px-3 py-1 text-xs bg-secondary text-white rounded hover:bg-primary transition">Detail</button>
-                    <button onClick={() => openEdit(r)} className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-primary transition">Edit</button>
+                    <button onClick={() => openDetail(r)} className="px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition">Detail</button>
+                    <button onClick={() => openEdit(r)} className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition">Edit</button>
                   </div>
                 </TD>
                 </TableRow>
@@ -369,7 +369,7 @@ export default function PelamarLowonganPage() {
           actions={
             <>
               <button onClick={() => { setShowEditModal(false); setSelected(null); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Batal</button>
-              <button onClick={saveEdit} disabled={Boolean(saving)} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary">{saving ? "Menyimpan..." : "Simpan"}</button>
+              <button onClick={saveEdit} disabled={Boolean(saving)} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]">{saving ? "Menyimpan..." : "Simpan"}</button>
             </>
           }
         >

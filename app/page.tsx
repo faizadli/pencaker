@@ -131,7 +131,7 @@ export default function HomePage() {
                     { value: "Temanggung", label: "Temanggung" },
                   ]}
                 />
-                <button className="px-6 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary hover:bg-primary text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2">
+                <button className="px-6 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary hover:bg-[var(--color-primary-dark)] text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2">
                   <i className="ri-search-line"></i> Cari
                 </button>
               </div>
@@ -205,7 +205,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                   <span className="text-xs text-gray-500">{job.tanggal}</span>
-                  <button className="px-4 py-2 bg-primary hover:bg-primary text-white text-sm rounded-lg transition-colors flex items-center gap-2">
+                  <button className="px-4 py-2 bg-primary hover:bg-[var(--color-primary-dark)] text-white text-sm rounded-lg transition-colors flex items-center gap-2">
                     Lamar
                     <i className="ri-send-plane-line"></i>
                   </button>
@@ -231,7 +231,7 @@ export default function HomePage() {
                       <i className="ri-calendar-line"></i>
                       <span>{news.tanggal}</span>
                     </div>
-                    <button className="text-primary hover:text-primary font-medium flex items-center gap-1 transition-colors">
+                    <button className="text-primary hover:text-[var(--color-primary-dark)] font-medium flex items-center gap-1 transition-colors">
                       Baca Selengkapnya <i className="ri-arrow-right-line"></i>
                     </button>
                   </div>

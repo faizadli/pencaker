@@ -178,7 +178,7 @@ export default function PencakerPage() {
               </div>
               <div className="flex flex-col sm:flex-row gap-2 items-stretch">
                 {permissions.includes("pencaker.create") && (
-                  <button onClick={() => { setEditingCandidateId(null); setFormCandidate({ full_name: "", birthdate: "", place_of_birth: "", nik: "", kecamatan: "", kelurahan: "", address: "", postal_code: "", gender: "", no_handphone: "", photo_profile: "", last_education: "", graduation_year: 0, status_perkawinan: "", cv_file: "" }); setUserEmail(""); setUserPassword(""); setShowFormModal(true); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-primary text-sm transition flex items-center justify-center">+ Tambah</button>
+                  <button onClick={() => { setEditingCandidateId(null); setFormCandidate({ full_name: "", birthdate: "", place_of_birth: "", nik: "", kecamatan: "", kelurahan: "", address: "", postal_code: "", gender: "", no_handphone: "", photo_profile: "", last_education: "", graduation_year: 0, status_perkawinan: "", cv_file: "" }); setUserEmail(""); setUserPassword(""); setShowFormModal(true); }} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center">+ Tambah</button>
                 )}
               </div>
             </div>
@@ -238,12 +238,12 @@ export default function PencakerPage() {
 
                 <div className="p-4 border-t border-gray-200">
                   <div className="flex gap-2">
-                    <button onClick={() => { setReviewCandidate(p); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-primary transition">
+                    <button onClick={() => { setReviewCandidate(p); setShowReviewModal(true); }} className="flex-1 px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition">
                       <i className="ri-eye-line mr-1"></i>
                       Detail
                     </button>
                     {permissions.includes("pencaker.update") && (
-                      <button onClick={() => { setEditingCandidateId(p.id); const src = rawCandidates.find((c) => c.id === p.id); if (src) setFormCandidate({ user_id: src.user_id, full_name: src.full_name || "", birthdate: src.birthdate || "", place_of_birth: src.place_of_birth || "", nik: src.nik || "", kecamatan: src.kecamatan || "", kelurahan: src.kelurahan || "", address: src.address || "", postal_code: src.postal_code || "", gender: src.gender || "", no_handphone: src.no_handphone || "", photo_profile: src.photo_profile || "", last_education: src.last_education || "", graduation_year: Number(src.graduation_year || 0), status_perkawinan: src.status_perkawinan || "", cv_file: undefined }); setShowFormModal(true); }} className="flex-1 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary transition">
+                      <button onClick={() => { setEditingCandidateId(p.id); const src = rawCandidates.find((c) => c.id === p.id); if (src) setFormCandidate({ user_id: src.user_id, full_name: src.full_name || "", birthdate: src.birthdate || "", place_of_birth: src.place_of_birth || "", nik: src.nik || "", kecamatan: src.kecamatan || "", kelurahan: src.kelurahan || "", address: src.address || "", postal_code: src.postal_code || "", gender: src.gender || "", no_handphone: src.no_handphone || "", photo_profile: src.photo_profile || "", last_education: src.last_education || "", graduation_year: Number(src.graduation_year || 0), status_perkawinan: src.status_perkawinan || "", cv_file: undefined }); setShowFormModal(true); }} className="flex-1 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition">
                         <i className="ri-pencil-line mr-1"></i>
                         Edit
                       </button>
@@ -423,7 +423,7 @@ export default function PencakerPage() {
                       showError("Gagal menyimpan data pencaker");
                     }
                   }}
-                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary"
+                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
                 >Simpan</button>
               </>
             }

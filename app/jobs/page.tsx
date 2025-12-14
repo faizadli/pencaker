@@ -200,7 +200,7 @@ export default function JobsPage() {
                 <i className="ri-briefcase-line text-4xl text-gray-300 mb-3"></i>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Tidak ada lowongan ditemukan</h3>
                 <p className="text-gray-600 mb-4">Coba ubah kata kunci pencarian atau filter</p>
-                <button onClick={() => { setSearch(""); resetFilter(); }} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition">Reset Pencarian</button>
+                <button onClick={() => { setSearch(""); resetFilter(); }} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition">Reset Pencarian</button>
               </div>
             )}
 
