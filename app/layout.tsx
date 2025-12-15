@@ -4,6 +4,7 @@ import "./globals.css";
 import Footer from "../components/layout/Footer";
 import Navbar from "../components/layout/Navbar";
 import AutoToTop from "../components/utils/AutoToTop";
+import ToastProvider from "../components/ui/Toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,7 +35,9 @@ export default function RootLayout({
         <AutoToTop />
         <Navbar />
         <main className="flex-1 bg-white pt-16">
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </main>
         <Footer />
       </body>

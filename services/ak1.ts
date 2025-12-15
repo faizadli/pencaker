@@ -90,7 +90,7 @@ export async function presignUpload(folder: string, filename: string, content_ty
   const resp = await fetch(`${BASE}/api/uploads/presign`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify({ action: "put", folder, filename, content_type }) });
   if (!resp.ok) throw new Error("Gagal membuat presigned URL");
   const data = await resp.json();
-  return data.data as { url: string; key: string };
+  return data.data as { url: string; key: string; public_url?: string };
 }
 
 export async function presignDownload(keyOrUrl: string) {

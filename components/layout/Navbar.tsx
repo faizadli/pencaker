@@ -109,7 +109,7 @@ export default function Navbar() {
                 <Link href="/about" className={isRoute("/about") ? "text-primary font-medium transition-colors" : "text-gray-600 hover:text-primary transition-colors"}>Tentang Kami</Link>
                 <Link href="/jobs" className={isRoute("/jobs") ? "text-primary font-medium transition-colors" : "text-gray-600 hover:text-primary transition-colors"}>Lowongan</Link>
                 <Link href="/bkk" className={isRoute("/bkk") ? "text-primary font-medium transition-colors" : "text-gray-600 hover:text-primary transition-colors"}>BKK</Link>
-                <Link href="#" className="text-gray-600 hover:text-primary transition-colors">Informasi</Link>
+                <Link href="/informasi" className="text-gray-600 hover:text-primary transition-colors">Informasi</Link>
                 <div className="relative">
                   <button onClick={() => setOpenMore(v => !v)} className={isMoreActive ? "text-primary font-medium transition-colors" : "text-gray-600 hover:text-primary transition-colors"}>
                     Lainnya <i className="ri-arrow-down-s-line"></i>

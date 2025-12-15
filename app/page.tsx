@@ -301,27 +301,42 @@ export default function HomePage() {
 
       <section className="py-16 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-primary mb-8">Berita & Informasi</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {newsList.map((news) => (
-              <div key={news.id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 transform hover:-translate-y-1">
-                <Image src={news.gambar} alt={news.judul} width={800} height={320} className="w-full h-48 object-cover" />
-                <div className="p-6">
-                  <h3 className="font-bold text-primary text-xl mb-3 hover:text-primary transition-colors">{news.judul}</h3>
-                  <p className="text-gray-600 mb-4 leading-relaxed">{news.ringkasan}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <i className="ri-calendar-line"></i>
-                      <span>{news.tanggal}</span>
-                    </div>
-                    <button className="text-primary hover:text-[var(--color-primary-dark)] font-medium flex items-center gap-1 transition-colors">
-                      Baca Selengkapnya <i className="ri-arrow-right-line"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-primary">Berita & Informasi</h2>
+            <Link href="/informasi" className="text-primary hover:text-primary font-medium flex items-center gap-2 transition-colors">
+              Tampilkan Semua
+              <i className="ri-arrow-right-line"></i>
+            </Link>
           </div>
+          {(() => {
+            const toTime = (s: string) => {
+              const d = new Date(s);
+              return Number.isNaN(d.getTime()) ? 0 : d.getTime();
+            };
+            const latestNews = [...newsList].sort((a, b) => toTime(b.tanggal) - toTime(a.tanggal)).slice(0, 3);
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {latestNews.map((news) => (
+                  <div key={news.id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 transform hover:-translate-y-1">
+                    <Image src={news.gambar} alt={news.judul} width={800} height={320} className="w-full h-48 object-cover" />
+                    <div className="p-6">
+                      <h3 className="font-bold text-primary text-xl mb-3 hover:text-primary transition-colors">{news.judul}</h3>
+                      <p className="text-gray-600 mb-4 leading-relaxed">{news.ringkasan}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <i className="ri-calendar-line"></i>
+                          <span>{news.tanggal}</span>
+                        </div>
+                        <Link href={`/informasi/${encodeURIComponent(news.id)}`} className="text-primary hover:text-[var(--color-primary-dark)] font-medium flex items-center gap-1 transition-colors">
+                          Baca Selengkapnya <i className="ri-arrow-right-line"></i>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </section>
 

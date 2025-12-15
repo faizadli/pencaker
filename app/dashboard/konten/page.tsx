@@ -13,23 +13,25 @@ type SiteContentItem<T> = { id: string; data: T; status: "PUBLISHED" | "DRAFT" }
 type ListResponse<T> = { data: SiteContentItem<T>[] };
 
 export default function KontenPage() {
-  type Tab = "berita" | "faq" | "partners" | "testimonials" | "about";
+  type Tab = "berita" | "faq" | "partners" | "testimonials" | "bkk" | "about";
   type AboutSection = "about_profile" | "about_focus" | "about_mission" | "about_team";
   type PubStatus = "Publikasi" | "Draft";
-  type Berita = { id: string; judul: string; tanggal: string; kategori: string; isi: string; status: "Publikasi" | "Draft" };
+  type Berita = { id: string; judul: string; tanggal: string; kategori: string; isi: string; gambar: string; status: "Publikasi" | "Draft" };
   type Faq = { id: string; pertanyaan: string; jawaban: string; kategori: string; status: "Publikasi" | "Draft" };
   type Partner = { id: string; name: string; logo: string; status: "Publikasi" | "Draft" };
   type Testimonial = { id: string; nama: string; pekerjaan: string; perusahaan: string; testimoni: string; foto: string; status: "Publikasi" | "Draft" };
   type AboutFocus = { id: string; text: string; status: "Publikasi" | "Draft" };
   type AboutMission = { id: string; text: string; status: "Publikasi" | "Draft" };
   type TeamMember = { id: string; name: string; position: string; role: string; image: string; status: "Publikasi" | "Draft" };
+  type Bkk = { id: string; nama: string; alamat: string; website: string; status: "Publikasi" | "Draft" };
   
 
   const [activeTab, setActiveTab] = useState<Tab>("berita");
-  const [contentModal, setContentModal] = useState<{ section: "partners" | "testimonials" | "news" | "faqs"; id?: string } | null>(null);
+  const [contentModal, setContentModal] = useState<{ section: "partners" | "testimonials" | "news" | "faqs" | "bkk"; id?: string } | null>(null);
   const [partnerLogoPreview, setPartnerLogoPreview] = useState<string>("");
   const [testimonialPhotoPreview, setTestimonialPhotoPreview] = useState<string>("");
   const [teamImagePreview, setTeamImagePreview] = useState<string>("");
+  const [newsImagePreview, setNewsImagePreview] = useState<string>("");
   const [aboutModal, setAboutModal] = useState<{ section: "profile" | "focus_areas" | "mission_points" | "team"; id?: string } | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -37,6 +39,7 @@ export default function KontenPage() {
   const [editFaq, setEditFaq] = useState<Faq | null>(null);
   const [editPartner, setEditPartner] = useState<Partner | null>(null);
   const [editTestimonial, setEditTestimonial] = useState<Testimonial | null>(null);
+  const [editBkk, setEditBkk] = useState<Bkk | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [profileHtml, setProfileHtml] = useState<string>("");
   const [editFocus, setEditFocus] = useState<AboutFocus | null>(null);
@@ -48,6 +51,7 @@ export default function KontenPage() {
   const [faqList, setFaqList] = useState<Faq[]>([]);
   const [partnersList, setPartnersList] = useState<Partner[]>([]);
   const [testimonialsList, setTestimonialsList] = useState<Testimonial[]>([]);
+  const [bkkList, setBkkList] = useState<Bkk[]>([]);
   const [focusList, setFocusList] = useState<AboutFocus[]>([]);
   const [missionsList, setMissionsList] = useState<AboutMission[]>([]);
   const [teamList, setTeamList] = useState<TeamMember[]>([]);
@@ -59,9 +63,9 @@ export default function KontenPage() {
   useEffect(() => {
     (async () => {
       try {
-        const beritaResp = await listSiteContents({ page: "home", section: "news", published: false }) as ListResponse<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string }>;
+        const beritaResp = await listSiteContents({ page: "home", section: "news", published: false }) as ListResponse<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>;
         const rows = Array.isArray(beritaResp.data) ? beritaResp.data : [];
-        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string }>) => ({ id: String(r.id), judul: String(r.data?.judul || r.data?.title || ""), tanggal: String(r.data?.tanggal || ""), kategori: String(r.data?.kategori || "Informasi"), isi: String(r.data?.isi || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"] })));
+        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>) => ({ id: String(r.id), judul: String(r.data?.judul || r.data?.title || ""), tanggal: String(r.data?.tanggal || ""), kategori: String(r.data?.kategori || "Informasi"), isi: String(r.data?.isi || ""), gambar: String(r.data?.gambar || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"] })));
       } catch {}
       try {
         const faqResp = await listSiteContents({ page: "home", section: "faqs", published: false }) as ListResponse<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string; kategori?: string }>;
@@ -77,6 +81,11 @@ export default function KontenPage() {
         const testiResp = await listSiteContents({ page: "home", section: "testimonials", published: false }) as ListResponse<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>;
         const rows = Array.isArray(testiResp.data) ? testiResp.data : [];
         setTestimonialsList(rows.map((r: SiteContentItem<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>) => ({ id: String(r.id), nama: String(r.data?.nama || ""), pekerjaan: String(r.data?.pekerjaan || ""), perusahaan: String(r.data?.perusahaan || ""), testimoni: String(r.data?.testimoni || ""), foto: String(r.data?.foto || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Testimonial["status"] })));
+      } catch {}
+      try {
+        const bkkResp = await listSiteContents({ page: "home", section: "bkk", published: false }) as ListResponse<{ nama?: string; alamat?: string; website?: string }>;
+        const rows = Array.isArray(bkkResp.data) ? bkkResp.data : [];
+        setBkkList(rows.map((r: SiteContentItem<{ nama?: string; alamat?: string; website?: string }>) => ({ id: String(r.id), nama: String(r.data?.nama || ""), alamat: String(r.data?.alamat || ""), website: String(r.data?.website || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Bkk["status"] })));
       } catch {}
       // home stats removed
       try {
@@ -107,7 +116,7 @@ export default function KontenPage() {
 
   const handleAdd = (section: Tab) => {
     if (section === "berita") {
-      const item: Berita = { id: "__new__", judul: "", tanggal: "", kategori: "Informasi", isi: "", status: "Draft" };
+      const item: Berita = { id: "__new__", judul: "", tanggal: "", kategori: "Informasi", isi: "", gambar: "", status: "Draft" };
       setEditBerita(item);
       setContentModal({ section: "news", id: "__new__" });
     } else if (section === "faq") {
@@ -124,17 +133,22 @@ export default function KontenPage() {
       setEditTestimonial(item);
       setTestimonialPhotoPreview("");
       setContentModal({ section: "testimonials", id: "__new__" });
+    } else if (section === "bkk") {
+      const item: Bkk = { id: "__new__", nama: "", alamat: "", website: "", status: "Draft" };
+      setEditBkk(item);
+      setContentModal({ section: "bkk", id: "__new__" });
     }
   };
 
   const handleEdit = (
     section: Tab,
-    item: Berita | Faq | Partner | Testimonial
+    item: Berita | Faq | Partner | Testimonial | Bkk
   ) => {
-    if (section === "berita") { setEditBerita(item as Berita); setContentModal({ section: "news", id: String(item.id) }); }
+    if (section === "berita") { setEditBerita(item as Berita); setContentModal({ section: "news", id: String(item.id) }); try { const v = String((item as Berita).gambar || ""); if (v) presignDownload(v).then((d) => setNewsImagePreview(d.url)).catch(() => {}); } catch {} }
     if (section === "faq") { setEditFaq(item as Faq); setContentModal({ section: "faqs", id: String(item.id) }); }
     if (section === "partners") { setEditPartner(item as Partner); setContentModal({ section: "partners", id: String(item.id) }); try { const v = String((item as Partner).logo || ""); if (v) presignDownload(v).then((d) => setPartnerLogoPreview(d.url)).catch(() => {}); } catch {} }
     if (section === "testimonials") { setEditTestimonial(item as Testimonial); setContentModal({ section: "testimonials", id: String(item.id) }); try { const v = String((item as Testimonial).foto || ""); if (v) presignDownload(v).then((d) => setTestimonialPhotoPreview(d.url)).catch(() => {}); } catch {} }
+    if (section === "bkk") { setEditBkk(item as Bkk); setContentModal({ section: "bkk", id: String(item.id) }); }
     
   };
 
@@ -146,10 +160,10 @@ export default function KontenPage() {
       if (!String(editBerita.judul || "").trim() || htmlEmpty) { showError("Lengkapi judul dan isi berita"); return; }
       setBeritaList(beritaList.map((item) => (item.id === id ? { ...editBerita } : item)));
       try {
-        await upsertSiteContent({ id: upsertId, page: "home", section: "news", data: { judul: editBerita.judul, tanggal: editBerita.tanggal, kategori: editBerita.kategori, isi: editBerita.isi }, status: editBerita.status === "Publikasi" ? "PUBLISHED" : "DRAFT", sort_order: 0 });
-        const beritaResp = await listSiteContents({ page: "home", section: "news", published: false }) as ListResponse<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string }>;
+        await upsertSiteContent({ id: upsertId, page: "home", section: "news", data: { judul: editBerita.judul, tanggal: editBerita.tanggal, kategori: editBerita.kategori, isi: editBerita.isi, gambar: editBerita.gambar }, status: editBerita.status === "Publikasi" ? "PUBLISHED" : "DRAFT", sort_order: 0 });
+        const beritaResp = await listSiteContents({ page: "home", section: "news", published: false }) as ListResponse<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>;
         const rows = Array.isArray(beritaResp.data) ? beritaResp.data : [];
-        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string }>) => ({ id: String(r.id), judul: String(r.data?.judul || r.data?.title || ""), tanggal: String(r.data?.tanggal || ""), kategori: String(r.data?.kategori || "Informasi"), isi: String(r.data?.isi || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"] })));
+        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>) => ({ id: String(r.id), judul: String(r.data?.judul || r.data?.title || ""), tanggal: String(r.data?.tanggal || ""), kategori: String(r.data?.kategori || "Informasi"), isi: String(r.data?.isi || ""), gambar: String(r.data?.gambar || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"] })));
         showSuccess("Berita disimpan");
       } catch {}
     } else if (section === "faq" && editFaq) {
@@ -183,6 +197,17 @@ export default function KontenPage() {
         const rows = Array.isArray(testiResp.data) ? testiResp.data : [];
         setTestimonialsList(rows.map((r: SiteContentItem<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>) => ({ id: String(r.id), nama: String(r.data?.nama || ""), pekerjaan: String(r.data?.pekerjaan || ""), perusahaan: String(r.data?.perusahaan || ""), testimoni: String(r.data?.testimoni || ""), foto: String(r.data?.foto || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Testimonial["status"] })));
         showSuccess("Testimoni disimpan");
+      } catch {}
+      setContentModal(null);
+    } else if (section === "bkk" && editBkk) {
+      setContentSubmitted(true);
+      if (!String(editBkk.nama || "").trim()) { showError("Nama BKK wajib diisi"); return; }
+      try {
+        await upsertSiteContent({ id: upsertId, page: "home", section: "bkk", data: { nama: editBkk.nama, alamat: editBkk.alamat, website: editBkk.website }, status: editBkk.status === "Publikasi" ? "PUBLISHED" : "DRAFT", sort_order: 0 });
+        const bkkResp = await listSiteContents({ page: "home", section: "bkk", published: false }) as ListResponse<{ nama?: string; alamat?: string; website?: string }>;
+        const rows = Array.isArray(bkkResp.data) ? bkkResp.data : [];
+        setBkkList(rows.map((r: SiteContentItem<{ nama?: string; alamat?: string; website?: string }>) => ({ id: String(r.id), nama: String(r.data?.nama || ""), alamat: String(r.data?.alamat || ""), website: String(r.data?.website || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Bkk["status"] })));
+        showSuccess("Data BKK disimpan");
       } catch {}
       setContentModal(null);
     } else if (section === "about_profile") {
@@ -242,22 +267,30 @@ export default function KontenPage() {
     
   };
 
-  const uploadContentImage = async (section: "partners" | "testimonials" | "team", file: File) => {
+  const uploadContentImage = async (section: "partners" | "testimonials" | "team" | "news", file: File) => {
     try {
-      const folder = section === "partners" ? "site-contents/partners" : section === "testimonials" ? "site-contents/testimonials" : "site-contents/team";
-      const { url, key } = await presignUpload(folder, file.name, file.type);
+      const folder = section === "partners" ? "site-contents/partners" : section === "testimonials" ? "site-contents/testimonials" : section === "team" ? "site-contents/team" : "site-contents/news";
+      const { url, key, public_url } = await presignUpload(folder, file.name, file.type);
       await fetch(url, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
       if (section === "partners" && editPartner) {
-        setEditPartner({ ...editPartner, logo: key });
-        try { const d = await presignDownload(key); setPartnerLogoPreview(d.url); } catch {}
+        const saved = public_url || key;
+        setEditPartner({ ...editPartner, logo: saved });
+        try { const d = await presignDownload(saved); setPartnerLogoPreview(d.url); } catch {}
       }
       if (section === "testimonials" && editTestimonial) {
-        setEditTestimonial({ ...editTestimonial, foto: key });
-        try { const d = await presignDownload(key); setTestimonialPhotoPreview(d.url); } catch {}
+        const saved = public_url || key;
+        setEditTestimonial({ ...editTestimonial, foto: saved });
+        try { const d = await presignDownload(saved); setTestimonialPhotoPreview(d.url); } catch {}
       }
       if (section === "team" && editTeam) {
-        setEditTeam({ ...editTeam, image: key });
-        try { const d = await presignDownload(key); setTeamImagePreview(d.url); } catch {}
+        const saved = public_url || key;
+        setEditTeam({ ...editTeam, image: saved });
+        try { const d = await presignDownload(saved); setTeamImagePreview(d.url); } catch {}
+      }
+      if (section === "news" && editBerita) {
+        const saved = public_url || key;
+        setEditBerita({ ...(editBerita as Berita), gambar: saved });
+        try { const d = await presignDownload(saved); setNewsImagePreview(d.url); } catch {}
       }
     } catch {}
   };
@@ -269,6 +302,7 @@ export default function KontenPage() {
         faq: "faqs",
         partners: "partners",
         testimonials: "testimonials",
+        bkk: "bkk",
         about: "",
         about_profile: "profile",
         about_focus: "focus_areas",
@@ -281,9 +315,9 @@ export default function KontenPage() {
     } catch {}
     if (section === "berita") {
       try {
-        const beritaResp = await listSiteContents({ page: "home", section: "news", published: false }) as ListResponse<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string }>;
+        const beritaResp = await listSiteContents({ page: "home", section: "news", published: false }) as ListResponse<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>;
         const rows = Array.isArray(beritaResp.data) ? beritaResp.data : [];
-        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string }>) => ({ id: String(r.id), judul: String(r.data?.judul || r.data?.title || ""), tanggal: String(r.data?.tanggal || ""), kategori: String(r.data?.kategori || "Informasi"), isi: String(r.data?.isi || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"] })));
+        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>) => ({ id: String(r.id), judul: String(r.data?.judul || r.data?.title || ""), tanggal: String(r.data?.tanggal || ""), kategori: String(r.data?.kategori || "Informasi"), isi: String(r.data?.isi || ""), gambar: String(r.data?.gambar || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"] })));
       } catch {}
     } else if (section === "faq") {
       try {
@@ -302,6 +336,12 @@ export default function KontenPage() {
         const testiResp = await listSiteContents({ page: "home", section: "testimonials", published: false }) as ListResponse<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>;
         const rows = Array.isArray(testiResp.data) ? testiResp.data : [];
         setTestimonialsList(rows.map((r: SiteContentItem<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>) => ({ id: String(r.id), nama: String(r.data?.nama || ""), pekerjaan: String(r.data?.pekerjaan || ""), perusahaan: String(r.data?.perusahaan || ""), testimoni: String(r.data?.testimoni || ""), foto: String(r.data?.foto || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Testimonial["status"] })));
+      } catch {}
+    } else if (section === "bkk") {
+      try {
+        const bkkResp = await listSiteContents({ page: "home", section: "bkk", published: false }) as ListResponse<{ nama?: string; alamat?: string; website?: string }>;
+        const rows = Array.isArray(bkkResp.data) ? bkkResp.data : [];
+        setBkkList(rows.map((r: SiteContentItem<{ nama?: string; alamat?: string; website?: string }>) => ({ id: String(r.id), nama: String(r.data?.nama || ""), alamat: String(r.data?.alamat || ""), website: String(r.data?.website || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Bkk["status"] })));
       } catch {}
     } else if (section === "about_focus") {
       try {
@@ -378,6 +418,7 @@ export default function KontenPage() {
                 { id: "faq", label: "❓ FAQ", icon: "ri-question-line" },
                 { id: "partners", label: "🤝 Mitra", icon: "ri-team-line" },
                 { id: "testimonials", label: "💬 Testimoni", icon: "ri-chat-1-line" },
+                { id: "bkk", label: "🏫 BKK", icon: "ri-school-line" },
                 { id: "about", label: "📄 Tentang", icon: "ri-file-user-line" },
               ].map((tab) => (
                 <button key={tab.id} onClick={() => { setActiveTab(tab.id as typeof activeTab); setPage(1); }} className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id ? "text-primary border-b-2 border-primary" : "text-gray-500 hover:text-primary"}`}>
@@ -617,7 +658,7 @@ export default function KontenPage() {
           )}
 
           {contentModal && (
-            <Modal open={true} size={contentModal.section === "news" ? "xl" : "md"} title={`${contentModal.id === "__new__" ? "Tambah" : "Edit"} ${contentModal.section === "partners" ? "Mitra" : contentModal.section === "testimonials" ? "Testimoni" : contentModal.section === "news" ? "Berita" : "FAQ"}`} onClose={() => setContentModal(null)} actions={
+            <Modal open={true} size={contentModal.section === "news" ? "xl" : "md"} title={`${contentModal.id === "__new__" ? "Tambah" : "Edit"} ${contentModal.section === "partners" ? "Mitra" : contentModal.section === "testimonials" ? "Testimoni" : contentModal.section === "news" ? "Berita" : contentModal.section === "faqs" ? "FAQ" : "BKK"}`} onClose={() => setContentModal(null)} actions={
               <>
                 <button onClick={() => {
                   setContentSubmitted(true);
@@ -629,6 +670,8 @@ export default function KontenPage() {
                     handleSave("berita", (contentModal.id || editBerita.id));
                   } else if (contentModal.section === "faqs" && editFaq) {
                     handleSave("faq", (contentModal.id || editFaq.id));
+                  } else if (contentModal.section === "bkk" && editBkk) {
+                    handleSave("bkk", (contentModal.id || editBkk.id));
                   }
                   setContentModal(null);
                 }} className="px-3 py-2 bg-primary text-white rounded-lg"><i className="ri-check-line"></i> Simpan</button>
@@ -660,6 +703,8 @@ export default function KontenPage() {
                 <div className="space-y-3">
                   <Input type="text" value={editBerita.judul} onChange={(e) => setEditBerita({ ...(editBerita as Berita), judul: e.target.value })} placeholder="Judul berita" className="w-full" required submitted={contentSubmitted} />
                   <TextEditor value={editBerita.isi} onChange={(v) => setEditBerita({ ...(editBerita as Berita), isi: v })} placeholder="Isi konten berita..." required submitted={contentSubmitted} />
+                  <Input type="file" accept="image/*,application/pdf" label="Upload Thumbnail" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) uploadContentImage("news", f); }} />
+                  {newsImagePreview && (<Image src={newsImagePreview} alt="Thumbnail Berita" width={256} height={160} className="w-64 h-40 object-cover border rounded-xl" />)}
                   <SearchableSelect value={editBerita.status} onChange={(v) => setEditBerita({ ...(editBerita as Berita), status: v as Berita["status"] })} options={[{ value: "Draft", label: "Draft" }, { value: "Publikasi", label: "Publikasi" }]} />
                 </div>
               )}
@@ -668,6 +713,14 @@ export default function KontenPage() {
                   <Input type="text" value={editFaq.pertanyaan} onChange={(e) => setEditFaq({ ...(editFaq as Faq), pertanyaan: e.target.value })} placeholder="Pertanyaan" className="w-full" required submitted={contentSubmitted} />
                   <Textarea value={editFaq.jawaban} onChange={(e) => setEditFaq({ ...(editFaq as Faq), jawaban: e.target.value })} rows={4} placeholder="Jawaban" className="w-full" required submitted={contentSubmitted} />
                   <SearchableSelect value={editFaq.status} onChange={(v) => setEditFaq({ ...(editFaq as Faq), status: v as Faq["status"] })} options={[{ value: "Draft", label: "Draft" }, { value: "Publikasi", label: "Publikasi" }]} required submitted={contentSubmitted} />
+                </div>
+              )}
+              {contentModal.section === "bkk" && editBkk && (
+                <div className="space-y-3">
+                  <Input type="text" value={editBkk.nama} onChange={(e) => setEditBkk({ ...(editBkk as Bkk), nama: e.target.value })} placeholder="Nama BKK" className="w-full" required submitted={contentSubmitted} />
+                  <Textarea value={editBkk.alamat} onChange={(e) => setEditBkk({ ...(editBkk as Bkk), alamat: e.target.value })} rows={3} placeholder="Alamat" className="w-full" />
+                  <Input type="text" value={editBkk.website} onChange={(e) => setEditBkk({ ...(editBkk as Bkk), website: e.target.value })} placeholder="Website" className="w-full" />
+                  <SearchableSelect value={editBkk.status} onChange={(v) => setEditBkk({ ...(editBkk as Bkk), status: v as Bkk["status"] })} options={[{ value: "Draft", label: "Draft" }, { value: "Publikasi", label: "Publikasi" }]} required submitted={contentSubmitted} />
                 </div>
               )}
               
@@ -712,12 +765,47 @@ export default function KontenPage() {
             </div>
           )}
 
+          {activeTab === "bkk" && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-primary">Daftar BKK</h2>
+                <button onClick={() => handleAdd("bkk")} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2">
+                  <i className="ri-add-line"></i>
+                  Tambah BKK
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {bkkList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((b) => (
+                <div key={b.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                  <div className="p-6">
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-primary text-lg">{b.nama}</h3>
+                        <p className="text-sm text-gray-500 mt-1">{b.alamat}</p>
+                        <p className="text-sm text-blue-600 mt-1">{b.website}</p>
+                        <div className="flex items-center gap-3 mt-3">
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(b.status)}`}>{b.status}</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleEdit("bkk", b)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1"><i className="ri-edit-line"></i>Edit</button>
+                        <button onClick={() => handleDelete("bkk", b.id)} className="px-3 py-2 text-sm border border-red-200 text-red-700 rounded-lg hover:bg-red-50 transition flex items-center gap-1"><i className="ri-delete-bin-line"></i>Hapus</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              </div>
+            </div>
+          )}
+
           <div className="mt-4">
             <Pagination page={page} pageSize={pageSize} total={(
               activeTab === "berita" ? beritaList.length :
               activeTab === "faq" ? faqList.length :
               activeTab === "partners" ? partnersList.length :
               activeTab === "testimonials" ? testimonialsList.length :
+              activeTab === "bkk" ? bkkList.length :
               1
             )} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
           </div>
