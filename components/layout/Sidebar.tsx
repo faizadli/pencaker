@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { logout } from "../../services/auth";
 import { getCandidateProfile, getCompanyProfile, getDisnakerProfile } from "../../services/profile";
 import { listRoles, getRolePermissions } from "../../services/rbac";
+import { getPublicSiteSettings } from "../../services/site";
 
 export default function Sidebar({ roleProp }: { roleProp?: string }) {
   const [isMinimized] = useState(false);
@@ -17,6 +18,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
   const [permissionCodes, setPermissionCodes] = useState<string[]>([]);
   const [userName, setUserName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
+  const [brand, setBrand] = useState<{ name: string; logo: string }>({ name: "", logo: "" });
   type CompanyProfileLite = { company_name?: string; company_logo?: string; status?: string; disnaker_id?: string };
   type CandidateProfileLite = { full_name?: string; photo_profile?: string };
   type DisnakerProfileLite = { full_name?: string; photo_profile?: string };
@@ -63,6 +65,17 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
     };
     init();
   }, [role, pathname]);
+
+  useEffect(() => {
+    const loadBrand = async () => {
+      try {
+        const s = await getPublicSiteSettings();
+        const cfg = (s as { data?: { instansi_nama?: string; instansi_logo?: string } }).data ?? (s as { instansi_nama?: string; instansi_logo?: string });
+        setBrand({ name: String(cfg?.instansi_nama || "ADIKARA"), logo: String(cfg?.instansi_logo || "") });
+      } catch {}
+    };
+    loadBrand();
+  }, []);
 
   useEffect(() => {
     const touch = () => localStorage.setItem("lastActivity", String(Date.now()));
@@ -124,12 +137,22 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
         <div className="flex items-center justify-between p-5 border-b border-white/20">
           {isMinimized ? (
             <div className="w-full flex justify-center">
-              <span className="text-2xl">💼</span>
+              {brand.logo ? (
+                <Image src={brand.logo} alt={brand.name || "Logo"} width={500} height={500}  unoptimized />
+              ) : (
+                <span className="text-2xl">💼</span>
+              )}
             </div>
           ) : (
-            <h1 className="text-xl font-bold">
-              ADIKARA<span className="font-normal text-sm">Paser</span>
-            </h1>
+            <div className="flex items-center gap-3">
+              {brand.logo ? (
+                <Image src={brand.logo} alt={brand.name || "Logo"} width={500} height={500} unoptimized />
+              ) : (
+                <div className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center">
+                  <i className="ri-building-line"></i>
+                </div>
+              )}
+            </div>
           )}
           <button onClick={() => setIsMobileOpen(false)} className="lg:hidden p-2 rounded hover:bg-white/10" aria-label="Tutup Sidebar">
             <i className="ri-close-line text-xl"></i>

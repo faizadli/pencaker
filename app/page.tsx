@@ -137,12 +137,6 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="absolute inset-0 bg-cover bg-center " style={{ backgroundImage: `url(${banner.backgroundImage})` }}></div>
         <div className="max-w-6xl mx-auto text-center relative z-10">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            {instansi.logo ? (
-              <Image src={instansi.logo} alt={instansi.nama || "Logo Instansi"} width={40} height={40} className="w-10 h-10 rounded-lg object-contain border border-white/30" />
-            ) : null}
-            {instansi.nama ? (<span className="text-white/90 text-sm font-medium">{instansi.nama}</span>) : null}
-          </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
             {banner.title}
             <span className="block text-blue-100 text-xl md:text-2xl font-normal mt-2">{banner.subtitle}</span>

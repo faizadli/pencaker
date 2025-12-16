@@ -1,8 +1,10 @@
 "use client";
 import Link from "next/link";
-import { useSyncExternalStore, useState } from "react";
+import Image from "next/image";
+import { useEffect, useRef, useSyncExternalStore, useState } from "react";
 import { usePathname } from "next/navigation";
 import Modal from "../ui/Modal";
+import { getPublicSiteSettings } from "../../services/site";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -12,6 +14,8 @@ export default function Navbar() {
   const [openMobile, setOpenMobile] = useState(false);
   const [openMore, setOpenMore] = useState(false);
   const [openMobileMore, setOpenMobileMore] = useState(false);
+  const [brand, setBrand] = useState<{ name: string; logo: string }>({ name: "", logo: "" });
+  const navRef = useRef<HTMLDivElement | null>(null);
   const subscribe = (cb: () => void) => {
     if (typeof window === "undefined") return () => {};
     const checkAndEmit = () => {
@@ -86,20 +90,43 @@ export default function Navbar() {
     return href === "/" ? pathname === "/" : pathname.startsWith(href);
   };
   const isMoreActive = Boolean((pathname || "").startsWith("/pelatihan") || (pathname || "").startsWith("/pengaduan"));
+  useEffect(() => {
+    const loadBrand = async () => {
+      try {
+        const s = await getPublicSiteSettings();
+        const cfg = (s as { data?: { instansi_nama?: string; instansi_logo?: string } }).data ?? (s as { instansi_nama?: string; instansi_logo?: string });
+        setBrand({ name: String(cfg?.instansi_nama || "ADIKARA"), logo: String(cfg?.instansi_logo || "") });
+      } catch {}
+    };
+    loadBrand();
+  }, []);
+  useEffect(() => {
+    const updateVar = () => {
+      const el = navRef.current;
+      if (el && typeof document !== "undefined") {
+        const h = el.offsetHeight;
+        document.documentElement.style.setProperty("--navbar-height", `${h}px`);
+      }
+    };
+    updateVar();
+    window.addEventListener("resize", updateVar);
+    return () => window.removeEventListener("resize", updateVar);
+  }, [brand]);
   if (isDashboard) return null;
   return (
     <div>
-      <nav className="bg-white shadow-lg border-b border-gray-200 fixed top-0 left-0 right-0 z-50 w-full">
+      <nav ref={navRef} className="bg-white shadow-lg border-b border-gray-200 fixed top-0 left-0 right-0 z-50 w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                  <i className="ri-building-line text-white text-lg"></i>
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-primary">ADIKARA</h1>
-                </div>
+                {brand.logo ? (
+                  <Image src={brand.logo} alt={brand.name || "Logo"} width={200} height={200} className="object-contain" unoptimized />
+                ) : (
+                  <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                    <i className="ri-building-line text-white text-lg"></i>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -150,7 +177,7 @@ export default function Navbar() {
         </div>
       </nav>
       {openMobile && (
-        <div className="lg:hidden fixed top-16 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow">
+        <div className="lg:hidden fixed left-0 right-0 z-50 bg-white border-b border-gray-200 shadow" style={{ top: "var(--navbar-height, 64px)" }}>
           <div className="px-4 py-3 space-y-3">
             <Link href="/" onClick={() => setOpenMobile(false)} className="block text-primary font-medium">Beranda</Link>
             <Link href="/about" onClick={() => setOpenMobile(false)} className="block text-gray-700">Tentang Kami</Link>

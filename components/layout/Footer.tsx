@@ -1,9 +1,23 @@
 "use client";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { getPublicSiteSettings } from "../../services/site";
 
 export default function Footer() {
   const pathname = usePathname();
   const isDashboard = (pathname || "").startsWith("/dashboard");
+  const [brand, setBrand] = useState<{ name: string; logo: string }>({ name: "", logo: "" });
+  useEffect(() => {
+    const loadBrand = async () => {
+      try {
+        const s = await getPublicSiteSettings();
+        const cfg = (s as { data?: { instansi_nama?: string; instansi_logo?: string } }).data ?? (s as { instansi_nama?: string; instansi_logo?: string });
+        setBrand({ name: String(cfg?.instansi_nama || "ADIKARA"), logo: String(cfg?.instansi_logo || "") });
+      } catch {}
+    };
+    loadBrand();
+  }, []);
   if (isDashboard) return null;
   return (
     <div>
@@ -12,13 +26,13 @@ export default function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                  <i className="ri-building-line text-white text-lg"></i>
-                </div>
-                <div>
-                  <h4 className="font-bold text-lg">ADIKARA</h4>
-                  <p className="text-xs text-gray-300">Aplikasi Data dan Informasi Ketenagakerjaan • Area Regional Paser</p>
-                </div>
+                {brand.logo ? (
+                  <Image src={brand.logo} alt={brand.name || "Logo"} width={200} height={200} className="object-contain" unoptimized />
+                ) : (
+                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                    <i className="ri-building-line text-white text-lg"></i>
+                  </div>
+                )}
               </div>
               <p className="text-sm text-gray-300 leading-relaxed">
                 ADIKARA — Menjunjung kehormatan dan martabat, bertindak dengan integritas dan etika, menjadi teladan dalam sikap dan kinerja, mengutamakan tanggung jawab dan profesionalisme.

@@ -34,7 +34,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-dvh flex flex-col bg-white`}>
         <AutoToTop />
         <Navbar />
-        <main className="flex-1 bg-white pt-16">
+        <main className="flex-1 bg-white" style={{ paddingTop: "var(--navbar-height, 64px)" }}>
           <ToastProvider>
             {children}
           </ToastProvider>
