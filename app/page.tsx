@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Input, SearchableSelect } from "../components/ui/field";
 import { listPublicJobs } from "../services/jobs";
 import { getHomeContent, getPublicSiteSettings } from "../services/site";
 import { getPublicCompanyById } from "../services/company";
@@ -17,8 +16,6 @@ export default function HomePage() {
     // stats removed from API; shown as dummy cards
   };
   type SiteSettingsShape = { banner_judul?: string; banner_subjudul?: string; banner_background_image?: string; instansi_nama?: string; instansi_logo?: string; instansi_alamat?: string; instansi_telepon?: string; instansi_email?: string; instansi_website?: string; instansi_jam_layanan?: string; instansi_facebook?: string; instansi_instagram?: string; instansi_youtube?: string };
-  const [searchQuery, setSearchQuery] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
   const [activeFaq, setActiveFaq] = useState<string | null>(null);
 
   const [latestJobs, setLatestJobs] = useState<Array<{ id: string; posisi: string; perusahaan: string; logo: string; lokasi: string; tipe: string; sektor: string; pendidikan: string; tanggal: string }>>([]);
@@ -78,6 +75,7 @@ export default function HomePage() {
   const [testimonials, setTestimonials] = useState<Array<{ id: string; nama: string; pekerjaan: string; perusahaan: string; testimoni: string; foto: string }>>([]);
   const [partners, setPartners] = useState<Array<{ id: string; name: string; logo: string }>>([]);
   const [faqs, setFaqs] = useState<Array<{ id: string; q: string; a: string }>>([]);
+  const [bannerRatio, setBannerRatio] = useState<number | null>(null);
 
   useEffect(() => {
     const loadContent = async () => {
@@ -133,28 +131,26 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
 
-      <section className="relative bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-dark)] text-white py-20 px-4 sm:px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="absolute inset-0 bg-cover bg-center " style={{ backgroundImage: `url(${banner.backgroundImage})` }}></div>
-        <div className="max-w-6xl mx-auto text-center relative z-10">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
-            {banner.title}
-            <span className="block text-blue-100 text-xl md:text-2xl font-normal mt-2">{banner.subtitle}</span>
-          </h1>
-          <p className="text-lg md:text-xl opacity-90 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Temukan lowongan kerja terbaru, ikuti pelatihan gratis, dan dapatkan dukungan karier dari pemerintah.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/jobs" className="px-8 py-4 bg-white text-primary font-semibold rounded-xl hover:bg-gray-100 transition-all shadow-lg flex items-center justify-center gap-2">
-              <i className="ri-search-line"></i> Cari Lowongan
-            </Link>
-            <a href="/register/candidate" className="px-8 py-4 border-2 border-white text-white font-semibold rounded-xl hover:bg-white/10 transition-all flex items-center justify-center gap-2">
-              <i className="ri-user-add-line"></i> Daftar Pencaker
-            </a>
-            <a href="/register/company" className="px-8 py-4 border-2 border-white text-white font-semibold rounded-xl hover:bg-white/10 transition-all flex items-center justify-center gap-2">
-              <i className="ri-building-line"></i> Daftar Perusahaan
-            </a>
-          </div>
+      <section className="relative text-white overflow-hidden">
+        <div className="relative w-full" style={{ aspectRatio: bannerRatio ? String(bannerRatio) : "3 / 1" }}>
+          <Image
+            src={banner.backgroundImage}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-contain"
+            onLoadingComplete={(img) => {
+              try {
+                const w = img.naturalWidth || 0;
+                const h = img.naturalHeight || 0;
+                const r = w && h ? w / h : 3;
+                setBannerRatio(r);
+              } catch {}
+            }}
+          />
+          <div className="absolute inset-0 bg-black/20"></div>
+          
         </div>
       </section>
       <section className="bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] relative z-30 border-y border-white/10">
@@ -188,30 +184,22 @@ export default function HomePage() {
         `}</style>
       </section>
 
-      <section className="py-12 bg-gray-50 -mt-8 relative z-20">
+      <section className="py-16 md:py-20 bg-gray-50 relative z-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-gray-200">
-            <h2 className="text-xl md:text-2xl font-semibold text-primary mb-6 text-center">Cari Lowongan Kerja</h2>
-            <div className="flex flex-col md:flex-row gap-4 items-stretch">
-              <div className="flex-1">
-                <Input icon="ri-search-line" type="text" placeholder="Kata kunci (misal: IT, guru, teknisi)" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full py-3 rounded-xl border-gray-300 transition-all" />
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2 items-stretch">
-                <SearchableSelect
-                  value={locationFilter}
-                  onChange={(v) => setLocationFilter(v)}
-                  className="px-0 py-0 rounded-xl"
-                  options={[
-                    { value: "", label: "Semua Lokasi" },
-                    { value: "kaltim", label: "kaltim" },
-                    { value: "Bekasi", label: "Bekasi" },
-                    { value: "Temanggung", label: "Temanggung" },
-                  ]}
-                />
-                <button className="px-6 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary hover:bg-[var(--color-primary-dark)] text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2">
-                  <i className="ri-search-line"></i> Cari
-                </button>
-              </div>
+          <div className="text-center">
+            <h1 className="text-2xl md:text-4xl font-bold text-primary">{banner.title}</h1>
+            <p className="text-sm md:text-base text-gray-600 mt-2">{banner.subtitle}</p>
+            <p className="text-gray-600 mt-4 text-sm md:text-base">Temukan lowongan kerja terbaru, ikuti pelatihan gratis, dan dapatkan dukungan karier dari pemerintah.</p>
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/jobs" className="px-6 py-3 bg-primary hover:bg-[var(--color-primary-dark)] text-white font-semibold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 text-sm md:text-base">
+                <i className="ri-search-line"></i> Cari Lowongan
+              </Link>
+              <a href="/register/candidate" className="px-6 py-3 border-2 border-primary text-primary hover:bg-gray-50 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-sm md:text-base">
+                <i className="ri-user-add-line"></i> Daftar Pencaker
+              </a>
+              <a href="/register/company" className="px-6 py-3 border-2 border-primary text-primary hover:bg-gray-50 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-sm md:text-base">
+                <i className="ri-building-line"></i> Daftar Perusahaan
+              </a>
             </div>
           </div>
         </div>

@@ -360,7 +360,9 @@ export default function PengaturanPage() {
           {activeSection === "banner" && (
             <Card header={<h3 className="text-lg font-semibold text-primary">Banner Website</h3>}>
               <div className="mb-6">
-                <div className="w-full h-48 bg-cover bg-center rounded-lg mb-4 border border-gray-200" style={{ backgroundImage: `url(${bannerUrl || banner.backgroundImage})` }}></div>
+                <div className="relative w-full h-48 rounded-lg mb-4 border border-gray-200 overflow-hidden">
+                  <Image src={bannerUrl || banner.backgroundImage} alt="Preview Banner" fill sizes="100vw" className="object-contain sm:object-cover" />
+                </div>
                 {editField === "backgroundImage" ? (
                   <div className="space-y-3">
                     <Input type="file" accept="image/*" label="Unggah Background" submitted={settingsSubmitted} onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) uploadAndSet("backgroundImage", f); }} />
