@@ -359,7 +359,19 @@ export default function Ak1Page() {
 
                                 try {
                                   const backLy = await getAk1Layout("Kartu AK1 Tampak Belakang");
-                                  const backData = (backLy as { data?: Ak1Layout | null }).data || null;
+                                  let backData = (backLy as { data?: Ak1Layout | null }).data || null;
+                                  
+                                  if (!backData || !backData.coordinates || backData.coordinates.length === 0) {
+                                    backData = {
+                                      ...(backData || { name: "Kartu AK1 Tampak Belakang", front_width: FRONT_BASE.w, front_height: FRONT_BASE.h }),
+                                      coordinates: [
+                                        { token: "ak1_doc:expired1", x: 2558, y: 296, size: 40, w: 195, h: 70, kind: "text" },
+                                        { token: "ak1_doc:expired2", x: 2558, y: 457, size: 40, w: 200, h: 70, kind: "text" },
+                                        { token: "ak1_doc:expired3", x: 2566, y: 618, size: 40, w: 200, h: 70, kind: "text" }
+                                      ] as unknown as Ak1LayoutField[]
+                                    } as Ak1Layout;
+                                  }
+
                                   if (backData && backData.coordinates && lyData) {
                                     const backCoords = backData.coordinates.map(c => ({ ...c, side: 'back' as const }));
                                     const newCoords = [...(lyData.coordinates || []), ...backCoords];
@@ -614,12 +626,60 @@ export default function Ak1Page() {
                                     setGenMeta({ ak1_document_id: r.ak1_document_id, candidate_id: r.candidate_id, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
                                     setGenCandidate({ full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate } as CandidateProfileLite);
                                     setGenDocDetail(null);
+                                    setBackSrcUrl(null);
+                                    setBackPreviewUrl(null);
+
                                     const tpResp = await getAk1Template() as { data?: { name?: string; file_template?: string | null } };
                                     const t = tpResp.data || null;
                                     const name = t?.name ? String(t.name) : undefined;
                                     if (t?.file_template) setFrontSrcUrl(String(t.file_template));
+                                    
                                     const lyResp = await getAk1Layout(name);
-                                    const lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
+                                    let lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
+                                    if (lyData && lyData.coordinates) {
+                                      lyData.coordinates = lyData.coordinates.map((c: Ak1LayoutField) => ({ ...c, side: c.side || 'front' }));
+                                    }
+
+                                    try {
+                                      const backTpResp = await getAk1Template("Kartu AK1 Tampak Belakang");
+                                      const backTp = (backTpResp as { data?: Ak1Template | null }).data || null;
+                                      if (backTp?.file_template) {
+                                        setBackSrcUrl(String(backTp.file_template));
+                                        setBackPreviewUrl(String(backTp.file_template));
+                                      }
+                                    } catch (e) {
+                                      console.error("Error fetching back template:", e);
+                                    }
+
+                                    try {
+                                      const backLy = await getAk1Layout("Kartu AK1 Tampak Belakang");
+                                      let backData = (backLy as { data?: Ak1Layout | null }).data || null;
+                                      
+                                      // Fallback default coordinates if not set in DB yet
+                                      if (!backData || !backData.coordinates || backData.coordinates.length === 0) {
+                                        backData = {
+                                          ...(backData || {}),
+                                          front_width: FRONT_BASE.w,
+                                          front_height: FRONT_BASE.h,
+                                          coordinates: [
+                                            { token: "ak1_doc:expired1", x: 2558, y: 296, size: 40, w: 195, h: 70, kind: "text" },
+                                            { token: "ak1_doc:expired2", x: 2558, y: 457, size: 40, w: 200, h: 70, kind: "text" },
+                                            { token: "ak1_doc:expired3", x: 2566, y: 618, size: 40, w: 200, h: 70, kind: "text" }
+                                          ] as unknown as Ak1LayoutField[]
+                                        } as Ak1Layout;
+                                      }
+
+                                      if (backData && backData.coordinates && lyData) {
+                                        const backCoords = backData.coordinates.map((c: Ak1LayoutField) => ({ ...c, side: 'back' as const }));
+                                        const newCoords = [...(lyData.coordinates || []), ...backCoords];
+                                        const newW = Math.max(lyData.front_width || 0, backData.front_width || 0);
+                                        const newH = Math.max(lyData.front_height || 0, backData.front_height || 0);
+                                        lyData = { ...lyData, coordinates: newCoords as Ak1LayoutField[], front_width: newW, front_height: newH };
+                                      }
+                                    } catch (e) {
+                                      console.error("Error fetching back layout:", e);
+                                    }
+
                                     setLayout(lyData);
                                     try {
                                       const prof = await getCandidateProfileById(r.candidate_id);
@@ -705,15 +765,20 @@ export default function Ak1Page() {
                               setGenMeta({ ak1_document_id: r.ak1_document_id, candidate_id: r.candidate_id, no_urut_pendaftaran: "", card_created_at: "", card_expired_at: "" });
                               setGenCandidate({ full_name: r.full_name, nik: r.nik, place_of_birth: r.place_of_birth, birthdate: r.birthdate } as CandidateProfileLite);
                               setGenDocDetail(null);
+                              setBackSrcUrl(null);
+                              setBackPreviewUrl(null);
+
                               const tpResp = await getAk1Template() as { data?: { name?: string; file_template?: string | null } };
                               const t = tpResp.data || null;
                               const name = t?.name ? String(t.name) : undefined;
                               if (t?.file_template) setFrontSrcUrl(String(t.file_template));
+                              
                               const lyResp = await getAk1Layout(name);
                               let lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
                               if (lyData && lyData.coordinates) {
                                 lyData.coordinates = lyData.coordinates.map((c: Ak1LayoutField) => ({ ...c, side: c.side || 'front' }));
                               }
+
                               try {
                                 const backTpResp = await getAk1Template("Kartu AK1 Tampak Belakang");
                                 const backTp = (backTpResp as { data?: Ak1Template | null }).data || null;
@@ -721,7 +786,11 @@ export default function Ak1Page() {
                                   setBackSrcUrl(String(backTp.file_template));
                                   setBackPreviewUrl(String(backTp.file_template));
                                 }
+                              } catch (e) {
+                                console.error("Error fetching back template:", e);
+                              }
 
+                              try {
                                 const backLy = await getAk1Layout("Kartu AK1 Tampak Belakang");
                                 let backData = (backLy as { data?: Ak1Layout | null }).data || null;
                                 
@@ -746,7 +815,10 @@ export default function Ak1Page() {
                                   const newH = Math.max(lyData.front_height || 0, backData.front_height || 0);
                                   lyData = { ...lyData, coordinates: newCoords as Ak1LayoutField[], front_width: newW, front_height: newH };
                                 }
-                              } catch {}
+                              } catch (e) {
+                                console.error("Error fetching back layout:", e);
+                              }
+
                               setLayout(lyData);
                               try {
                                 const prof = await getCandidateProfileById(r.candidate_id);
