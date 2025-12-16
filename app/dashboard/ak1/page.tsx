@@ -12,8 +12,8 @@ import Card from "../../../components/ui/Card";
 import CardGrid from "../../../components/ui/CardGrid";
 import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
 import { useToast } from "../../../components/ui/Toast";
-import type { PDFImage } from "pdf-lib";
-import type { Ak1Layout, Ak1LayoutField } from "../../../services/ak1";
+import type { PDFImage, PDFPage } from "pdf-lib";
+import type { Ak1Layout, Ak1LayoutField, Ak1Template } from "../../../services/ak1";
 export default function Ak1Page() {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
@@ -69,6 +69,8 @@ export default function Ak1Page() {
   const [frontScale, setFrontScale] = useState(1);
   const [frontSrcUrl, setFrontSrcUrl] = useState<string | null>(null);
   const [frontPreviewUrl, setFrontPreviewUrl] = useState<string | null>(null);
+  const [backSrcUrl, setBackSrcUrl] = useState<string | null>(null);
+  const [backPreviewUrl, setBackPreviewUrl] = useState<string | null>(null);
   const [genUser, setGenUser] = useState<{ id?: string; email?: string; role?: string; no_handphone?: string } | null>(null);
   
   type Ak1LayoutFieldExt = Ak1LayoutField & { w?: number; h?: number; digitSize?: number };
@@ -110,10 +112,10 @@ export default function Ak1Page() {
   useEffect(() => {
     try {
       if (!showGenerateModal) return;
-      if (!frontSrcUrl) return;
-      setFrontPreviewUrl(frontSrcUrl);
+      if (frontSrcUrl) setFrontPreviewUrl(frontSrcUrl);
+      if (backSrcUrl) setBackPreviewUrl(backSrcUrl);
     } catch {}
-  }, [showGenerateModal, frontSrcUrl]);
+  }, [showGenerateModal, frontSrcUrl, backSrcUrl]);
 
   const formatDate = (val?: string) => {
     if (!val) return "";
@@ -342,8 +344,30 @@ export default function Ak1Page() {
                                 const t = tpResp.data || null;
                                 const name = t?.name ? String(t.name) : undefined;
                                 if (t?.file_template) setFrontSrcUrl(String(t.file_template));
+                                
+                                try {
+                                  const backTp = await getAk1Template("Kartu AK1 Tampak Belakang") as { data?: { file_template?: string | null } };
+                                  const bt = backTp.data || null;
+                                  if (bt?.file_template) setBackSrcUrl(String(bt.file_template));
+                                } catch {}
+
                                 const lyResp = await getAk1Layout(name);
-                                const lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
+                                let lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
+                                if (lyData && lyData.coordinates) {
+                                  lyData.coordinates = lyData.coordinates.map(c => ({ ...c, side: c.side || 'front' }));
+                                }
+
+                                try {
+                                  const backLy = await getAk1Layout("Kartu AK1 Tampak Belakang");
+                                  const backData = (backLy as { data?: Ak1Layout | null }).data || null;
+                                  if (backData && backData.coordinates && lyData) {
+                                    const backCoords = backData.coordinates.map(c => ({ ...c, side: 'back' as const }));
+                                    const newCoords = [...(lyData.coordinates || []), ...backCoords];
+                                    const newW = Math.max(lyData.front_width || 0, backData.front_width || 0);
+                                    const newH = Math.max(lyData.front_height || 0, backData.front_height || 0);
+                                    lyData = { ...lyData, coordinates: newCoords as Ak1LayoutField[], front_width: newW, front_height: newH };
+                                  }
+                                } catch {}
                                 setLayout(lyData);
                                 try {
                                   const rawPhoto = String((doc || {}).pas_photo_file || "");
@@ -463,8 +487,30 @@ export default function Ak1Page() {
                                     const t = tpResp.data || null;
                                     const name = t?.name ? String(t.name) : undefined;
                                     if (t?.file_template) setFrontSrcUrl(String(t.file_template));
+
+                                    try {
+                                      const backTp = await getAk1Template("Kartu AK1 Tampak Belakang") as { data?: { file_template?: string | null } };
+                                      const bt = backTp.data || null;
+                                      if (bt?.file_template) setBackSrcUrl(String(bt.file_template));
+                                    } catch {}
+
                                     const lyResp = await getAk1Layout(name);
-                                    const lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
+                                    let lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
+                                    if (lyData && lyData.coordinates) {
+                                      lyData.coordinates = lyData.coordinates.map(c => ({ ...c, side: c.side || 'front' }));
+                                    }
+
+                                    try {
+                                      const backLy = await getAk1Layout("Kartu AK1 Tampak Belakang");
+                                      const backData = (backLy as { data?: Ak1Layout | null }).data || null;
+                                      if (backData && backData.coordinates && lyData) {
+                                        const backCoords = backData.coordinates.map(c => ({ ...c, side: 'back' as const }));
+                                        const newCoords = [...(lyData.coordinates || []), ...backCoords];
+                                        const newW = Math.max(lyData.front_width || 0, backData.front_width || 0);
+                                        const newH = Math.max(lyData.front_height || 0, backData.front_height || 0);
+                                        lyData = { ...lyData, coordinates: newCoords as Ak1LayoutField[], front_width: newW, front_height: newH };
+                                      }
+                                    } catch {}
                                     setLayout(lyData);
                                     try {
                                       const prof = await getCandidateProfileById(r.candidate_id);
@@ -664,7 +710,43 @@ export default function Ak1Page() {
                               const name = t?.name ? String(t.name) : undefined;
                               if (t?.file_template) setFrontSrcUrl(String(t.file_template));
                               const lyResp = await getAk1Layout(name);
-                              const lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
+                              let lyData = (lyResp as { data?: Ak1Layout | null }).data || null;
+                              if (lyData && lyData.coordinates) {
+                                lyData.coordinates = lyData.coordinates.map((c: Ak1LayoutField) => ({ ...c, side: c.side || 'front' }));
+                              }
+                              try {
+                                const backTpResp = await getAk1Template("Kartu AK1 Tampak Belakang");
+                                const backTp = (backTpResp as { data?: Ak1Template | null }).data || null;
+                                if (backTp?.file_template) {
+                                  setBackSrcUrl(String(backTp.file_template));
+                                  setBackPreviewUrl(String(backTp.file_template));
+                                }
+
+                                const backLy = await getAk1Layout("Kartu AK1 Tampak Belakang");
+                                let backData = (backLy as { data?: Ak1Layout | null }).data || null;
+                                
+                                // Fallback default coordinates if not set in DB yet
+                                if (!backData || !backData.coordinates || backData.coordinates.length === 0) {
+                                  backData = {
+                                    ...(backData || {}),
+                                    front_width: FRONT_BASE.w,
+                                    front_height: FRONT_BASE.h,
+                                    coordinates: [
+                                      { token: "ak1_doc:expired1", x: 2558, y: 296, size: 40, w: 195, h: 70, kind: "text" },
+                                      { token: "ak1_doc:expired2", x: 2558, y: 457, size: 40, w: 200, h: 70, kind: "text" },
+                                      { token: "ak1_doc:expired3", x: 2566, y: 618, size: 40, w: 200, h: 70, kind: "text" }
+                                    ] as unknown as Ak1LayoutField[]
+                                  } as Ak1Layout;
+                                }
+
+                                if (backData && backData.coordinates && lyData) {
+                                  const backCoords = backData.coordinates.map((c: Ak1LayoutField) => ({ ...c, side: 'back' as const }));
+                                  const newCoords = [...(lyData.coordinates || []), ...backCoords];
+                                  const newW = Math.max(lyData.front_width || 0, backData.front_width || 0);
+                                  const newH = Math.max(lyData.front_height || 0, backData.front_height || 0);
+                                  lyData = { ...lyData, coordinates: newCoords as Ak1LayoutField[], front_width: newW, front_height: newH };
+                                }
+                              } catch {}
                               setLayout(lyData);
                               try {
                                 const prof = await getCandidateProfileById(r.candidate_id);
@@ -721,11 +803,6 @@ export default function Ak1Page() {
                       img.onerror = () => reject(new Error("image"));
                       img.src = url;
                     });
-                    const srcUrl = frontPreviewUrl || frontSrcUrl || "/ak1/front.svg";
-                    const frontUrl = await toPng(srcUrl, FRONT_BASE.w, FRONT_BASE.h);
-                    const frontImg = await pdfDoc.embedPng(frontUrl);
-                    const page = pdfDoc.addPage([FRONT_BASE.w, FRONT_BASE.h]);
-                    page.drawImage(frontImg, { x: 0, y: 0, width: FRONT_BASE.w, height: FRONT_BASE.h });
 
                     let pdfPhoto: PDFImage | null = null;
                     try {
@@ -740,20 +817,8 @@ export default function Ak1Page() {
                         try { pdfPhoto = await pdfDoc.embedPng(u8); } catch { pdfPhoto = await pdfDoc.embedJpg(u8); }
                       }
                     } catch {}
-                    const hasLayoutPhoto = ((layout?.coordinates || []) as Ak1LayoutField[]).some((ff) => {
-                      const kindF = (ff as Ak1LayoutField).kind || 'text';
-                      const t = String((ff as Ak1LayoutField).token || '');
-                      const k = t.includes(':') ? (t.split(':', 2)[1] || '') : t;
-                      return kindF === 'image' && (t === 'pas_photo' || k === 'pas_photo_file');
-                    });
 
-                    const layoutW = Number(layout?.front_width || FRONT_BASE.w);
-                    const layoutH = Number(layout?.front_height || FRONT_BASE.h);
-                    const unitX = FRONT_BASE.w / layoutW;
-                    const unitY = FRONT_BASE.h / layoutH;
-
-                    if ((layout?.coordinates || []).length) {
-                      const getTokenText = (token: string): string => {
+                    const getTokenText = (token: string): string => {
                         const [src, key] = token.includes(':') ? token.split(':', 2) as [string, string] : ['', token];
                         const alias = (k: string) => {
                           const map: Record<string, string> = { no_hp: 'no_handphone', phone: 'no_handphone', telepon: 'no_handphone', hp: 'no_handphone' };
@@ -762,6 +827,24 @@ export default function Ak1Page() {
                         const normKey = alias(key);
                         if (key === 'ttl' || token === 'ttl') return `${String(genCandidate?.place_of_birth || '')} / ${formatDate(genCandidate?.birthdate)}`;
                         if (key === 'expired' || token === 'expired') return String(formatDate(genMeta.card_expired_at));
+                        if (key === 'expired1' || token === 'expired1') {
+                          const base = genMeta.card_created_at ? new Date(genMeta.card_created_at) : new Date();
+                          if (Number.isNaN(base.getTime())) base.setTime(Date.now());
+                          base.setMonth(base.getMonth() + 6);
+                          return formatDate(base.toISOString());
+                        }
+                        if (key === 'expired2' || token === 'expired2') {
+                          const base = genMeta.card_created_at ? new Date(genMeta.card_created_at) : new Date();
+                          if (Number.isNaN(base.getTime())) base.setTime(Date.now());
+                          base.setMonth(base.getMonth() + 12);
+                          return formatDate(base.toISOString());
+                        }
+                        if (key === 'expired3' || token === 'expired3') {
+                          const base = genMeta.card_created_at ? new Date(genMeta.card_created_at) : new Date();
+                          if (Number.isNaN(base.getTime())) base.setTime(Date.now());
+                          base.setMonth(base.getMonth() + 18);
+                          return formatDate(base.toISOString());
+                        }
                         if (key === 'no_reg' || token === 'no_reg') return String(genNoReg);
                         const readFrom = (namespace: string, k: string): string => {
                           if (namespace === 'candidate') return String((genCandidate as unknown as Record<string, unknown>)?.[k] ?? '');
@@ -788,70 +871,90 @@ export default function Ak1Page() {
                         if (u) return u;
                         const d = readFrom('doc', normKey);
                         return d;
-                      };
-                      ((layout?.coordinates || []) as Ak1LayoutField[]).forEach((f: Ak1LayoutField) => {
-                        const kind = f.kind || 'text';
-                        if (kind === 'text') {
-                          const sizePx = Math.round((f.size || 16) * unitY);
-                          const xPx = (f.x || 0) * unitX;
-                          const yPx = FRONT_BASE.h - ((f.y || 0) * unitY) - sizePx;
-                          const val = getTokenText(f.token);
-                          page.drawText(val || String(f.token), { x: xPx, y: yPx, size: sizePx, font, color: rgb(0, 0, 0) });
-                        } else if (kind === 'image') {
-                          const fe = f as Ak1LayoutFieldExt;
-                          const wPx = Math.max(1, Number(fe.w || 0)) * unitX;
-                          const hPx = Math.max(1, Number(fe.h || 0)) * unitY;
-                          const x = (f.x || 0) * unitX;
-                          const y = FRONT_BASE.h - ((f.y || 0) * unitY) - hPx;
-                          const tokenStr = String(f.token || '');
-                          const mKey = tokenStr.includes(':') ? (tokenStr.split(':', 2)[1] || '') : tokenStr;
-                          const matchPas = tokenStr === 'pas_photo' || mKey === 'pas_photo_file';
-                          if (matchPas && pdfPhoto) {
-                            page.drawImage(pdfPhoto, { x, y, width: wPx, height: hPx });
+                    };
+
+                    const layoutW = Number(layout?.front_width || FRONT_BASE.w);
+                    const layoutH = Number(layout?.front_height || FRONT_BASE.h);
+                    const unitX = FRONT_BASE.w / layoutW;
+                    const unitY = FRONT_BASE.h / layoutH;
+
+                    const drawFields = (p: PDFPage, fields: Ak1LayoutField[]) => {
+                        fields.forEach((f) => {
+                          const kind = f.kind || 'text';
+                          if (kind === 'text') {
+                            const sizePx = Math.round((f.size || 16) * unitY);
+                            const xPx = (f.x || 0) * unitX;
+                            const yPx = FRONT_BASE.h - ((f.y || 0) * unitY) - sizePx;
+                            const val = getTokenText(f.token);
+                            p.drawText(val || String(f.token), { x: xPx, y: yPx, size: sizePx, font, color: rgb(0, 0, 0) });
+                          } else if (kind === 'image') {
+                            const fe = f as Ak1LayoutFieldExt;
+                            const wPx = Math.max(1, Number(fe.w || 0)) * unitX;
+                            const hPx = Math.max(1, Number(fe.h || 0)) * unitY;
+                            const x = (f.x || 0) * unitX;
+                            const y = FRONT_BASE.h - ((f.y || 0) * unitY) - hPx;
+                            const tokenStr = String(f.token || '');
+                            const mKey = tokenStr.includes(':') ? (tokenStr.split(':', 2)[1] || '') : tokenStr;
+                            const matchPas = tokenStr === 'pas_photo' || mKey === 'pas_photo_file';
+                            if (matchPas && pdfPhoto) {
+                              p.drawImage(pdfPhoto, { x, y, width: wPx, height: hPx });
+                            } else {
+                              p.drawRectangle({ x, y, width: wPx, height: hPx, borderColor: rgb(0, 0, 0), borderWidth: 1 });
+                            }
                           } else {
-                            page.drawRectangle({ x, y, width: wPx, height: hPx, borderColor: rgb(0, 0, 0), borderWidth: 1 });
-                          }
-                        } else {
-                          const count = Math.max(1, Number(f.count || 1));
-                          const cellW = Math.max(1, Number(f.cellW || 24)) * unitX;
-                          const cellH = Math.max(1, Number(f.cellH || 32)) * unitY;
-                          const gap = Math.max(0, Number(f.gap || 4)) * unitX;
-                          const startX = (f.x || 0) * unitX;
-                          const startY = (f.y || 0) * unitY;
-                          const srcRaw = String(f.source || f.token || '');
-                          const [srcNs, srcKey] = srcRaw.includes(':') ? (srcRaw.split(':', 2) as [string, string]) : ['', srcRaw];
-                          let digits: string[] = [];
-                          if (srcRaw === 'noreg_nik4' || srcRaw === 'nik_pendaftaran') {
-                            digits = String(genCandidate?.nik || '').slice(0, 4).padEnd(4, ' ').split('');
-                          } else if (srcRaw === 'noreg_no8' || srcRaw === 'no_urut_pendaftaran') {
-                            const noUrut = String(genMeta.no_urut_pendaftaran || '').padStart(8, '0').slice(0, 8);
-                            digits = noUrut.split('');
-                          } else if (srcRaw === 'noreg_ttl6' || srcRaw === 'birthdate_pendaftaran') {
-                            const bdStr = String(genCandidate?.birthdate || '');
-                            const d = new Date(bdStr);
-                            if (!Number.isNaN(d.getTime())) {
-                              const dd = String(d.getDate()).padStart(2, '0');
-                              const mm = String(d.getMonth() + 1).padStart(2, '0');
-                              const yy = String(d.getFullYear()).slice(-2);
-                              digits = `${dd}${mm}${yy}`.split('');
+                            const count = Math.max(1, Number(f.count || 1));
+                            const cellW = Math.max(1, Number(f.cellW || 24)) * unitX;
+                            const cellH = Math.max(1, Number(f.cellH || 32)) * unitY;
+                            const gap = Math.max(0, Number(f.gap || 4)) * unitX;
+                            const startX = (f.x || 0) * unitX;
+                            const startY = (f.y || 0) * unitY;
+                            const srcRaw = String(f.source || f.token || '');
+                            const [srcNs, srcKey] = srcRaw.includes(':') ? (srcRaw.split(':', 2) as [string, string]) : ['', srcRaw];
+                            let digits: string[] = [];
+                            if (srcRaw === 'noreg_nik4' || srcRaw === 'nik_pendaftaran') {
+                              digits = String(genCandidate?.nik || '').slice(0, 4).padEnd(4, ' ').split('');
+                            } else if (srcRaw === 'noreg_no8' || srcRaw === 'no_urut_pendaftaran') {
+                              const noUrut = String(genMeta.no_urut_pendaftaran || '').padStart(8, '0').slice(0, 8);
+                              digits = noUrut.split('');
+                            } else if (srcRaw === 'noreg_ttl6' || srcRaw === 'birthdate_pendaftaran') {
+                              const bdStr = String(genCandidate?.birthdate || '');
+                              const d = new Date(bdStr);
+                              if (!Number.isNaN(d.getTime())) {
+                                const dd = String(d.getDate()).padStart(2, '0');
+                                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                                const yy = String(d.getFullYear()).slice(-2);
+                                digits = `${dd}${mm}${yy}`.split('');
+                              }
+                            } else if (srcRaw === 'nik' || (srcNs === 'candidate' && srcKey === 'nik')) {
+                              digits = String(genCandidate?.nik || '').padEnd(count, ' ').slice(0, count).split('');
                             }
-                          } else if (srcRaw === 'nik' || (srcNs === 'candidate' && srcKey === 'nik')) {
-                            digits = String(genCandidate?.nik || '').padEnd(count, ' ').slice(0, count).split('');
-                          }
-                          const fe = f as Ak1LayoutFieldExt;
-                          const sizeTxt = Math.round(((fe.digitSize || f.size || 16)) * unitY);
-                          for (let i = 0; i < count; i++) {
-                            const x = startX + i * (cellW + gap);
-                            const y = FRONT_BASE.h - startY - cellH;
-                            page.drawRectangle({ x, y, width: cellW, height: cellH, borderColor: rgb(0, 0, 0), borderWidth: 1 });
-                            const ch = (digits[i] || '').trim();
-                            if (ch) {
-                              const tw = font.widthOfTextAtSize(ch, sizeTxt);
-                              page.drawText(ch, { x: x + (cellW - tw) / 2, y: y + (cellH - sizeTxt) / 2, size: sizeTxt, font, color: rgb(0, 0, 0) });
+                            const fe = f as Ak1LayoutFieldExt;
+                            const sizeTxt = Math.round(((fe.digitSize || f.size || 16)) * unitY);
+                            for (let i = 0; i < count; i++) {
+                              const x = startX + i * (cellW + gap);
+                              const y = FRONT_BASE.h - startY - cellH;
+                              p.drawRectangle({ x, y, width: cellW, height: cellH, borderColor: rgb(0, 0, 0), borderWidth: 1 });
+                              const ch = (digits[i] || '').trim();
+                              if (ch) {
+                                const tw = font.widthOfTextAtSize(ch, sizeTxt);
+                                p.drawText(ch, { x: x + (cellW - tw) / 2, y: y + (cellH - sizeTxt) / 2, size: sizeTxt, font, color: rgb(0, 0, 0) });
+                              }
                             }
                           }
-                        }
-                      });
+                        });
+                    };
+
+                    const srcUrl = frontPreviewUrl || frontSrcUrl || "/ak1/front.svg";
+                    const frontUrl = await toPng(srcUrl, FRONT_BASE.w, FRONT_BASE.h);
+                    const frontImg = await pdfDoc.embedPng(frontUrl);
+                    const page = pdfDoc.addPage([FRONT_BASE.w, FRONT_BASE.h]);
+                    page.drawImage(frontImg, { x: 0, y: 0, width: FRONT_BASE.w, height: FRONT_BASE.h });
+
+                    const allFields = (layout?.coordinates || []) as Ak1LayoutField[];
+                    const frontFields = allFields.filter(f => !f.side || f.side === 'front');
+
+                    if (frontFields.length) {
+                      drawFields(page, frontFields);
                     } else {
                       const CELL_W = 24 * frontUnitX;
                       const CELL_H = 32 * frontUnitY;
@@ -924,6 +1027,14 @@ export default function Ak1Page() {
                         page.drawText(String(formatDate(genMeta.card_expired_at)), { x, y, size: sizeText, font, color: rgb(0, 0, 0) });
                       }
                     }
+
+                    const hasLayoutPhoto = frontFields.some((ff) => {
+                      const kindF = (ff as Ak1LayoutField).kind || 'text';
+                      const t = String((ff as Ak1LayoutField).token || '');
+                      const k = t.includes(':') ? (t.split(':', 2)[1] || '') : t;
+                      return kindF === 'image' && (t === 'pas_photo' || k === 'pas_photo_file');
+                    });
+
                     if (!hasLayoutPhoto && pdfPhoto) {
                       const pw = 90 * frontUnitX;
                       const ph = 110 * frontUnitY;
@@ -932,7 +1043,18 @@ export default function Ak1Page() {
                       page.drawImage(pdfPhoto, { x: px, y: py, width: pw, height: ph });
                     }
 
-                    // Back page dihapus; PDF hanya halaman depan sesuai template aktif
+                    if (backPreviewUrl || backSrcUrl) {
+                        const backSrc = backPreviewUrl || backSrcUrl;
+                        if (backSrc) {
+                             const backUrl = await toPng(backSrc, FRONT_BASE.w, FRONT_BASE.h);
+                             const backImg = await pdfDoc.embedPng(backUrl);
+                             const pageBack = pdfDoc.addPage([FRONT_BASE.w, FRONT_BASE.h]);
+                             pageBack.drawImage(backImg, { x: 0, y: 0, width: FRONT_BASE.w, height: FRONT_BASE.h });
+                             
+                             const backFields = allFields.filter(f => f.side === 'back');
+                             drawFields(pageBack, backFields);
+                        }
+                    }
 
                     const bytes = await pdfDoc.save();
                     const uint = new Uint8Array(bytes);
@@ -976,7 +1098,7 @@ export default function Ak1Page() {
                         <svg width={FRONT_BASE.w} height={FRONT_BASE.h} viewBox={`0 0 ${FRONT_BASE.w} ${FRONT_BASE.h}`} xmlns="http://www.w3.org/2000/svg" style={{ position: 'absolute', inset: 0 }}>
                         {(layout?.coordinates || []).length ? (
                           <>
-                            {((layout?.coordinates || []) as Ak1LayoutField[]).map((f: Ak1LayoutField, i: number) => {
+                            {((layout?.coordinates || []) as Ak1LayoutField[]).filter(f => !f.side || f.side === 'front').map((f: Ak1LayoutField, i: number) => {
                               const kind = f.kind || 'text';
                               if (kind === 'text') {
                                 const tokenStr = String(f.token);
@@ -989,6 +1111,24 @@ export default function Ak1Page() {
                                   const normKey = alias(key);
                                   if (normKey === 'ttl' || key === 'ttl') return `${String(genCandidate?.place_of_birth || '')} / ${formatDate(genCandidate?.birthdate)}`;
                                   if (normKey === 'expired' || key === 'expired') return String(formatDate(genMeta.card_expired_at));
+                                  if (normKey === 'expired1' || key === 'expired1') {
+                                    const base = genMeta.card_created_at ? new Date(genMeta.card_created_at) : new Date();
+                                    if (Number.isNaN(base.getTime())) base.setTime(Date.now());
+                                    base.setMonth(base.getMonth() + 6);
+                                    return formatDate(base.toISOString());
+                                  }
+                                  if (normKey === 'expired2' || key === 'expired2') {
+                                    const base = genMeta.card_created_at ? new Date(genMeta.card_created_at) : new Date();
+                                    if (Number.isNaN(base.getTime())) base.setTime(Date.now());
+                                    base.setMonth(base.getMonth() + 12);
+                                    return formatDate(base.toISOString());
+                                  }
+                                  if (normKey === 'expired3' || key === 'expired3') {
+                                    const base = genMeta.card_created_at ? new Date(genMeta.card_created_at) : new Date();
+                                    if (Number.isNaN(base.getTime())) base.setTime(Date.now());
+                                    base.setMonth(base.getMonth() + 18);
+                                    return formatDate(base.toISOString());
+                                  }
                                   if (normKey === 'no_reg' || key === 'no_reg') return String(genNoReg);
                                   const readFrom = (namespace: string, k: string): string => {
                                     if (namespace === 'candidate') return String((genCandidate as unknown as Record<string, unknown>)?.[k] ?? '');
@@ -1106,7 +1246,89 @@ export default function Ak1Page() {
                       </div>
                     </div>
                   </div>
-                  {/* Back preview dihapus sesuai kebutuhan */}
+                  {backPreviewUrl && (
+                    <div className="mt-4">
+                      <div className="text-xs text-gray-500 mb-2">Preview Kartu (belakang)</div>
+                      <div className="w-full overflow-auto">
+                        <div className="relative" style={{ width: FRONT_BASE.w * frontScale, height: FRONT_BASE.h * frontScale }}>
+                          <div className="relative border-2 border-black bg-white" style={{ width: FRONT_BASE.w, height: FRONT_BASE.h, transform: `scale(${frontScale})`, transformOrigin: 'top left' }}>
+                            <div aria-label="Back" style={{ width: FRONT_BASE.w, height: FRONT_BASE.h, backgroundImage: `url(${backPreviewUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                            <svg width={FRONT_BASE.w} height={FRONT_BASE.h} viewBox={`0 0 ${FRONT_BASE.w} ${FRONT_BASE.h}`} xmlns="http://www.w3.org/2000/svg" style={{ position: 'absolute', inset: 0 }}>
+                            {(layout?.coordinates || []).filter(f => f.side === 'back').map((f: Ak1LayoutField, i: number) => {
+                              const kind = f.kind || 'text';
+                              if (kind === 'text') {
+                                const tokenStr = String(f.token);
+                                const [src, key] = tokenStr.includes(':') ? tokenStr.split(':', 2) as [string, string] : ['', tokenStr];
+                                const mappedVal = (() => {
+                                  const alias = (k: string) => {
+                                    const map: Record<string, string> = { no_hp: 'no_handphone', phone: 'no_handphone', telepon: 'no_handphone', hp: 'no_handphone' };
+                                    return map[k] || k;
+                                  };
+                                  const normKey = alias(key);
+                                  if (normKey === 'ttl' || key === 'ttl') return `${String(genCandidate?.place_of_birth || '')} / ${formatDate(genCandidate?.birthdate)}`;
+                                  if (normKey === 'expired' || key === 'expired') return String(formatDate(genMeta.card_expired_at));
+                                  if (normKey === 'expired1' || key === 'expired1') {
+                                    const base = genMeta.card_created_at ? new Date(genMeta.card_created_at) : new Date();
+                                    if (Number.isNaN(base.getTime())) base.setTime(Date.now());
+                                    base.setMonth(base.getMonth() + 6);
+                                    return formatDate(base.toISOString());
+                                  }
+                                  if (normKey === 'expired2' || key === 'expired2') {
+                                    const base = genMeta.card_created_at ? new Date(genMeta.card_created_at) : new Date();
+                                    if (Number.isNaN(base.getTime())) base.setTime(Date.now());
+                                    base.setMonth(base.getMonth() + 12);
+                                    return formatDate(base.toISOString());
+                                  }
+                                  if (normKey === 'expired3' || key === 'expired3') {
+                                    const base = genMeta.card_created_at ? new Date(genMeta.card_created_at) : new Date();
+                                    if (Number.isNaN(base.getTime())) base.setTime(Date.now());
+                                    base.setMonth(base.getMonth() + 18);
+                                    return formatDate(base.toISOString());
+                                  }
+                                  if (normKey === 'no_reg' || key === 'no_reg') return String(genNoReg);
+                                  const readFrom = (namespace: string, k: string): string => {
+                                    if (namespace === 'candidate') return String((genCandidate as unknown as Record<string, unknown>)?.[k] ?? '');
+                                    if (namespace === 'user') return String((genUser as unknown as Record<string, unknown>)?.[k] ?? '');
+                                    if (namespace === 'ak1_doc' || namespace === 'doc') {
+                                      if (k === 'card_expired_at') return String(formatDate(genMeta.card_expired_at));
+                                      return String((genDocDetail as unknown as Record<string, unknown>)?.[k] ?? '');
+                                    }
+                                    return '';
+                                  };
+                                  if (src) {
+                                    const first = readFrom(src, normKey);
+                                    if (first) return first;
+                                    const c = readFrom('candidate', normKey);
+                                    if (c) return c;
+                                    const u = readFrom('user', normKey);
+                                    if (u) return u;
+                                    const d = readFrom('doc', normKey);
+                                    return d;
+                                  }
+                                  const c = readFrom('candidate', normKey);
+                                  if (c) return c;
+                                  const u = readFrom('user', normKey);
+                                  if (u) return u;
+                                  const d = readFrom('doc', normKey);
+                                  return d;
+                                })();
+                                const txt = mappedVal || key;
+                                const fill = 'black';
+                                const weight = 400;
+                                return (
+                                  <g key={`b-${i}`}>
+                                    <text x={(f.x || 0)} y={(f.y || 0)} dominantBaseline="hanging" textAnchor="start" fontFamily="Arial, sans-serif" fontSize={Math.round((f.size || 16))} fill={fill} fontWeight={weight}>{txt}</text>
+                                  </g>
+                                );
+                              }
+                              return null;
+                            })}
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -2,8 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Input, Textarea, SearchableSelect } from "../../../components/ui/field";
+import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
+import Modal from "../../../components/ui/Modal";
 import { presignUpload, upsertAk1Template, listAk1Templates, upsertAk1Layout, getAk1Layout, presignDownload } from "../../../services/ak1";
-import { getSiteSettings, upsertSiteSettings } from "../../../services/site";
+import { getSiteSettings, upsertSiteSettings, upsertJobCategoryGroups, upsertEducationGroups, upsertPositionGroups } from "../../../services/site";
 import { presignDisnakerProfileUpload } from "../../../services/profile";
 import type { Ak1Template } from "../../../services/ak1";
 import Card from "../../../components/ui/Card";
@@ -13,7 +15,38 @@ export default function PengaturanPage() {
   type Instansi = { nama: string; alamat: string; telepon: string; email: string; website: string; logo: string; jamLayanan: string; facebook: string; instagram: string; youtube: string };
   type Banner = { judul: string; subjudul: string; ctaText: string; ctaLink: string; backgroundImage: string };
   type Maintenance = { aktif: boolean; pesan: string; jadwal: string };
-  type MasterData = { kecamatan: string[]; pendidikan: string[]; keahlian: string[] };
+  type MasterData = { pendidikan: string[]; keahlian: string[] };
+  type JobCategoryItem = { id?: string; code?: string; name: string };
+  type JobCategoryGroup = { id?: string; code?: string; name: string; items: JobCategoryItem[] };
+  type EducationItem = { id?: string; code?: string; name: string };
+  type EducationGroup = { id?: string; code?: string; name: string; items: EducationItem[] };
+  type PositionItem = { id?: string; code?: string; name: string };
+  type PositionGroup = { id?: string; code?: string; name: string; items: PositionItem[] };
+  type SiteSettingsShape = {
+    instansi_nama?: string;
+    instansi_alamat?: string;
+    instansi_telepon?: string;
+    instansi_email?: string;
+    instansi_website?: string;
+    instansi_logo?: string;
+    instansi_jam_layanan?: string;
+    instansi_facebook?: string;
+    instansi_instagram?: string;
+    instansi_youtube?: string;
+    banner_judul?: string;
+    banner_subjudul?: string;
+    banner_cta_text?: string;
+    banner_cta_link?: string;
+    banner_background_image?: string;
+    maintenance_aktif?: number;
+    maintenance_pesan?: string;
+    maintenance_jadwal?: string;
+    kategori_pekerjaan_groups?: JobCategoryGroup[];
+    education_groups?: EducationGroup[];
+    position_groups?: PositionGroup[];
+    master_pendidikan?: string;
+    master_keahlian?: string;
+  };
 
   const [instansi, setInstansi] = useState<Instansi>({
     nama: "",
@@ -35,12 +68,42 @@ export default function PengaturanPage() {
     backgroundImage: "",
   });
   const [maintenance, setMaintenance] = useState<Maintenance>({ aktif: false, pesan: "", jadwal: "" });
-  const [kategoriPekerjaan, setKategoriPekerjaan] = useState<string[]>([]);
-  const [masterData, setMasterData] = useState<MasterData>({ kecamatan: [], pendidikan: [], keahlian: [] });
+  const [kategoriGroups, setKategoriGroups] = useState<JobCategoryGroup[]>([]);
+  const [educationGroups, setEducationGroups] = useState<EducationGroup[]>([]);
+  const [positionGroups, setPositionGroups] = useState<PositionGroup[]>([]);
+  
+  // Modals state
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<{ idx: number; code: string; name: string } | null>(null);
+  const [newGroupData, setNewGroupData] = useState<{ id?: string; code: string; name: string; items: { id?: string; code?: string; name: string }[] }>({ code: "", name: "", items: [] });
+
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<{ groupIdx: number; itemIdx: number; code: string; name: string } | null>(null);
+  const [newCategoryData, setNewCategoryData] = useState<{ groupIdx: string; code: string; name: string }>({ groupIdx: "", code: "", name: "" });
+
+  // Education Modals state
+  const [isEduGroupModalOpen, setIsEduGroupModalOpen] = useState(false);
+  const [editingEduGroup, setEditingEduGroup] = useState<{ idx: number; code: string; name: string } | null>(null);
+  const [newEduGroupData, setNewEduGroupData] = useState<{ id?: string; code: string; name: string; items: { id?: string; code?: string; name: string }[] }>({ code: "", name: "", items: [] });
+
+  const [isEduLevelModalOpen, setIsEduLevelModalOpen] = useState(false);
+  const [editingEduLevel, setEditingEduLevel] = useState<{ groupIdx: number; itemIdx: number; code: string; name: string } | null>(null);
+  const [newEduLevelData, setNewEduLevelData] = useState<{ groupIdx: string; code: string; name: string }>({ groupIdx: "", code: "", name: "" });
+
+  // Position Modals state
+  const [isPosGroupModalOpen, setIsPosGroupModalOpen] = useState(false);
+  const [editingPosGroup, setEditingPosGroup] = useState<{ idx: number; code: string; name: string } | null>(null);
+  const [newPosGroupData, setNewPosGroupData] = useState<{ id?: string; code: string; name: string; items: { id?: string; code?: string; name: string }[] }>({ code: "", name: "", items: [] });
+
+  const [isPosTitleModalOpen, setIsPosTitleModalOpen] = useState(false);
+  const [editingPosTitle, setEditingPosTitle] = useState<{ groupIdx: number; itemIdx: number; code: string; name: string } | null>(null);
+  const [newPosTitleData, setNewPosTitleData] = useState<{ groupIdx: string; code: string; name: string }>({ groupIdx: "", code: "", name: "" });
+
+  const [masterData, setMasterData] = useState<MasterData>({ pendidikan: [], keahlian: [] });
 
   const [editField, setEditField] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState("");
-  const [activeSection, setActiveSection] = useState<"instansi" | "banner" | "maintenance" | "kategori" | "master" | "ak1layout">("instansi");
+  const [activeSection, setActiveSection] = useState<"instansi" | "banner" | "maintenance" | "master" | "ak1layout">("instansi");
   const [logoUrl, setLogoUrl] = useState<string>("");
   const [bannerUrl, setBannerUrl] = useState<string>("");
   const { showSuccess, showError } = useToast();
@@ -49,32 +112,9 @@ export default function PengaturanPage() {
   useEffect(() => {
     (async () => {
       try {
-        type SiteSettingsShape = {
-          instansi_nama?: string;
-          instansi_alamat?: string;
-          instansi_telepon?: string;
-          instansi_email?: string;
-          instansi_website?: string;
-          instansi_logo?: string;
-          instansi_jam_layanan?: string;
-          instansi_facebook?: string;
-          instansi_instagram?: string;
-          instansi_youtube?: string;
-          banner_judul?: string;
-          banner_subjudul?: string;
-          banner_cta_text?: string;
-          banner_cta_link?: string;
-          banner_background_image?: string;
-          maintenance_aktif?: number;
-          maintenance_pesan?: string;
-          maintenance_jadwal?: string;
-          kategori_pekerjaan?: string;
-          master_kecamatan?: string;
-          master_pendidikan?: string;
-          master_keahlian?: string;
-        };
         const s = await getSiteSettings();
-        const cfg: SiteSettingsShape = (s as { data?: SiteSettingsShape }).data ?? (s as SiteSettingsShape);
+        const cfgContainer = s as unknown as { data?: SiteSettingsShape };
+        const cfg: SiteSettingsShape = cfgContainer.data ?? (s as unknown as SiteSettingsShape);
         setInstansi({
           nama: String(cfg?.instansi_nama || ""),
           alamat: String(cfg?.instansi_alamat || ""),
@@ -99,11 +139,42 @@ export default function PengaturanPage() {
           pesan: String(cfg?.maintenance_pesan || ""),
           jadwal: String(cfg?.maintenance_jadwal || ""),
         });
-        setKategoriPekerjaan(String(cfg?.kategori_pekerjaan || "").split(",").map((x) => x.trim()).filter(Boolean));
+        try {
+          const rawGroups = cfg?.kategori_pekerjaan_groups;
+          const groupsArr: JobCategoryGroup[] = Array.isArray(rawGroups) ? rawGroups : [];
+          const mapped = groupsArr.map((g) => ({
+            id: String(g.id || ""),
+            code: String(g.code || ""),
+            name: String(g.name || ""),
+            items: Array.isArray(g.items) ? g.items.map((it) => ({ id: String(it.id || ""), code: String(it.code || ""), name: String(it.name || "") })) : [],
+          }));
+          setKategoriGroups(mapped);
+        } catch {}
+        try {
+          const rawGroups = cfg?.education_groups;
+          const groupsArr: EducationGroup[] = Array.isArray(rawGroups) ? rawGroups : [];
+          const mapped = groupsArr.map((g) => ({
+            id: String(g.id || ""),
+            code: String(g.code || ""),
+            name: String(g.name || ""),
+            items: Array.isArray(g.items) ? g.items.map((it) => ({ id: String(it.id || ""), code: String(it.code || ""), name: String(it.name || "") })) : [],
+          }));
+          setEducationGroups(mapped);
+        } catch {}
+        try {
+          const rawGroups = cfg?.position_groups;
+          const groupsArr: PositionGroup[] = Array.isArray(rawGroups) ? rawGroups : [];
+          const mapped = groupsArr.map((g) => ({
+            id: String(g.id || ""),
+            code: String(g.code || ""),
+            name: String(g.name || ""),
+            items: Array.isArray(g.items) ? g.items.map((it) => ({ id: String(it.id || ""), code: String(it.code || ""), name: String(it.name || "") })) : [],
+          }));
+          setPositionGroups(mapped);
+        } catch {}
         setMasterData({
-          kecamatan: String(cfg?.master_kecamatan || "").split(",").map((x) => x.trim()).filter(Boolean),
           pendidikan: String(cfg?.master_pendidikan || "").split(",").map((x) => x.trim()).filter(Boolean),
-          keahlian: String(cfg?.master_keahlian || "").split(",").map((x) => x.trim()).filter(Boolean),
+          keahlian: [], // Deprecated
         });
         try {
           const logoVal = String(cfg?.instansi_logo || "");
@@ -123,6 +194,15 @@ export default function PengaturanPage() {
 
   const handleEdit = (field: string, value: string | string[]) => {
     setEditField(field);
+    if (field === "kategoriGroups") {
+      try {
+        const json = JSON.stringify(kategoriGroups, null, 2);
+        setTempValue(json);
+      } catch {
+        setTempValue("[]");
+      }
+      return;
+    }
     setTempValue(Array.isArray(value) ? value.join(", ") : value);
   };
 
@@ -132,21 +212,38 @@ export default function PengaturanPage() {
     const nextInstansi = { ...instansi };
     const nextBanner = { ...banner };
     const nextMaintenance = { ...maintenance };
-    let nextKategori = [...kategoriPekerjaan];
     let nextMaster = { ...masterData };
 
     if (editField === "logo" || editField === "backgroundImage") {
       if (!tempValue) { showError("File belum diunggah"); setSettingsSubmitted(false); return; }
       if (editField === "logo") nextInstansi.logo = tempValue;
       else nextBanner.backgroundImage = tempValue;
-    } else if (["kecamatan", "pendidikan", "keahlian"].includes(editField)) {
+    } else if (["pendidikan", "keahlian"].includes(editField)) {
       const items = tempValue.split(",").map((i) => i.trim()).filter(Boolean);
       const key = editField as keyof MasterData;
       nextMaster = { ...nextMaster, [key]: items } as MasterData;
-    } else if (editField === "kategoriPekerjaan") {
-      const items = tempValue.split(",").map((i) => i.trim()).filter(Boolean);
-      if (items.length === 0) { showError("Kategori tidak boleh kosong"); setSettingsSubmitted(false); return; }
-      nextKategori = items;
+    } else if (editField === "kategoriGroups") {
+      try {
+        const parsed = JSON.parse(String(tempValue || "[]"));
+        if (!Array.isArray(parsed)) throw new Error("Format tidak valid");
+        await upsertJobCategoryGroups({ groups: parsed as JobCategoryGroup[] });
+        const s2 = await getSiteSettings();
+        const cfg2Container = s2 as unknown as { data?: SiteSettingsShape };
+        const cfg2: SiteSettingsShape = cfg2Container.data ?? (s2 as unknown as SiteSettingsShape);
+        const rawGroups = cfg2?.kategori_pekerjaan_groups;
+        const groupsArr: JobCategoryGroup[] = Array.isArray(rawGroups) ? rawGroups : [];
+        const mapped = groupsArr.map((g) => ({
+          id: String(g.id || ""),
+          code: String(g.code || ""),
+          name: String(g.name || ""),
+          items: Array.isArray(g.items) ? g.items.map((it) => ({ id: String(it.id || ""), code: String(it.code || ""), name: String(it.name || "") })) : [],
+        }));
+        setKategoriGroups(mapped);
+      } catch {
+        showError("Gagal menyimpan grup kategori. Periksa format JSON.");
+        setSettingsSubmitted(false);
+        return;
+      }
     } else {
       const keys = editField.split(".");
       const val = String(tempValue || "").trim();
@@ -172,7 +269,6 @@ export default function PengaturanPage() {
     setInstansi(nextInstansi);
     setBanner(nextBanner);
     setMaintenance(nextMaintenance);
-    setKategoriPekerjaan(nextKategori);
     setMasterData(nextMaster);
     setEditField(null);
     setTempValue("");
@@ -197,8 +293,6 @@ export default function PengaturanPage() {
         maintenance_aktif: nextMaintenance.aktif ? 1 : 0,
         maintenance_pesan: nextMaintenance.pesan,
         maintenance_jadwal: nextMaintenance.jadwal,
-        kategori_pekerjaan: nextKategori.join(","),
-        master_kecamatan: nextMaster.kecamatan.join(","),
         master_pendidikan: nextMaster.pendidikan.join(","),
         master_keahlian: nextMaster.keahlian.join(","),
       } as Record<string, unknown>;
@@ -254,11 +348,405 @@ export default function PengaturanPage() {
     } catch {}
   };
 
+  const handleSaveGroup = async () => {
+    try {
+      const nextGroups = [...kategoriGroups];
+      if (editingGroup) {
+        nextGroups[editingGroup.idx] = {
+          ...nextGroups[editingGroup.idx],
+          code: newGroupData.code,
+          name: newGroupData.name,
+          items: newGroupData.items,
+        };
+      } else {
+        nextGroups.push({
+          code: newGroupData.code,
+          name: newGroupData.name,
+          items: newGroupData.items,
+        });
+      }
+      
+      const payloadGroups = nextGroups.map((g) => ({
+        id: g.id,
+        code: g.code || "",
+        name: g.name,
+        items: (g.items || []).map((it) => ({ id: it.id, code: it.code || "", name: it.name })),
+      }));
+      
+      await upsertJobCategoryGroups({ groups: payloadGroups });
+      
+      // Reload settings to get IDs and fresh state
+      const s2 = await getSiteSettings();
+      const cfg2 = (s2 as unknown as { data?: SiteSettingsShape }).data ?? (s2 as unknown as SiteSettingsShape);
+      const rawGroups = cfg2?.kategori_pekerjaan_groups;
+      const groupsArr: JobCategoryGroup[] = Array.isArray(rawGroups) ? rawGroups : [];
+      const mapped = groupsArr.map((g) => ({
+        id: String(g.id || ""),
+        code: String(g.code || ""),
+        name: String(g.name || ""),
+        items: Array.isArray(g.items) ? g.items.map((it) => ({ id: String(it.id || ""), code: String(it.code || ""), name: String(it.name || "") })) : [],
+      }));
+      setKategoriGroups(mapped);
+      
+      setIsGroupModalOpen(false);
+      setEditingGroup(null);
+      setNewGroupData({ code: "", name: "", items: [] });
+      showSuccess("Grup berhasil disimpan");
+    } catch {
+      showError("Gagal menyimpan grup");
+    }
+  };
+
+  const handleSaveCategory = async () => {
+    try {
+      const gIdx = editingCategory ? editingCategory.groupIdx : parseInt(newCategoryData.groupIdx);
+      if (isNaN(gIdx) || gIdx < 0 || gIdx >= kategoriGroups.length) {
+        showError("Grup tidak valid");
+        return;
+      }
+
+      const nextGroups = [...kategoriGroups];
+      const targetGroup = { ...nextGroups[gIdx] };
+      const newItems = [...targetGroup.items];
+
+      if (editingCategory) {
+        newItems[editingCategory.itemIdx] = { ...newItems[editingCategory.itemIdx], code: newCategoryData.code, name: newCategoryData.name };
+      } else {
+        newItems.push({ code: newCategoryData.code, name: newCategoryData.name });
+      }
+      
+      targetGroup.items = newItems;
+      nextGroups[gIdx] = targetGroup;
+
+      const payloadGroups = nextGroups.map((g) => ({
+        id: g.id,
+        code: g.code || "",
+        name: g.name,
+        items: (g.items || []).map((it) => ({ id: it.id, code: it.code || "", name: it.name })),
+      }));
+
+      await upsertJobCategoryGroups({ groups: payloadGroups });
+
+      // Reload
+      const s2 = await getSiteSettings();
+      const cfg2 = (s2 as unknown as { data?: SiteSettingsShape }).data ?? (s2 as unknown as SiteSettingsShape);
+      const rawGroups = cfg2?.kategori_pekerjaan_groups;
+      const groupsArr: JobCategoryGroup[] = Array.isArray(rawGroups) ? rawGroups : [];
+      const mapped = groupsArr.map((g) => ({
+        id: String(g.id || ""),
+        code: String(g.code || ""),
+        name: String(g.name || ""),
+        items: Array.isArray(g.items) ? g.items.map((it) => ({ id: String(it.id || ""), code: String(it.code || ""), name: String(it.name || "") })) : [],
+      }));
+      setKategoriGroups(mapped);
+
+      setIsCategoryModalOpen(false);
+      setEditingCategory(null);
+      setNewCategoryData({ groupIdx: "", code: "", name: "" });
+      showSuccess("Kategori berhasil disimpan");
+    } catch {
+      showError("Gagal menyimpan kategori");
+    }
+  };
+
+  const handleSaveEduGroup = async () => {
+    try {
+      const nextGroups = [...educationGroups];
+      if (editingEduGroup) {
+        nextGroups[editingEduGroup.idx] = {
+          ...nextGroups[editingEduGroup.idx],
+          code: newEduGroupData.code,
+          name: newEduGroupData.name,
+          items: newEduGroupData.items,
+        };
+      } else {
+        nextGroups.push({
+          code: newEduGroupData.code,
+          name: newEduGroupData.name,
+          items: newEduGroupData.items,
+        });
+      }
+      
+      const payloadGroups = nextGroups.map((g) => ({
+        id: g.id,
+        code: g.code || "",
+        name: g.name,
+        items: (g.items || []).map((it) => ({ id: it.id, code: it.code || "", name: it.name })),
+      }));
+      
+      await upsertEducationGroups({ groups: payloadGroups });
+      
+      // Reload settings to get IDs and fresh state
+      const s2 = await getSiteSettings();
+      const cfg2 = (s2 as unknown as { data?: SiteSettingsShape }).data ?? (s2 as unknown as SiteSettingsShape);
+      const rawGroups = cfg2?.education_groups;
+      const groupsArr: EducationGroup[] = Array.isArray(rawGroups) ? rawGroups : [];
+      const mapped = groupsArr.map((g) => ({
+        id: String(g.id || ""),
+        code: String(g.code || ""),
+        name: String(g.name || ""),
+        items: Array.isArray(g.items) ? g.items.map((it) => ({ id: String(it.id || ""), code: String(it.code || ""), name: String(it.name || "") })) : [],
+      }));
+      setEducationGroups(mapped);
+      
+      setIsEduGroupModalOpen(false);
+      setEditingEduGroup(null);
+      setNewEduGroupData({ code: "", name: "", items: [] });
+      showSuccess("Grup pendidikan berhasil disimpan");
+    } catch {
+      showError("Gagal menyimpan grup pendidikan");
+    }
+  };
+
+  const handleSaveEduLevel = async () => {
+    try {
+      const gIdx = editingEduLevel ? editingEduLevel.groupIdx : parseInt(newEduLevelData.groupIdx);
+      if (isNaN(gIdx) || gIdx < 0 || gIdx >= educationGroups.length) {
+        showError("Grup pendidikan tidak valid");
+        return;
+      }
+
+      const nextGroups = [...educationGroups];
+      const targetGroup = { ...nextGroups[gIdx] };
+      const newItems = [...targetGroup.items];
+
+      if (editingEduLevel) {
+        newItems[editingEduLevel.itemIdx] = { ...newItems[editingEduLevel.itemIdx], code: newEduLevelData.code, name: newEduLevelData.name };
+      } else {
+        newItems.push({ code: newEduLevelData.code, name: newEduLevelData.name });
+      }
+      
+      targetGroup.items = newItems;
+      nextGroups[gIdx] = targetGroup;
+
+      const payloadGroups = nextGroups.map((g) => ({
+        id: g.id,
+        code: g.code || "",
+        name: g.name,
+        items: (g.items || []).map((it) => ({ id: it.id, code: it.code || "", name: it.name })),
+      }));
+
+      await upsertEducationGroups({ groups: payloadGroups });
+
+      // Reload
+      const s2 = await getSiteSettings();
+      const cfg2 = (s2 as unknown as { data?: SiteSettingsShape }).data ?? (s2 as unknown as SiteSettingsShape);
+      const rawGroups = cfg2?.education_groups;
+      const groupsArr: EducationGroup[] = Array.isArray(rawGroups) ? rawGroups : [];
+
+      const mapped = groupsArr.map((g) => ({
+        id: String(g.id || ""),
+        code: String(g.code || ""),
+        name: String(g.name || ""),
+        items: Array.isArray(g.items) ? g.items.map((it) => ({ id: String(it.id || ""), code: String(it.code || ""), name: String(it.name || "") })) : [],
+      }));
+      setEducationGroups(mapped);
+
+      setIsEduLevelModalOpen(false);
+      setEditingEduLevel(null);
+      setNewEduLevelData({ groupIdx: "", code: "", name: "" });
+      showSuccess("Tingkat pendidikan berhasil disimpan");
+    } catch {
+      showError("Gagal menyimpan tingkat pendidikan");
+    }
+  };
+
+  const handleDeleteCategoryGroup = async (idx: number) => {
+    if (!confirm("Hapus grup ini beserta semua kategorinya?")) return;
+    try {
+      const nextGroups = kategoriGroups.filter((_, i) => i !== idx);
+      const payloadGroups = nextGroups.map((g) => ({
+        id: g.id,
+        code: g.code || "",
+        name: g.name,
+        items: (g.items || []).map((it) => ({ id: it.id, code: it.code || "", name: it.name })),
+      }));
+      await upsertJobCategoryGroups({ groups: payloadGroups });
+      
+      const s2 = await getSiteSettings();
+      const cfg2 = (s2 as unknown as { data?: SiteSettingsShape }).data ?? (s2 as unknown as SiteSettingsShape);
+      const rawGroups = cfg2?.kategori_pekerjaan_groups;
+      const groupsArr: JobCategoryGroup[] = Array.isArray(rawGroups) ? rawGroups : [];
+      const mapped = groupsArr.map((g) => ({
+        id: String(g.id || ""),
+        code: String(g.code || ""),
+        name: String(g.name || ""),
+        items: Array.isArray(g.items) ? g.items.map((it) => ({ id: String(it.id || ""), code: String(it.code || ""), name: String(it.name || "") })) : [],
+      }));
+      setKategoriGroups(mapped);
+      showSuccess("Grup dihapus");
+    } catch {
+      showError("Gagal menghapus grup");
+    }
+  };
+
+  const handleDeleteEducationGroup = async (idx: number) => {
+    if (!confirm("Hapus grup pendidikan ini beserta semua tingkatnya?")) return;
+    try {
+      const nextGroups = educationGroups.filter((_, i) => i !== idx);
+      const payloadGroups = nextGroups.map((g) => ({
+        id: g.id,
+        code: g.code || "",
+        name: g.name,
+        items: (g.items || []).map((it) => ({ id: it.id, code: it.code || "", name: it.name })),
+      }));
+      await upsertEducationGroups({ groups: payloadGroups });
+      
+      const s2 = await getSiteSettings();
+      const cfg2 = (s2 as unknown as { data?: SiteSettingsShape }).data ?? (s2 as unknown as SiteSettingsShape);
+      const rawGroups = cfg2?.education_groups;
+      const groupsArr: EducationGroup[] = Array.isArray(rawGroups) ? rawGroups : [];
+      const mapped = groupsArr.map((g) => ({
+        id: String(g.id || ""),
+        code: String(g.code || ""),
+        name: String(g.name || ""),
+        items: Array.isArray(g.items) ? g.items.map((it) => ({ id: String(it.id || ""), code: String(it.code || ""), name: String(it.name || "") })) : [],
+      }));
+      setEducationGroups(mapped);
+      showSuccess("Grup pendidikan dihapus");
+    } catch {
+      showError("Gagal menghapus grup pendidikan");
+    }
+  };
+
+
+
+  const handleSavePosGroup = async () => {
+    try {
+      const nextGroups = [...positionGroups];
+      if (editingPosGroup) {
+        nextGroups[editingPosGroup.idx] = {
+          ...nextGroups[editingPosGroup.idx],
+          code: newPosGroupData.code,
+          name: newPosGroupData.name,
+          items: newPosGroupData.items,
+        };
+      } else {
+        nextGroups.push({
+          code: newPosGroupData.code,
+          name: newPosGroupData.name,
+          items: newPosGroupData.items,
+        });
+      }
+      
+      const payloadGroups = nextGroups.map((g) => ({
+        id: g.id,
+        code: g.code || "",
+        name: g.name,
+        items: (g.items || []).map((it) => ({ id: it.id, code: it.code || "", name: it.name })),
+      }));
+      
+      await upsertPositionGroups({ groups: payloadGroups });
+      
+      // Reload settings to get IDs and fresh state
+      const s2 = await getSiteSettings();
+      const cfg2 = (s2 as unknown as { data?: SiteSettingsShape }).data ?? (s2 as unknown as SiteSettingsShape);
+      const rawGroups = cfg2?.position_groups;
+      const groupsArr: PositionGroup[] = Array.isArray(rawGroups) ? rawGroups : [];
+      const mapped = groupsArr.map((g) => ({
+        id: String(g.id || ""),
+        code: String(g.code || ""),
+        name: String(g.name || ""),
+        items: Array.isArray(g.items) ? g.items.map((it) => ({ id: String(it.id || ""), code: String(it.code || ""), name: String(it.name || "") })) : [],
+      }));
+      setPositionGroups(mapped);
+      
+      setIsPosGroupModalOpen(false);
+      setEditingPosGroup(null);
+      setNewPosGroupData({ code: "", name: "", items: [] });
+      showSuccess("Grup jabatan berhasil disimpan");
+    } catch {
+      showError("Gagal menyimpan grup jabatan");
+    }
+  };
+
+  const handleDeletePosGroup = async (idx: number) => {
+    if (!confirm("Hapus grup jabatan ini beserta semua jabatannya?")) return;
+    try {
+      const nextGroups = positionGroups.filter((_, i) => i !== idx);
+      const payloadGroups = nextGroups.map((g) => ({
+        id: g.id,
+        code: g.code || "",
+        name: g.name,
+        items: (g.items || []).map((it) => ({ id: it.id, code: it.code || "", name: it.name })),
+      }));
+      await upsertPositionGroups({ groups: payloadGroups });
+      
+      const s2 = await getSiteSettings();
+      const cfg2 = (s2 as unknown as { data?: SiteSettingsShape }).data ?? (s2 as unknown as SiteSettingsShape);
+      const rawGroups = cfg2?.position_groups;
+      const groupsArr: PositionGroup[] = Array.isArray(rawGroups) ? rawGroups : [];
+      const mapped = groupsArr.map((g) => ({
+        id: String(g.id || ""),
+        code: String(g.code || ""),
+        name: String(g.name || ""),
+        items: Array.isArray(g.items) ? g.items.map((it) => ({ id: String(it.id || ""), code: String(it.code || ""), name: String(it.name || "") })) : [],
+      }));
+      setPositionGroups(mapped);
+      showSuccess("Grup jabatan berhasil dihapus");
+    } catch {
+      showError("Gagal menghapus grup jabatan");
+    }
+  };
+
+  const handleSavePosTitle = async () => {
+    try {
+      const gIdx = editingPosTitle ? editingPosTitle.groupIdx : parseInt(newPosTitleData.groupIdx);
+      if (isNaN(gIdx) || gIdx < 0 || gIdx >= positionGroups.length) {
+        showError("Grup tidak valid");
+        return;
+      }
+
+      const nextGroups = [...positionGroups];
+      const targetGroup = { ...nextGroups[gIdx] };
+      const newItems = [...targetGroup.items];
+
+      if (editingPosTitle) {
+        newItems[editingPosTitle.itemIdx] = { ...newItems[editingPosTitle.itemIdx], code: newPosTitleData.code, name: newPosTitleData.name };
+      } else {
+        newItems.push({ code: newPosTitleData.code, name: newPosTitleData.name });
+      }
+      
+      targetGroup.items = newItems;
+      nextGroups[gIdx] = targetGroup;
+
+      const payloadGroups = nextGroups.map((g) => ({
+        id: g.id,
+        code: g.code || "",
+        name: g.name,
+        items: (g.items || []).map((it) => ({ id: it.id, code: it.code || "", name: it.name })),
+      }));
+
+      await upsertPositionGroups({ groups: payloadGroups });
+
+      // Reload
+      const s2 = await getSiteSettings();
+      const cfg2 = (s2 as unknown as { data?: SiteSettingsShape }).data ?? (s2 as unknown as SiteSettingsShape);
+      const rawGroups = cfg2?.position_groups;
+      const groupsArr: PositionGroup[] = Array.isArray(rawGroups) ? rawGroups : [];
+      const mapped = groupsArr.map((g) => ({
+        id: String(g.id || ""),
+        code: String(g.code || ""),
+        name: String(g.name || ""),
+        items: Array.isArray(g.items) ? g.items.map((it) => ({ id: String(it.id || ""), code: String(it.code || ""), name: String(it.name || "") })) : [],
+      }));
+      setPositionGroups(mapped);
+
+      setIsPosTitleModalOpen(false);
+      setEditingPosTitle(null);
+      setNewPosTitleData({ groupIdx: "", code: "", name: "" });
+      showSuccess("Jabatan berhasil disimpan");
+    } catch {
+      showError("Gagal menyimpan jabatan");
+    }
+  };
+
+
+
   const sections = [
     { id: "instansi", label: "Profil Instansi", icon: "ri-building-line" },
     { id: "banner", label: "Banner Website", icon: "ri-image-line" },
     { id: "maintenance", label: "Maintenance", icon: "ri-tools-line" },
-    { id: "kategori", label: "Kategori", icon: "ri-price-tag-3-line" },
     { id: "master", label: "Master Data", icon: "ri-database-line" },
     { id: "ak1layout", label: "Layout AK1", icon: "ri-layout-5-line" },
   ];
@@ -275,7 +763,7 @@ export default function PengaturanPage() {
           <Card className="mb-6 overflow-hidden">
             <div className="flex overflow-x-auto">
               {sections.map((section) => (
-                <button key={section.id} onClick={() => setActiveSection(section.id as "instansi" | "banner" | "maintenance" | "kategori" | "master" | "ak1layout")} className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${activeSection === section.id ? "text-primary border-b-2 border-primary" : "text-gray-500 hover:text-primary"}`}>
+                <button key={section.id} onClick={() => setActiveSection(section.id as "instansi" | "banner" | "maintenance" | "master" | "ak1layout")} className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${activeSection === section.id ? "text-primary border-b-2 border-primary" : "text-gray-500 hover:text-primary"}`}>
                   <i className={section.icon}></i>
                   {section.label}
                 </button>
@@ -467,65 +955,641 @@ export default function PengaturanPage() {
             </Card>
           )}
 
-          {activeSection === "kategori" && (
-            <Card header={<h3 className="text-lg font-semibold text-primary">Kategori Pekerjaan</h3>}>
-              {editField !== "kategoriPekerjaan" ? (
-                <div>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {kategoriPekerjaan.map((kat) => (
-                      <span key={kat} className="px-3 py-2 bg-secondary/20 text-primary text-sm rounded-lg font-medium">{kat}</span>
-                    ))}
-                  </div>
-                    <button onClick={() => handleEdit("kategoriPekerjaan", kategoriPekerjaan)} className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
-                      <i className="ri-edit-line"></i>
-                      Edit Kategori
-                    </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <Textarea value={tempValue} onChange={(e) => setTempValue(e.target.value)} rows={4} placeholder="Masukkan kategori pekerjaan, pisahkan dengan koma" className="w-full" required submitted={settingsSubmitted} />
-                  <div className="flex gap-2">
-                    <button onClick={handleSave} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
-                      <i className="ri-check-line"></i>
-                      Simpan
-                    </button>
-                    <button onClick={() => setEditField(null)} className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition">Batal</button>
-                  </div>
-                </div>
-              )}
-            </Card>
-          )}
 
         {activeSection === "master" && (
           <div className="space-y-6">
-              {(["kecamatan", "pendidikan", "keahlian"] as (keyof MasterData)[]).map((key) => (
-                <Card key={key} header={<h3 className="text-lg font-semibold text-primary capitalize">{key === "kecamatan" && "Data Kecamatan"}{key === "pendidikan" && "Data Pendidikan"}{key === "keahlian" && "Data Keahlian"}</h3>}>
-                  {editField !== key ? (
-                    <div>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {masterData[key].map((item) => (
-                          <span key={item} className="px-3 py-2 bg-gray-100 text-gray-800 text-sm rounded-lg">{item}</span>
-                        ))}
-                      </div>
-                      <button onClick={() => handleEdit(key, masterData[key])} className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
-                        <i className="ri-edit-line"></i>
-                        Edit {key.charAt(0).toUpperCase() + key.slice(1)}
+            <Card header={<h3 className="text-lg font-semibold text-primary">Kategori Pekerjaan</h3>}>
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => {
+                    setEditingGroup(null);
+                    setNewGroupData({ code: "", name: "", items: [] });
+                    setIsGroupModalOpen(true);
+                  }}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition text-sm flex items-center gap-2"
+                >
+                  <i className="ri-add-line"></i> Tambah Grup
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingCategory(null);
+                    setNewCategoryData({ groupIdx: "", code: "", name: "" });
+                    setIsCategoryModalOpen(true);
+                  }}
+                  className="px-4 py-2 bg-secondary text-white rounded-lg hover:opacity-90 transition text-sm flex items-center gap-2"
+                >
+                  <i className="ri-add-line"></i> Tambah Kategori
+                </button>
+              </div>
+
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TH>Kode Grup</TH>
+                    <TH>Nama Grup</TH>
+                    <TH>Jumlah Kategori</TH>
+                    <TH>Aksi</TH>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {kategoriGroups.length === 0 ? (
+                    <TableRow>
+                      <TD colSpan={4} className="text-center py-4 text-gray-500">Belum ada grup kategori</TD>
+                    </TableRow>
+                  ) : (
+                    kategoriGroups.map((g, idx) => (
+                      <TableRow key={idx}>
+                        <TD>{g.code || "-"}</TD>
+                        <TD>{g.name}</TD>
+                        <TD>
+                          <span className="text-sm text-gray-600">
+                            {(g.items?.length || 0)} Kategori
+                          </span>
+                        </TD>
+                        <TD>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingGroup({ idx, code: g.code || "", name: g.name });
+                                setNewGroupData({
+                                  id: g.id,
+                                  code: g.code || "",
+                                  name: g.name,
+                                  items: g.items.map((it) => ({ id: it.id, code: it.code || "", name: it.name }))
+                                });
+                                setIsGroupModalOpen(true);
+                              }}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              <i className="ri-edit-line"></i>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCategoryGroup(idx)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <i className="ri-delete-bin-line"></i>
+                            </button>
+                          </div>
+                        </TD>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              {/* Modals */}
+              <Modal
+                open={isGroupModalOpen}
+                onClose={() => setIsGroupModalOpen(false)}
+                title={editingGroup ? "Edit Grup Kategori" : "Tambah Grup Kategori"}
+                size="md"
+                actions={
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => setIsGroupModalOpen(false)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
+                    <button onClick={handleSaveGroup} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)]">Simpan</button>
+                  </div>
+                }
+              >
+                <div className="space-y-4">
+                  <Input
+                    label="Kode Grup"
+                    value={newGroupData.code}
+                    onChange={(e) => setNewGroupData({ ...newGroupData, code: e.target.value })}
+                    placeholder="Contoh: K01"
+                  />
+                  <Input
+                    label="Nama Grup"
+                    value={newGroupData.name}
+                    onChange={(e) => setNewGroupData({ ...newGroupData, name: e.target.value })}
+                    placeholder="Contoh: Pertanian"
+                  />
+
+                  <div className="pt-2 border-t mt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-sm font-medium text-gray-700">Daftar Kategori</label>
+                      <button
+                        type="button"
+                        onClick={() => setNewGroupData({
+                          ...newGroupData,
+                          items: [...newGroupData.items, { name: "" }]
+                        })}
+                        className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium"
+                      >
+                        + Tambah Kategori
                       </button>
                     </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <Textarea value={tempValue} onChange={(e) => setTempValue(e.target.value)} rows={4} placeholder={`Masukkan daftar ${key}, pisahkan dengan koma`} className="w-full" required submitted={settingsSubmitted} />
-                      <div className="flex gap-2">
-                        <button onClick={handleSave} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2">
-                          <i className="ri-check-line"></i>
-                          Simpan
-                        </button>
-                        <button onClick={() => setEditField(null)} className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition">Batal</button>
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {newGroupData.items.map((item, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <Input
+                            value={item.code || ""}
+                            onChange={(e) => {
+                              const newItems = [...newGroupData.items];
+                              newItems[idx] = { ...newItems[idx], code: e.target.value };
+                              setNewGroupData({ ...newGroupData, items: newItems });
+                            }}
+                            placeholder="Kode"
+                            className="w-24"
+                          />
+                          <Input
+                            value={item.name}
+                            onChange={(e) => {
+                              const newItems = [...newGroupData.items];
+                              newItems[idx] = { ...newItems[idx], name: e.target.value };
+                              setNewGroupData({ ...newGroupData, items: newItems });
+                            }}
+                            placeholder="Nama Kategori"
+                            className="flex-1"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newItems = newGroupData.items.filter((_, i) => i !== idx);
+                              setNewGroupData({ ...newGroupData, items: newItems });
+                            }}
+                            className="px-2 text-red-500 hover:bg-red-50 rounded"
+                            title="Hapus Kategori"
+                          >
+                            <i className="ri-delete-bin-line" />
+                          </button>
+                        </div>
+                      ))}
+                      {newGroupData.items.length === 0 && (
+                        <p className="text-sm text-gray-400 italic text-center py-4 bg-gray-50 rounded border border-dashed">
+                          Belum ada kategori dalam grup ini
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Modal>
+
+              <Modal
+                open={isCategoryModalOpen}
+                onClose={() => setIsCategoryModalOpen(false)}
+                title={editingCategory ? "Edit Kategori" : "Tambah Kategori"}
+                size="md"
+                actions={
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => setIsCategoryModalOpen(false)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
+                    <button onClick={handleSaveCategory} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)]">Simpan</button>
+                  </div>
+                }
+              >
+                <div className="space-y-4">
+                  {!editingCategory && (
+                    <SearchableSelect
+                      label="Pilih Grup"
+                      value={newCategoryData.groupIdx}
+                      onChange={(val) => setNewCategoryData({ ...newCategoryData, groupIdx: val })}
+                      options={kategoriGroups.map((g, i) => ({ value: String(i), label: g.name || g.code || `Grup ${i + 1}` }))}
+                    />
+                  )}
+                  {editingCategory && (
+                    <div className="mb-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Grup</label>
+                      <div className="px-3 py-2 bg-gray-100 rounded-lg text-gray-700">
+                        {kategoriGroups[editingCategory.groupIdx]?.name || "-"}
                       </div>
                     </div>
                   )}
-                </Card>
-              ))}
+                  <Input
+                    label="Kode Kategori"
+                    value={newCategoryData.code}
+                    onChange={(e) => setNewCategoryData({ ...newCategoryData, code: e.target.value })}
+                    placeholder="Contoh: P01"
+                  />
+                  <Input
+                    label="Nama Kategori"
+                    value={newCategoryData.name}
+                    onChange={(e) => setNewCategoryData({ ...newCategoryData, name: e.target.value })}
+                    placeholder="Contoh: Petani Padi"
+                  />
+                </div>
+              </Modal>
+            </Card>
+
+            <Card header={<h3 className="text-lg font-semibold text-primary">Data Pendidikan</h3>}>
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => {
+                    setEditingEduGroup(null);
+                    setNewEduGroupData({ code: "", name: "", items: [] });
+                    setIsEduGroupModalOpen(true);
+                  }}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition text-sm flex items-center gap-2"
+                >
+                  <i className="ri-add-line"></i> Tambah Grup
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingEduLevel(null);
+                    setNewEduLevelData({ groupIdx: "", code: "", name: "" });
+                    setIsEduLevelModalOpen(true);
+                  }}
+                  className="px-4 py-2 bg-secondary text-white rounded-lg hover:opacity-90 transition text-sm flex items-center gap-2"
+                >
+                  <i className="ri-add-line"></i> Tambah Tingkat
+                </button>
+              </div>
+
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TH>Kode Grup</TH>
+                    <TH>Nama Grup</TH>
+                    <TH>Jumlah Tingkat</TH>
+                    <TH>Aksi</TH>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {educationGroups.length === 0 ? (
+                    <TableRow>
+                      <TD colSpan={4} className="text-center py-4 text-gray-500">Belum ada grup pendidikan</TD>
+                    </TableRow>
+                  ) : (
+                    educationGroups.map((g, idx) => (
+                      <TableRow key={idx}>
+                        <TD>{g.code || "-"}</TD>
+                        <TD>{g.name}</TD>
+                        <TD>
+                          <span className="text-sm text-gray-600">
+                            {(g.items?.length || 0)} Tingkat
+                          </span>
+                        </TD>
+                        <TD>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingEduGroup({ idx, code: g.code || "", name: g.name });
+                                setNewEduGroupData({
+                                  id: g.id,
+                                  code: g.code || "",
+                                  name: g.name,
+                                  items: g.items.map((it) => ({ id: it.id, code: it.code || "", name: it.name }))
+                                });
+                                setIsEduGroupModalOpen(true);
+                              }}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              <i className="ri-edit-line"></i>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteEducationGroup(idx)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <i className="ri-delete-bin-line"></i>
+                            </button>
+                          </div>
+                        </TD>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              {/* Modals */}
+              <Modal
+                open={isEduGroupModalOpen}
+                onClose={() => setIsEduGroupModalOpen(false)}
+                title={editingEduGroup ? "Edit Grup Pendidikan" : "Tambah Grup Pendidikan"}
+                size="md"
+                actions={
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => setIsEduGroupModalOpen(false)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
+                    <button onClick={handleSaveEduGroup} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)]">Simpan</button>
+                  </div>
+                }
+              >
+                <div className="space-y-4">
+                  <Input
+                    label="Kode Grup"
+                    value={newEduGroupData.code}
+                    onChange={(e) => setNewEduGroupData({ ...newEduGroupData, code: e.target.value })}
+                    placeholder="Contoh: E01"
+                  />
+                  <Input
+                    label="Nama Grup"
+                    value={newEduGroupData.name}
+                    onChange={(e) => setNewEduGroupData({ ...newEduGroupData, name: e.target.value })}
+                    placeholder="Contoh: Pendidikan Formal"
+                  />
+
+                  <div className="pt-2 border-t mt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-sm font-medium text-gray-700">Daftar Tingkat</label>
+                      <button
+                        type="button"
+                        onClick={() => setNewEduGroupData({
+                          ...newEduGroupData,
+                          items: [...newEduGroupData.items, { name: "" }]
+                        })}
+                        className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium"
+                      >
+                        + Tambah Tingkat
+                      </button>
+                    </div>
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {newEduGroupData.items.map((item, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <Input
+                            value={item.code || ""}
+                            onChange={(e) => {
+                              const newItems = [...newEduGroupData.items];
+                              newItems[idx] = { ...newItems[idx], code: e.target.value };
+                              setNewEduGroupData({ ...newEduGroupData, items: newItems });
+                            }}
+                            placeholder="Kode"
+                            className="w-24"
+                          />
+                          <Input
+                            value={item.name}
+                            onChange={(e) => {
+                              const newItems = [...newEduGroupData.items];
+                              newItems[idx] = { ...newItems[idx], name: e.target.value };
+                              setNewEduGroupData({ ...newEduGroupData, items: newItems });
+                            }}
+                            placeholder="Nama Tingkat"
+                            className="flex-1"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newItems = newEduGroupData.items.filter((_, i) => i !== idx);
+                              setNewEduGroupData({ ...newEduGroupData, items: newItems });
+                            }}
+                            className="px-2 text-red-500 hover:bg-red-50 rounded"
+                            title="Hapus Tingkat"
+                          >
+                            <i className="ri-delete-bin-line" />
+                          </button>
+                        </div>
+                      ))}
+                      {newEduGroupData.items.length === 0 && (
+                        <p className="text-sm text-gray-400 italic text-center py-4 bg-gray-50 rounded border border-dashed">
+                          Belum ada tingkat dalam grup ini
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Modal>
+
+              <Modal
+                open={isEduLevelModalOpen}
+                onClose={() => setIsEduLevelModalOpen(false)}
+                title={editingEduLevel ? "Edit Tingkat Pendidikan" : "Tambah Tingkat Pendidikan"}
+                size="md"
+                actions={
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => setIsEduLevelModalOpen(false)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
+                    <button onClick={handleSaveEduLevel} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)]">Simpan</button>
+                  </div>
+                }
+              >
+                <div className="space-y-4">
+                  {!editingEduLevel && (
+                    <SearchableSelect
+                      label="Pilih Grup"
+                      value={newEduLevelData.groupIdx}
+                      onChange={(val) => setNewEduLevelData({ ...newEduLevelData, groupIdx: val })}
+                      options={educationGroups.map((g, i) => ({ value: String(i), label: g.name || g.code || `Grup ${i + 1}` }))}
+                    />
+                  )}
+                  {editingEduLevel && (
+                    <div className="mb-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Grup</label>
+                      <div className="px-3 py-2 bg-gray-100 rounded-lg text-gray-700">
+                        {educationGroups[editingEduLevel.groupIdx]?.name || "-"}
+                      </div>
+                    </div>
+                  )}
+                  <Input
+                    label="Kode Tingkat"
+                    value={newEduLevelData.code}
+                    onChange={(e) => setNewEduLevelData({ ...newEduLevelData, code: e.target.value })}
+                    placeholder="Contoh: D3"
+                  />
+                  <Input
+                    label="Nama Tingkat"
+                    value={newEduLevelData.name}
+                    onChange={(e) => setNewEduLevelData({ ...newEduLevelData, name: e.target.value })}
+                    placeholder="Contoh: Diploma 3"
+                  />
+                </div>
+              </Modal>
+            </Card>
+
+            <Card header={<h3 className="text-lg font-semibold text-primary">Data Jabatan</h3>}>
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => {
+                    setEditingPosGroup(null);
+                    setNewPosGroupData({ code: "", name: "", items: [] });
+                    setIsPosGroupModalOpen(true);
+                  }}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition text-sm flex items-center gap-2"
+                >
+                  <i className="ri-add-line"></i> Tambah Grup
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingPosTitle(null);
+                    setNewPosTitleData({ groupIdx: "", code: "", name: "" });
+                    setIsPosTitleModalOpen(true);
+                  }}
+                  className="px-4 py-2 bg-secondary text-white rounded-lg hover:opacity-90 transition text-sm flex items-center gap-2"
+                >
+                  <i className="ri-add-line"></i> Tambah Jabatan
+                </button>
+              </div>
+
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TH>Kode Grup</TH>
+                    <TH>Nama Grup</TH>
+                    <TH>Jumlah Jabatan</TH>
+                    <TH>Aksi</TH>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {positionGroups.length === 0 ? (
+                    <TableRow>
+                      <TD colSpan={4} className="text-center py-4 text-gray-500">Belum ada grup jabatan</TD>
+                    </TableRow>
+                  ) : (
+                    positionGroups.map((g, idx) => (
+                      <TableRow key={idx}>
+                        <TD>{g.code || "-"}</TD>
+                        <TD>{g.name}</TD>
+                        <TD>
+                          <span className="text-sm text-gray-600">
+                            {(g.items?.length || 0)} Jabatan
+                          </span>
+                        </TD>
+                        <TD>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingPosGroup({ idx, code: g.code || "", name: g.name });
+                                setNewPosGroupData({
+                                  id: g.id,
+                                  code: g.code || "",
+                                  name: g.name,
+                                  items: g.items.map((it) => ({ id: it.id, code: it.code || "", name: it.name }))
+                                });
+                                setIsPosGroupModalOpen(true);
+                              }}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              <i className="ri-edit-line"></i>
+                            </button>
+                            <button
+                              onClick={() => handleDeletePosGroup(idx)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <i className="ri-delete-bin-line"></i>
+                            </button>
+                          </div>
+                        </TD>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              {/* Modals */}
+              <Modal
+                open={isPosGroupModalOpen}
+                onClose={() => setIsPosGroupModalOpen(false)}
+                title={editingPosGroup ? "Edit Grup Jabatan" : "Tambah Grup Jabatan"}
+                size="md"
+                actions={
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => setIsPosGroupModalOpen(false)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
+                    <button onClick={handleSavePosGroup} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)]">Simpan</button>
+                  </div>
+                }
+              >
+                <div className="space-y-4">
+                  <Input
+                    label="Kode Grup"
+                    value={newPosGroupData.code}
+                    onChange={(e) => setNewPosGroupData({ ...newPosGroupData, code: e.target.value })}
+                    placeholder="Contoh: J01"
+                  />
+                  <Input
+                    label="Nama Grup"
+                    value={newPosGroupData.name}
+                    onChange={(e) => setNewPosGroupData({ ...newPosGroupData, name: e.target.value })}
+                    placeholder="Contoh: Tenaga Profesional"
+                  />
+
+                  <div className="pt-2 border-t mt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-sm font-medium text-gray-700">Daftar Jabatan</label>
+                      <button
+                        type="button"
+                        onClick={() => setNewPosGroupData({
+                          ...newPosGroupData,
+                          items: [...newPosGroupData.items, { name: "" }]
+                        })}
+                        className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium"
+                      >
+                        + Tambah Jabatan
+                      </button>
+                    </div>
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {newPosGroupData.items.map((item, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <Input
+                            value={item.code || ""}
+                            onChange={(e) => {
+                              const newItems = [...newPosGroupData.items];
+                              newItems[idx] = { ...newItems[idx], code: e.target.value };
+                              setNewPosGroupData({ ...newPosGroupData, items: newItems });
+                            }}
+                            placeholder="Kode"
+                            className="w-24"
+                          />
+                          <Input
+                            value={item.name}
+                            onChange={(e) => {
+                              const newItems = [...newPosGroupData.items];
+                              newItems[idx] = { ...newItems[idx], name: e.target.value };
+                              setNewPosGroupData({ ...newPosGroupData, items: newItems });
+                            }}
+                            placeholder="Nama Jabatan"
+                            className="flex-1"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newItems = newPosGroupData.items.filter((_, i) => i !== idx);
+                              setNewPosGroupData({ ...newPosGroupData, items: newItems });
+                            }}
+                            className="px-2 text-red-500 hover:bg-red-50 rounded"
+                            title="Hapus Jabatan"
+                          >
+                            <i className="ri-delete-bin-line" />
+                          </button>
+                        </div>
+                      ))}
+                      {newPosGroupData.items.length === 0 && (
+                        <p className="text-sm text-gray-400 italic text-center py-4 bg-gray-50 rounded border border-dashed">
+                          Belum ada jabatan dalam grup ini
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Modal>
+
+              <Modal
+                open={isPosTitleModalOpen}
+                onClose={() => setIsPosTitleModalOpen(false)}
+                title={editingPosTitle ? "Edit Jabatan" : "Tambah Jabatan"}
+                size="md"
+                actions={
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => setIsPosTitleModalOpen(false)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
+                    <button onClick={handleSavePosTitle} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)]">Simpan</button>
+                  </div>
+                }
+              >
+                <div className="space-y-4">
+                  {!editingPosTitle && (
+                    <SearchableSelect
+                      label="Pilih Grup"
+                      value={newPosTitleData.groupIdx}
+                      onChange={(val) => setNewPosTitleData({ ...newPosTitleData, groupIdx: val })}
+                      options={positionGroups.map((g, i) => ({ value: String(i), label: g.name || g.code || `Grup ${i + 1}` }))}
+                    />
+                  )}
+                  {editingPosTitle && (
+                    <div className="mb-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Grup</label>
+                      <div className="px-3 py-2 bg-gray-100 rounded-lg text-gray-700">
+                        {positionGroups[editingPosTitle.groupIdx]?.name || "-"}
+                      </div>
+                    </div>
+                  )}
+                  <Input
+                    label="Kode Jabatan"
+                    value={newPosTitleData.code}
+                    onChange={(e) => setNewPosTitleData({ ...newPosTitleData, code: e.target.value })}
+                    placeholder="Contoh: J01"
+                  />
+                  <Input
+                    label="Nama Jabatan"
+                    value={newPosTitleData.name}
+                    onChange={(e) => setNewPosTitleData({ ...newPosTitleData, name: e.target.value })}
+                    placeholder="Contoh: Dokter"
+                  />
+                </div>
+              </Modal>
+            </Card>
           </div>
         )}
 
@@ -543,7 +1607,7 @@ function Ak1LayoutEditor() {
   const FRONT = { w: 3900, h: 1216 };
   const candidateColumns = ['full_name','nik','place_of_birth','birthdate','gender','status_perkawinan','address','postal_code','photo_profile','last_education','graduation_year','cv_file'];
   const userColumns = ['id','email','no_handphone','role'];
-  const docColumns = ['ktp_file','ijazah_file','pas_photo_file','certificate_file','card_file','card_created_at','card_expired_at','no_pendaftaran_pencari_kerja'];
+  const docColumns = ['ktp_file','ijazah_file','pas_photo_file','certificate_file','card_file','card_created_at','card_expired_at','expired1','expired2','expired3','no_pendaftaran_pencari_kerja'];
   const [fields, setFields] = useState<FieldCfg[]>([]);
   const [saving, setSaving] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>("");

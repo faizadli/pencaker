@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
- import { Input, SearchableSelect, SegmentedToggle, TextEditor } from "../../../components/ui/field";
+ import { Input, SearchableSelect, SegmentedToggle, TextEditor, SearchableSelectOption } from "../../../components/ui/field";
 import Pagination from "../../../components/ui/Pagination";
 import Modal from "../../../components/ui/Modal";
 import StatCard from "../../../components/ui/StatCard";
@@ -13,6 +13,7 @@ import { listJobs, createJob, approveJob, rejectJob, updateJob, listApplications
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { useToast } from "../../../components/ui/Toast";
 import { getCompanyProfile, getCompanyProfileById, getDisnakerProfile } from "../../../services/profile";
+import { getPositionGroups, getJobCategoryGroups, getEducationGroups } from "../../../services/site";
 
 export default function LowonganPage() {
   const router = useRouter();
@@ -30,6 +31,17 @@ export default function LowonganPage() {
   const [companyName, setCompanyName] = useState<string>("");
   const [disnakerId, setDisnakerId] = useState<string>("");
 
+  // Options state
+  const [positionOptions, setPositionOptions] = useState<SearchableSelectOption[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<SearchableSelectOption[]>([]);
+  const [educationOptions, setEducationOptions] = useState<SearchableSelectOption[]>([]);
+
+  const placementOptions: SearchableSelectOption[] = [
+    { label: "Dalam Kabupaten", value: "AKAD" },
+    { label: "Luar Kabupaten", value: "AKL" },
+    { label: "Luar Negeri", value: "AKAN" },
+  ];
+
   type Job = {
     id: string;
     company_id: string;
@@ -37,9 +49,11 @@ export default function LowonganPage() {
     companyName?: string;
     company?: string;
     job_title: string;
+    position_id?: string;
     job_type: "full-time" | "part-time" | "internship" | "contract" | "freelance";
     job_description: string;
     category: string;
+    placement?: string;
     min_salary: number;
     max_salary: number;
     experience_required: string;
@@ -88,6 +102,7 @@ export default function LowonganPage() {
 
   type NewJob = {
     posisi: string;
+    position_id?: string;
     sektor: string;
     tipe: UITipe;
     batasAkhir: string;
@@ -98,6 +113,7 @@ export default function LowonganPage() {
     min_salary: number;
     max_salary: number;
     work_setup: string;
+    placement?: string;
   };
 
   type ViewJob = {
@@ -118,6 +134,7 @@ export default function LowonganPage() {
     experience_required: string;
     education_required: string;
     skills_required: string;
+    placement?: string;
   };
 
   const [lowonganList, setLowonganList] = useState<Job[]>([]);
@@ -126,10 +143,53 @@ export default function LowonganPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(true);
-  const EMPTY_NEW_JOB: NewJob = { posisi: "", sektor: "", tipe: "Full-time", batasAkhir: "", deskripsi: "", experience_required: "", education_required: "", skills_required: "", min_salary: 0, max_salary: 0, work_setup: "WFO" };
+  const EMPTY_NEW_JOB: NewJob = { posisi: "", position_id: "", sektor: "", tipe: "Full-time", batasAkhir: "", deskripsi: "", experience_required: "", education_required: "", skills_required: "", min_salary: 0, max_salary: 0, work_setup: "WFO", placement: "" };
   const [newJob, setNewJob] = useState<NewJob>(EMPTY_NEW_JOB);
   const [submittedJob, setSubmittedJob] = useState(false);
   const [appCounts, setAppCounts] = useState<Record<string, { total: number; processed: number; approved: number }>>({});
+
+  type GroupItem = { id?: string; code?: string; name: string };
+  type GroupData = { id?: string; code?: string; name: string; items?: GroupItem[] };
+
+  const transformGroupsToOptions = useCallback((groups: GroupData[], valueKey: "id" | "name" = "name") => {
+    const opts: SearchableSelectOption[] = [];
+    groups.forEach((g) => {
+      opts.push({ value: `group-${g.id || g.name}`, label: g.name, isGroup: true });
+      if (Array.isArray(g.items)) {
+        g.items.forEach((item: GroupItem) => {
+          opts.push({ value: String(item[valueKey] || ""), label: item.name, indent: true });
+        });
+      }
+    });
+    return opts;
+  }, []);
+
+  useEffect(() => {
+    async function loadOptions() {
+      try {
+        const [posResp, catResp, eduResp] = await Promise.all([
+          getPositionGroups(),
+          getJobCategoryGroups(),
+          getEducationGroups()
+        ]);
+        
+        const posRaw = posResp.data || posResp;
+        const posData = Array.isArray(posRaw) ? posRaw : (posRaw.groups || []);
+        setPositionOptions(transformGroupsToOptions(posData, "id"));
+
+        const catRaw = catResp.data || catResp;
+        const catData = Array.isArray(catRaw) ? catRaw : (catRaw.groups || []);
+        setCategoryOptions(transformGroupsToOptions(catData, "name"));
+
+        const eduRaw = eduResp.data || eduResp;
+        const eduData = Array.isArray(eduRaw) ? eduRaw : (eduRaw.groups || []);
+        setEducationOptions(transformGroupsToOptions(eduData, "name"));
+      } catch (e) {
+        console.error("Failed to load dropdown options", e);
+      }
+    }
+    loadOptions();
+  }, [transformGroupsToOptions]);
 
   const enrichJobsWithCompanyName = useCallback(async (rows: Job[]) => {
     try {
@@ -266,6 +326,7 @@ export default function LowonganPage() {
       experience_required: j.experience_required,
       education_required: j.education_required,
       skills_required: j.skills_required,
+      placement: j.placement,
     }));
     return toView.filter((lowongan: ViewJob) => {
       const matchesSearch = lowongan.posisi.toLowerCase().includes(searchTerm.toLowerCase()) || lowongan.perusahaan.toLowerCase().includes(searchTerm.toLowerCase());
@@ -312,6 +373,7 @@ export default function LowonganPage() {
       const payload = {
         company_id: companyId,
         job_title: newJob.posisi,
+        position_id: newJob.position_id,
         job_type: jobTypeMap[newJob.tipe],
         job_description: newJob.deskripsi || "",
         category: newJob.sektor || "Umum",
@@ -321,11 +383,13 @@ export default function LowonganPage() {
         education_required: newJob.education_required || "",
         skills_required: newJob.skills_required || "",
         work_setup: newJob.work_setup || "WFO",
+        placement: newJob.placement,
         application_deadline: newJob.batasAkhir,
       } as const;
       if (editingId) {
         await updateJob(editingId, {
           job_title: payload.job_title,
+          position_id: payload.position_id,
           job_type: payload.job_type,
           job_description: payload.job_description,
           category: payload.category,
@@ -335,6 +399,7 @@ export default function LowonganPage() {
           education_required: payload.education_required,
           skills_required: payload.skills_required,
           work_setup: payload.work_setup,
+          placement: payload.placement,
           application_deadline: payload.application_deadline,
         });
       } else {
@@ -487,15 +552,43 @@ export default function LowonganPage() {
             </>
           }>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input label="Posisi" type="text" placeholder="Masukkan posisi" value={newJob.posisi} onChange={(e) => setNewJob({ ...newJob, posisi: e.target.value })} submitted={submittedJob} />
+              <SearchableSelect 
+                label="Posisi" 
+                value={newJob.position_id || ""} 
+                onChange={(v) => {
+                  const opt = positionOptions.find(o => o.value === v);
+                  setNewJob({ ...newJob, position_id: v, posisi: opt ? opt.label : "" });
+                }} 
+                options={positionOptions} 
+                submitted={submittedJob} 
+              />
               <SearchableSelect label="Tipe" value={newJob.tipe} onChange={(v) => setNewJob({ ...newJob, tipe: v as UITipe })} options={[{ value: "Full-time", label: "Full-time" }, { value: "Part-time", label: "Part-time" }, { value: "Shift", label: "Shift" }, { value: "Remote", label: "Remote" }, { value: "Kontrak", label: "Kontrak" }]} submitted={submittedJob} />
               <SearchableSelect label="Skema Kerja" value={newJob.work_setup} onChange={(v) => setNewJob({ ...newJob, work_setup: v })} options={[{ value: "WFO", label: "WFO" }, { value: "WFH", label: "WFH" }, { value: "Hybrid", label: "Hybrid" }]} submitted={submittedJob} />
               <Input label="Gaji Minimum" type="number" placeholder="0" value={newJob.min_salary} onChange={(e) => setNewJob({ ...newJob, min_salary: Number(e.target.value) })} submitted={submittedJob} />
               <Input label="Gaji Maksimum" type="number" placeholder="0" value={newJob.max_salary} onChange={(e) => setNewJob({ ...newJob, max_salary: Number(e.target.value) })} submitted={submittedJob} />
               <Input label="Batas Akhir" type="date" value={newJob.batasAkhir} onChange={(e) => setNewJob({ ...newJob, batasAkhir: e.target.value })} submitted={submittedJob} />
-              <SearchableSelect label="Kategori" value={newJob.sektor} onChange={(v) => setNewJob({ ...newJob, sektor: v })} options={[{ value: "IT", label: "IT" }, { value: "Manufaktur", label: "Manufaktur" }, { value: "Pertanian", label: "Pertanian" }, { value: "Kesehatan", label: "Kesehatan" }, { value: "Umum", label: "Umum" }]} submitted={submittedJob} />
+              <SearchableSelect 
+                label="Kategori" 
+                value={newJob.sektor} 
+                onChange={(v) => setNewJob({ ...newJob, sektor: v })} 
+                options={categoryOptions} 
+                submitted={submittedJob} 
+              />
               <Input label="Pengalaman" type="text" placeholder="Contoh: 2 tahun di bidang terkait" value={newJob.experience_required} onChange={(e) => setNewJob({ ...newJob, experience_required: e.target.value })} submitted={submittedJob} />
-              <SearchableSelect label="Pendidikan" value={newJob.education_required} onChange={(v) => setNewJob({ ...newJob, education_required: v })} options={[{ value: "", label: "Pilih..." }, { value: "SMA/SMK", label: "SMA/SMK" }, { value: "Diploma", label: "Diploma" }, { value: "S1", label: "S1" }, { value: "S2", label: "S2" }]} submitted={submittedJob} />
+              <SearchableSelect 
+                label="Pendidikan" 
+                value={newJob.education_required} 
+                onChange={(v) => setNewJob({ ...newJob, education_required: v })} 
+                options={educationOptions} 
+                submitted={submittedJob} 
+              />
+              <SearchableSelect 
+                label="Penempatan" 
+                value={newJob.placement || ""} 
+                onChange={(v) => setNewJob({ ...newJob, placement: v })} 
+                options={placementOptions} 
+                submitted={submittedJob} 
+              />
               <div className="md:col-span-2">
                 <TextEditor label="Deskripsi" value={newJob.deskripsi} onChange={(v) => setNewJob({ ...newJob, deskripsi: v })} placeholder="Detail tugas, tanggung jawab, dan kualifikasi" submitted={submittedJob} />
               </div>
@@ -540,6 +633,12 @@ export default function LowonganPage() {
                   <div>
                     <div className="text-sm text-gray-500">Tipe</div>
                     <div className="font-medium text-gray-900">{reviewJob.tipe || "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Penempatan</div>
+                    <div className="font-medium text-gray-900">
+                      {reviewJob.placement ? (placementOptions.find(p => p.value === reviewJob.placement)?.label || reviewJob.placement) : "-"}
+                    </div>
                   </div>
                 </div>
                 <div className="bg-white rounded-lg p-4 border grid grid-cols-2 gap-4">
@@ -639,6 +738,7 @@ export default function LowonganPage() {
                             const isoDeadline = raw?.application_deadline ? new Date(raw.application_deadline).toISOString().slice(0, 10) : "";
                             setNewJob({
                               posisi: raw?.job_title || job.posisi,
+                              position_id: raw?.position_id || "",
                               sektor: raw?.category || job.sektor,
                               tipe: job.tipe as UITipe,
                               batasAkhir: isoDeadline,
@@ -649,6 +749,7 @@ export default function LowonganPage() {
                               min_salary: typeof raw?.min_salary === "number" ? raw!.min_salary : 0,
                               max_salary: typeof raw?.max_salary === "number" ? raw!.max_salary : 0,
                               work_setup: raw?.work_setup || job.lokasi,
+                              placement: raw?.placement || "",
                             });
                             setShowForm(true);
                           }}

@@ -8,9 +8,11 @@ function authHeader(): Record<string, string> {
 export type JobPayload = {
   company_id: string;
   job_title: string;
+  position_id?: string;
   job_type: "full-time" | "part-time" | "internship" | "contract" | "freelance";
   job_description: string;
   category: string;
+  placement?: string;
   min_salary: number;
   max_salary: number;
   experience_required: string;

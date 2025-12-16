@@ -112,7 +112,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   );
 });
 
-type SearchableSelectOption = { value: string; label: string };
+export type SearchableSelectOption = { value: string; label: string; isGroup?: boolean; indent?: boolean };
 type SearchableSelectProps = {
   options: SearchableSelectOption[];
   value: string;
@@ -213,9 +213,15 @@ export function SearchableSelect({ options, value, onChange, placeholder = "Pili
             {filtered.length === 0 && <li className="px-3 py-2 text-sm text-gray-500">Tidak ada hasil</li>}
             {filtered.map((o) => (
               <li key={o.value}>
-                <button type="button" onClick={() => { onChange(o.value); setOpen(false); setQuery(""); }} className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${o.value === value ? "bg-secondary/20 text-primary font-medium" : "text-gray-900"}`}>
-                  {o.label}
-                </button>
+                {o.isGroup ? (
+                  <div className="w-full text-left px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 uppercase tracking-wider select-none">
+                    {o.label}
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => { onChange(o.value); setOpen(false); setQuery(""); }} className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${o.indent ? "pl-8" : ""} ${o.value === value ? "bg-secondary/20 text-primary font-medium" : "text-gray-900"}`}>
+                    {o.label}
+                  </button>
+                )}
               </li>
             ))}
           </ul>

@@ -65,3 +65,53 @@ export async function deleteSiteContent(id: string, section?: string) {
   if (!resp.ok) throw new Error("Gagal menghapus konten situs");
   return resp.json();
 }
+
+export async function getJobCategoryGroups() {
+  const resp = await fetch(`${BASE}/api/admin/job-category-groups`, { headers: { ...authHeader() } });
+  if (!resp.ok) throw new Error("Gagal mengambil grup kategori");
+  return resp.json();
+}
+
+export async function upsertJobCategoryGroups(payload: { groups: { id?: string; code?: string; name: string; items?: { id?: string; code?: string; name: string }[] }[] }) {
+  const resp = await fetch(`${BASE}/api/admin/job-category-groups/upsert`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify(payload),
+  });
+  if (!resp.ok) throw new Error("Gagal menyimpan grup kategori");
+  return resp.json();
+}
+
+export async function getEducationGroups() {
+  const resp = await fetch(`${BASE}/api/admin/education-groups`, { headers: { ...authHeader() } });
+  if (!resp.ok) throw new Error("Gagal mengambil grup pendidikan");
+  return resp.json();
+}
+
+export async function upsertEducationGroups(payload: { groups: { id?: string; code?: string; name: string; items?: { id?: string; code?: string; name: string }[] }[] }) {
+  const resp = await fetch(`${BASE}/api/admin/education-groups/upsert`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify(payload),
+  });
+  if (!resp.ok) throw new Error("Gagal menyimpan grup pendidikan");
+  return resp.json();
+}
+
+
+
+export async function getPositionGroups() {
+  const resp = await fetch(`${BASE}/api/admin/position-groups`, { headers: { ...authHeader() } });
+  if (!resp.ok) throw new Error("Gagal mengambil grup jabatan");
+  return resp.json();
+}
+
+export async function upsertPositionGroups(payload: { groups: { id?: string; code?: string; name: string; items?: { id?: string; code?: string; name: string }[] }[] }) {
+  const resp = await fetch(`${BASE}/api/admin/position-groups/upsert`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify(payload),
+  });
+  if (!resp.ok) throw new Error("Gagal menyimpan grup jabatan");
+  return resp.json();
+}
