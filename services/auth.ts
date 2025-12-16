@@ -32,28 +32,6 @@ export async function login(credential: { email?: string; no_handphone?: string 
   return { role: String(data.role), id: String(data.id), token: String(data.token || "") };
 }
 
-export async function requestOtp(channel: "email" | "phone", target: string, user_id?: string) {
-  const resp = await fetch(`${BASE}/api/user/request-otp`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ channel, target, user_id }),
-  });
-  const data = await resp.json().catch(() => ({}));
-  if (!resp.ok) throw new Error(String((data && data.message) || "Gagal mengirim OTP"));
-  return data;
-}
-
-export async function verifyOtp(channel: "email" | "phone", target: string, code: string) {
-  const resp = await fetch(`${BASE}/api/user/verify-otp`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ channel, target, code }),
-  });
-  const data = await resp.json().catch(() => ({}));
-  if (!resp.ok) throw new Error(String((data && data.message) || "Verifikasi OTP gagal"));
-  return data as { ok: boolean };
-}
-
 export function startSession(role: string, userId: string | null, token?: string) {
   const t = token || "";
   localStorage.setItem("token", t);

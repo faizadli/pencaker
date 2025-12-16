@@ -1,15 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Input, Textarea, SearchableSelect, SegmentedToggle } from "../../../components/ui/field";
-import { login, registerUser, startSession, requestOtp, verifyOtp } from "../../../services/auth";
+import { Input, Textarea, SearchableSelect } from "../../../components/ui/field";
+import { login, registerUser, startSession } from "../../../services/auth";
 import { presignCompanyProfileUpload, upsertCompanyProfile, getUserById } from "../../../services/profile";
 import { listDistricts, listVillages } from "../../../services/wilayah";
-import { useToast } from "../../../components/ui/Toast";
 
 export default function RegisterCompany() {
   const router = useRouter();
-  const { showSuccess, showError } = useToast();
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") || "" : "";
     const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
@@ -37,12 +35,6 @@ export default function RegisterCompany() {
     about_company: "",
   });
   const [account, setAccount] = useState({ email: "", no_handphone: "", password: "", confirm: "" });
-  const [otpCode, setOtpCode] = useState<string>("");
-  const [otpChannel, setOtpChannel] = useState<"phone" | "email">("phone");
-  const [otpSending, setOtpSending] = useState(false);
-  const [otpVerifying, setOtpVerifying] = useState(false);
-  const [otpPhoneVerified, setOtpPhoneVerified] = useState(false);
-  const [otpEmailVerified, setOtpEmailVerified] = useState(false);
   
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [finalized, setFinalized] = useState(false);
@@ -64,11 +56,6 @@ export default function RegisterCompany() {
         setLoading(false);
         return;
       }
-      if (!otpPhoneVerified) {
-        setError("Verifikasi OTP nomor HP terlebih dahulu.");
-        setLoading(false);
-        return;
-      }
       if ((account.password || "").length < 8) {
         setError("Password minimal 8 karakter.");
         setLoading(false);
@@ -84,60 +71,6 @@ export default function RegisterCompany() {
       setError("Gagal membuat akun perusahaan.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const sendOtpSms = async () => {
-    const phone = String(account.no_handphone || "").trim();
-    if (!phone) { setError("Isi nomor HP terlebih dahulu."); return; }
-    setOtpSending(true);
-    try {
-      await requestOtp("phone", phone);
-      showSuccess("OTP SMS dikirim.");
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Gagal mengirim OTP SMS.";
-      showError(msg);
-    } finally {
-      setOtpSending(false);
-    }
-  };
-
-  const sendOtpEmail = async () => {
-    const email = String(account.email || "").trim();
-    if (!email) { setError("Isi email terlebih dahulu jika ingin OTP via email."); return; }
-    setOtpSending(true);
-    try {
-      await requestOtp("email", email);
-      showSuccess("OTP Email dikirim.");
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Gagal mengirim OTP Email.";
-      showError(msg);
-    } finally {
-      setOtpSending(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    const code = String(otpCode || "").trim();
-    if (!code) { setError("Masukkan kode OTP terlebih dahulu."); return; }
-    const channel = otpChannel;
-    const target = channel === "phone" ? String(account.no_handphone || "").trim() : String(account.email || "").trim();
-    if (!target) { setError(channel === "phone" ? "Nomor HP belum diisi." : "Email belum diisi."); return; }
-    setOtpVerifying(true);
-    try {
-      const res = await verifyOtp(channel, target, code);
-      if (res.ok) {
-        if (channel === "phone") setOtpPhoneVerified(true);
-        else setOtpEmailVerified(true);
-        showSuccess(`Verifikasi OTP ${channel === "phone" ? "SMS" : "Email"} berhasil.`);
-      } else {
-        showError("Kode OTP tidak valid atau kadaluarsa.");
-      }
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Gagal verifikasi OTP.";
-      showError(msg);
-    } finally {
-      setOtpVerifying(false);
     }
   };
 
@@ -345,27 +278,6 @@ export default function RegisterCompany() {
             </div>
             <div>
               <Input label="Nomor Handphone" icon="ri-phone-line" type="tel" value={account.no_handphone} onChange={(e) => { setAccount({ ...account, no_handphone: e.target.value }); }} placeholder="08xxxxxxxxxx" required />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button type="button" onClick={sendOtpSms} disabled={otpSending} className="px-4 py-2.5 rounded-xl bg-secondary/20 text-primary hover:bg-secondary/30 flex items-center gap-2">
-                {otpSending ? (<><div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div><span>Mengirim...</span></>) : (<><i className="ri-send-plane-2-line"></i><span>Kirim OTP SMS</span></>)}
-              </button>
-              <button type="button" onClick={sendOtpEmail} disabled={otpSending || !account.email} className="px-4 py-2.5 rounded-xl bg-secondary/20 text-primary hover:bg-secondary/30 flex items-center gap-2 disabled:opacity-60">
-                {otpSending ? (<><div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div><span>Mengirim...</span></>) : (<><i className="ri-mail-send-line"></i><span>Kirim OTP Email</span></>)}
-              </button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
-              <Input label="Kode OTP" icon="ri-shield-keyhole-line" type="text" value={otpCode} onChange={(e) => setOtpCode(e.target.value)} placeholder="6 digit" />
-              <SegmentedToggle options={[{ value: "phone", label: "SMS" }, { value: "email", label: "Email" }]} value={otpChannel} onChange={(v) => setOtpChannel(v as "phone" | "email")} />
-            </div>
-            <div className="flex items-center gap-3">
-              <button type="button" onClick={handleVerifyOtp} disabled={otpVerifying} className="px-4 py-2.5 rounded-xl bg-primary text-white hover:bg-primary flex items-center gap-2">
-                {otpVerifying ? (<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span>Memverifikasi...</span></>) : (<><i className="ri-shield-check-line"></i><span>Verifikasi OTP</span></>)}
-              </button>
-              <div className="text-sm text-gray-600 flex items-center gap-3">
-                <span className={`flex items-center gap-1 ${otpPhoneVerified ? "text-primary" : "text-gray-500"}`}><i className={otpPhoneVerified ? "ri-check-double-line" : "ri-shield-line"}></i><span>SMS terverifikasi</span></span>
-                <span className={`flex items-center gap-1 ${otpEmailVerified ? "text-primary" : "text-gray-500"}`}><i className={otpEmailVerified ? "ri-check-double-line" : "ri-shield-line"}></i><span>Email terverifikasi</span></span>
-              </div>
             </div>
             <div>
               <Input label="Password" icon="ri-lock-2-line" type="password" value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} placeholder="Minimal 8 karakter" required />
