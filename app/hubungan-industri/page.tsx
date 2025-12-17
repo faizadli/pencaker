@@ -6,6 +6,7 @@ import { Bar, Line, Pie } from "react-chartjs-2";
 import Link from "next/link";
 import Card from "../../components/ui/Card";
 import { getHomeContent } from "../../services/site";
+import { stripHtml, formatDate } from "../../utils/format";
 
 export default function HubunganIndustriPage() {
   const tugas = [
@@ -78,21 +79,6 @@ export default function HubunganIndustriPage() {
     })();
   }, []);
 
-  const toDate = (s: string) => {
-    if (!s) {
-      const d = new Date();
-      return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
-    }
-    try {
-      const d = new Date(s);
-      return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
-    } catch { return s; }
-  };
-  const toExcerpt = (html?: string, max = 140) => {
-    const txt = String(html || "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
-    if (txt.length <= max) return txt;
-    return txt.slice(0, max).replace(/\s+\S*$/, "") + "…";
-  };
   const toTime = (s?: string) => {
     if (!s) return 0;
     const d = new Date(s);
@@ -137,11 +123,11 @@ export default function HubunganIndustriPage() {
                               <Image src={thumb} alt={n.judul || "Thumbnail"} width={800} height={320} className="w-full h-40 sm:h-48 object-cover" />
                               <div className="p-4">
                                 <h4 className="font-bold text-primary text-base sm:text-lg mb-2 hover:text-primary transition-colors">{n.judul || "Tanpa Judul"}</h4>
-                                <p className="text-gray-600 mb-3 leading-relaxed text-sm">{toExcerpt(n.isi, 140)}</p>
+                                <p className="text-gray-600 mb-3 leading-relaxed text-sm">{stripHtml(n.isi).slice(0, 140) + (stripHtml(n.isi).length > 140 ? "..." : "")}</p>
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2 text-xs text-gray-500">
                                     <i className="ri-calendar-line"></i>
-                                    <span>{toDate(n.tanggal)}</span>
+                                    <span>{formatDate(n.tanggal)}</span>
                                   </div>
                                 </div>
                               </div>

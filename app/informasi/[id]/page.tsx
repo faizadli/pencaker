@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getHomeContent } from "../../../services/site";
 import EmptyState from "../../../components/ui/EmptyState";
 import { useParams } from "next/navigation";
+import { formatDate } from "../../../utils/format";
 
 type NewsItem = { id: string; data: { judul?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string } };
 
@@ -26,17 +27,6 @@ export default function NewsDetailPage() {
       }
     })();
   }, [id]);
-
-  const formatDate = (s?: string) => {
-    const v = String(s || "");
-    if (!v) return "";
-    try {
-      const d = new Date(v);
-      return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
-    } catch {
-      return v;
-    }
-  };
 
   if (loading) {
     return <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">Memuat...</div>;

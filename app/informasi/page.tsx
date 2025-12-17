@@ -6,6 +6,7 @@ import { getHomeContent } from "../../services/site";
 import { useToast } from "../../components/ui/Toast";
 import { Input, SearchableSelect } from "../../components/ui/field";
 import Pagination from "../../components/ui/Pagination";
+import { stripHtml, formatDate } from "../../utils/format";
 
 type NewsItem = { id: string; data: { judul?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string } };
 
@@ -28,17 +29,6 @@ export default function InformasiPage() {
     })();
   }, [showError]);
 
-  const formatDate = (s?: string) => {
-    const v = String(s || "");
-    try {
-      const d = v ? new Date(v) : new Date();
-      return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
-    } catch {
-      const d = new Date();
-      return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
-    }
-  };
-  const toText = (html?: string) => String(html || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   const categories = (() => {
     const set = new Set<string>();
     items.forEach((n) => { const c = String(n.data?.kategori || "Informasi"); if (c) set.add(c); });
@@ -46,7 +36,7 @@ export default function InformasiPage() {
   })();
   const filtered = items.filter((n) => {
     const title = String(n.data?.judul || "");
-    const body = toText(n.data?.isi);
+    const body = stripHtml(n.data?.isi || "");
     const cat = String(n.data?.kategori || "Informasi");
     const q = query.trim().toLowerCase();
     const matchSearch = q === "" || title.toLowerCase().includes(q) || body.toLowerCase().includes(q);
@@ -96,7 +86,7 @@ export default function InformasiPage() {
                 const date = formatDate(rawDate);
                 const cat = String(n.data?.kategori || "Informasi");
                 const thumb = String(n.data?.gambar || "");
-                const excerpt = toText(n.data?.isi).slice(0, 160);
+                const excerpt = stripHtml(n.data?.isi || "").slice(0, 160);
                 return (
                   <div key={n.id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 transform hover:-translate-y-1">
                     {thumb ? (

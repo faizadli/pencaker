@@ -5,6 +5,7 @@ import Link from "next/link";
 import { listPublicJobs } from "../services/jobs";
 import { getHomeContent, getPublicSiteSettings } from "../services/site";
 import { getPublicCompanyById } from "../services/company";
+import { stripHtml, formatDate } from "../utils/format";
 
 export default function HomePage() {
   type SiteContentItem<T> = { id: string; page: "home" | "about"; section: string; data: T; status: "PUBLISHED" | "DRAFT"; sort_order: number };
@@ -111,7 +112,7 @@ export default function HomePage() {
             id: String(n.id || Math.random()),
             judul: String(n.data?.judul || n.data?.title || ""),
             tanggal: String(n.data?.tanggal || created || ""),
-            ringkasan: String(n.data?.isi || n.data?.ringkasan || ""),
+            ringkasan: stripHtml(n.data?.isi || n.data?.ringkasan || "").slice(0, 160) + "...",
             gambar: String(n.data?.gambar || "https://picsum.photos/800/320"),
           };
         }));
@@ -128,25 +129,6 @@ export default function HomePage() {
     };
     loadContent();
   }, []);
-
-  const toDate = (s?: string) => {
-    try {
-      const d = s ? new Date(s) : new Date();
-      return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
-    } catch {
-      const d = new Date();
-      return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
-    }
-  };
-  
-
-  
-
-  
-
-  
-
-  
 
   const toggleFaq = (id: string) => setActiveFaq(activeFaq === id ? null : id);
 
@@ -327,7 +309,7 @@ export default function HomePage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-sm text-gray-500">
                           <i className="ri-calendar-line"></i>
-                          <span>{toDate(news.tanggal)}</span>
+                          <span>{formatDate(news.tanggal)}</span>
                         </div>
                         <Link href={`/informasi/${encodeURIComponent(news.id)}`} className="text-primary hover:text-[var(--color-primary-dark)] font-medium flex items-center gap-1 transition-colors">
                           Baca Selengkapnya <i className="ri-arrow-right-line"></i>

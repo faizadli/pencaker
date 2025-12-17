@@ -9,14 +9,14 @@ import Pagination from "../../../components/ui/Pagination";
 import Card from "../../../components/ui/Card";
 import { listSiteContents, upsertSiteContent, deleteSiteContent } from "../../../services/site";
 import { useToast } from "../../../components/ui/Toast";
+
 type SiteContentItem<T> = { id: string; data: T; status: "PUBLISHED" | "DRAFT" };
 type ListResponse<T> = { data: SiteContentItem<T>[] };
 
 export default function KontenPage() {
-  type Tab = "berita" | "faq" | "partners" | "testimonials" | "bkk" | "about";
+  type Tab = "faq" | "partners" | "testimonials" | "bkk" | "about";
   type AboutSection = "about_profile" | "about_focus" | "about_mission" | "about_team" | "about_running_text";
   type PubStatus = "Publikasi" | "Draft";
-  type Berita = { id: string; judul: string; tanggal: string; kategori: string; isi: string; gambar: string; status: "Publikasi" | "Draft" };
   type Faq = { id: string; pertanyaan: string; jawaban: string; kategori: string; status: "Publikasi" | "Draft" };
   type Partner = { id: string; name: string; logo: string; status: "Publikasi" | "Draft" };
   type Testimonial = { id: string; nama: string; pekerjaan: string; perusahaan: string; testimoni: string; foto: string; status: "Publikasi" | "Draft" };
@@ -27,16 +27,14 @@ export default function KontenPage() {
   type RunningText = { id: string; text: string; status: "Publikasi" | "Draft" };
   
 
-  const [activeTab, setActiveTab] = useState<Tab>("berita");
-  const [contentModal, setContentModal] = useState<{ section: "partners" | "testimonials" | "news" | "faqs" | "bkk"; id?: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("faq");
+  const [contentModal, setContentModal] = useState<{ section: "partners" | "testimonials" | "faqs" | "bkk"; id?: string } | null>(null);
   const [partnerLogoPreview, setPartnerLogoPreview] = useState<string>("");
   const [testimonialPhotoPreview, setTestimonialPhotoPreview] = useState<string>("");
   const [teamImagePreview, setTeamImagePreview] = useState<string>("");
-  const [newsImagePreview, setNewsImagePreview] = useState<string>("");
   const [aboutModal, setAboutModal] = useState<{ section: "profile" | "focus_areas" | "mission_points" | "team" | "running_text"; id?: string } | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [editBerita, setEditBerita] = useState<Berita | null>(null);
   const [editFaq, setEditFaq] = useState<Faq | null>(null);
   const [editPartner, setEditPartner] = useState<Partner | null>(null);
   const [editTestimonial, setEditTestimonial] = useState<Testimonial | null>(null);
@@ -49,7 +47,6 @@ export default function KontenPage() {
   const [editRunningText, setEditRunningText] = useState<RunningText | null>(null);
   
 
-  const [beritaList, setBeritaList] = useState<Berita[]>([]);
   const [faqList, setFaqList] = useState<Faq[]>([]);
   const [partnersList, setPartnersList] = useState<Partner[]>([]);
   const [testimonialsList, setTestimonialsList] = useState<Testimonial[]>([]);
@@ -65,19 +62,6 @@ export default function KontenPage() {
 
   useEffect(() => {
     (async () => {
-      try {
-        const beritaResp = await listSiteContents({ page: "home", section: "news", published: false }) as ListResponse<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>;
-        const rows = Array.isArray(beritaResp.data) ? beritaResp.data : [];
-        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>) => ({
-          id: String(r.id),
-          judul: String(r.data?.judul || r.data?.title || ""),
-          tanggal: String(r.data?.tanggal || (r as unknown as Record<string, unknown>)?.["created_at"] || (r as unknown as Record<string, unknown>)?.["createdAt"] || (r as unknown as Record<string, unknown>)?.["updated_at"] || (r as unknown as Record<string, unknown>)?.["updatedAt"] || ""),
-          kategori: String(r.data?.kategori || "Informasi"),
-          isi: String(r.data?.isi || ""),
-          gambar: String(r.data?.gambar || ""),
-          status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"],
-        })));
-      } catch {}
       try {
         const faqResp = await listSiteContents({ page: "home", section: "faqs", published: false }) as ListResponse<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string; kategori?: string }>;
         const rows = Array.isArray(faqResp.data) ? faqResp.data : [];
@@ -132,11 +116,7 @@ export default function KontenPage() {
   }, []);
 
   const handleAdd = (section: Tab) => {
-    if (section === "berita") {
-      const item: Berita = { id: "__new__", judul: "", tanggal: "", kategori: "Informasi", isi: "", gambar: "", status: "Draft" };
-      setEditBerita(item);
-      setContentModal({ section: "news", id: "__new__" });
-    } else if (section === "faq") {
+    if (section === "faq") {
       const item: Faq = { id: "__new__", pertanyaan: "", jawaban: "", kategori: "Umum", status: "Draft" };
       setEditFaq(item);
       setContentModal({ section: "faqs", id: "__new__" });
@@ -159,9 +139,8 @@ export default function KontenPage() {
 
   const handleEdit = (
     section: Tab,
-    item: Berita | Faq | Partner | Testimonial | Bkk
+    item: Faq | Partner | Testimonial | Bkk
   ) => {
-    if (section === "berita") { setEditBerita(item as Berita); setContentModal({ section: "news", id: String(item.id) }); try { const v = String((item as Berita).gambar || ""); if (v) presignDownload(v).then((d) => setNewsImagePreview(d.url)).catch(() => {}); } catch {} }
     if (section === "faq") { setEditFaq(item as Faq); setContentModal({ section: "faqs", id: String(item.id) }); }
     if (section === "partners") { setEditPartner(item as Partner); setContentModal({ section: "partners", id: String(item.id) }); try { const v = String((item as Partner).logo || ""); if (v) presignDownload(v).then((d) => setPartnerLogoPreview(d.url)).catch(() => {}); } catch {} }
     if (section === "testimonials") { setEditTestimonial(item as Testimonial); setContentModal({ section: "testimonials", id: String(item.id) }); try { const v = String((item as Testimonial).foto || ""); if (v) presignDownload(v).then((d) => setTestimonialPhotoPreview(d.url)).catch(() => {}); } catch {} }
@@ -171,27 +150,7 @@ export default function KontenPage() {
 
   const handleSave = async (section: Tab | AboutSection, id: string) => {
     const upsertId = id === "__new__" ? undefined : id;
-    if (section === "berita" && editBerita) {
-      setContentSubmitted(true);
-      const htmlEmpty = String(editBerita.isi || "").replace(/<[^>]*>/g, "").trim() === "";
-      if (!String(editBerita.judul || "").trim() || htmlEmpty) { showError("Lengkapi judul dan isi berita"); return; }
-      setBeritaList(beritaList.map((item) => (item.id === id ? { ...editBerita } : item)));
-      try {
-        await upsertSiteContent({ id: upsertId, page: "home", section: "news", data: { judul: editBerita.judul, tanggal: editBerita.tanggal, kategori: editBerita.kategori, isi: editBerita.isi, gambar: editBerita.gambar }, status: editBerita.status === "Publikasi" ? "PUBLISHED" : "DRAFT", sort_order: 0 });
-        const beritaResp = await listSiteContents({ page: "home", section: "news", published: false }) as ListResponse<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>;
-        const rows = Array.isArray(beritaResp.data) ? beritaResp.data : [];
-        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>) => ({
-          id: String(r.id),
-          judul: String(r.data?.judul || r.data?.title || ""),
-          tanggal: String(r.data?.tanggal || (r as unknown as Record<string, unknown>)?.["created_at"] || (r as unknown as Record<string, unknown>)?.["createdAt"] || (r as unknown as Record<string, unknown>)?.["updated_at"] || (r as unknown as Record<string, unknown>)?.["updatedAt"] || ""),
-          kategori: String(r.data?.kategori || "Informasi"),
-          isi: String(r.data?.isi || ""),
-          gambar: String(r.data?.gambar || ""),
-          status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"],
-        })));
-        showSuccess("Berita disimpan");
-      } catch {}
-    } else if (section === "faq" && editFaq) {
+    if (section === "faq" && editFaq) {
       setContentSubmitted(true);
       if (!String(editFaq.pertanyaan || "").trim() || !String(editFaq.jawaban || "").trim()) { showError("Lengkapi pertanyaan dan jawaban"); return; }
       setFaqList(faqList.map((item) => (item.id === id ? { ...editFaq } : item)));
@@ -290,7 +249,6 @@ export default function KontenPage() {
       } catch {}
     }
     
-    setEditBerita(null);
     setEditFaq(null);
     setEditPartner(null);
     setEditTestimonial(null);
@@ -303,9 +261,9 @@ export default function KontenPage() {
     
   };
 
-  const uploadContentImage = async (section: "partners" | "testimonials" | "team" | "news", file: File) => {
+  const uploadContentImage = async (section: "partners" | "testimonials" | "team", file: File) => {
     try {
-      const folder = section === "partners" ? "site-contents/partners" : section === "testimonials" ? "site-contents/testimonials" : section === "team" ? "site-contents/team" : "site-contents/news";
+      const folder = section === "partners" ? "site-contents/partners" : section === "testimonials" ? "site-contents/testimonials" : "site-contents/team";
       const { url, key, public_url } = await presignUpload(folder, file.name, file.type);
       await fetch(url, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
       if (section === "partners" && editPartner) {
@@ -323,18 +281,12 @@ export default function KontenPage() {
         setEditTeam({ ...editTeam, image: saved });
         try { const d = await presignDownload(saved); setTeamImagePreview(d.url); } catch {}
       }
-      if (section === "news" && editBerita) {
-        const saved = public_url || key;
-        setEditBerita({ ...(editBerita as Berita), gambar: saved });
-        try { const d = await presignDownload(saved); setNewsImagePreview(d.url); } catch {}
-      }
     } catch {}
   };
 
   const handleDelete = async (section: Tab | AboutSection, id: string) => {
     try {
       const secMap: Record<Tab | AboutSection, string> = {
-        berita: "news",
         faq: "faqs",
         partners: "partners",
         testimonials: "testimonials",
@@ -350,21 +302,7 @@ export default function KontenPage() {
       await deleteSiteContent(id, sec);
       showSuccess("Data dihapus");
     } catch {}
-    if (section === "berita") {
-      try {
-        const beritaResp = await listSiteContents({ page: "home", section: "news", published: false }) as ListResponse<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>;
-        const rows = Array.isArray(beritaResp.data) ? beritaResp.data : [];
-        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>) => ({
-          id: String(r.id),
-          judul: String(r.data?.judul || r.data?.title || ""),
-          tanggal: String(r.data?.tanggal || (r as unknown as Record<string, unknown>)?.["created_at"] || (r as unknown as Record<string, unknown>)?.["createdAt"] || (r as unknown as Record<string, unknown>)?.["updated_at"] || (r as unknown as Record<string, unknown>)?.["updatedAt"] || ""),
-          kategori: String(r.data?.kategori || "Informasi"),
-          isi: String(r.data?.isi || ""),
-          gambar: String(r.data?.gambar || ""),
-          status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"],
-        })));
-      } catch {}
-    } else if (section === "faq") {
+    if (section === "faq") {
       try {
         const faqResp = await listSiteContents({ page: "home", section: "faqs", published: false }) as ListResponse<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string; kategori?: string }>;
         const rows = Array.isArray(faqResp.data) ? faqResp.data : [];
@@ -440,16 +378,6 @@ export default function KontenPage() {
     }
   };
 
-  const formatDate = (s?: string) => {
-    try {
-      const d = s ? new Date(s) : new Date();
-      return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
-    } catch {
-      const d = new Date();
-      return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
-    }
-  };
-
   return (
     <>
       <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
@@ -460,7 +388,6 @@ export default function KontenPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard title="Total Berita" value={beritaList.length} change="" color="var(--color-secondary)" icon="ri-article-line" />
             <StatCard title="FAQ Terbit" value={faqList.filter((f) => f.status === "Publikasi").length} change="" color="var(--color-danger)" icon="ri-question-line" />
             <StatCard title="Mitra" value={partnersList.length} change="" color="var(--color-primary)" icon="ri-team-line" />
             
@@ -469,7 +396,6 @@ export default function KontenPage() {
           <Card className="mb-6" >
             <div className="flex overflow-x-auto">
               {[
-                { id: "berita", label: "📰 Berita", icon: "ri-article-line" },
                 { id: "faq", label: "❓ FAQ", icon: "ri-question-line" },
                 { id: "partners", label: "🤝 Mitra", icon: "ri-team-line" },
                 { id: "testimonials", label: "💬 Testimoni", icon: "ri-chat-1-line" },
@@ -483,44 +409,6 @@ export default function KontenPage() {
               ))}
             </div>
           </Card>
-
-          {activeTab === "berita" && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-primary">Berita & Artikel</h2>
-                <button onClick={() => handleAdd("berita")} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2">
-                  <i className="ri-add-line"></i>
-                  Tambah Berita
-                </button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {beritaList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize).map((berita) => (
-                <div key={berita.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-                  <div className="p-6">
-                    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-                      <div className="flex-1">
-                        <h3 className="font-bold text-primary text-lg">{berita.judul}</h3>
-                        <div className="flex items-center gap-3 mt-2 flex-wrap">
-                          <span className="text-sm text-gray-500">{formatDate(berita.tanggal)}</span>
-                          <span className={`px-2 py-1 text-xs rounded-full ${getKategoriColor(berita.kategori)}`}>{berita.kategori}</span>
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(berita.status)}`}>{berita.status}</span>
-                        </div>
-                        <p className="text-sm text-gray-500 mt-3">{berita.isi}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={() => handleEdit("berita", berita)} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1">
-                          <i className="ri-edit-line"></i>
-                          Edit
-                        </button>
-                        <button onClick={() => handleDelete("berita", berita.id)} className="px-3 py-2 text-sm border border-red-200 text-red-700 rounded-lg hover:bg-red-50 transition flex items-center gap-1"><i className="ri-delete-bin-line"></i>Hapus</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              </div>
-            </div>
-          )}
 
           {activeTab === "about" && (
             <div className="space-y-6">
@@ -734,7 +622,7 @@ export default function KontenPage() {
           )}
 
           {contentModal && (
-            <Modal open={true} size={contentModal.section === "news" ? "xl" : "md"} title={`${contentModal.id === "__new__" ? "Tambah" : "Edit"} ${contentModal.section === "partners" ? "Mitra" : contentModal.section === "testimonials" ? "Testimoni" : contentModal.section === "news" ? "Berita" : contentModal.section === "faqs" ? "FAQ" : "BKK"}`} onClose={() => setContentModal(null)} actions={
+            <Modal open={true} size="md" title={`${contentModal.id === "__new__" ? "Tambah" : "Edit"} ${contentModal.section === "partners" ? "Mitra" : contentModal.section === "testimonials" ? "Testimoni" : contentModal.section === "faqs" ? "FAQ" : "BKK"}`} onClose={() => setContentModal(null)} actions={
               <>
                 <button onClick={() => {
                   setContentSubmitted(true);
@@ -742,8 +630,6 @@ export default function KontenPage() {
                     handleSave("partners", (contentModal.id || editPartner.id));
                   } else if (contentModal.section === "testimonials" && editTestimonial) {
                     handleSave("testimonials", (contentModal.id || editTestimonial.id));
-                  } else if (contentModal.section === "news" && editBerita) {
-                    handleSave("berita", (contentModal.id || editBerita.id));
                   } else if (contentModal.section === "faqs" && editFaq) {
                     handleSave("faq", (contentModal.id || editFaq.id));
                   } else if (contentModal.section === "bkk" && editBkk) {
@@ -773,29 +659,6 @@ export default function KontenPage() {
                   <Input type="file" accept="image/*" label="Foto Testimoni" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) uploadContentImage("testimonials", f); }} />
                   {testimonialPhotoPreview && (<Image src={testimonialPhotoPreview} alt="Foto" width={96} height={96} className="w-24 h-24 object-cover border rounded" />)}
                   <SearchableSelect value={editTestimonial.status} onChange={(v) => setEditTestimonial({ ...editTestimonial, status: v as Testimonial["status"] })} options={[{ value: "Draft", label: "Draft" }, { value: "Publikasi", label: "Publikasi" }]} required submitted={contentSubmitted} />
-                </div>
-              )}
-              {contentModal.section === "news" && editBerita && (
-                <div className="space-y-3">
-                  <Input type="text" value={editBerita.judul} onChange={(e) => setEditBerita({ ...(editBerita as Berita), judul: e.target.value })} placeholder="Judul berita" className="w-full" required submitted={contentSubmitted} />
-                  <TextEditor value={editBerita.isi} onChange={(v) => setEditBerita({ ...(editBerita as Berita), isi: v })} placeholder="Isi konten berita..." required submitted={contentSubmitted} />
-                  <SearchableSelect
-                    label="Kategori"
-                    value={editBerita.kategori}
-                    onChange={(v) => setEditBerita({ ...(editBerita as Berita), kategori: v })}
-                    options={[
-                      { value: "Pelatihan", label: "Pelatihan" },
-                      { value: "Penempatan", label: "Penempatan" },
-                      { value: "Hubungan Industri", label: "Hubungan Industri" },
-                      { value: "Transmigrasi", label: "Transmigrasi" },
-                      { value: "Informasi", label: "Informasi" },
-                    ]}
-                    required
-                    submitted={contentSubmitted}
-                  />
-                  <Input type="file" accept="image/*,application/pdf" label="Upload Thumbnail" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) uploadContentImage("news", f); }} />
-                  {newsImagePreview && (<Image src={newsImagePreview} alt="Thumbnail Berita" width={256} height={160} className="w-64 h-40 object-cover border rounded-xl" />)}
-                  <SearchableSelect value={editBerita.status} onChange={(v) => setEditBerita({ ...(editBerita as Berita), status: v as Berita["status"] })} options={[{ value: "Draft", label: "Draft" }, { value: "Publikasi", label: "Publikasi" }]} />
                 </div>
               )}
               {contentModal.section === "faqs" && editFaq && (
@@ -891,7 +754,6 @@ export default function KontenPage() {
 
           <div className="mt-4">
             <Pagination page={page} pageSize={pageSize} total={(
-              activeTab === "berita" ? beritaList.length :
               activeTab === "faq" ? faqList.length :
               activeTab === "partners" ? partnersList.length :
               activeTab === "testimonials" ? testimonialsList.length :

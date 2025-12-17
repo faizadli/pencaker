@@ -96,6 +96,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
     { name: "Pelatihan", icon: "ri-book-open-line", path: "/dashboard/pelatihan" },
     { name: "Pengaduan", icon: "ri-alert-line", path: "/dashboard/pengaduan" },
     { name: "Laporan", icon: "ri-file-chart-line", path: "/dashboard/laporan" },
+    { name: "Berita", icon: "ri-newspaper-line", path: "/dashboard/berita" },
     { name: "Konten Website", icon: "ri-pages-line", path: "/dashboard/konten" },
     { name: "User Management", icon: "ri-shield-user-line", path: "/dashboard/users" },
     { name: "Pengaturan", icon: "ri-settings-2-line", path: "/dashboard/pengaturan" },
@@ -110,7 +111,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
       if (i.path === "/dashboard/lowongan") return permissionCodes.includes("lowongan.read") && (role !== "company" || companyApproved);
       if (i.path === "/dashboard/pencaker") return permissionCodes.includes("pencaker.read");
       if (i.path === "/dashboard/users") return permissionCodes.includes("users.read");
-      if (i.path === "/dashboard/konten") return permissionCodes.includes("konten.read");
+      if (i.path === "/dashboard/konten" || i.path === "/dashboard/berita") return permissionCodes.includes("konten.read");
       if (i.path === "/dashboard/pengaturan") return permissionCodes.includes("pengaturan.read");
       if (i.path === "/dashboard/pelatihan") return permissionCodes.includes("pelatihan.read");
       if (i.path === "/dashboard/pengaduan") return permissionCodes.includes("pengaduan.read");
