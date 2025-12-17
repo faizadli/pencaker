@@ -146,7 +146,7 @@ export default function Navbar() {
                 </Link>
                 <Link href="/jobs" className={isRoute("/jobs") ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"}>Lowongan</Link>
                 <Link href="/bkk" className={isRoute("/bkk") ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"}>BKK</Link>
-                <Link href="/informasi" className="text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap">Informasi</Link>
+                <Link href="/informasi" className={isRoute("/informasi") ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"}>Informasi</Link>
                 <div className="relative" onMouseEnter={() => { cancelCloseMore(); setOpenMore(true); }} onMouseLeave={() => { cancelCloseMore(); closeMoreTimer.current = window.setTimeout(() => setOpenMore(false), 160); }}>
                   <button className={isMoreActive ? "text-primary font-semibold px-3 py-2 rounded-lg bg-gray-50 transition-colors flex items-center gap-1" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors flex items-center gap-1"}>
                     Lainnya <i className={`ri-arrow-down-s-line transition-transform ${openMore ? "rotate-180" : ""}`}></i>
@@ -192,21 +192,21 @@ export default function Navbar() {
       {openMobile && (
         <div className="xl:hidden fixed left-0 right-0 z-50 bg-white border-b border-gray-200 shadow" style={{ top: "var(--navbar-height, 64px)" }}>
           <div className="px-4 py-3 space-y-3">
-            <Link href="/" onClick={() => setOpenMobile(false)} className="block text-primary font-medium px-3 py-2 rounded-lg hover:bg-gray-50">Beranda</Link>
-            <Link href="/about" onClick={() => setOpenMobile(false)} className="block text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50">Tentang Kami</Link>
-            <Link href="/jobs" onClick={() => setOpenMobile(false)} className="block text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50">Lowongan</Link>
-            <Link href="/bkk" onClick={() => setOpenMobile(false)} className="block text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50">BKK</Link>
-            <Link href="/informasi" onClick={() => setOpenMobile(false)} className="block text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50">Informasi</Link>
+            <Link href="/" onClick={() => setOpenMobile(false)} className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}>Beranda</Link>
+            <Link href="/about" onClick={() => setOpenMobile(false)} className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/about") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}>Tentang Kami</Link>
+            <Link href="/jobs" onClick={() => setOpenMobile(false)} className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/jobs") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}>Lowongan</Link>
+            <Link href="/bkk" onClick={() => setOpenMobile(false)} className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/bkk") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}>BKK</Link>
+            <Link href="/informasi" onClick={() => setOpenMobile(false)} className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/informasi") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}>Informasi</Link>
             <button onClick={() => setOpenMobileMore(v => !v)} className="flex items-center justify-between w-full text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50">
               <span>Lainnya</span>
               <i className={openMobileMore ? "ri-arrow-up-s-line" : "ri-arrow-down-s-line"}></i>
             </button>
             {openMobileMore && (
               <div className="pl-3 space-y-2">
-                <Link href="/pelatihan" onClick={() => setOpenMobile(false)} className="flex items-center gap-2 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50"><i className="ri-graduation-cap-line text-primary"></i><span>Pelatihan</span></Link>
-                <Link href="/transmigrasi" onClick={() => setOpenMobile(false)} className="flex items-center gap-2 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50"><i className="ri-route-line text-primary"></i><span>Bidang Transmigrasi</span></Link>
-                <Link href="/penempatan" onClick={() => setOpenMobile(false)} className="flex items-center gap-2 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50"><i className="ri-map-pin-line text-primary"></i><span>Penempatan</span></Link>
-                <Link href="/hubungan-industri" onClick={() => setOpenMobile(false)} className="flex items-center gap-2 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50"><i className="ri-briefcase-line text-primary"></i><span>Hubungan Industri</span></Link>
+                <Link href="/pelatihan" onClick={() => setOpenMobile(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/pelatihan") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}><i className="ri-graduation-cap-line text-primary"></i><span>Pelatihan</span></Link>
+                <Link href="/transmigrasi" onClick={() => setOpenMobile(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/transmigrasi") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}><i className="ri-route-line text-primary"></i><span>Bidang Transmigrasi</span></Link>
+                <Link href="/penempatan" onClick={() => setOpenMobile(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/penempatan") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}><i className="ri-map-pin-line text-primary"></i><span>Penempatan</span></Link>
+                <Link href="/hubungan-industri" onClick={() => setOpenMobile(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/hubungan-industri") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}><i className="ri-briefcase-line text-primary"></i><span>Hubungan Industri</span></Link>
               </div>
             )}
             {isLoggedIn ? (
