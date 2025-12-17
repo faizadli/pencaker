@@ -14,7 +14,7 @@ type ListResponse<T> = { data: SiteContentItem<T>[] };
 
 export default function KontenPage() {
   type Tab = "berita" | "faq" | "partners" | "testimonials" | "bkk" | "about";
-  type AboutSection = "about_profile" | "about_focus" | "about_mission" | "about_team";
+  type AboutSection = "about_profile" | "about_focus" | "about_mission" | "about_team" | "about_running_text";
   type PubStatus = "Publikasi" | "Draft";
   type Berita = { id: string; judul: string; tanggal: string; kategori: string; isi: string; gambar: string; status: "Publikasi" | "Draft" };
   type Faq = { id: string; pertanyaan: string; jawaban: string; kategori: string; status: "Publikasi" | "Draft" };
@@ -24,6 +24,7 @@ export default function KontenPage() {
   type AboutMission = { id: string; text: string; status: "Publikasi" | "Draft" };
   type TeamMember = { id: string; name: string; position: string; role: string; image: string; status: "Publikasi" | "Draft" };
   type Bkk = { id: string; nama: string; alamat: string; website: string; status: "Publikasi" | "Draft" };
+  type RunningText = { id: string; text: string; status: "Publikasi" | "Draft" };
   
 
   const [activeTab, setActiveTab] = useState<Tab>("berita");
@@ -32,7 +33,7 @@ export default function KontenPage() {
   const [testimonialPhotoPreview, setTestimonialPhotoPreview] = useState<string>("");
   const [teamImagePreview, setTeamImagePreview] = useState<string>("");
   const [newsImagePreview, setNewsImagePreview] = useState<string>("");
-  const [aboutModal, setAboutModal] = useState<{ section: "profile" | "focus_areas" | "mission_points" | "team"; id?: string } | null>(null);
+  const [aboutModal, setAboutModal] = useState<{ section: "profile" | "focus_areas" | "mission_points" | "team" | "running_text"; id?: string } | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [editBerita, setEditBerita] = useState<Berita | null>(null);
@@ -45,6 +46,7 @@ export default function KontenPage() {
   const [editFocus, setEditFocus] = useState<AboutFocus | null>(null);
   const [editMission, setEditMission] = useState<AboutMission | null>(null);
   const [editTeam, setEditTeam] = useState<TeamMember | null>(null);
+  const [editRunningText, setEditRunningText] = useState<RunningText | null>(null);
   
 
   const [beritaList, setBeritaList] = useState<Berita[]>([]);
@@ -55,6 +57,7 @@ export default function KontenPage() {
   const [focusList, setFocusList] = useState<AboutFocus[]>([]);
   const [missionsList, setMissionsList] = useState<AboutMission[]>([]);
   const [teamList, setTeamList] = useState<TeamMember[]>([]);
+  const [runningText, setRunningText] = useState<RunningText | null>(null);
   const { showSuccess, showError } = useToast();
   const [contentSubmitted, setContentSubmitted] = useState(false);
   
@@ -109,6 +112,12 @@ export default function KontenPage() {
         const teamResp = await listSiteContents({ page: "about", section: "team", published: false }) as ListResponse<{ name?: string; position?: string; role?: string; image?: string }>;
         const rows = Array.isArray(teamResp.data) ? teamResp.data : [];
         setTeamList(rows.map((r: SiteContentItem<{ name?: string; position?: string; role?: string; image?: string }>) => ({ id: String(r.id), name: String(r.data?.name || ""), position: String(r.data?.position || ""), role: String(r.data?.role || ""), image: String(r.data?.image || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as TeamMember["status"] })));
+      } catch {}
+      try {
+        const rtResp = await listSiteContents({ page: "home", section: "running_text", published: false }) as ListResponse<{ text?: string }>;
+        const rows = Array.isArray(rtResp.data) ? rtResp.data : [];
+        const first = rows[0];
+        setRunningText(first ? { id: String(first.id), text: String(first.data?.text || ""), status: String(first.status === "PUBLISHED" ? "Publikasi" : "Draft") as RunningText["status"] } : null);
       } catch {}
       // achievements/statistics removed
     })();
@@ -252,6 +261,17 @@ export default function KontenPage() {
         setTeamList(rows.map((r: SiteContentItem<{ name?: string; position?: string; role?: string; image?: string }>) => ({ id: String(r.id), name: String(r.data?.name || ""), position: String(r.data?.position || ""), role: String(r.data?.role || ""), image: String(r.data?.image || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as TeamMember["status"] })));
         showSuccess("Anggota tim disimpan");
       } catch {}
+    } else if (section === "about_running_text" && editRunningText) {
+      if (!String(editRunningText.text || "").trim()) { showError("Teks wajib diisi"); return; }
+      setRunningText({ ...editRunningText, status: "Publikasi" });
+      try {
+        await upsertSiteContent({ id: upsertId, page: "home", section: "running_text", data: { text: editRunningText.text }, status: "PUBLISHED", sort_order: 0 });
+        const rtResp = await listSiteContents({ page: "home", section: "running_text", published: false }) as ListResponse<{ text?: string }>;
+        const rows = Array.isArray(rtResp.data) ? rtResp.data : [];
+        const first = rows[0];
+        setRunningText(first ? { id: String(first.id), text: String(first.data?.text || ""), status: "Publikasi" } : null);
+        showSuccess("Teks berjalan disimpan");
+      } catch {}
     }
     
     setEditBerita(null);
@@ -308,6 +328,7 @@ export default function KontenPage() {
         about_focus: "focus_areas",
         about_mission: "mission_points",
         about_team: "team",
+        about_running_text: "running_text",
       };
       const sec = secMap[section];
       await deleteSiteContent(id, sec);
@@ -541,6 +562,20 @@ export default function KontenPage() {
                 </div>
               </Card>
 
+              <Card header={<h2 className="text-lg font-semibold text-primary">Teks Berjalan (Running Text)</h2>}>
+                <div className="flex justify-between items-center mb-4">
+                  <p className="text-sm text-gray-600">Teks yang berjalan di halaman beranda</p>
+                  <button onClick={() => { const item: RunningText = runningText || { id: "__new__", text: "", status: "Publikasi" }; setEditRunningText(item); setAboutModal({ section: "running_text", id: item.id === "__new__" ? "__new__" : item.id }); }} className="px-3 py-2 bg-primary text-white rounded-lg text-sm"><i className="ri-edit-line"></i> Edit</button>
+                </div>
+                {runningText ? (
+                  <div className="p-4 bg-white rounded-lg border">
+                    <p className="text-sm text-primary">{runningText.text}</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400 italic">Belum ada teks berjalan.</p>
+                )}
+              </Card>
+
               
 
               {aboutModal && (
@@ -555,6 +590,8 @@ export default function KontenPage() {
                         handleSave("about_mission", (aboutModal.id || editMission.id));
                       } else if (aboutModal.section === "team" && editTeam) {
                         handleSave("about_team", (aboutModal.id || editTeam.id));
+                      } else if (aboutModal.section === "running_text" && editRunningText) {
+                        handleSave("about_running_text", (aboutModal.id || editRunningText.id));
                       }
                       setAboutModal(null);
                     }} className="px-3 py-2 bg-primary text-white rounded-lg"><i className="ri-check-line"></i> Simpan</button>
@@ -574,6 +611,11 @@ export default function KontenPage() {
                     <div className="space-y-3">
                       <Input type="text" value={editMission.text} onChange={(e) => setEditMission((prev) => (prev ? { ...prev, text: e.target.value } : prev))} className="w-full" />
                       <SearchableSelect value={editMission.status} onChange={(v) => setEditMission((prev) => (prev ? { ...prev, status: v as PubStatus } : prev))} options={[{ value: "Draft", label: "Draft" }, { value: "Publikasi", label: "Publikasi" }]} />
+                    </div>
+                  )}
+                  {aboutModal.section === "running_text" && editRunningText && (
+                    <div className="space-y-3">
+                      <Textarea value={editRunningText.text} onChange={(e) => setEditRunningText((prev) => (prev ? { ...prev, text: e.target.value } : prev))} placeholder="Teks" className="w-full" rows={4} />
                     </div>
                   )}
                   {aboutModal.section === "team" && editTeam && (

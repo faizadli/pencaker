@@ -89,7 +89,12 @@ export default function Navbar() {
     if (!pathname) return false;
     return href === "/" ? pathname === "/" : pathname.startsWith(href);
   };
-  const isMoreActive = Boolean((pathname || "").startsWith("/pelatihan") || (pathname || "").startsWith("/pengaduan"));
+  const isMoreActive = Boolean(
+    (pathname || "").startsWith("/pelatihan") ||
+    (pathname || "").startsWith("/pengaduan") ||
+    (pathname || "").startsWith("/transmigrasi") ||
+    (pathname || "").startsWith("/hubungan-industri")
+  );
   useEffect(() => {
     const loadBrand = async () => {
       try {
@@ -121,30 +126,35 @@ export default function Navbar() {
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center gap-3">
                 {brand.logo ? (
-                  <Image src={brand.logo} alt={brand.name || "Logo"} width={200} height={200} className="object-contain" unoptimized />
+                  <Image src={brand.logo} alt={brand.name || "Logo"} width={200} height={200} className="object-contain h-8 sm:h-10 md:h-12 w-auto" unoptimized />
                 ) : (
-                  <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                    <i className="ri-building-line text-white text-lg"></i>
+                  <div className="bg-primary rounded-lg flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12">
+                    <i className="ri-building-line text-white text-base sm:text-lg md:text-xl"></i>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="hidden lg:block">
-              <div className="ml-6 lg:ml-10 flex items-baseline space-x-6 lg:space-x-8">
-                <Link href="/" className={isRoute("/") ? "text-primary font-medium transition-colors" : "text-gray-600 hover:text-primary transition-colors"}>Beranda</Link>
-                <Link href="/about" className={isRoute("/about") ? "text-primary font-medium transition-colors" : "text-gray-600 hover:text-primary transition-colors"}>Tentang Kami</Link>
-                <Link href="/jobs" className={isRoute("/jobs") ? "text-primary font-medium transition-colors" : "text-gray-600 hover:text-primary transition-colors"}>Lowongan</Link>
-                <Link href="/bkk" className={isRoute("/bkk") ? "text-primary font-medium transition-colors" : "text-gray-600 hover:text-primary transition-colors"}>BKK</Link>
-                <Link href="/informasi" className="text-gray-600 hover:text-primary transition-colors">Informasi</Link>
-                <div className="relative">
-                  <button onClick={() => setOpenMore(v => !v)} className={isMoreActive ? "text-primary font-medium transition-colors" : "text-gray-600 hover:text-primary transition-colors"}>
-                    Lainnya <i className="ri-arrow-down-s-line"></i>
+            <div className="hidden xl:block">
+              <div className="ml-6 lg:ml-10 flex items-baseline space-x-2 lg:space-x-3">
+                <Link href="/" className={isRoute("/") ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"}>Beranda</Link>
+                <Link href="/about" className={isRoute("/about") ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"}>
+                  <span className="hidden xl:inline">Tentang Kami</span>
+                  <span className="xl:hidden">Tentang</span>
+                </Link>
+                <Link href="/jobs" className={isRoute("/jobs") ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"}>Lowongan</Link>
+                <Link href="/bkk" className={isRoute("/bkk") ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"}>BKK</Link>
+                <Link href="/informasi" className="text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap">Informasi</Link>
+                <div className="relative" onMouseEnter={() => setOpenMore(true)}>
+                  <button className={isMoreActive ? "text-primary font-semibold px-3 py-2 rounded-lg bg-gray-50 transition-colors flex items-center gap-1" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors flex items-center gap-1"}>
+                    Lainnya <i className={`ri-arrow-down-s-line transition-transform ${openMore ? "rotate-180" : ""}`}></i>
                   </button>
                   {openMore && (
-                    <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow">
-                      <Link href="/pelatihan" onClick={() => setOpenMore(false)} className={`block px-3 py-2 text-sm ${isRoute("/pelatihan") ? "text-primary" : "text-gray-600 hover:text-primary"}`}>Pelatihan</Link>
-                      <Link href="/pengaduan" onClick={() => setOpenMore(false)} className={`block px-3 py-2 text-sm ${isRoute("/pengaduan") ? "text-primary" : "text-gray-600 hover:text-primary"}`}>Pengaduan</Link>
+                    <div className="absolute right-0 mt-3 w-56 bg-white border border-gray-200 rounded-xl shadow-xl p-2" onMouseEnter={() => setOpenMore(true)} onMouseLeave={() => setOpenMore(false)}>
+                      <Link href="/pelatihan" onClick={() => setOpenMore(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/pelatihan") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}><i className="ri-graduation-cap-line text-primary"></i> <span>Pelatihan</span></Link>
+                      <Link href="/transmigrasi" onClick={() => setOpenMore(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/transmigrasi") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}><i className="ri-route-line text-primary"></i> <span>Bidang Transmigrasi</span></Link>
+                      <Link href="/penempatan" onClick={() => setOpenMore(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/penempatan") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}><i className="ri-map-pin-line text-primary"></i> <span>Penempatan</span></Link>
+                      <Link href="/hubungan-industri" onClick={() => setOpenMore(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/hubungan-industri") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}><i className="ri-briefcase-line text-primary"></i> <span>Hubungan Industri</span></Link>
                     </div>
                   )}
                 </div>
@@ -159,7 +169,7 @@ export default function Navbar() {
                 </Link>
               </div>
             ) : (
-              <div className="hidden lg:flex items-center gap-4">
+              <div className="hidden xl:flex items-center gap-4">
                 <button onClick={() => setOpenLogin(true)} className="text-primary hover:text-primary font-medium transition-colors">Masuk</button>
                 <button onClick={() => setOpenRegister(true)} className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
                   <i className="ri-user-add-line"></i>
@@ -168,7 +178,7 @@ export default function Navbar() {
               </div>
             )}
 
-            <div className="lg:hidden">
+            <div className="xl:hidden">
               <button aria-label="Menu" onClick={() => setOpenMobile(v => !v)} className="text-primary p-2">
                 <i className="ri-menu-line text-xl"></i>
               </button>
@@ -177,21 +187,23 @@ export default function Navbar() {
         </div>
       </nav>
       {openMobile && (
-        <div className="lg:hidden fixed left-0 right-0 z-50 bg-white border-b border-gray-200 shadow" style={{ top: "var(--navbar-height, 64px)" }}>
+        <div className="xl:hidden fixed left-0 right-0 z-50 bg-white border-b border-gray-200 shadow" style={{ top: "var(--navbar-height, 64px)" }}>
           <div className="px-4 py-3 space-y-3">
-            <Link href="/" onClick={() => setOpenMobile(false)} className="block text-primary font-medium">Beranda</Link>
-            <Link href="/about" onClick={() => setOpenMobile(false)} className="block text-gray-700">Tentang Kami</Link>
-            <Link href="/jobs" onClick={() => setOpenMobile(false)} className="block text-gray-700">Lowongan</Link>
-            <Link href="/bkk" onClick={() => setOpenMobile(false)} className="block text-gray-700">BKK</Link>
-            <Link href="#" onClick={() => setOpenMobile(false)} className="block text-gray-700">Informasi</Link>
-            <button onClick={() => setOpenMobileMore(v => !v)} className="flex items-center justify-between w-full text-gray-700">
+            <Link href="/" onClick={() => setOpenMobile(false)} className="block text-primary font-medium px-3 py-2 rounded-lg hover:bg-gray-50">Beranda</Link>
+            <Link href="/about" onClick={() => setOpenMobile(false)} className="block text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50">Tentang Kami</Link>
+            <Link href="/jobs" onClick={() => setOpenMobile(false)} className="block text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50">Lowongan</Link>
+            <Link href="/bkk" onClick={() => setOpenMobile(false)} className="block text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50">BKK</Link>
+            <Link href="/informasi" onClick={() => setOpenMobile(false)} className="block text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50">Informasi</Link>
+            <button onClick={() => setOpenMobileMore(v => !v)} className="flex items-center justify-between w-full text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50">
               <span>Lainnya</span>
               <i className={openMobileMore ? "ri-arrow-up-s-line" : "ri-arrow-down-s-line"}></i>
             </button>
             {openMobileMore && (
               <div className="pl-3 space-y-2">
-                <Link href="/pelatihan" onClick={() => setOpenMobile(false)} className="block text-gray-700">Pelatihan</Link>
-                <Link href="/pengaduan" onClick={() => setOpenMobile(false)} className="block text-gray-700">Pengaduan</Link>
+                <Link href="/pelatihan" onClick={() => setOpenMobile(false)} className="flex items-center gap-2 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50"><i className="ri-graduation-cap-line text-primary"></i><span>Pelatihan</span></Link>
+                <Link href="/transmigrasi" onClick={() => setOpenMobile(false)} className="flex items-center gap-2 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50"><i className="ri-route-line text-primary"></i><span>Bidang Transmigrasi</span></Link>
+                <Link href="/penempatan" onClick={() => setOpenMobile(false)} className="flex items-center gap-2 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50"><i className="ri-map-pin-line text-primary"></i><span>Penempatan</span></Link>
+                <Link href="/hubungan-industri" onClick={() => setOpenMobile(false)} className="flex items-center gap-2 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50"><i className="ri-briefcase-line text-primary"></i><span>Hubungan Industri</span></Link>
               </div>
             )}
             {isLoggedIn ? (

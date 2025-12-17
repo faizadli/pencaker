@@ -13,6 +13,7 @@ export default function HomePage() {
     faqs: SiteContentItem<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string }>[];
     partners: SiteContentItem<{ name?: string; logo?: string }>[];
     testimonials: SiteContentItem<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>[];
+    running_text: SiteContentItem<{ text?: string }>[];
     // stats removed from API; shown as dummy cards
   };
   type SiteSettingsShape = { banner_judul?: string; banner_subjudul?: string; banner_background_image?: string; instansi_nama?: string; instansi_logo?: string; instansi_alamat?: string; instansi_telepon?: string; instansi_email?: string; instansi_website?: string; instansi_jam_layanan?: string; instansi_facebook?: string; instansi_instagram?: string; instansi_youtube?: string };
@@ -75,6 +76,7 @@ export default function HomePage() {
   const [testimonials, setTestimonials] = useState<Array<{ id: string; nama: string; pekerjaan: string; perusahaan: string; testimoni: string; foto: string }>>([]);
   const [partners, setPartners] = useState<Array<{ id: string; name: string; logo: string }>>([]);
   const [faqs, setFaqs] = useState<Array<{ id: string; q: string; a: string }>>([]);
+  const [runningTexts, setRunningTexts] = useState<Array<{ id: string; text: string }>>([]);
   const [bannerRatio, setBannerRatio] = useState<number | null>(null);
 
   useEffect(() => {
@@ -111,6 +113,8 @@ export default function HomePage() {
         setPartners(partnerItems.map((p) => ({ id: String(p.id || Math.random()), name: String(p.data?.name || ""), logo: String(p.data?.logo || "https://picsum.photos/200") })));
         const faqItems = Array.isArray(hc.faqs) ? hc.faqs : [];
         setFaqs(faqItems.map((f) => ({ id: String(f.id || Math.random()), q: String(f.data?.pertanyaan || f.data?.q || ""), a: String(f.data?.jawaban || f.data?.a || "") })));
+        const rtItems = Array.isArray(hc.running_text) ? hc.running_text : [];
+        setRunningTexts(rtItems.map((rt) => ({ id: String(rt.id || Math.random()), text: String(rt.data?.text || "") })));
       } catch {}
     };
     loadContent();
@@ -156,18 +160,16 @@ export default function HomePage() {
       <section className="bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] relative z-30 border-y border-white/10">
         <div className="marquee overflow-hidden w-full">
           <div className="marquee-track whitespace-nowrap">
-            <div className="marquee-item flex items-center gap-3 px-6 py-3 text-white text-base font-medium tracking-wide">
-              <i className="ri-information-line text-[var(--color-secondary)]"></i>
-              <span>
-                <strong className="text-[var(--color-secondary)]">ADIKARA</strong> berasal dari bahasa Sanskerta, terdiri dari kata adi yang berarti utama, luhur, atau unggul, dan kara yang berarti perbuatan atau tindakan. Secara makna, ADIKARA dapat diartikan sebagai tindakan yang mulia dan bermartabat, atau sikap unggul yang mencerminkan kehormatan, integritas, dan tanggung jawab. Dalam konteks nilai, organisasi, atau program, ADIKARA sering dimaknai sebagai: Menjunjung kehormatan dan martabat • Bertindak dengan integritas dan etika • Menjadi teladan dalam sikap dan kinerja • Mengutamakan tanggung jawab dan profesionalisme
-              </span>
-            </div>
-            <div className="marquee-item flex items-center gap-3 px-6 py-3 text-white text-base font-medium tracking-wide">
-              <i className="ri-information-line text-[var(--color-secondary)]"></i>
-              <span>
-                <strong className="text-[var(--color-secondary)]">ADIKARA</strong> berasal dari bahasa Sanskerta, terdiri dari kata adi yang berarti utama, luhur, atau unggul, dan kara yang berarti perbuatan atau tindakan. Secara makna, ADIKARA dapat diartikan sebagai tindakan yang mulia dan bermartabat, atau sikap unggul yang mencerminkan kehormatan, integritas, dan tanggung jawab. Dalam konteks nilai, organisasi, atau program, ADIKARA sering dimaknai sebagai: Menjunjung kehormatan dan martabat • Bertindak dengan integritas dan etika • Menjadi teladan dalam sikap dan kinerja • Mengutamakan tanggung jawab dan profesionalisme
-              </span>
-            </div>
+            {(runningTexts.length > 0 ? [...runningTexts, ...runningTexts] : []).map((rt, idx) => (
+              <div key={`${rt.id}-${idx}`} className="marquee-item flex items-center gap-3 px-6 py-3 text-white text-base font-medium tracking-wide">
+                <span>{rt.text}</span>
+              </div>
+            ))}
+            {runningTexts.length === 0 && (
+              <div className="marquee-item flex items-center gap-3 px-6 py-3 text-white text-base font-medium tracking-wide">
+                 {/* Empty state or default text could go here if needed, but keeping it empty per dynamic request */}
+              </div>
+            )}
           </div>
         </div>
         <style jsx>{`
