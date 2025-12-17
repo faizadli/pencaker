@@ -130,7 +130,35 @@ export function SearchableSelect({ options, value, onChange, placeholder = "Pili
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const selected = useMemo(() => options.find((o) => o.value === value), [options, value]);
-  const filtered = useMemo(() => options.filter((o) => (o.label + o.value).toLowerCase().includes(query.toLowerCase())), [options, query]);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return options;
+    const res: SearchableSelectOption[] = [];
+    let currentGroup: SearchableSelectOption | null = null;
+    let groupAdded = false;
+    let groupMatches = false;
+    options.forEach((o) => {
+      if (o.isGroup) {
+        currentGroup = o;
+        groupAdded = false;
+        groupMatches = (o.label + o.value).toLowerCase().includes(q);
+        return;
+      }
+      const itemMatches = (o.label + o.value).toLowerCase().includes(q);
+      if (!currentGroup) {
+        if (itemMatches) res.push(o);
+        return;
+      }
+      if (groupMatches || itemMatches) {
+        if (!groupAdded) {
+          res.push(currentGroup);
+          groupAdded = true;
+        }
+        if (itemMatches) res.push(o);
+      }
+    });
+    return res;
+  }, [options, query]);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [menuStyle, setMenuStyle] = useState<{ top: number; left: number; width: number; maxHeight: number } | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -211,8 +239,8 @@ export function SearchableSelect({ options, value, onChange, placeholder = "Pili
           </div>
           <ul className="max-h-[300px] overflow-auto">
             {filtered.length === 0 && <li className="px-3 py-2 text-sm text-gray-500">Tidak ada hasil</li>}
-            {filtered.map((o) => (
-              <li key={o.value}>
+            {filtered.map((o, idx) => (
+              <li key={`${o.value}::${o.label}::${idx}`}>
                 {o.isGroup ? (
                   <div className="w-full text-left px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 uppercase tracking-wider select-none">
                     {o.label}

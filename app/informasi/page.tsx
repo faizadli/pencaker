@@ -30,12 +30,12 @@ export default function InformasiPage() {
 
   const formatDate = (s?: string) => {
     const v = String(s || "");
-    if (!v) return "";
     try {
-      const d = new Date(v);
+      const d = v ? new Date(v) : new Date();
       return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
     } catch {
-      return v;
+      const d = new Date();
+      return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
     }
   };
   const toText = (html?: string) => String(html || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
@@ -92,7 +92,8 @@ export default function InformasiPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {paged.map((n) => {
                 const title = String(n.data?.judul || "");
-                const date = formatDate(n.data?.tanggal);
+                const rawDate = (n.data?.tanggal || (n as unknown as Record<string, unknown>)?.["created_at"] || (n as unknown as Record<string, unknown>)?.["createdAt"] || (n as unknown as Record<string, unknown>)?.["updated_at"] || (n as unknown as Record<string, unknown>)?.["updatedAt"] || "") as string;
+                const date = formatDate(rawDate);
                 const cat = String(n.data?.kategori || "Informasi");
                 const thumb = String(n.data?.gambar || "");
                 const excerpt = toText(n.data?.isi).slice(0, 160);

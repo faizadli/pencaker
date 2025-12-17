@@ -68,7 +68,15 @@ export default function KontenPage() {
       try {
         const beritaResp = await listSiteContents({ page: "home", section: "news", published: false }) as ListResponse<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>;
         const rows = Array.isArray(beritaResp.data) ? beritaResp.data : [];
-        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>) => ({ id: String(r.id), judul: String(r.data?.judul || r.data?.title || ""), tanggal: String(r.data?.tanggal || ""), kategori: String(r.data?.kategori || "Informasi"), isi: String(r.data?.isi || ""), gambar: String(r.data?.gambar || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"] })));
+        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>) => ({
+          id: String(r.id),
+          judul: String(r.data?.judul || r.data?.title || ""),
+          tanggal: String(r.data?.tanggal || (r as unknown as Record<string, unknown>)?.["created_at"] || (r as unknown as Record<string, unknown>)?.["createdAt"] || (r as unknown as Record<string, unknown>)?.["updated_at"] || (r as unknown as Record<string, unknown>)?.["updatedAt"] || ""),
+          kategori: String(r.data?.kategori || "Informasi"),
+          isi: String(r.data?.isi || ""),
+          gambar: String(r.data?.gambar || ""),
+          status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"],
+        })));
       } catch {}
       try {
         const faqResp = await listSiteContents({ page: "home", section: "faqs", published: false }) as ListResponse<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string; kategori?: string }>;
@@ -172,7 +180,15 @@ export default function KontenPage() {
         await upsertSiteContent({ id: upsertId, page: "home", section: "news", data: { judul: editBerita.judul, tanggal: editBerita.tanggal, kategori: editBerita.kategori, isi: editBerita.isi, gambar: editBerita.gambar }, status: editBerita.status === "Publikasi" ? "PUBLISHED" : "DRAFT", sort_order: 0 });
         const beritaResp = await listSiteContents({ page: "home", section: "news", published: false }) as ListResponse<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>;
         const rows = Array.isArray(beritaResp.data) ? beritaResp.data : [];
-        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>) => ({ id: String(r.id), judul: String(r.data?.judul || r.data?.title || ""), tanggal: String(r.data?.tanggal || ""), kategori: String(r.data?.kategori || "Informasi"), isi: String(r.data?.isi || ""), gambar: String(r.data?.gambar || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"] })));
+        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>) => ({
+          id: String(r.id),
+          judul: String(r.data?.judul || r.data?.title || ""),
+          tanggal: String(r.data?.tanggal || (r as unknown as Record<string, unknown>)?.["created_at"] || (r as unknown as Record<string, unknown>)?.["createdAt"] || (r as unknown as Record<string, unknown>)?.["updated_at"] || (r as unknown as Record<string, unknown>)?.["updatedAt"] || ""),
+          kategori: String(r.data?.kategori || "Informasi"),
+          isi: String(r.data?.isi || ""),
+          gambar: String(r.data?.gambar || ""),
+          status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"],
+        })));
         showSuccess("Berita disimpan");
       } catch {}
     } else if (section === "faq" && editFaq) {
@@ -338,7 +354,15 @@ export default function KontenPage() {
       try {
         const beritaResp = await listSiteContents({ page: "home", section: "news", published: false }) as ListResponse<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>;
         const rows = Array.isArray(beritaResp.data) ? beritaResp.data : [];
-        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>) => ({ id: String(r.id), judul: String(r.data?.judul || r.data?.title || ""), tanggal: String(r.data?.tanggal || ""), kategori: String(r.data?.kategori || "Informasi"), isi: String(r.data?.isi || ""), gambar: String(r.data?.gambar || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"] })));
+        setBeritaList(rows.map((r: SiteContentItem<{ judul?: string; title?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string }>) => ({
+          id: String(r.id),
+          judul: String(r.data?.judul || r.data?.title || ""),
+          tanggal: String(r.data?.tanggal || (r as unknown as Record<string, unknown>)?.["created_at"] || (r as unknown as Record<string, unknown>)?.["createdAt"] || (r as unknown as Record<string, unknown>)?.["updated_at"] || (r as unknown as Record<string, unknown>)?.["updatedAt"] || ""),
+          kategori: String(r.data?.kategori || "Informasi"),
+          isi: String(r.data?.isi || ""),
+          gambar: String(r.data?.gambar || ""),
+          status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"],
+        })));
       } catch {}
     } else if (section === "faq") {
       try {
@@ -416,6 +440,16 @@ export default function KontenPage() {
     }
   };
 
+  const formatDate = (s?: string) => {
+    try {
+      const d = s ? new Date(s) : new Date();
+      return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
+    } catch {
+      const d = new Date();
+      return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
+    }
+  };
+
   return (
     <>
       <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
@@ -467,7 +501,7 @@ export default function KontenPage() {
                       <div className="flex-1">
                         <h3 className="font-bold text-primary text-lg">{berita.judul}</h3>
                         <div className="flex items-center gap-3 mt-2 flex-wrap">
-                          <span className="text-sm text-gray-500">{berita.tanggal}</span>
+                          <span className="text-sm text-gray-500">{formatDate(berita.tanggal)}</span>
                           <span className={`px-2 py-1 text-xs rounded-full ${getKategoriColor(berita.kategori)}`}>{berita.kategori}</span>
                           <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(berita.status)}`}>{berita.status}</span>
                         </div>
@@ -745,6 +779,20 @@ export default function KontenPage() {
                 <div className="space-y-3">
                   <Input type="text" value={editBerita.judul} onChange={(e) => setEditBerita({ ...(editBerita as Berita), judul: e.target.value })} placeholder="Judul berita" className="w-full" required submitted={contentSubmitted} />
                   <TextEditor value={editBerita.isi} onChange={(v) => setEditBerita({ ...(editBerita as Berita), isi: v })} placeholder="Isi konten berita..." required submitted={contentSubmitted} />
+                  <SearchableSelect
+                    label="Kategori"
+                    value={editBerita.kategori}
+                    onChange={(v) => setEditBerita({ ...(editBerita as Berita), kategori: v })}
+                    options={[
+                      { value: "Pelatihan", label: "Pelatihan" },
+                      { value: "Penempatan", label: "Penempatan" },
+                      { value: "Hubungan Industri", label: "Hubungan Industri" },
+                      { value: "Transmigrasi", label: "Transmigrasi" },
+                      { value: "Informasi", label: "Informasi" },
+                    ]}
+                    required
+                    submitted={contentSubmitted}
+                  />
                   <Input type="file" accept="image/*,application/pdf" label="Upload Thumbnail" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) uploadContentImage("news", f); }} />
                   {newsImagePreview && (<Image src={newsImagePreview} alt="Thumbnail Berita" width={256} height={160} className="w-64 h-40 object-cover border rounded-xl" />)}
                   <SearchableSelect value={editBerita.status} onChange={(v) => setEditBerita({ ...(editBerita as Berita), status: v as Berita["status"] })} options={[{ value: "Draft", label: "Draft" }, { value: "Publikasi", label: "Publikasi" }]} />

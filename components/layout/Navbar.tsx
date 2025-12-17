@@ -85,15 +85,17 @@ export default function Navbar() {
   const getServerSnapshot = () => "|";
   const snap = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const isLoggedIn = (() => { const [t, u] = snap.split("|"); return Boolean(t && u); })();
+  const closeMoreTimer = useRef<number | null>(null);
+  const cancelCloseMore = () => { if (closeMoreTimer.current) { clearTimeout(closeMoreTimer.current); closeMoreTimer.current = null; } };
   const isRoute = (href: string) => {
     if (!pathname) return false;
     return href === "/" ? pathname === "/" : pathname.startsWith(href);
   };
   const isMoreActive = Boolean(
     (pathname || "").startsWith("/pelatihan") ||
-    (pathname || "").startsWith("/pengaduan") ||
     (pathname || "").startsWith("/transmigrasi") ||
-    (pathname || "").startsWith("/hubungan-industri")
+    (pathname || "").startsWith("/hubungan-industri") ||
+    (pathname || "").startsWith("/penempatan")
   );
   useEffect(() => {
     const loadBrand = async () => {
@@ -145,12 +147,12 @@ export default function Navbar() {
                 <Link href="/jobs" className={isRoute("/jobs") ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"}>Lowongan</Link>
                 <Link href="/bkk" className={isRoute("/bkk") ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"}>BKK</Link>
                 <Link href="/informasi" className="text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap">Informasi</Link>
-                <div className="relative" onMouseEnter={() => setOpenMore(true)}>
+                <div className="relative" onMouseEnter={() => { cancelCloseMore(); setOpenMore(true); }} onMouseLeave={() => { cancelCloseMore(); closeMoreTimer.current = window.setTimeout(() => setOpenMore(false), 160); }}>
                   <button className={isMoreActive ? "text-primary font-semibold px-3 py-2 rounded-lg bg-gray-50 transition-colors flex items-center gap-1" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors flex items-center gap-1"}>
                     Lainnya <i className={`ri-arrow-down-s-line transition-transform ${openMore ? "rotate-180" : ""}`}></i>
                   </button>
                   {openMore && (
-                    <div className="absolute right-0 mt-3 w-56 bg-white border border-gray-200 rounded-xl shadow-xl p-2" onMouseEnter={() => setOpenMore(true)} onMouseLeave={() => setOpenMore(false)}>
+                    <div className="absolute right-0 mt-3 w-56 bg-white border border-gray-200 rounded-xl shadow-xl p-2" onMouseEnter={() => { cancelCloseMore(); setOpenMore(true); }} onMouseLeave={() => { cancelCloseMore(); closeMoreTimer.current = window.setTimeout(() => setOpenMore(false), 160); }}>
                       <Link href="/pelatihan" onClick={() => setOpenMore(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/pelatihan") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}><i className="ri-graduation-cap-line text-primary"></i> <span>Pelatihan</span></Link>
                       <Link href="/transmigrasi" onClick={() => setOpenMore(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/transmigrasi") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}><i className="ri-route-line text-primary"></i> <span>Bidang Transmigrasi</span></Link>
                       <Link href="/penempatan" onClick={() => setOpenMore(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/penempatan") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}><i className="ri-map-pin-line text-primary"></i> <span>Penempatan</span></Link>
@@ -186,6 +188,7 @@ export default function Navbar() {
           </div>
         </div>
       </nav>
+      {/* Dropdown anchored card (desktop) restored */}
       {openMobile && (
         <div className="xl:hidden fixed left-0 right-0 z-50 bg-white border-b border-gray-200 shadow" style={{ top: "var(--navbar-height, 64px)" }}>
           <div className="px-4 py-3 space-y-3">

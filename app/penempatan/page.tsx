@@ -35,7 +35,7 @@ export default function PenempatanPage() {
 
   const [cards, setCards] = useState<Array<{ id: string; posisi: string; perusahaan: string; logo: string; lokasi: string; tipe: string; sektor: string; pendidikan: string; tanggal: string }>>([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
-  const [relatedNews, setRelatedNews] = useState<Array<{ id: string; judul: string; tanggal: string; kategori: string }>>([]);
+  const [relatedNews, setRelatedNews] = useState<Array<{ id: string; judul: string; tanggal: string; kategori: string; isi: string; gambar: string }>>([]);
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -85,14 +85,19 @@ export default function PenempatanPage() {
   useEffect(() => {
     (async () => {
       try {
-        const resp = await getHomeContent() as { news?: Array<{ id: string; data?: { judul?: string; tanggal?: string; kategori?: string } }> };
+        const resp = await getHomeContent() as { news?: Array<{ id: string; data?: { judul?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string } }> };
         const rows = Array.isArray(resp?.news) ? resp.news : [];
-        const mapped = rows.map((n) => ({
-          id: String(n.id || Math.random()),
-          judul: String(n.data?.judul || ""),
-          tanggal: String(n.data?.tanggal || ""),
-          kategori: String(n.data?.kategori || "Informasi"),
-        }));
+        const mapped = rows.map((n) => {
+          const created = String(((n as unknown as Record<string, unknown>)?.["created_at"] || (n as unknown as Record<string, unknown>)?.["createdAt"] || (n as unknown as Record<string, unknown>)?.["updated_at"] || (n as unknown as Record<string, unknown>)?.["updatedAt"] || ""));
+          return {
+            id: String(n.id || Math.random()),
+            judul: String(n.data?.judul || ""),
+            tanggal: String(n.data?.tanggal || created || ""),
+            kategori: String(n.data?.kategori || "Informasi"),
+            isi: String(n.data?.isi || ""),
+            gambar: String(n.data?.gambar || ""),
+          };
+        });
         setRelatedNews(mapped.filter((n) => n.kategori.toLowerCase() === "penempatan"));
       } catch {
         setRelatedNews([]);
@@ -101,11 +106,24 @@ export default function PenempatanPage() {
   }, []);
 
   const toDate = (s?: string) => {
-    if (!s) return "";
+    if (!s) {
+      const d = new Date();
+      return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
+    }
     try {
       const d = new Date(s);
       return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
     } catch { return s; }
+  };
+  const toExcerpt = (html?: string, max = 140) => {
+    const txt = String(html || "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+    if (txt.length <= max) return txt;
+    return txt.slice(0, max).replace(/\s+\S*$/, "") + "…";
+  };
+  const toTime = (s?: string) => {
+    if (!s) return 0;
+    const d = new Date(s);
+    return Number.isNaN(d.getTime()) ? 0 : d.getTime();
   };
 
   return (
@@ -135,15 +153,35 @@ export default function PenempatanPage() {
                 <h3 className="text-lg font-semibold text-primary">Informasi Terkait</h3>
                 <div className="mt-4 space-y-3">
                   {relatedNews.length === 0 && (<p className="text-sm text-gray-500">Belum ada berita dengan kategori Penempatan.</p>)}
-                  {relatedNews.slice(0, 5).map((n) => (
-                    <div key={n.id} className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Link href={`/informasi/${encodeURIComponent(n.id)}`} className="font-medium text-primary hover:text-[var(--color-primary-dark)]">{n.judul || "Tanpa Judul"}</Link>
-                      <div className="text-xs text-gray-500 mt-1">{toDate(n.tanggal)}</div>
-                    </div>
-                  ))}
-                  <Link href="/informasi" className="inline-flex items-center gap-1 text-primary hover:text-[var(--color-primary-dark)] font-medium transition-colors text-sm">
-                    Lihat Semua <i className="ri-arrow-right-line"></i>
-                  </Link>
+                  {(() => {
+                    const latest = [...relatedNews].sort((a, b) => toTime(b.tanggal) - toTime(a.tanggal)).slice(0, 3);
+                    return (
+                      <div className="grid grid-cols-1 gap-4">
+                        {latest.map((n) => {
+                          const thumb = n.gambar || "https://picsum.photos/800/320";
+                          return (
+                            <Link key={n.id} href={`/informasi/${encodeURIComponent(n.id)}`} className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 transform hover:-translate-y-1">
+                              <Image src={thumb} alt={n.judul || "Thumbnail"} width={800} height={320} className="w-full h-40 sm:h-48 object-cover" />
+                              <div className="p-4">
+                                <h4 className="font-bold text-primary text-base sm:text-lg mb-2 hover:text-primary transition-colors">{n.judul || "Tanpa Judul"}</h4>
+                                <p className="text-gray-600 mb-3 leading-relaxed text-sm">{toExcerpt(n.isi, 140)}</p>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                                    <i className="ri-calendar-line"></i>
+                                    <span>{toDate(n.tanggal)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                <Link href="/informasi" className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm font-medium transition-colors">
+                  Lihat Semua
+                  <i className="ri-arrow-right-line"></i>
+                </Link>
                 </div>
               </Card>
             </div>

@@ -105,7 +105,16 @@ export default function HomePage() {
       try {
         const hc: HomeContentResponse = await getHomeContent() as HomeContentResponse;
         const news = Array.isArray(hc.news) ? hc.news : [];
-        setNewsList(news.map((n) => ({ id: String(n.id || Math.random()), judul: String(n.data?.judul || n.data?.title || ""), tanggal: String(n.data?.tanggal || ""), ringkasan: String(n.data?.isi || n.data?.ringkasan || ""), gambar: String(n.data?.gambar || "https://picsum.photos/800/320") })));
+        setNewsList(news.map((n) => {
+          const created = String(((n as unknown as Record<string, unknown>)?.["created_at"] || (n as unknown as Record<string, unknown>)?.["createdAt"] || (n as unknown as Record<string, unknown>)?.["updated_at"] || (n as unknown as Record<string, unknown>)?.["updatedAt"] || ""));
+          return {
+            id: String(n.id || Math.random()),
+            judul: String(n.data?.judul || n.data?.title || ""),
+            tanggal: String(n.data?.tanggal || created || ""),
+            ringkasan: String(n.data?.isi || n.data?.ringkasan || ""),
+            gambar: String(n.data?.gambar || "https://picsum.photos/800/320"),
+          };
+        }));
         // stats removed from API; keep dummy cards
         const testiItems = Array.isArray(hc.testimonials) ? hc.testimonials : [];
         setTestimonials(testiItems.map((t) => ({ id: String(t.id || Math.random()), nama: String(t.data?.nama || ""), pekerjaan: String(t.data?.pekerjaan || ""), perusahaan: String(t.data?.perusahaan || ""), testimoni: String(t.data?.testimoni || ""), foto: String(t.data?.foto || "https://picsum.photos/200") })));
@@ -120,6 +129,15 @@ export default function HomePage() {
     loadContent();
   }, []);
 
+  const toDate = (s?: string) => {
+    try {
+      const d = s ? new Date(s) : new Date();
+      return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
+    } catch {
+      const d = new Date();
+      return d.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" });
+    }
+  };
   
 
   
@@ -309,7 +327,7 @@ export default function HomePage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-sm text-gray-500">
                           <i className="ri-calendar-line"></i>
-                          <span>{news.tanggal}</span>
+                          <span>{toDate(news.tanggal)}</span>
                         </div>
                         <Link href={`/informasi/${encodeURIComponent(news.id)}`} className="text-primary hover:text-[var(--color-primary-dark)] font-medium flex items-center gap-1 transition-colors">
                           Baca Selengkapnya <i className="ri-arrow-right-line"></i>

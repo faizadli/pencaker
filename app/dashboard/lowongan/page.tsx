@@ -151,13 +151,13 @@ export default function LowonganPage() {
   type GroupItem = { id?: string; code?: string; name: string };
   type GroupData = { id?: string; code?: string; name: string; items?: GroupItem[] };
 
-  const transformGroupsToOptions = useCallback((groups: GroupData[], valueKey: "id" | "name" = "name") => {
+  const transformGroupsToOptions = useCallback((groups: GroupData[], valueKey: "id" | "name" = "name", appendGroup = false) => {
     const opts: SearchableSelectOption[] = [];
     groups.forEach((g) => {
       opts.push({ value: `group-${g.id || g.name}`, label: g.name, isGroup: true });
       if (Array.isArray(g.items)) {
         g.items.forEach((item: GroupItem) => {
-          opts.push({ value: String(item[valueKey] || ""), label: item.name, indent: true });
+          opts.push({ value: String(item[valueKey] || ""), label: appendGroup ? `${item.name} - ${g.name}` : item.name, indent: true });
         });
       }
     });
