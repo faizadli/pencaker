@@ -9,6 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "lint:fix": "eslint --fix",
+    "format": "lint-staged",
     "prepare": "husky"
   },
   "dependencies": {
