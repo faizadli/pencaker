@@ -1,5 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
+import FullPageLoading from "../../components/ui/FullPageLoading";
 import StatCard from "../../components/ui/StatCard";
 import Card from "../../components/ui/Card";
 import Link from "next/link";
@@ -223,18 +224,20 @@ function DashboardPageComponent() {
     scales: { y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: foregroundColor } }, x: { grid: { display: false }, ticks: { color: foregroundColor } } },
   } as const;
 
+  if (loading) {
+    return (
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
+  }
+
   return (
     <>
       <main className={`transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64`}>
         <div className="px-4 sm:px-6">
-          {loading && (
-            <div className="flex items-center justify-center h-[40vh]">
-              <div className="flex items-center gap-3 text-primary">
-                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-sm font-medium">Memuat ringkasan dashboard...</span>
-              </div>
-            </div>
-          )}
           {isCandidate && (
             <div className="mb-6">
               <h1 className="text-xl sm:text-2xl font-bold text-primary">Dashboard Pencaker</h1>

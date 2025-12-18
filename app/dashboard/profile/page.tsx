@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { Input, SearchableSelect, Textarea } from "../../../components/ui/field";
 import Card from "../../../components/ui/Card";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 import { upsertCompanyProfile, upsertCandidateProfile, upsertDisnakerProfile, getCompanyProfile, getCandidateProfile, getDisnakerProfile, getUserById, presignCompanyProfileUpload, presignCandidateProfileUpload } from "../../../services/profile";
 import { listDistricts, listVillages } from "../../../services/wilayah";
 import { useToast } from "../../../components/ui/Toast";
@@ -24,6 +25,7 @@ export default function ProfilePage() {
     tema: "light",
     notifikasi: true,
   });
+  const [loading, setLoading] = useState(true);
 
   // Initialize with empty strings to prevent undefined values
   const [companyForm, setCompanyForm] = useState({ 
@@ -296,10 +298,22 @@ export default function ProfilePage() {
           }
         }
       } catch {
+      } finally {
+        if (userId && role) setLoading(false);
       }
     };
     fetchProfile();
   }, [role, userId]);
+
+  if (loading && userId && role) {
+    return (
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
+  }
 
   return (          
       <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">

@@ -9,11 +9,13 @@ import Pagination from "../../../components/ui/Pagination";
 import Card from "../../../components/ui/Card";
 import { listSiteContents, upsertSiteContent, deleteSiteContent } from "../../../services/site";
 import { useToast } from "../../../components/ui/Toast";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 
 type SiteContentItem<T> = { id: string; data: T; status: "PUBLISHED" | "DRAFT" };
 type ListResponse<T> = { data: SiteContentItem<T>[] };
 
 export default function KontenPage() {
+  const [loading, setLoading] = useState(true);
   type Tab = "faq" | "partners" | "testimonials" | "bkk" | "about";
   type AboutSection = "about_profile" | "about_focus" | "about_mission" | "about_team" | "about_running_text";
   type PubStatus = "Publikasi" | "Draft";
@@ -63,55 +65,68 @@ export default function KontenPage() {
   useEffect(() => {
     (async () => {
       try {
-        const faqResp = await listSiteContents({ page: "home", section: "faqs", published: false }) as ListResponse<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string; kategori?: string }>;
-        const rows = Array.isArray(faqResp.data) ? faqResp.data : [];
-        setFaqList(rows.map((r: SiteContentItem<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string; kategori?: string }>) => ({ id: String(r.id), pertanyaan: String(r.data?.pertanyaan || r.data?.q || ""), jawaban: String(r.data?.jawaban || r.data?.a || ""), kategori: String(r.data?.kategori || "Umum"), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Faq["status"] })));
-      } catch {}
-      try {
-        const partnersResp = await listSiteContents({ page: "home", section: "partners", published: false }) as ListResponse<{ name?: string; logo?: string }>;
-        const rows = Array.isArray(partnersResp.data) ? partnersResp.data : [];
-        setPartnersList(rows.map((r: SiteContentItem<{ name?: string; logo?: string }>) => ({ id: String(r.id), name: String(r.data?.name || ""), logo: String(r.data?.logo || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Partner["status"] })));
-      } catch {}
-      try {
-        const testiResp = await listSiteContents({ page: "home", section: "testimonials", published: false }) as ListResponse<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>;
-        const rows = Array.isArray(testiResp.data) ? testiResp.data : [];
-        setTestimonialsList(rows.map((r: SiteContentItem<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>) => ({ id: String(r.id), nama: String(r.data?.nama || ""), pekerjaan: String(r.data?.pekerjaan || ""), perusahaan: String(r.data?.perusahaan || ""), testimoni: String(r.data?.testimoni || ""), foto: String(r.data?.foto || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Testimonial["status"] })));
-      } catch {}
-      try {
-        const bkkResp = await listSiteContents({ page: "home", section: "bkk", published: false }) as ListResponse<{ nama?: string; alamat?: string; website?: string }>;
-        const rows = Array.isArray(bkkResp.data) ? bkkResp.data : [];
-        setBkkList(rows.map((r: SiteContentItem<{ nama?: string; alamat?: string; website?: string }>) => ({ id: String(r.id), nama: String(r.data?.nama || ""), alamat: String(r.data?.alamat || ""), website: String(r.data?.website || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Bkk["status"] })));
-      } catch {}
-      // home stats removed
-      try {
-        const profileResp = await listSiteContents({ page: "about", section: "profile", published: false }) as ListResponse<{ content_html?: string }>;
-        const rows = Array.isArray(profileResp.data) ? profileResp.data : [];
-        const first = rows[0];
-        setProfileId(first ? String(first.id) : null);
-        setProfileHtml(first ? String(first.data?.content_html || "") : "");
-      } catch {}
-      try {
-        const focusResp = await listSiteContents({ page: "about", section: "focus_areas", published: false }) as ListResponse<{ text?: string }>;
-        const rows = Array.isArray(focusResp.data) ? focusResp.data : [];
-        setFocusList(rows.map((r: SiteContentItem<{ text?: string }>) => ({ id: String(r.id), text: String(r.data?.text || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as AboutFocus["status"] })));
-      } catch {}
-      try {
-        const missionResp = await listSiteContents({ page: "about", section: "mission_points", published: false }) as ListResponse<{ text?: string }>;
-        const rows = Array.isArray(missionResp.data) ? missionResp.data : [];
-        setMissionsList(rows.map((r: SiteContentItem<{ text?: string }>) => ({ id: String(r.id), text: String(r.data?.text || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as AboutMission["status"] })));
-      } catch {}
-      try {
-        const teamResp = await listSiteContents({ page: "about", section: "team", published: false }) as ListResponse<{ name?: string; position?: string; role?: string; image?: string }>;
-        const rows = Array.isArray(teamResp.data) ? teamResp.data : [];
-        setTeamList(rows.map((r: SiteContentItem<{ name?: string; position?: string; role?: string; image?: string }>) => ({ id: String(r.id), name: String(r.data?.name || ""), position: String(r.data?.position || ""), role: String(r.data?.role || ""), image: String(r.data?.image || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as TeamMember["status"] })));
-      } catch {}
-      try {
-        const rtResp = await listSiteContents({ page: "home", section: "running_text", published: false }) as ListResponse<{ text?: string }>;
-        const rows = Array.isArray(rtResp.data) ? rtResp.data : [];
-        const first = rows[0];
-        setRunningText(first ? { id: String(first.id), text: String(first.data?.text || ""), status: String(first.status === "PUBLISHED" ? "Publikasi" : "Draft") as RunningText["status"] } : null);
-      } catch {}
-      // achievements/statistics removed
+        try {
+          const faqResp = await listSiteContents({ page: "home", section: "faqs", published: false }) as ListResponse<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string; kategori?: string }>;
+          const rows = Array.isArray(faqResp.data) ? faqResp.data : [];
+          setFaqList(rows.map((r: SiteContentItem<{ pertanyaan?: string; q?: string; jawaban?: string; a?: string; kategori?: string }>) => ({ id: String(r.id), pertanyaan: String(r.data?.pertanyaan || r.data?.q || ""), jawaban: String(r.data?.jawaban || r.data?.a || ""), kategori: String(r.data?.kategori || "Umum"), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Faq["status"] })));
+        } catch {}
+        
+        try {
+          const partnersResp = await listSiteContents({ page: "home", section: "partners", published: false }) as ListResponse<{ name?: string; logo?: string }>;
+          const rows = Array.isArray(partnersResp.data) ? partnersResp.data : [];
+          setPartnersList(rows.map((r: SiteContentItem<{ name?: string; logo?: string }>) => ({ id: String(r.id), name: String(r.data?.name || ""), logo: String(r.data?.logo || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Partner["status"] })));
+        } catch {}
+        
+        try {
+          const testiResp = await listSiteContents({ page: "home", section: "testimonials", published: false }) as ListResponse<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>;
+          const rows = Array.isArray(testiResp.data) ? testiResp.data : [];
+          setTestimonialsList(rows.map((r: SiteContentItem<{ nama?: string; pekerjaan?: string; perusahaan?: string; testimoni?: string; foto?: string }>) => ({ id: String(r.id), nama: String(r.data?.nama || ""), pekerjaan: String(r.data?.pekerjaan || ""), perusahaan: String(r.data?.perusahaan || ""), testimoni: String(r.data?.testimoni || ""), foto: String(r.data?.foto || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Testimonial["status"] })));
+        } catch {}
+        
+        try {
+          const bkkResp = await listSiteContents({ page: "home", section: "bkk", published: false }) as ListResponse<{ nama?: string; alamat?: string; website?: string }>;
+          const rows = Array.isArray(bkkResp.data) ? bkkResp.data : [];
+          setBkkList(rows.map((r: SiteContentItem<{ nama?: string; alamat?: string; website?: string }>) => ({ id: String(r.id), nama: String(r.data?.nama || ""), alamat: String(r.data?.alamat || ""), website: String(r.data?.website || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Bkk["status"] })));
+        } catch {}
+
+        try {
+          const profileResp = await listSiteContents({ page: "about", section: "profile", published: false }) as ListResponse<{ content_html?: string }>;
+          const rows = Array.isArray(profileResp.data) ? profileResp.data : [];
+          const first = rows[0];
+          setProfileId(first ? String(first.id) : null);
+          setProfileHtml(first ? String(first.data?.content_html || "") : "");
+        } catch {}
+
+        try {
+          const focusResp = await listSiteContents({ page: "about", section: "focus_areas", published: false }) as ListResponse<{ text?: string }>;
+          const rows = Array.isArray(focusResp.data) ? focusResp.data : [];
+          setFocusList(rows.map((r: SiteContentItem<{ text?: string }>) => ({ id: String(r.id), text: String(r.data?.text || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as AboutFocus["status"] })));
+        } catch {}
+
+        try {
+          const missionResp = await listSiteContents({ page: "about", section: "mission_points", published: false }) as ListResponse<{ text?: string }>;
+          const rows = Array.isArray(missionResp.data) ? missionResp.data : [];
+          setMissionsList(rows.map((r: SiteContentItem<{ text?: string }>) => ({ id: String(r.id), text: String(r.data?.text || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as AboutMission["status"] })));
+        } catch {}
+
+        try {
+          const teamResp = await listSiteContents({ page: "about", section: "team", published: false }) as ListResponse<{ name?: string; position?: string; role?: string; image?: string }>;
+          const rows = Array.isArray(teamResp.data) ? teamResp.data : [];
+          setTeamList(rows.map((r: SiteContentItem<{ name?: string; position?: string; role?: string; image?: string }>) => ({ id: String(r.id), name: String(r.data?.name || ""), position: String(r.data?.position || ""), role: String(r.data?.role || ""), image: String(r.data?.image || ""), status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as TeamMember["status"] })));
+        } catch {}
+
+        try {
+          const rtResp = await listSiteContents({ page: "home", section: "running_text", published: false }) as ListResponse<{ text?: string }>;
+          const rows = Array.isArray(rtResp.data) ? rtResp.data : [];
+          const first = rows[0];
+          setRunningText(first ? { id: String(first.id), text: String(first.data?.text || ""), status: String(first.status === "PUBLISHED" ? "Publikasi" : "Draft") as RunningText["status"] } : null);
+        } catch {}
+
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -377,6 +392,16 @@ export default function KontenPage() {
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  if (loading) {
+    return (
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <>

@@ -4,17 +4,19 @@ import Image from "next/image";
 import { useEffect, useRef, useSyncExternalStore, useState } from "react";
 import { usePathname } from "next/navigation";
 import Modal from "../ui/Modal";
-import { getPublicSiteSettings } from "../../services/site";
+import { useSiteSettings } from "../../context/SiteContext";
 
 export default function Navbar() {
   const pathname = usePathname();
   const isDashboard = (pathname || "").startsWith("/dashboard");
+  const { settings } = useSiteSettings();
+  const brand = { name: settings.instansi_nama, logo: settings.instansi_logo };
+
   const [openLogin, setOpenLogin] = useState(false);
   const [openRegister, setOpenRegister] = useState(false);
   const [openMobile, setOpenMobile] = useState(false);
   const [openMore, setOpenMore] = useState(false);
   const [openMobileMore, setOpenMobileMore] = useState(false);
-  const [brand, setBrand] = useState<{ name: string; logo: string }>({ name: "", logo: "" });
   const navRef = useRef<HTMLDivElement | null>(null);
   const subscribe = (cb: () => void) => {
     if (typeof window === "undefined") return () => {};
@@ -85,6 +87,8 @@ export default function Navbar() {
   const getServerSnapshot = () => "|";
   const snap = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const isLoggedIn = (() => { const [t, u] = snap.split("|"); return Boolean(t && u); })();
+  const isAuthFlow = (pathname || "").startsWith("/login") || (pathname || "").startsWith("/register");
+  const showLoggedIn = isAuthFlow ? false : isLoggedIn;
   const closeMoreTimer = useRef<number | null>(null);
   const cancelCloseMore = () => { if (closeMoreTimer.current) { clearTimeout(closeMoreTimer.current); closeMoreTimer.current = null; } };
   const isRoute = (href: string) => {
@@ -97,16 +101,7 @@ export default function Navbar() {
     (pathname || "").startsWith("/hubungan-industri") ||
     (pathname || "").startsWith("/penempatan")
   );
-  useEffect(() => {
-    const loadBrand = async () => {
-      try {
-        const s = await getPublicSiteSettings();
-        const cfg = (s as { data?: { instansi_nama?: string; instansi_logo?: string } }).data ?? (s as { instansi_nama?: string; instansi_logo?: string });
-        setBrand({ name: String(cfg?.instansi_nama || "ADIKARA"), logo: String(cfg?.instansi_logo || "") });
-      } catch {}
-    };
-    loadBrand();
-  }, []);
+
   useEffect(() => {
     const updateVar = () => {
       const el = navRef.current;
@@ -118,7 +113,7 @@ export default function Navbar() {
     updateVar();
     window.addEventListener("resize", updateVar);
     return () => window.removeEventListener("resize", updateVar);
-  }, [brand]);
+  }, []);
   if (isDashboard) return null;
   return (
     <div>
@@ -163,7 +158,7 @@ export default function Navbar() {
               </div>
             </div>
 
-            {isLoggedIn ? (
+            {showLoggedIn ? (
               <div className="hidden lg:flex items-center gap-4">
                 <Link href="/dashboard" className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
                   <i className="ri-dashboard-line"></i>
@@ -209,7 +204,7 @@ export default function Navbar() {
                 <Link href="/hubungan-industri" onClick={() => setOpenMobile(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/hubungan-industri") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}><i className="ri-briefcase-line text-primary"></i><span>Hubungan Industri</span></Link>
               </div>
             )}
-            {isLoggedIn ? (
+            {showLoggedIn ? (
               <Link href="/dashboard" onClick={() => setOpenMobile(false)} className="block bg-primary text-white px-4 py-2 rounded-lg">Dashboard</Link>
             ) : (
               <div className="flex gap-3">

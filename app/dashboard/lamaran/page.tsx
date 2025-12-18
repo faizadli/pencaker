@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 import Card from "../../../components/ui/Card";
 import CardGrid from "../../../components/ui/CardGrid";
 import StatCard from "../../../components/ui/StatCard";
@@ -176,17 +177,19 @@ export default function LamaranPage() {
 
   const paginated = useMemo(() => filtered.slice((page - 1) * pageSize, page * pageSize), [filtered, page, pageSize]);
 
+  if (loading) {
+    return (
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
       <div className="px-4 sm:px-6">
-        {loading && (
-          <div className="flex items-center justify-center h-[40vh]">
-            <div className="flex items-center gap-3 text-primary">
-              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm font-medium">Memuat data lamaran...</span>
-            </div>
-          </div>
-        )}
 
         <div className="mb-6">
           <h1 className="text-xl sm:text-2xl font-bold text-primary">Lamaran Saya</h1>

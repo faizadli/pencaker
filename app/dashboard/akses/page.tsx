@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { assignRolePermissions, createRole, getRolePermissions, listPermissions, listRoles } from "../../../services/rbac";
 import { Input, SearchableSelect } from "../../../components/ui/field";
 import Card from "../../../components/ui/Card";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 import { useToast } from "../../../components/ui/Toast";
 
 export default function AksesPage() {
@@ -54,6 +55,7 @@ export default function AksesPage() {
     const allowed = permissionCodes.includes("akses.read");
     if (!allowed) router.replace("/dashboard");
   }, [permsLoaded, permissionCodes, router]);
+ 
 
   useEffect(() => {
     const loadRolePerms = async () => {
@@ -97,6 +99,16 @@ export default function AksesPage() {
       showError("Gagal membuat role");
     }
   };
+ 
+  if (!permsLoaded) {
+    return (
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">

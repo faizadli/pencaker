@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import FullPageLoading from "../../components/ui/FullPageLoading";
 import { getHomeContent } from "../../services/site";
 import { useToast } from "../../components/ui/Toast";
 import { Input, SearchableSelect } from "../../components/ui/field";
@@ -12,6 +13,7 @@ type NewsItem = { id: string; data: { judul?: string; tanggal?: string; kategori
 
 export default function InformasiPage() {
   const [items, setItems] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [page, setPage] = useState(1);
@@ -25,6 +27,8 @@ export default function InformasiPage() {
         setItems(rows);
       } catch {
         showError("Gagal memuat daftar berita");
+      } finally {
+        setLoading(false);
       }
     })();
   }, [showError]);
@@ -47,6 +51,8 @@ export default function InformasiPage() {
   const startIndex = (page - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, total);
   const paged = filtered.slice(startIndex, endIndex);
+
+  if (loading) return <FullPageLoading />;
 
   return (
     <div className="min-h-screen bg-white">

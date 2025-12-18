@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Input, SearchableSelect } from "../../../components/ui/field";
 import Modal from "../../../components/ui/Modal";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 import { listUsers, updateUser, deleteUser, createUser, type UserListItem } from "../../../services/users";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { useRouter } from "next/navigation";
@@ -169,19 +170,20 @@ export default function UsersPage() {
 
   const getStatusColor = (status: string) => (status === "Aktif" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800");
 
+  if (loading) {
+    return (
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
+  }
+
   return (
     <>
       <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
         <div className="px-4 sm:px-6">
-
-          {loading && (
-            <div className="flex items-center justify-center h-[40vh]">
-              <div className="flex items-center gap-3 text-primary">
-                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-sm font-medium">Memuat data pengguna...</span>
-              </div>
-            </div>
-          )}
 
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-primary">Manajemen Pengguna & Hak Akses</h1>

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Card from "../../components/ui/Card";
 import EmptyState from "../../components/ui/EmptyState";
+import FullPageLoading from "../../components/ui/FullPageLoading";
 import { getHomeContent } from "../../services/site";
 import Link from "next/link";
 import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../components/ui/Table";
@@ -31,6 +32,8 @@ export default function BkkLandingPage() {
     })();
   }, []);
 
+  if (loading) return <FullPageLoading />;
+
   return (
     <main className="min-h-screen bg-gray-50">
       <section className="relative bg-primary text-white py-16">
@@ -42,9 +45,7 @@ export default function BkkLandingPage() {
       <section className="py-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <Card header={<h2 className="text-lg font-semibold text-primary">Daftar BKK Wilayah Kabupaten Paser</h2>}>
-            {loading ? (
-              <div className="py-10 text-center text-gray-500 text-sm">Memuat data BKK...</div>
-            ) : bkkList.length === 0 ? (
+            {bkkList.length === 0 ? (
               <EmptyState icon="ri-school-line" title="Belum ada data BKK" description="Silakan kembali lagi nanti." />
             ) : (
               <Table>

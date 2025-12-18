@@ -6,6 +6,7 @@ import Card from "../../../../../components/ui/Card";
 import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../../../components/ui/Table";
 import { Input, SearchableSelect } from "../../../../../components/ui/field";
 import Modal from "../../../../../components/ui/Modal";
+import FullPageLoading from "../../../../../components/ui/FullPageLoading";
 import { listApplications, updateApplication, getJobById } from "../../../../../services/jobs";
 import { getCandidateProfileById } from "../../../../../services/profile";
 import { useToast } from "../../../../../components/ui/Toast";
@@ -16,6 +17,7 @@ export default function PelamarLowonganPage() {
   const router = useRouter();
   const jobId = String(params?.id || "");
   const [jobTitle, setJobTitle] = useState("");
+  const [loading, setLoading] = useState(true);
   type AppStatus = "pending" | "test" | "interview" | "approve" | "rejected";
   const [rows, setRows] = useState<Array<{ id: string; candidate_id: string; name: string; age?: number; kecamatan?: string; kelurahan?: string; status?: AppStatus; schedule_start?: string | null; schedule_end?: string | null; note?: string | null }>>([]);
   const [saving, setSaving] = useState<string>("");
@@ -43,7 +45,7 @@ export default function PelamarLowonganPage() {
     }
   }, []);
 
-  const calcAge = (birthdate?: string): number | undefined => {
+  const calcAge = useCallback((birthdate?: string): number | undefined => {
     const s = typeof birthdate === "string" ? birthdate : undefined;
     if (!s) return undefined;
     const d = new Date(s);
@@ -53,7 +55,7 @@ export default function PelamarLowonganPage() {
     const m = now.getMonth() - d.getMonth();
     if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
     return age >= 0 ? age : undefined;
-  };
+  }, []);
 
   useEffect(() => {
     async function boot() {
@@ -101,10 +103,12 @@ export default function PelamarLowonganPage() {
         setRows(normalized);
       } catch {
         setRows([]);
-      } finally {}
+      } finally {
+        setLoading(false);
+      }
     }
     boot();
-  }, [jobId, router, hasData, isObj, toStatus]);
+  }, [jobId, router, hasData, isObj, toStatus, calcAge]);
 
   const statusOptions = useMemo(() => [
     { value: "pending", label: "Pending" },
@@ -193,6 +197,16 @@ export default function PelamarLowonganPage() {
       setSaving("");
     }
   };
+
+  if (loading) {
+    return (
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">

@@ -10,8 +10,10 @@ import { presignDisnakerProfileUpload } from "../../../services/profile";
 import type { Ak1Template } from "../../../services/ak1";
 import Card from "../../../components/ui/Card";
 import { useToast } from "../../../components/ui/Toast";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 
 export default function PengaturanPage() {
+  const [loading, setLoading] = useState(true);
   type Instansi = { nama: string; alamat: string; telepon: string; email: string; website: string; logo: string; jamLayanan: string; facebook: string; instagram: string; youtube: string };
   type Banner = { judul: string; subjudul: string; ctaText: string; ctaLink: string; backgroundImage: string };
   type Maintenance = { aktif: boolean; pesan: string; jadwal: string };
@@ -188,9 +190,21 @@ export default function PengaturanPage() {
             else { try { const d = await presignDownload(bgVal); setBannerUrl(d.url); } catch {} }
           }
         } catch {}
-      } catch {}
+      } catch {} finally {
+        setLoading(false);
+      }
     })();
   }, []);
+
+  if (loading) {
+    return (
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
+  }
 
   const handleEdit = (field: string, value: string | string[]) => {
     setEditField(field);

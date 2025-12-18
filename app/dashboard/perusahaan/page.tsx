@@ -9,6 +9,7 @@ import CardGrid from "../../../components/ui/CardGrid";
 import Card from "../../../components/ui/Card";
 import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
 import { useRouter } from "next/navigation";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { getDisnakerProfile } from "../../../services/profile";
 import { listCompanies, approveCompany, rejectCompany, createCompanyProfile, updateCompanyProfile } from "../../../services/company";
@@ -205,6 +206,16 @@ export default function PerusahaanPage() {
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  if (loading) {
+    return (
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <>

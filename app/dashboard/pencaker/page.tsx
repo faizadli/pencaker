@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 import Image from "next/image";
 import { Input, SearchableSelect } from "../../../components/ui/field";
 import Pagination from "../../../components/ui/Pagination";
@@ -16,6 +17,7 @@ import { listDistricts, listVillages } from "../../../services/wilayah";
 
 export default function PencakerPage() {
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   
   const [role] = useState<string>(() => (typeof window !== "undefined" ? localStorage.getItem("role") || "" : ""));
@@ -150,10 +152,22 @@ export default function PencakerPage() {
         setRawCandidates(rows);
       } catch {
         setPencakers([]);
+      } finally {
+        setLoading(false);
       }
     }
     load();
   }, [searchTerm, permsLoaded]);
+
+  if (loading || !permsLoaded) {
+    return (
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
+  }
 
   const filteredPencakers = pencakers.filter((pencaker) => {
     const matchesSearch = pencaker.nama.toLowerCase().includes(searchTerm.toLowerCase()) || pencaker.nik.includes(searchTerm);

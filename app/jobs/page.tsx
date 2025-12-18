@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Input, SearchableSelect } from "../../components/ui/field";
 import Pagination from "../../components/ui/Pagination";
 import Image from "next/image";
+import FullPageLoading from "../../components/ui/FullPageLoading";
 import { listPublicJobs } from "../../services/jobs";
 import { getPublicCompanyById } from "../../services/company";
 import { listDistricts, listVillages } from "../../services/wilayah";
@@ -31,7 +32,7 @@ type Job = {
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [kecamatan, setKecamatan] = useState("");
   const [kelurahan, setKelurahan] = useState("");
@@ -151,6 +152,8 @@ export default function JobsPage() {
     setPage(1);
   }, [search, kecamatan, kelurahan, education, type]);
 
+  if (loading) return <FullPageLoading />;
+
   return (
     <div className="min-h-screen bg-white">
 
@@ -189,29 +192,27 @@ export default function JobsPage() {
               <span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">Diperbarui hari ini</span>
             </div>
 
-            {loading && (
-              <div className="text-center py-8">
-                <i className="ri-loader-4-line animate-spin text-2xl text-gray-500"></i>
-              </div>
-            )}
+            {loading ? <FullPageLoading /> : (
+              <>
+                {filtered.length === 0 && (
+                  <div className="text-center py-8 bg-white rounded-xl shadow-md border border-gray-200">
+                    <i className="ri-briefcase-line text-4xl text-gray-300 mb-3"></i>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Tidak ada lowongan ditemukan</h3>
+                    <p className="text-gray-600 mb-4">Coba ubah kata kunci pencarian atau filter</p>
+                    <button onClick={() => { setSearch(""); resetFilter(); }} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition">Reset Pencarian</button>
+                  </div>
+                )}
 
-            {!loading && filtered.length === 0 && (
-              <div className="text-center py-8 bg-white rounded-xl shadow-md border border-gray-200">
-                <i className="ri-briefcase-line text-4xl text-gray-300 mb-3"></i>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Tidak ada lowongan ditemukan</h3>
-                <p className="text-gray-600 mb-4">Coba ubah kata kunci pencarian atau filter</p>
-                <button onClick={() => { setSearch(""); resetFilter(); }} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition">Reset Pencarian</button>
-              </div>
+                <div className="space-y-3">
+                  {paged.map((j, i) => (
+                    <JobItem key={j.id || `${j.job_title}-${i}`} job={j} />
+                  ))}
+                </div>
+                <div className="mt-4">
+                  <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
+                </div>
+              </>
             )}
-
-            <div className="space-y-3">
-              {paged.map((j, i) => (
-                <JobItem key={j.id || `${j.job_title}-${i}`} job={j} />
-              ))}
-            </div>
-            <div className="mt-4">
-              <Pagination page={page} pageSize={pageSize} total={filtered.length} onPageChange={setPage} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
-            </div>
           </main>
         </div>
       </section>

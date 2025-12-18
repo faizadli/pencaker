@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getJobById, listPublicJobs, applyJob } from "../../../services/jobs";
 import { getCandidateProfile } from "../../../services/profile";
 import { getPublicCompanyById } from "../../../services/company";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 import Modal from "../../../components/ui/Modal";
 
 type Job = {
@@ -147,16 +148,7 @@ export default function JobDetailPage() {
     return s === "closed" ? "TUTUP" : s ? s.toUpperCase() : "DIBUKA";
   }, [job]);
 
-  if (loading) return (
-    <main className="min-h-screen bg-white">
-      <div className="px-4 sm:px-6 flex items-center justify-center h-[60vh]">
-        <div className="flex items-center gap-3 text-primary">
-          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm font-medium">Memuat detail lowongan...</span>
-        </div>
-      </div>
-    </main>
-  );
+  if (loading) return <FullPageLoading />;
 
   if (error || !job) return (
     <main className="min-h-screen bg-white">

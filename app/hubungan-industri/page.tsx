@@ -5,6 +5,7 @@ import "chart.js/auto";
 import { Bar, Line, Pie } from "react-chartjs-2";
 import Link from "next/link";
 import Card from "../../components/ui/Card";
+import FullPageLoading from "../../components/ui/FullPageLoading";
 import { getHomeContent } from "../../services/site";
 import { stripHtml, formatDate } from "../../utils/format";
 
@@ -56,6 +57,8 @@ export default function HubunganIndustriPage() {
   }), []);
 
   const [relatedNews, setRelatedNews] = useState<Array<{ id: string; judul: string; tanggal: string; kategori: string; isi: string; gambar: string }>>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     (async () => {
       try {
@@ -75,6 +78,8 @@ export default function HubunganIndustriPage() {
         setRelatedNews(mapped.filter((n) => n.kategori.toLowerCase() === "hubungan industri"));
       } catch {
         setRelatedNews([]);
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
@@ -84,6 +89,8 @@ export default function HubunganIndustriPage() {
     const d = new Date(s);
     return Number.isNaN(d.getTime()) ? 0 : d.getTime();
   };
+
+  if (loading) return <FullPageLoading />;
 
   return (
     <div className="min-h-screen bg-white">
@@ -111,36 +118,40 @@ export default function HubunganIndustriPage() {
               <Card>
                 <h3 className="text-lg font-semibold text-primary">Informasi Terkait</h3>
                 <div className="mt-4 space-y-3">
-                  {relatedNews.length === 0 && (<p className="text-sm text-gray-500">Belum ada berita dengan kategori Hubungan Industri.</p>)}
-                  {(() => {
-                    const latest = [...relatedNews].sort((a, b) => toTime(b.tanggal) - toTime(a.tanggal)).slice(0, 3);
-                    return (
-                      <div className="grid grid-cols-1 gap-4">
-                        {latest.map((n) => {
-                          const thumb = n.gambar || "https://picsum.photos/800/320";
-                          return (
-                            <Link key={n.id} href={`/informasi/${encodeURIComponent(n.id)}`} className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 transform hover:-translate-y-1">
-                              <Image src={thumb} alt={n.judul || "Thumbnail"} width={800} height={320} className="w-full h-40 sm:h-48 object-cover" />
-                              <div className="p-4">
-                                <h4 className="font-bold text-primary text-base sm:text-lg mb-2 hover:text-primary transition-colors">{n.judul || "Tanpa Judul"}</h4>
-                                <p className="text-gray-600 mb-3 leading-relaxed text-sm">{stripHtml(n.isi).slice(0, 140) + (stripHtml(n.isi).length > 140 ? "..." : "")}</p>
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                                    <i className="ri-calendar-line"></i>
-                                    <span>{formatDate(n.tanggal)}</span>
+                    <>
+                      {relatedNews.length === 0 && (<p className="text-sm text-gray-500">Belum ada berita dengan kategori Hubungan Industri.</p>)}
+                      {(() => {
+                        const latest = [...relatedNews].sort((a, b) => toTime(b.tanggal) - toTime(a.tanggal)).slice(0, 3);
+                        return (
+                          <div className="grid grid-cols-1 gap-4">
+                            {latest.map((n) => {
+                              const thumb = n.gambar || "https://picsum.photos/800/320";
+                              return (
+                                <Link key={n.id} href={`/informasi/${encodeURIComponent(n.id)}`} className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 transform hover:-translate-y-1">
+                                  <Image src={thumb} alt={n.judul || "Thumbnail"} width={800} height={320} className="w-full h-40 sm:h-48 object-cover" />
+                                  <div className="p-4">
+                                    <h4 className="font-bold text-primary text-base sm:text-lg mb-2 hover:text-primary transition-colors">{n.judul || "Tanpa Judul"}</h4>
+                                    <p className="text-gray-600 mb-3 leading-relaxed text-sm">{stripHtml(n.isi).slice(0, 140) + (stripHtml(n.isi).length > 140 ? "..." : "")}</p>
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                                        <i className="ri-calendar-line"></i>
+                                        <span>{formatDate(n.tanggal)}</span>
+                                      </div>
+                                    </div>
                                   </div>
-                                </div>
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
-                  <Link href="/informasi" className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm font-medium transition-colors">
-                    Lihat Semua
-                    <i className="ri-arrow-right-line"></i>
-                  </Link>
+                                </Link>
+                              );
+                            })}
+     </div>
+                        );
+                      })()}
+                    </>
+                  {!loading && relatedNews.length > 0 && (
+                    <Link href="/informasi" className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm font-medium transition-colors">
+                      Lihat Semua
+                      <i className="ri-arrow-right-line"></i>
+                    </Link>
+                  )}
                 </div>
               </Card>
             </div>

@@ -14,6 +14,8 @@ import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../componen
 import { useToast } from "../../../components/ui/Toast";
 import type { PDFImage, PDFPage } from "pdf-lib";
 import type { Ak1Layout, Ak1LayoutField, Ak1Template } from "../../../services/ak1";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
+
 export default function Ak1Page() {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
@@ -268,15 +270,13 @@ export default function Ak1Page() {
     return Boolean(p.full_name && p.nik && p.place_of_birth && p.birthdate && p.gender && p.status_perkawinan && p.address && p.postal_code);
   })();
 
-  if (!guardReady) {
+  if (loading || !guardReady) {
     return (
-      <>
-        <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-          <div className="px-4 sm:px-6">
-            <div className="py-20 flex items-center justify-center text-gray-500">Memeriksa akses…</div>
-          </div>
-        </main>
-      </>
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
     );
   }
 

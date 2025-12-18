@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getHomeContent } from "../../../services/site";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 import EmptyState from "../../../components/ui/EmptyState";
 import { useParams } from "next/navigation";
 import { formatDate } from "../../../utils/format";
@@ -29,7 +30,7 @@ export default function NewsDetailPage() {
   }, [id]);
 
   if (loading) {
-    return <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">Memuat...</div>;
+    return <FullPageLoading />;
   }
   if (!item) {
     return (

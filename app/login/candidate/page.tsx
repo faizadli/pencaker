@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input, SegmentedToggle } from "../../../components/ui/field";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 import { login, startSession } from "../../../services/auth";
 import { getUserById } from "../../../services/profile";
 
@@ -11,6 +12,7 @@ export default function CandidateLogin() {
   const [usePhone, setUsePhone] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") || "" : "";
@@ -20,10 +22,12 @@ export default function CandidateLogin() {
         try {
           await getUserById(uid);
           router.replace("/dashboard");
+          return;
         } catch {
           localStorage.removeItem("token");
         }
       }
+      setCheckingSession(false);
     })();
   }, [router]);
 
@@ -50,6 +54,8 @@ export default function CandidateLogin() {
       setError("Email atau password salah.");
     }
   };
+
+  if (checkingSession) return <FullPageLoading />;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">

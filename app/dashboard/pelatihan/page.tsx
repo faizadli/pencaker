@@ -1,18 +1,35 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input, SearchableSelect, SegmentedToggle } from "../../../components/ui/field";
 import StatCard from "../../../components/ui/StatCard";
 import Pagination from "../../../components/ui/Pagination";
 import Card from "../../../components/ui/Card";
 import CardGrid from "../../../components/ui/CardGrid";
 import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 
 export default function PelatihanPage() {
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (loading) {
+    return (
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
+  }
 
   const programs = [
     { id: 1, nama: "Pelatihan Web Development", bidang: "Teknologi", penyelenggara: "BLK Kota Bandung", jadwal: "10 - 15 Juni 2025", durasi: "6 hari (08.00 - 15.00)", lokasi: "Jl. Cikutra No. 85, Bandung", fasilitas: "Modul, Sertifikat, Makan Siang", kuota: 30, terdaftar: 28, status: "Pendaftaran", peserta: [{ id: 101, nama: "Budi Santoso" }, { id: 102, nama: "Ani Wijaya" }, { id: 103, nama: "Dedi Kusuma" }, { id: 104, nama: "Siti Rahayu" }] },

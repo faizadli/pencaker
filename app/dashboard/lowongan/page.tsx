@@ -15,6 +15,8 @@ import { useToast } from "../../../components/ui/Toast";
 import { getCompanyProfile, getCompanyProfileById, getDisnakerProfile } from "../../../services/profile";
 import { getPositionGroups, getJobCategoryGroups, getEducationGroups } from "../../../services/site";
 
+import FullPageLoading from "../../../components/ui/FullPageLoading";
+
 export default function LowonganPage() {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
@@ -299,6 +301,7 @@ export default function LowonganPage() {
     }
     loadJobs();
   }, [role, companyId, permissions, enrichJobsWithCompanyName, statusFilter, permsLoaded, uiToApiStatus, page, pageSize]);
+ 
 
   const filteredLowongan: ViewJob[] = useMemo(() => {
     const toView: ViewJob[] = lowonganList.map((j) => ({
@@ -497,6 +500,16 @@ export default function LowonganPage() {
   const canCreate = permissions.includes("lowongan.create");
   const canEdit = permissions.includes("lowongan.update");
   const canVerify = permissions.includes("lowongan.verify");
+
+  if (!permsLoaded || loading) {
+    return (
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <>

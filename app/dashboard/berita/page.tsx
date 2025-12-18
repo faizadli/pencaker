@@ -9,6 +9,7 @@ import Pagination from "../../../components/ui/Pagination";
 import { listSiteContents, upsertSiteContent, deleteSiteContent } from "../../../services/site";
 import { useToast } from "../../../components/ui/Toast";
 import { stripHtml, formatDate } from "../../../utils/format";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 
 type SiteContentItem<T> = { id: string; data: T; status: "PUBLISHED" | "DRAFT" };
 type ListResponse<T> = { data: SiteContentItem<T>[] };
@@ -76,6 +77,7 @@ export default function BeritaPage() {
   const [contentSubmitted, setContentSubmitted] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -91,9 +93,21 @@ export default function BeritaPage() {
           gambar: String(r.data?.gambar || ""),
           status: String(r.status === "PUBLISHED" ? "Publikasi" : "Draft") as Berita["status"],
         })));
-      } catch {}
+      } catch {} finally {
+        setLoading(false);
+      }
     })();
   }, []);
+
+  if (loading) {
+    return (
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
+  }
 
   const handleAdd = () => {
     const item: Berita = { id: "__new__", judul: "", tanggal: "", kategori: "Informasi", isi: "", gambar: "", status: "Draft" };

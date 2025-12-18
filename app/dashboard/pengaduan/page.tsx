@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Pagination from "../../../components/ui/Pagination";
 import StatCard from "../../../components/ui/StatCard";
 import CardGrid from "../../../components/ui/CardGrid";
@@ -7,21 +7,37 @@ import Card from "../../../components/ui/Card";
 import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
 import EmptyState from "../../../components/ui/EmptyState";
 import { Input, SearchableSelect, Textarea, SegmentedToggle } from "../../../components/ui/field";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 
 export default function PengaduanPage() {
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 0);
+    return () => clearTimeout(t);
+  }, []);
+ 
   const [pengaduanList, setPengaduanList] = useState([
     { id: 1, tanggal: "10 Nov 2025", pelapor: "Budi Santoso", nik: "3204121234567890", jenis: "Upah Tidak Dibayar", perusahaan: "CV Jaya Makmur", lokasi: "Bandung", deskripsi: "Sudah bekerja 3 bulan tanpa upah. Majikan mengabaikan permintaan pembayaran.", status: "Proses", tindakLanjut: "Sedang dilakukan pemanggilan terhadap pihak perusahaan.", bukti: true },
     { id: 2, tanggal: "12 Nov 2025", pelapor: "Ani Wijaya", nik: "3204130987654321", jenis: "PHK Tanpa Pesangon", perusahaan: "PT Global Teknik", lokasi: "Jakarta", deskripsi: "Di-PHK sepihak tanpa alasan jelas dan tidak diberi pesangon.", status: "Pending", tindakLanjut: "", bukti: true },
     { id: 3, tanggal: "8 Nov 2025", pelapor: "Dedi Kusuma", nik: "3204141122334455", jenis: "Lingkungan Kerja Tidak Aman", perusahaan: "UD Bangun Jaya", lokasi: "Bekasi", deskripsi: "Tidak ada APD dan area kerja berisiko tinggi tanpa pengaman.", status: "Selesai", tindakLanjut: "Tim telah melakukan inspeksi. Perusahaan diberi surat peringatan dan wajib perbaiki fasilitas.", bukti: false },
   ]);
-
   const [editNote, setEditNote] = useState<{ id: number | null; value: string }>({ id: null, value: "" });
+ 
+  if (loading) {
+    return (
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
+  }
 
   const filteredPengaduan = pengaduanList.filter((p) => {
     const matchesSearch = p.pelapor.toLowerCase().includes(searchTerm.toLowerCase()) || p.jenis.toLowerCase().includes(searchTerm.toLowerCase()) || p.perusahaan.toLowerCase().includes(searchTerm.toLowerCase());

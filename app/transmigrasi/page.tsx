@@ -5,6 +5,7 @@ import "chart.js/auto";
 import { Bar, Line, Pie } from "react-chartjs-2";
 import Link from "next/link";
 import Card from "../../components/ui/Card";
+import FullPageLoading from "../../components/ui/FullPageLoading";
 import { getHomeContent } from "../../services/site";
 
 export default function TransmigrasiPage() {
@@ -56,6 +57,8 @@ export default function TransmigrasiPage() {
   }), []);
 
   const [relatedNews, setRelatedNews] = useState<Array<{ id: string; judul: string; tanggal: string; kategori: string; isi: string; gambar: string }>>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     (async () => {
       try {
@@ -75,6 +78,8 @@ export default function TransmigrasiPage() {
         setRelatedNews(mapped.filter((n) => n.kategori.toLowerCase() === "transmigrasi"));
       } catch {
         setRelatedNews([]);
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
@@ -99,6 +104,8 @@ export default function TransmigrasiPage() {
     const d = new Date(s);
     return Number.isNaN(d.getTime()) ? 0 : d.getTime();
   };
+
+  if (loading) return <FullPageLoading />;
 
   return (
     <div className="min-h-screen bg-white">
@@ -152,10 +159,12 @@ export default function TransmigrasiPage() {
                       </div>
                     );
                   })()}
-                  <Link href="/informasi" className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm font-medium transition-colors">
-                    Lihat Semua
-                    <i className="ri-arrow-right-line"></i>
-                  </Link>
+                  {relatedNews.length > 0 && (
+                    <Link href="/informasi" className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm font-medium transition-colors">
+                      Lihat Semua
+                      <i className="ri-arrow-right-line"></i>
+                    </Link>
+                  )}
                 </div>
               </Card>
             </div>

@@ -2,12 +2,15 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input, Textarea, SearchableSelect } from "../../../components/ui/field";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 import { login, registerUser, startSession } from "../../../services/auth";
 import { presignCompanyProfileUpload, upsertCompanyProfile, getUserById } from "../../../services/profile";
 import { listDistricts, listVillages } from "../../../services/wilayah";
 
 export default function RegisterCompany() {
   const router = useRouter();
+  const [checkingSession, setCheckingSession] = useState(true);
+
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") || "" : "";
     const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
@@ -16,8 +19,10 @@ export default function RegisterCompany() {
         try {
           await getUserById(uid);
           router.replace("/dashboard");
+          return;
         } catch {}
       }
+      setCheckingSession(false);
     })();
   }, [router]);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -244,6 +249,8 @@ export default function RegisterCompany() {
     };
     loadVillages();
   }, [company.kecamatan, districts]);
+
+  if (checkingSession) return <FullPageLoading />;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 sm:px-6 lg:px-8 py-8">

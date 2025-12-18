@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { getAboutContent, getPublicSiteSettings } from "../../services/site";
+import FullPageLoading from "../../components/ui/FullPageLoading";
 
 export default function AboutPage() {
   const [teamMembers, setTeamMembers] = useState<Array<{ id: string; name: string; position: string; role: string; image: string }>>([
@@ -138,6 +139,7 @@ export default function AboutPage() {
   ]);
   const [profileHtml, setProfileHtml] = useState<string>("");
   const [contact, setContact] = useState<{ alamat: string; telepon: string; email: string; jam_layanan: string; facebook: string; instagram: string; youtube: string }>({ alamat: "", telepon: "", email: "", jam_layanan: "", facebook: "", instagram: "", youtube: "" });
+  const [loading, setLoading] = useState(true);
   type SiteSettingsShape = { instansi_alamat?: string; instansi_telepon?: string; instansi_email?: string; instansi_jam_layanan?: string; instansi_facebook?: string; instansi_instagram?: string; instansi_youtube?: string };
 
   useEffect(() => {
@@ -175,10 +177,14 @@ export default function AboutPage() {
           instagram: String(cfg?.instansi_instagram || ""),
           youtube: String(cfg?.instansi_youtube || ""),
         });
-      } catch {}
+      } catch {} finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
+
+  if (loading) return <FullPageLoading />;
 
   return (
     <div className="min-h-screen bg-white">

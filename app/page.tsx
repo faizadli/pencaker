@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import FullPageLoading from "../components/ui/FullPageLoading";
 import { listPublicJobs } from "../services/jobs";
 import { getHomeContent, getPublicSiteSettings } from "../services/site";
 import { getPublicCompanyById } from "../services/company";
@@ -19,6 +20,8 @@ export default function HomePage() {
   };
   type SiteSettingsShape = { banner_judul?: string; banner_subjudul?: string; banner_background_image?: string; instansi_nama?: string; instansi_logo?: string; instansi_alamat?: string; instansi_telepon?: string; instansi_email?: string; instansi_website?: string; instansi_jam_layanan?: string; instansi_facebook?: string; instansi_instagram?: string; instansi_youtube?: string };
   const [activeFaq, setActiveFaq] = useState<string | null>(null);
+  const [loadingJobs, setLoadingJobs] = useState(true);
+  const [loadingContent, setLoadingContent] = useState(true);
 
   const [latestJobs, setLatestJobs] = useState<Array<{ id: string; posisi: string; perusahaan: string; logo: string; lokasi: string; tipe: string; sektor: string; pendidikan: string; tanggal: string }>>([]);
 
@@ -60,6 +63,8 @@ export default function HomePage() {
         setLatestJobs(cards);
       } catch {
         setLatestJobs([]);
+      } finally {
+        setLoadingJobs(false);
       }
     };
     load();
@@ -125,12 +130,16 @@ export default function HomePage() {
         setFaqs(faqItems.map((f) => ({ id: String(f.id || Math.random()), q: String(f.data?.pertanyaan || f.data?.q || ""), a: String(f.data?.jawaban || f.data?.a || "") })));
         const rtItems = Array.isArray(hc.running_text) ? hc.running_text : [];
         setRunningTexts(rtItems.map((rt) => ({ id: String(rt.id || Math.random()), text: String(rt.data?.text || "") })));
-      } catch {}
+      } catch {} finally {
+        setLoadingContent(false);
+      }
     };
     loadContent();
   }, []);
 
   const toggleFaq = (id: string) => setActiveFaq(activeFaq === id ? null : id);
+
+  if (loadingJobs || loadingContent) return <FullPageLoading />;
 
   return (
     <div className="min-h-screen bg-white">
@@ -237,7 +246,8 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {latestJobs.map((job) => (
+            {latestJobs.length > 0 ? (
+              latestJobs.map((job) => (
               <div key={job.id} className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl border border-gray-200 transition-all group">
                 <div className="flex items-start gap-4 mb-4">
                   {job.logo ? (
@@ -278,7 +288,12 @@ export default function HomePage() {
                   </button>
                 </div>
               </div>
-            ))}
+            ))
+            ) : (
+              <div className="col-span-full text-center py-10 text-gray-500">
+                Belum ada lowongan tersedia
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -298,6 +313,7 @@ export default function HomePage() {
               return Number.isNaN(d.getTime()) ? 0 : d.getTime();
             };
             const latestNews = [...newsList].sort((a, b) => toTime(b.tanggal) - toTime(a.tanggal)).slice(0, 3);
+            if (latestNews.length === 0) return <div className="text-center py-10 text-gray-500">Belum ada berita terbaru</div>;
             return (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {latestNews.map((news) => (

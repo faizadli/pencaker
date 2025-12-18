@@ -1,4 +1,6 @@
 "use client";
+import { useState, useEffect } from "react";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -18,7 +20,24 @@ import { useToast } from "../../../components/ui/Toast";
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
 export default function LaporanPage() {
+  const [loading, setLoading] = useState(true);
   const { showError } = useToast();
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (loading) {
+    return (
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
+  }
+
   const stats = {
     totalPencaker: 14230,
     totalPerusahaan: 345,

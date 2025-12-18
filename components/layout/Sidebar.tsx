@@ -5,77 +5,26 @@ import Image from "next/image";
 import { Input } from "../ui/field";
 import { usePathname } from "next/navigation";
 import { logout } from "../../services/auth";
-import { getCandidateProfile, getCompanyProfile, getDisnakerProfile } from "../../services/profile";
-import { listRoles, getRolePermissions } from "../../services/rbac";
-import { getPublicSiteSettings } from "../../services/site";
 
-export default function Sidebar({ roleProp }: { roleProp?: string }) {
+export type SidebarData = {
+  user: { name: string; avatar: string; approved: boolean };
+  permissions: string[];
+  brand: { name: string; logo: string };
+};
+
+export default function Sidebar({ roleProp, data }: { roleProp?: string; data?: SidebarData }) {
   const [isMinimized] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const role: string = roleProp || (typeof window !== "undefined" ? (localStorage.getItem("role") || "") : "");
-  const [companyApproved, setCompanyApproved] = useState(false);
-  const [permissionCodes, setPermissionCodes] = useState<string[]>([]);
-  const [userName, setUserName] = useState("");
-  const [userAvatar, setUserAvatar] = useState("");
-  const [brand, setBrand] = useState<{ name: string; logo: string }>({ name: "", logo: "" });
-  type CompanyProfileLite = { company_name?: string; company_logo?: string; status?: string; disnaker_id?: string };
-  type CandidateProfileLite = { full_name?: string; photo_profile?: string };
-  type DisnakerProfileLite = { full_name?: string; photo_profile?: string };
+  
+  const companyApproved = data?.user.approved || false;
+  const permissionCodes = data?.permissions || [];
+  const userName = data?.user.name || "";
+  const userAvatar = data?.user.avatar || "";
+  const brand = data?.brand || { name: "", logo: "" };
 
   const pathname = usePathname();
-
-  useEffect(() => {
-    const init = async () => {
-      try {
-        const rolesResp = await listRoles();
-        const roleItems = (rolesResp.data || rolesResp) as { id: number; name: string }[];
-        const target = roleItems.find((x) => String(x.name).toLowerCase() === String(role).toLowerCase());
-        if (target) {
-          const perms = await getRolePermissions(target.id);
-          const rows = (perms.data || perms) as { code: string; label: string }[];
-          setPermissionCodes(rows.map((r) => r.code));
-        }
-        const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
-        if (uid) {
-          if (role === "company") {
-            const res = await getCompanyProfile(uid);
-            const d = (res?.data || {}) as CompanyProfileLite;
-            const raw = String(d.status || "").toLowerCase();
-            const approved = Boolean(d.disnaker_id) || ["approved", "terverifikasi", "disetujui"].includes(raw);
-            setCompanyApproved(approved);
-            setUserName(String(d.company_name || ""));
-            setUserAvatar(String(d.company_logo || ""));
-            if (typeof document !== "undefined") {
-              document.cookie = `companyApproved=${approved ? "true" : "false"}; path=/; max-age=1800`;
-            }
-          } else if (role === "candidate") {
-            const res = await getCandidateProfile(uid);
-            const d = (res?.data || {}) as CandidateProfileLite;
-            setUserName(String(d.full_name || ""));
-            setUserAvatar(String(d.photo_profile || ""));
-          } else {
-            const res = await getDisnakerProfile(uid);
-            const d = (res?.data || {}) as DisnakerProfileLite;
-            setUserName(String(d.full_name || ""));
-            setUserAvatar(String(d.photo_profile || ""));
-          }
-        }
-      } catch {}
-    };
-    init();
-  }, [role, pathname]);
-
-  useEffect(() => {
-    const loadBrand = async () => {
-      try {
-        const s = await getPublicSiteSettings();
-        const cfg = (s as { data?: { instansi_nama?: string; instansi_logo?: string } }).data ?? (s as { instansi_nama?: string; instansi_logo?: string });
-        setBrand({ name: String(cfg?.instansi_nama || "ADIKARA"), logo: String(cfg?.instansi_logo || "") });
-      } catch {}
-    };
-    loadBrand();
-  }, []);
 
   useEffect(() => {
     const touch = () => localStorage.setItem("lastActivity", String(Date.now()));
@@ -131,7 +80,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
       )}
 
       <aside
-        className={`fixed top-0 left-0 z-50 h-screen bg-primary text-white transition-transform duration-300 lg:transition-all flex flex-col
+        className={`fixed top-0 left-0 z-50 h-screen bg-primary text-white transition-transform duration-300 flex flex-col
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0 ${isMinimized ? "w-16" : "w-64"}`}
       >
@@ -139,7 +88,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
           {isMinimized ? (
             <div className="w-full flex justify-center">
               {brand.logo ? (
-                <Image src={brand.logo} alt={brand.name || "Logo"} width={500} height={500}  unoptimized />
+                <Image src={brand.logo} alt={brand.name || "Logo"} width={500} height={500} unoptimized priority />
               ) : (
                 <span className="text-2xl">💼</span>
               )}
@@ -147,7 +96,7 @@ export default function Sidebar({ roleProp }: { roleProp?: string }) {
           ) : (
             <div className="flex items-center gap-3">
               {brand.logo ? (
-                <Image src={brand.logo} alt={brand.name || "Logo"} width={500} height={500} unoptimized />
+                <Image src={brand.logo} alt={brand.name || "Logo"} width={500} height={500} unoptimized priority />
               ) : (
                 <div className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center">
                   <i className="ri-building-line"></i>

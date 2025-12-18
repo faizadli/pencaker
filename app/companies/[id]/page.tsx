@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getPublicCompanyById } from "../../../services/company";
 import { listPublicJobs } from "../../../services/jobs";
 import Pagination from "../../../components/ui/Pagination";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 
 type Company = {
   id?: string;
@@ -91,16 +92,7 @@ export default function CompanyDetailPage() {
     return `https://picsum.photos/96?random=${encodeURIComponent(String(key))}`;
   }, [company]);
 
-  if (loading) return (
-    <main className="min-h-screen bg-white">
-      <div className="px-4 sm:px-6 flex items-center justify-center h-[60vh]">
-        <div className="flex items-center gap-3 text-primary">
-          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm font-medium">Memuat detail perusahaan...</span>
-        </div>
-      </div>
-    </main>
-  );
+  if (loading) return <FullPageLoading />;
 
   if (error || !company) return (
     <main className="min-h-screen bg-white">

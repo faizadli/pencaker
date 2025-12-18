@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input, SearchableSelect, SegmentedToggle, Textarea } from "../../../components/ui/field";
+import FullPageLoading from "../../../components/ui/FullPageLoading";
 import { login, registerUser, startSession } from "../../../services/auth";
 import { presignCandidateProfileUpload, upsertCandidateProfile, getUserById, getCandidateProfile } from "../../../services/profile";
 import { presignUpload, upsertAk1Document } from "../../../services/ak1";
@@ -9,6 +10,8 @@ import { listDistricts, listVillages } from "../../../services/wilayah";
 
 export default function RegisterCandidate() {
   const router = useRouter();
+  const [checkingSession, setCheckingSession] = useState(true);
+
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") || "" : "";
     const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
@@ -17,8 +20,10 @@ export default function RegisterCandidate() {
         try {
           await getUserById(uid);
           router.replace("/dashboard");
+          return;
         } catch {}
       }
+      setCheckingSession(false);
     })();
   }, [router]);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -327,6 +332,8 @@ export default function RegisterCandidate() {
     };
     loadVillages();
   }, [profile.kecamatan, districts]);
+
+  if (checkingSession) return <FullPageLoading />;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8 py-8">

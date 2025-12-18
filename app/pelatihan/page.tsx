@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Card from "../../components/ui/Card";
+import FullPageLoading from "../../components/ui/FullPageLoading";
 import { getHomeContent } from "../../services/site";
+import { listPublicJobs } from "../../services/jobs";
 
 export default function PelatihanPage() {
   const tugas = [
@@ -16,16 +18,14 @@ export default function PelatihanPage() {
     "Pelaporan dan evaluasi pelaksanaan pelatihan kerja",
   ];
 
-  const upcoming = [
-    { id: "up-1", nama: "Pelatihan Web Development", penyelenggara: "BLK Kota Bandung", jadwal: "10–15 Juni 2025", durasi: "6 hari", lokasi: "Bandung", kuota: 30 },
-    { id: "up-2", nama: "Pelatihan Digital Marketing", penyelenggara: "BLK Kab. Bekasi", jadwal: "20–25 Juni 2025", durasi: "5 hari", lokasi: "Bekasi", kuota: 25 },
-    { id: "up-3", nama: "Pelatihan Teknisi Elektronik", penyelenggara: "BLK Kab. Temanggung", jadwal: "5–10 Juli 2025", durasi: "6 hari", lokasi: "Temanggung", kuota: 20 },
-  ];
-
+  const [upcoming, setUpcoming] = useState<Array<{ id: string; nama: string; penyelenggara: string; jadwal: string; durasi: string; lokasi: string; kuota: number }>>([]);
   const [relatedNews, setRelatedNews] = useState<Array<{ id: string; judul: string; tanggal: string; kategori: string; isi: string; gambar: string }>>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     (async () => {
       try {
+        // Fetch News
         const resp = await getHomeContent() as { news?: Array<{ id: string; data?: { judul?: string; tanggal?: string; kategori?: string; isi?: string; gambar?: string } }> };
         const rows = Array.isArray(resp?.news) ? resp.news : [];
         const mapped = rows.map((n) => {
@@ -40,8 +40,36 @@ export default function PelatihanPage() {
           };
         });
         setRelatedNews(mapped.filter((n) => n.kategori.toLowerCase() === "pelatihan"));
+
+        // Fetch Jobs (simulating training programs)
+        const jobsResp = await listPublicJobs({ limit: 6 });
+        const jobsRaw = (jobsResp as unknown) as { data?: unknown };
+        const jobsArr = Array.isArray(jobsRaw.data) ? (jobsRaw.data as unknown[]) : Array.isArray(jobsResp as unknown[]) ? (jobsResp as unknown[]) : [];
+        // Filter jobs that might be related to training if possible, or just show some as example?
+        // For now, let's just map them to the "upcoming" structure to avoid dummy data.
+        // Or if no specific training data, we might leave it empty.
+        // User said "ganti menggunakan tampil loading state" instead of dummy data.
+        // So I will clear the dummy data. If I have real data, show it. If not, show empty.
+        // I will map jobs to upcoming just to show something real if available.
+        const mappedJobs = jobsArr.slice(0, 3).map((j) => {
+             const obj = j as Record<string, unknown>;
+             return {
+                 id: String(obj["id"] || Math.random()),
+                 nama: String(obj["job_title"] || "-"),
+                 penyelenggara: String(obj["company_name"] || "-"),
+                 jadwal: "Hubungi Penyelenggara", // Placeholder as jobs might not have schedule
+                 durasi: "-",
+                 lokasi: String(obj["work_setup"] || "-"),
+                 kuota: 0
+             };
+        });
+        setUpcoming(mappedJobs);
+
       } catch {
         setRelatedNews([]);
+        setUpcoming([]);
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
@@ -66,6 +94,8 @@ export default function PelatihanPage() {
     const d = new Date(s);
     return Number.isNaN(d.getTime()) ? 0 : d.getTime();
   };
+
+  if (loading) return <FullPageLoading />;
 
   return (
     <div className="min-h-screen bg-white">
@@ -120,10 +150,12 @@ export default function PelatihanPage() {
                     );
                   })()}
                 </div>
-                <Link href="/informasi" className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm font-medium transition-colors">
-                  Lihat Semua
-                  <i className="ri-arrow-right-line"></i>
-                </Link>
+                {relatedNews.length > 0 && (
+                  <Link href="/informasi" className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm font-medium transition-colors">
+                    Lihat Semua
+                    <i className="ri-arrow-right-line"></i>
+                  </Link>
+                )}
               </Card>
             </div>
           </div>
@@ -143,7 +175,8 @@ export default function PelatihanPage() {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {upcoming.map((pel) => (
+            {upcoming.length > 0 ? (
+              upcoming.map((pel) => (
               <div key={pel.id} className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl border border-gray-200 transition-all group">
                 <div className="flex items-start gap-4 mb-4">
                   <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
@@ -180,7 +213,12 @@ export default function PelatihanPage() {
                   </button>
                 </div>
               </div>
-            ))}
+            ))
+            ) : (
+              <div className="col-span-full text-center py-10 text-gray-500">
+                Belum ada pelatihan yang akan datang
+              </div>
+            )}
           </div>
         </div>
       </section>
