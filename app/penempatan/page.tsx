@@ -7,6 +7,7 @@ import FullPageLoading from "../../components/ui/FullPageLoading";
 import { listPublicJobs } from "../../services/jobs";
 import { getHomeContent } from "../../services/site";
 import { getPublicCompanyById } from "../../services/company";
+import { stripHtml, formatDate } from "../../utils/format";
 
 // using dynamic mapping similar to homepage, no explicit type needed
 

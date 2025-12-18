@@ -138,6 +138,7 @@ export default function AboutPage() {
     "Meningkatkan penyerapan tenaga kerja di berbagai sektor/perusahaan yang profesional",
   ]);
   const [profileHtml, setProfileHtml] = useState<string>("");
+  const [visionHtml, setVisionHtml] = useState<string>("");
   const [contact, setContact] = useState<{ alamat: string; telepon: string; email: string; jam_layanan: string; facebook: string; instagram: string; youtube: string }>({ alamat: "", telepon: "", email: "", jam_layanan: "", facebook: "", instagram: "", youtube: "" });
   const [loading, setLoading] = useState(true);
   type SiteSettingsShape = { instansi_alamat?: string; instansi_telepon?: string; instansi_email?: string; instansi_jam_layanan?: string; instansi_facebook?: string; instansi_instagram?: string; instansi_youtube?: string };
@@ -149,7 +150,7 @@ export default function AboutPage() {
           type AboutContentResponse = {
             profile: SiteContentItem<{ content_html?: string }>[];
             focus_areas: SiteContentItem<{ text: string }>[];
-            vision: SiteContentItem<{ text: string }>[];
+            vision: SiteContentItem<{ text?: string; content_html?: string }>[];
             mission_points: SiteContentItem<{ text: string }>[];
             team: SiteContentItem<{ name: string; position: string; role: string; image: string }>[];
             // achievements/statistics removed from API; keep dummy
@@ -157,6 +158,8 @@ export default function AboutPage() {
           const ac = await getAboutContent() as AboutContentResponse;
         const prof = Array.isArray(ac.profile) ? ac.profile : [];
         setProfileHtml(String(prof[0]?.data?.content_html || ""));
+        const vis = Array.isArray(ac.vision) ? ac.vision : [];
+        setVisionHtml(String(vis[0]?.data?.text || vis[0]?.data?.content_html || ""));
         const fa = Array.isArray(ac.focus_areas) ? ac.focus_areas : [];
         setFocusAreas(fa.map((x) => String(x.data?.text || "")));
         const ms = Array.isArray(ac.mission_points) ? ac.mission_points : [];
@@ -256,9 +259,13 @@ export default function AboutPage() {
               <div className="w-16 h-1 bg-green-600 mx-auto"></div>
             </div>
             <div className="bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-xl border border-green-200">
-              <p className="text-gray-800 text-center leading-relaxed text-base">
-                &quot;Mewujudkan Tenaga Kerja yang Kompeten, Produktif, dan Berdaya Saing dalam Mendukung Pembangunan Daerah yang Berkelanjutan&quot;
-              </p>
+              {visionHtml ? (
+                 <div className="text-gray-800 text-center leading-relaxed text-base" dangerouslySetInnerHTML={{ __html: visionHtml }} />
+              ) : (
+                <p className="text-gray-800 text-center leading-relaxed text-base">
+                  &quot;Mewujudkan Tenaga Kerja yang Kompeten, Produktif, dan Berdaya Saing dalam Mendukung Pembangunan Daerah yang Berkelanjutan&quot;
+                </p>
+              )}
             </div>
           </div>
 

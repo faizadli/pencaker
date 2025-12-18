@@ -17,7 +17,7 @@ type ListResponse<T> = { data: SiteContentItem<T>[] };
 export default function KontenPage() {
   const [loading, setLoading] = useState(true);
   type Tab = "faq" | "partners" | "testimonials" | "bkk" | "about";
-  type AboutSection = "about_profile" | "about_focus" | "about_mission" | "about_team" | "about_running_text";
+  type AboutSection = "about_profile" | "about_focus" | "about_mission" | "about_team" | "about_running_text" | "about_vision";
   type PubStatus = "Publikasi" | "Draft";
   type Faq = { id: string; pertanyaan: string; jawaban: string; kategori: string; status: "Publikasi" | "Draft" };
   type Partner = { id: string; name: string; logo: string; status: "Publikasi" | "Draft" };
@@ -34,7 +34,7 @@ export default function KontenPage() {
   const [partnerLogoPreview, setPartnerLogoPreview] = useState<string>("");
   const [testimonialPhotoPreview, setTestimonialPhotoPreview] = useState<string>("");
   const [teamImagePreview, setTeamImagePreview] = useState<string>("");
-  const [aboutModal, setAboutModal] = useState<{ section: "profile" | "focus_areas" | "mission_points" | "team" | "running_text"; id?: string } | null>(null);
+  const [aboutModal, setAboutModal] = useState<{ section: "profile" | "focus_areas" | "mission_points" | "team" | "running_text" | "vision"; id?: string } | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [editFaq, setEditFaq] = useState<Faq | null>(null);
@@ -43,6 +43,8 @@ export default function KontenPage() {
   const [editBkk, setEditBkk] = useState<Bkk | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [profileHtml, setProfileHtml] = useState<string>("");
+  const [visionId, setVisionId] = useState<string | null>(null);
+  const [visionHtml, setVisionHtml] = useState<string>("");
   const [editFocus, setEditFocus] = useState<AboutFocus | null>(null);
   const [editMission, setEditMission] = useState<AboutMission | null>(null);
   const [editTeam, setEditTeam] = useState<TeamMember | null>(null);
@@ -95,6 +97,14 @@ export default function KontenPage() {
           const first = rows[0];
           setProfileId(first ? String(first.id) : null);
           setProfileHtml(first ? String(first.data?.content_html || "") : "");
+        } catch {}
+
+        try {
+          const visionResp = await listSiteContents({ page: "about", section: "vision", published: false }) as ListResponse<{ content_html?: string }>;
+          const rows = Array.isArray(visionResp.data) ? visionResp.data : [];
+          const first = rows[0];
+          setVisionId(first ? String(first.id) : null);
+          setVisionHtml(first ? String(first.data?.content_html || "") : "");
         } catch {}
 
         try {
@@ -221,6 +231,18 @@ export default function KontenPage() {
         setProfileHtml(first ? String(first.data?.content_html || "") : "");
         showSuccess("Profil disimpan");
       } catch {}
+    } else if (section === "about_vision") {
+      const htmlEmpty = String(visionHtml || "").replace(/<[^>]*>/g, "").trim() === "";
+      if (htmlEmpty) { showError("Visi wajib diisi"); return; }
+      try {
+        await upsertSiteContent({ id: visionId || upsertId, page: "about", section: "vision", data: { content_html: visionHtml }, status: "PUBLISHED", sort_order: 0 });
+        const visionResp = await listSiteContents({ page: "about", section: "vision", published: false }) as ListResponse<{ content_html?: string }>;
+        const rows = Array.isArray(visionResp.data) ? visionResp.data : [];
+        const first = rows[0];
+        setVisionId(first ? String(first.id) : null);
+        setVisionHtml(first ? String(first.data?.content_html || "") : "");
+        showSuccess("Visi disimpan");
+      } catch {}
     } else if (section === "about_focus" && editFocus) {
       if (!String(editFocus.text || "").trim()) { showError("Teks fokus wajib diisi"); return; }
       setFocusList(focusList.map((item) => (item.id === id ? { ...editFocus } : item)));
@@ -308,6 +330,7 @@ export default function KontenPage() {
         bkk: "bkk",
         about: "",
         about_profile: "profile",
+        about_vision: "vision",
         about_focus: "focus_areas",
         about_mission: "mission_points",
         about_team: "team",
@@ -445,6 +468,14 @@ export default function KontenPage() {
                 <div className="prose max-w-none text-sm" dangerouslySetInnerHTML={{ __html: profileHtml || "" }} />
               </Card>
 
+              <Card header={<h2 className="text-lg font-semibold text-primary">Visi</h2>}>
+                <div className="flex justify-between items-center mb-4">
+                  <p className="text-sm text-gray-600">Konten HTML visi</p>
+                  <button onClick={() => setAboutModal({ section: "vision", id: visionId || undefined })} className="px-3 py-2 bg-primary text-white rounded-lg text-sm"><i className="ri-edit-line"></i> Edit</button>
+                </div>
+                <div className="prose max-w-none text-sm" dangerouslySetInnerHTML={{ __html: visionHtml || "" }} />
+              </Card>
+
               <Card header={<h2 className="text-lg font-semibold text-primary">Fokus</h2>}>
                 <div className="flex justify-between items-center mb-4">
                   <p className="text-sm text-gray-600">Daftar area fokus</p>
@@ -531,6 +562,8 @@ export default function KontenPage() {
                     <button onClick={() => {
                       if (aboutModal.section === "profile") {
                         handleSave("about_profile", (aboutModal.id || profileId || "__new__"));
+                      } else if (aboutModal.section === "vision") {
+                        handleSave("about_vision", (aboutModal.id || visionId || "__new__"));
                       } else if (aboutModal.section === "focus_areas" && editFocus) {
                         handleSave("about_focus", (aboutModal.id || editFocus.id));
                       } else if (aboutModal.section === "mission_points" && editMission) {
@@ -547,6 +580,9 @@ export default function KontenPage() {
                 }>
                   {aboutModal.section === "profile" && (
                     <TextEditor value={profileHtml} onChange={(v) => setProfileHtml(v)} placeholder="Tulis profil instansi..." />
+                  )}
+                  {aboutModal.section === "vision" && (
+                    <TextEditor value={visionHtml} onChange={(v) => setVisionHtml(v)} placeholder="Tulis visi..." />
                   )}
                   {aboutModal.section === "focus_areas" && editFocus && (
                     <div className="space-y-3">
