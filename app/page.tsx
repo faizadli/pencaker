@@ -390,20 +390,50 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 bg-gray-100">
+      <section className="py-16 bg-gray-100 overflow-hidden">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">Perusahaan Mitra</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">Bekerjasama dengan perusahaan-perusahaan terpercaya</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {partners.map((partner) => (
-              <div key={partner.id} className="bg-white p-6 rounded-2xl border border-gray-200 hover:shadow-lg transition-all flex items-center justify-center">
-                <Image src={partner.logo} alt={partner.name} width={100} height={40} className="h-10 object-contain" />
-              </div>
-            ))}
+          
+          <div className="marquee-partners relative w-full">
+            <div className="marquee-track-partners flex">
+              {/* Loop 4 sets of partners to ensure infinite seamless scrolling even on wide screens */}
+              {[...Array(4)].map((_, setIndex) => (
+                <div key={setIndex} className="flex items-center gap-12 pr-12">
+                  {(partners.length > 0 ? partners : []).map((partner, index) => (
+                    <div key={`${setIndex}-${partner.id}-${index}`} className="flex-shrink-0 grayscale hover:grayscale-0 transition-all duration-300 opacity-70 hover:opacity-100">
+                      <Image src={partner.logo} alt={partner.name} width={150} height={60} className="h-16 w-auto object-contain" />
+                    </div>
+                  ))}
+                  {partners.length === 0 && setIndex === 0 && (
+                     <div className="text-gray-400 italic px-4">Belum ada mitra terdaftar</div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+        <style jsx>{`
+          @keyframes marqueePartners {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-25%); }
+          }
+          .marquee-partners {
+            position: relative;
+            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+          }
+          .marquee-track-partners {
+            width: max-content;
+            animation: marqueePartners 40s linear infinite;
+            will-change: transform;
+          }
+          .marquee-track-partners:hover {
+            animation-play-state: paused;
+          }
+        `}</style>
       </section>
 
       <section className="py-20 bg-gray-50">
