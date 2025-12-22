@@ -225,11 +225,13 @@ export async function listApplications(params?: {
   candidate_id?: string;
   company_id?: string;
   job_id?: string;
+  limit?: number;
 }) {
   const q = new URLSearchParams();
   if (params?.candidate_id) q.set("candidate_id", params.candidate_id);
   if (params?.company_id) q.set("company_id", params.company_id);
   if (params?.job_id) q.set("job_id", params.job_id);
+  if (params?.limit) q.set("limit", String(params.limit));
   const resp = await fetch(
     `${BASE}/api/jobs/applications${q.toString() ? `?${q.toString()}` : ""}`,
     { headers: { ...authHeader() } },

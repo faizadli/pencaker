@@ -28,6 +28,7 @@ import {
   getCandidateProfileById,
   listCandidates,
 } from "../../../../../services/profile";
+import { getEducationGroups } from "../../../../../services/site";
 import { listRoles, getRolePermissions } from "../../../../../services/rbac";
 import { useToast } from "../../../../../components/ui/Toast";
 
@@ -52,6 +53,10 @@ export default function PelamarLowonganPage() {
       schedule_end?: string | null;
       note?: string | null;
       is_admin_created?: boolean;
+      createdAt?: string;
+      statusPerkawinan?: string;
+      pendidikan?: string;
+      jurusan?: string;
     }>
   >([]);
   const [saving, setSaving] = useState<string>("");
@@ -77,8 +82,117 @@ export default function PelamarLowonganPage() {
   const [editEnd, setEditEnd] = useState<string | null>(null);
   const [editNote, setEditNote] = useState<string | null>(null);
 
+  const [filterAgeMin, setFilterAgeMin] = useState<string>("");
+  const [filterAgeMax, setFilterAgeMax] = useState<string>("");
+  const [filterRegDateStart, setFilterRegDateStart] = useState<string>("");
+  const [filterRegDateEnd, setFilterRegDateEnd] = useState<string>("");
+  const [filterMaritalStatus, setFilterMaritalStatus] = useState<string>("");
+  const [filterEducationLevel, setFilterEducationLevel] = useState<string>("");
+  const [filterEducationMajor, setFilterEducationMajor] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<"self" | "admin">("self");
+
+  const [educationGroups, setEducationGroups] = useState<
+    { id: string; name: string; items: { id: string; name: string }[] }[]
+  >([]);
+
   // Permissions
   const [permissions, setPermissions] = useState<string[]>([]);
+
+  const filteredRows = useMemo(() => {
+    let result = rows;
+
+    if (activeTab === "admin") {
+      result = result.filter((r) => r.is_admin_created);
+    } else {
+      result = result.filter((r) => !r.is_admin_created);
+    }
+
+    if (filterStatus) {
+      result = result.filter((r) => r.status === filterStatus);
+    }
+
+    if (filterAgeMin) {
+      result = result.filter((r) => (r.age || 0) >= parseInt(filterAgeMin));
+    }
+
+    if (filterAgeMax) {
+      result = result.filter((r) => (r.age || 0) <= parseInt(filterAgeMax));
+    }
+
+    // Reg Date filter
+    if (filterRegDateStart || filterRegDateEnd) {
+      result = result.filter((r) => {
+        if (!r.createdAt) return false;
+        const regDate = new Date(r.createdAt);
+        let match = true;
+        if (filterRegDateStart && regDate < new Date(filterRegDateStart))
+          match = false;
+        if (filterRegDateEnd) {
+          const endDate = new Date(filterRegDateEnd);
+          endDate.setHours(23, 59, 59, 999);
+          if (regDate > endDate) match = false;
+        }
+        return match;
+      });
+    }
+
+    // Marital status filter
+    if (filterMaritalStatus) {
+      result = result.filter(
+        (r) =>
+          r.statusPerkawinan?.toLowerCase() ===
+          filterMaritalStatus.toLowerCase(),
+      );
+    }
+
+    // Education Level filter
+    if (filterEducationLevel) {
+      const selectedGroup = educationGroups.find(
+        (g) => g.name === filterEducationLevel,
+      );
+      if (selectedGroup) {
+        const itemNames = selectedGroup.items.map((i) => i.name.toLowerCase());
+        result = result.filter(
+          (r) => r.pendidikan && itemNames.includes(r.pendidikan.toLowerCase()),
+        );
+      } else {
+        result = result.filter(
+          (r) =>
+            r.pendidikan?.toLowerCase() === filterEducationLevel.toLowerCase(),
+        );
+      }
+    }
+
+    // Education Major filter
+    if (filterEducationMajor) {
+      result = result.filter(
+        (r) => r.jurusan?.toLowerCase() === filterEducationMajor.toLowerCase(),
+      );
+    }
+
+    return result;
+  }, [
+    rows,
+    activeTab,
+    filterStatus,
+    filterAgeMin,
+    filterAgeMax,
+    filterRegDateStart,
+    filterRegDateEnd,
+    filterMaritalStatus,
+    filterEducationLevel,
+    filterEducationMajor,
+    educationGroups,
+  ]);
+
+  // Helper to get education major options
+  const getMajorOptions = () => {
+    if (!filterEducationLevel) return [];
+    const group = educationGroups.find((g) => g.name === filterEducationLevel);
+    if (!group) return [];
+    return group.items.map((i) => ({ value: i.name, label: i.name }));
+  };
 
   // Add Manual Applicant States
   const [showAddModal, setShowAddModal] = useState(false);
@@ -89,7 +203,6 @@ export default function PelamarLowonganPage() {
   const [selectedCandidateId, setSelectedCandidateId] = useState("");
   const [addNote, setAddNote] = useState("");
   const [isSearchingCandidate, setIsSearchingCandidate] = useState(false);
-  const [activeTab, setActiveTab] = useState<"self" | "admin">("self");
 
   useEffect(() => {
     async function bootPerms() {
@@ -177,6 +290,7 @@ export default function PelamarLowonganPage() {
             schedule_end?: string | null;
             note?: string | null;
             is_admin_created?: number | boolean;
+            created_at?: string;
           }>)
         : [];
       const normalized = await Promise.all(
@@ -194,6 +308,10 @@ export default function PelamarLowonganPage() {
           let age: number | undefined = undefined;
           let kecamatan: string | undefined = undefined;
           let kelurahan: string | undefined = undefined;
+          let statusPerkawinan: string | undefined = undefined;
+          let pendidikan: string | undefined = undefined;
+          const jurusan: string | undefined = undefined;
+
           const cname = objA["candidate_name"];
           const cbirth = objA["candidate_birthdate"];
           const ckec = objA["candidate_kecamatan"];
@@ -202,32 +320,53 @@ export default function PelamarLowonganPage() {
           if (typeof cbirth === "string" && cbirth) age = calcAge(cbirth);
           if (typeof ckec === "string" && ckec) kecamatan = ckec;
           if (typeof ckel === "string" && ckel) kelurahan = ckel;
-          if (name === a.candidate_id) {
-            try {
-              const cp = await getCandidateProfileById(a.candidate_id);
-              const base = hasData(cp) ? cp.data : cp;
-              const obj = isObj(base) ? base : {};
-              const nm = obj["full_name"];
-              name = typeof nm === "string" ? nm : a.candidate_id;
-              age =
-                age ??
-                calcAge(
-                  typeof obj["birthdate"] === "string"
-                    ? (obj["birthdate"] as string)
-                    : undefined,
-                );
-              kecamatan =
-                kecamatan ??
-                (typeof obj["kecamatan"] === "string"
-                  ? (obj["kecamatan"] as string)
-                  : undefined);
-              kelurahan =
-                kelurahan ??
-                (typeof obj["kelurahan"] === "string"
-                  ? (obj["kelurahan"] as string)
-                  : undefined);
-            } catch {}
-          }
+
+          // Always fetch profile to get details for filters if not provided in list
+          // Optimization: could check if fields are already in objA
+          try {
+            const cp = await getCandidateProfileById(a.candidate_id);
+            const base = hasData(cp) ? cp.data : cp;
+            const obj = isObj(base) ? base : {};
+            const nm = obj["full_name"];
+            name =
+              typeof nm === "string"
+                ? nm
+                : name === a.candidate_id
+                  ? a.candidate_id
+                  : name;
+            age =
+              age ??
+              calcAge(
+                typeof obj["birthdate"] === "string"
+                  ? (obj["birthdate"] as string)
+                  : undefined,
+              );
+            kecamatan =
+              kecamatan ??
+              (typeof obj["kecamatan"] === "string"
+                ? (obj["kecamatan"] as string)
+                : undefined);
+            kelurahan =
+              kelurahan ??
+              (typeof obj["kelurahan"] === "string"
+                ? (obj["kelurahan"] as string)
+                : undefined);
+            statusPerkawinan =
+              typeof obj["status_perkawinan"] === "string"
+                ? obj["status_perkawinan"]
+                : undefined;
+            pendidikan =
+              typeof obj["last_education"] === "string"
+                ? obj["last_education"]
+                : undefined;
+            // jurusan = ... (if available in profile)
+          } catch {}
+
+          const createdAt =
+            typeof objA["created_at"] === "string"
+              ? objA["created_at"]
+              : a.created_at || undefined;
+
           return {
             id,
             candidate_id: a.candidate_id,
@@ -240,6 +379,10 @@ export default function PelamarLowonganPage() {
             schedule_end: a.schedule_end || null,
             note: a.note || null,
             is_admin_created: !!a.is_admin_created,
+            createdAt,
+            statusPerkawinan,
+            pendidikan,
+            jurusan,
           };
         }),
       );
@@ -317,6 +460,27 @@ export default function PelamarLowonganPage() {
           router.replace("/dashboard/lowongan");
           return;
         }
+
+        // Load education groups
+        try {
+          const eduResp = await getEducationGroups();
+          const eduData = (eduResp.data || eduResp) as {
+            id?: string;
+            name?: string;
+            items?: { id?: string; name?: string }[];
+          }[];
+          setEducationGroups(
+            eduData.map((g) => ({
+              id: String(g.id || ""),
+              name: String(g.name || ""),
+              items: (g.items || []).map((i) => ({
+                id: String(i.id || ""),
+                name: String(i.name || ""),
+              })),
+            })),
+          );
+        } catch {}
+
         try {
           const j = await getJobById(jobId);
           const base = hasData(j) ? j.data : j;
@@ -523,90 +687,211 @@ export default function PelamarLowonganPage() {
           )}
         </div>
 
-        <div className="mb-6">
-          <SegmentedToggle
-            options={[
-              { label: "Melamar Sendiri", value: "self", icon: "ri-user-line" },
-              {
-                label: "Ditambahkan Admin",
-                value: "admin",
-                icon: "ri-admin-line",
-              },
-            ]}
-            value={activeTab}
-            onChange={(v) => setActiveTab(v as "self" | "admin")}
-            className="w-full sm:w-fit"
-          />
-        </div>
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex-1 min-w-0">
+            <Card className="overflow-hidden">
+              <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <SegmentedToggle
+                  options={[
+                    {
+                      label: "Melamar Sendiri",
+                      value: "self",
+                      icon: "ri-user-line",
+                    },
+                    {
+                      label: "Ditambahkan Admin",
+                      value: "admin",
+                      icon: "ri-admin-line",
+                    },
+                  ]}
+                  value={activeTab}
+                  onChange={(v) => setActiveTab(v as "self" | "admin")}
+                  className="w-full sm:w-fit"
+                />
+              </div>
+              <Table>
+                <TableHead>
+                  <tr>
+                    <TH>Nama</TH>
+                    <TH>Usia</TH>
+                    <TH>Kecamatan</TH>
+                    <TH>Kelurahan</TH>
+                    <TH>Status</TH>
+                    <TH>Aksi</TH>
+                  </tr>
+                </TableHead>
+                <TableBody>
+                  {filteredRows.map((r) => (
+                    <TableRow key={r.id}>
+                      <TD className="text-primary">{r.name}</TD>
+                      <TD className="text-gray-900">
+                        {typeof r.age === "number" ? `${r.age} th` : "-"}
+                      </TD>
+                      <TD className="text-gray-500">{r.kecamatan || "-"}</TD>
+                      <TD className="text-gray-500">{r.kelurahan || "-"}</TD>
+                      <TD>
+                        <span className="inline-block px-2 py-0.5 text-xs rounded bg-gray-100 text-primary">
+                          {statusOptions.find(
+                            (o) => o.value === (r.status || ""),
+                          )?.label || "-"}
+                        </span>
+                      </TD>
+                      <TD>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openDetail(r)}
+                            className="px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition"
+                          >
+                            Detail
+                          </button>
+                          <button
+                            onClick={() => openEdit(r)}
+                            className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      </TD>
+                    </TableRow>
+                  ))}
+                  {filteredRows.length === 0 && (
+                    <TableRow>
+                      <TD colSpan={6} className="text-gray-500">
+                        Belum ada pelamar{" "}
+                        {activeTab === "admin"
+                          ? "yang ditambahkan admin"
+                          : "yang melamar sendiri"}
+                        {(filterStatus ||
+                          filterAgeMin ||
+                          filterAgeMax ||
+                          filterRegDateStart ||
+                          filterEducationLevel) &&
+                          " yang sesuai filter"}
+                      </TD>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+          </div>
 
-        <Card className="overflow-hidden">
-          <Table>
-            <TableHead>
-              <tr>
-                <TH>Nama</TH>
-                <TH>Usia</TH>
-                <TH>Kecamatan</TH>
-                <TH>Kelurahan</TH>
-                <TH>Status</TH>
-                <TH>Aksi</TH>
-              </tr>
-            </TableHead>
-            <TableBody>
-              {rows
-                .filter((r) =>
-                  activeTab === "admin"
-                    ? r.is_admin_created
-                    : !r.is_admin_created,
-                )
-                .map((r) => (
-                  <TableRow key={r.id}>
-                    <TD className="text-primary">{r.name}</TD>
-                    <TD className="text-gray-900">
-                      {typeof r.age === "number" ? `${r.age} th` : "-"}
-                    </TD>
-                    <TD className="text-gray-500">{r.kecamatan || "-"}</TD>
-                    <TD className="text-gray-500">{r.kelurahan || "-"}</TD>
-                    <TD>
-                      <span className="inline-block px-2 py-0.5 text-xs rounded bg-gray-100 text-primary">
-                        {statusOptions.find((o) => o.value === (r.status || ""))
-                          ?.label || "-"}
-                      </span>
-                    </TD>
-                    <TD>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => openDetail(r)}
-                          className="px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition"
-                        >
-                          Detail
-                        </button>
-                        <button
-                          onClick={() => openEdit(r)}
-                          className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition"
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    </TD>
-                  </TableRow>
-                ))}
-              {rows.filter((r) =>
-                activeTab === "admin"
-                  ? r.is_admin_created
-                  : !r.is_admin_created,
-              ).length === 0 && (
-                <TableRow>
-                  <TD colSpan={6} className="text-gray-500">
-                    Belum ada pelamar{" "}
-                    {activeTab === "admin"
-                      ? "yang ditambahkan admin"
-                      : "yang melamar sendiri"}
-                  </TD>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </Card>
+          {/* Sidebar Filters */}
+          <div className="w-full lg:w-80 flex-shrink-0">
+            <div className="bg-white p-5 rounded-xl shadow-md border border-gray-200 sticky top-4">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i className="ri-filter-3-line"></i> Filter
+              </h3>
+
+              <div className="space-y-4">
+                {/* Status Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status Aplikasi
+                  </label>
+                  <SearchableSelect
+                    options={[
+                      { value: "", label: "Semua Status" },
+                      ...statusOptions,
+                    ]}
+                    value={filterStatus}
+                    onChange={setFilterStatus}
+                    placeholder="Pilih status..."
+                    className="w-full"
+                  />
+                </div>
+
+                {/* Age Range Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Rentang Umur
+                  </label>
+                  <div className="space-y-2">
+                    <Input
+                      type="number"
+                      placeholder="Min Umur"
+                      value={filterAgeMin}
+                      onChange={(e) => setFilterAgeMin(e.target.value)}
+                      className="w-full"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Max Umur"
+                      value={filterAgeMax}
+                      onChange={(e) => setFilterAgeMax(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+
+                {/* Reg Date Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tanggal Pendaftaran
+                  </label>
+                  <div className="space-y-2">
+                    <Input
+                      type="date"
+                      placeholder="Dari Tanggal"
+                      value={filterRegDateStart}
+                      onChange={(e) => setFilterRegDateStart(e.target.value)}
+                      className="w-full"
+                    />
+                    <Input
+                      type="date"
+                      placeholder="Sampai Tanggal"
+                      value={filterRegDateEnd}
+                      onChange={(e) => setFilterRegDateEnd(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+
+                {/* Marital Status */}
+                <SearchableSelect
+                  label="Status"
+                  options={[
+                    { value: "", label: "Pilih Status" },
+                    { value: "belum kawin", label: "Belum Kawin" },
+                    { value: "kawin", label: "Kawin" },
+                    { value: "cerai hidup", label: "Cerai Hidup" },
+                    { value: "cerai mati", label: "Cerai Mati" },
+                  ]}
+                  value={filterMaritalStatus}
+                  onChange={(v) => setFilterMaritalStatus(v)}
+                />
+
+                {/* Education Level */}
+                <SearchableSelect
+                  label="Tingkat Pendidikan"
+                  options={[
+                    { value: "", label: "Pilih Pendidikan" },
+                    ...educationGroups.map((g) => ({
+                      value: g.name,
+                      label: g.name,
+                    })),
+                  ]}
+                  value={filterEducationLevel}
+                  onChange={(v) => {
+                    setFilterEducationLevel(v);
+                    setFilterEducationMajor("");
+                  }}
+                />
+
+                {/* Education Major */}
+                <SearchableSelect
+                  label="Jurusan Pendidikan"
+                  options={[
+                    { value: "", label: "Cari jurusan pendidikan" },
+                    ...getMajorOptions(),
+                  ]}
+                  value={filterEducationMajor}
+                  onChange={(v) => setFilterEducationMajor(v)}
+                  disabled={!filterEducationLevel}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
         <Modal
           open={showAddModal}

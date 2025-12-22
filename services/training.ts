@@ -35,6 +35,29 @@ export interface TrainingParticipant {
   created_at: string;
 }
 
+export interface PublicParticipant {
+  id: string;
+  name: string;
+  status: string;
+  created_at: string;
+  photo?: string;
+  gender?: string;
+  age?: number;
+  education?: string;
+  // Detail fields
+  training_title?: string;
+  instructor?: string;
+  start_date?: string;
+  end_date?: string;
+  birth_place?: string;
+  birth_date?: string;
+  address?: string;
+  kecamatan?: string;
+  kelurahan?: string;
+  graduation_year?: string;
+  marital_status?: string;
+}
+
 export interface CreateTrainingRequest {
   title: string;
   description?: string;
@@ -57,6 +80,41 @@ export interface UpdateTrainingRequest {
   quota?: number;
   status?: "open" | "closed" | "ongoing" | "completed";
   image_url?: string;
+}
+
+export async function getPublicTrainings(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+}) {
+  const q = new URLSearchParams();
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.limit) q.set("limit", String(params.limit));
+  if (params?.search) q.set("search", params.search);
+  if (params?.status && params.status !== "all") q.set("status", params.status);
+
+  const resp = await fetch(`${BASE}/api/public/trainings?${q.toString()}`);
+  if (!resp.ok) throw new Error("Gagal mengambil data pelatihan publik");
+  return resp.json();
+}
+
+export async function getPublicTrainingById(id: string) {
+  const resp = await fetch(`${BASE}/api/public/trainings/${id}`);
+  if (!resp.ok) throw new Error("Gagal mengambil detail pelatihan publik");
+  return resp.json();
+}
+
+export async function getPublicTrainingParticipants(id: string) {
+  const resp = await fetch(`${BASE}/api/public/trainings/${id}/participants`);
+  if (!resp.ok) throw new Error("Gagal mengambil data peserta pelatihan");
+  return resp.json();
+}
+
+export async function getPublicParticipantDetail(id: string) {
+  const resp = await fetch(`${BASE}/api/public/training-participants/${id}`);
+  if (!resp.ok) throw new Error("Gagal mengambil detail peserta");
+  return resp.json();
 }
 
 export async function getTrainings(params?: {
