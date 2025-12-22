@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Input,
   SearchableSelect,
+  SearchableSelectOption,
   SegmentedToggle,
   Textarea,
 } from "../../../components/ui/field";
@@ -23,6 +24,7 @@ import {
 } from "../../../services/profile";
 import { presignUpload, upsertAk1Document } from "../../../services/ak1";
 import { listDistricts, listVillages } from "../../../services/wilayah";
+import { getEducationGroups } from "../../../services/site";
 
 export default function RegisterCandidate() {
   const router = useRouter();
@@ -103,6 +105,59 @@ export default function RegisterCandidate() {
     { value: string; label: string }[]
   >([]);
   type EmsifaItem = { id: number | string; name: string };
+
+  type GroupItem = { id?: string; code?: string; name: string };
+  type GroupData = {
+    id?: string;
+    code?: string;
+    name: string;
+    items?: GroupItem[];
+  };
+  const [educationOptions, setEducationOptions] = useState<
+    SearchableSelectOption[]
+  >([]);
+
+  const transformGroupsToOptions = useCallback(
+    (
+      groups: GroupData[],
+      valueKey: "id" | "name" = "name",
+      appendGroup = false,
+    ) => {
+      const opts: SearchableSelectOption[] = [];
+      groups.forEach((g) => {
+        opts.push({
+          value: `group-${g.id || g.name}`,
+          label: g.name,
+          isGroup: true,
+        });
+        if (Array.isArray(g.items)) {
+          g.items.forEach((item: GroupItem) => {
+            opts.push({
+              value: String(item[valueKey] || ""),
+              label: appendGroup ? `${item.name} - ${g.name}` : item.name,
+              indent: true,
+            });
+          });
+        }
+      });
+      return opts;
+    },
+    [],
+  );
+
+  useEffect(() => {
+    async function loadOptions() {
+      try {
+        const eduResp = await getEducationGroups();
+        const eduRaw = eduResp.data || eduResp;
+        const eduData = Array.isArray(eduRaw) ? eduRaw : eduRaw.groups || [];
+        setEducationOptions(transformGroupsToOptions(eduData, "name"));
+      } catch (e) {
+        console.error("Failed to load dropdown options", e);
+      }
+    }
+    loadOptions();
+  }, [transformGroupsToOptions]);
 
   const [cooldown, setCooldown] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
@@ -955,13 +1010,13 @@ export default function RegisterCandidate() {
                   required
                 />
 
-                <Input
+                <SearchableSelect
                   label="Pendidikan Terakhir"
+                  options={educationOptions}
                   value={profile.last_education}
-                  onChange={(e) =>
-                    setProfile({ ...profile, last_education: e.target.value })
+                  onChange={(value) =>
+                    setProfile({ ...profile, last_education: value })
                   }
-                  required
                 />
                 <Input
                   label="Tahun Lulus"

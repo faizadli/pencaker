@@ -1,0 +1,4814 @@
+{
+  "ipk3.1": [
+    {
+      "code": "1. Pencari kerja yang belum ditempatkan pada bulan yang lalu",
+      "label": "2726"
+    },
+    {
+      "code": "2. Pencari kerja yang terdaftar pada bulan ini",
+      "label": "9"
+    },
+    {
+      "code": "A. JUMLAH (1+2)",
+      "label": "[object Object]"
+    },
+    {
+      "code": "B. JUMLAH (3+4)",
+      "label": "[object Object]"
+    },
+    {
+      "code": "5. Pencari kerja yang belum ditempatkan pada akhir bulan ini (A-B)",
+      "label": "[object Object]"
+    },
+    {
+      "code": "II. LOWONGAN",
+      "label": "L"
+    },
+    {
+      "code": "1",
+      "label": "2"
+    },
+    {
+      "code": "1. Lowongan yang belum dipenuhi pada akhir bulan lalu",
+      "label": "485"
+    },
+    {
+      "code": "C. JUMLAH (1+2)",
+      "label": "[object Object]"
+    },
+    {
+      "code": "3. Lowongan yang dipenuhi bulan ini",
+      "label": "[object Object]"
+    },
+    {
+      "code": "D. JUMLAH (3+4)",
+      "label": "[object Object]"
+    },
+    {
+      "code": "5. Lowongan yang belum dipenuhi akhir bulan ini (C-D)",
+      "label": "[object Object]"
+    }
+  ],
+  "ipk3.2": [
+    {
+      "code": "1",
+      "label": "1"
+    },
+    {
+      "code": "1000",
+      "label": "SEKOLAH DASAR"
+    },
+    {
+      "code": "1101",
+      "label": "TIDAK TAMAT SD"
+    },
+    {
+      "code": "1102",
+      "label": "TAMAT SD"
+    },
+    {
+      "code": "1103",
+      "label": "SETINGKAT SD"
+    },
+    {
+      "code": "1199",
+      "label": "SD - TAK TERDEFINISI"
+    },
+    {
+      "code": "2000",
+      "label": "PENDIDIKAN MENENGAH PERTAMA"
+    },
+    {
+      "code": "2101",
+      "label": "SEKOLAH MENENGAH PERTAMA"
+    },
+    {
+      "code": "2102",
+      "label": "MADRASAH DINIYAH SANAWIYAH"
+    },
+    {
+      "code": "2103",
+      "label": "SLTP LAINNYA"
+    },
+    {
+      "code": "2104",
+      "label": "SLTP KEJURUAN"
+    },
+    {
+      "code": "2199",
+      "label": "SLTP - TAK TERDEFINISI"
+    },
+    {
+      "code": "3000",
+      "label": "PENDIDIKAN MENENGAH ATAS"
+    },
+    {
+      "code": "3101",
+      "label": "TEKNIK BANGUNAN"
+    },
+    {
+      "code": "3102",
+      "label": "TEKNIK PLUMBING DAN SANITASI"
+    },
+    {
+      "code": "3103",
+      "label": "TEKNIK SURVEI DAN PEMETAAN"
+    },
+    {
+      "code": "3104",
+      "label": "TEKNIK KETENAGALISTRIKAN"
+    },
+    {
+      "code": "3105",
+      "label": "TEKNIK PENDINGINAN DAN TATA UDARA"
+    },
+    {
+      "code": "3106",
+      "label": "TEKNIK MESIN"
+    },
+    {
+      "code": "3107",
+      "label": "TEKNIK OTOMOTIF"
+    },
+    {
+      "code": "3108",
+      "label": "TEKNOLOGI PESAWAT UDARA"
+    },
+    {
+      "code": "3109",
+      "label": "TEKNIK PERKAPALAN"
+    },
+    {
+      "code": "3110",
+      "label": "TEKNOLOGI TEKSTIL"
+    },
+    {
+      "code": "3111",
+      "label": "TEKNIK GRAFIKA"
+    },
+    {
+      "code": "3112",
+      "label": "GEOLOGI PERTAMBANGAN"
+    },
+    {
+      "code": "3113",
+      "label": "INSTRUMENTASI INDUSTRI"
+    },
+    {
+      "code": "3114",
+      "label": "TEKNIK KIMIA"
+    },
+    {
+      "code": "3115",
+      "label": "PELAYARAN"
+    },
+    {
+      "code": "3116",
+      "label": "TEKNIK INDUSTRI"
+    },
+    {
+      "code": "3117",
+      "label": "TEKNIK PERMINYAKAN"
+    },
+    {
+      "code": "3118",
+      "label": "TEKNIK ELEKTRONIKA"
+    },
+    {
+      "code": "3201",
+      "label": "TEKNIK TELEKOMUNIKASI"
+    },
+    {
+      "code": "3202",
+      "label": "TEKNIK KOMPUTER DAN INFORMATIKA"
+    },
+    {
+      "code": "3203",
+      "label": "TEKNIK BROADCASTING"
+    },
+    {
+      "code": "3301",
+      "label": "KESEHATAN"
+    },
+    {
+      "code": "3302",
+      "label": "PERAWATAN SOSIAL"
+    },
+    {
+      "code": "3401",
+      "label": "SENI RUPA"
+    },
+    {
+      "code": "3402",
+      "label": "DESAIN DAN PRODUKSI KRIA"
+    },
+    {
+      "code": "3403",
+      "label": "SENI PERTUNJUKAN"
+    },
+    {
+      "code": "3404",
+      "label": "PARIWISATA"
+    },
+    {
+      "code": "3405",
+      "label": "TATA BOGA"
+    },
+    {
+      "code": "3406",
+      "label": "TATA KECANTIKAN"
+    },
+    {
+      "code": "3407",
+      "label": "TATA BUSANA"
+    },
+    {
+      "code": "3501",
+      "label": "AGRIBISNIS PRODUKSI TANAMAN"
+    },
+    {
+      "code": "3502",
+      "label": "AGRIBISNIS PRODUKSI TERNAK"
+    },
+    {
+      "code": "3503",
+      "label": "AGRIBISNIS PRODUKSI SUMBERDAYA PERAIRAN"
+    },
+    {
+      "code": "3504",
+      "label": "MEKANISASI PERTANIAN"
+    },
+    {
+      "code": "3505",
+      "label": "AGRIBISNIS HASIL PERTANIAN"
+    },
+    {
+      "code": "3506",
+      "label": "PENYULUHAN PERTANIAN"
+    },
+    {
+      "code": "3507",
+      "label": "KEHUTANAN"
+    },
+    {
+      "code": "3601",
+      "label": "ADMINISTRASI"
+    },
+    {
+      "code": "3602",
+      "label": "KEUANGAN"
+    },
+    {
+      "code": "3603",
+      "label": "TATA NIAGA"
+    },
+    {
+      "code": "3701",
+      "label": "SLTA LAINNYA"
+    },
+    {
+      "code": "3702",
+      "label": "SLTA - TAK TERDEFINISI"
+    },
+    {
+      "code": "3801",
+      "label": "SMU"
+    },
+    {
+      "code": "3802",
+      "label": "MADRASAH DINIYAH ALIYAH"
+    },
+    {
+      "code": "4000",
+      "label": "DIPLOMA I / AKTA I"
+    },
+    {
+      "code": "4101",
+      "label": "PENDIDIKAN"
+    },
+    {
+      "code": "4102",
+      "label": "PENDIDIKAN LUAR SEKOLAH"
+    },
+    {
+      "code": "4103",
+      "label": "PENDIDIKAN KESEJAHTERAAN SOSIAL"
+    },
+    {
+      "code": "4104",
+      "label": "PSIKOLOGI"
+    },
+    {
+      "code": "4105",
+      "label": "ILMU PENGETAHUAN SOSIAL"
+    },
+    {
+      "code": "4106",
+      "label": "PENDIDIKAN MORAL PANCASILA"
+    },
+    {
+      "code": "4107",
+      "label": "ADMINISTRASI KEUANGAN"
+    },
+    {
+      "code": "4108",
+      "label": "ANTROPOLOGI"
+    },
+    {
+      "code": "4109",
+      "label": "SEJARAH"
+    },
+    {
+      "code": "4110",
+      "label": "HUKUM"
+    },
+    {
+      "code": "4111",
+      "label": "KESEKRETARIATAN"
+    },
+    {
+      "code": "4112",
+      "label": "OLAH RAGA KESEHATAN"
+    },
+    {
+      "code": "4113",
+      "label": "KESENIAN"
+    },
+    {
+      "code": "4114",
+      "label": "BAHASA INDONESIA"
+    },
+    {
+      "code": "4115",
+      "label": "BAHASA INGGRIS"
+    },
+    {
+      "code": "4116",
+      "label": "BAHASA ARAB"
+    },
+    {
+      "code": "4117",
+      "label": "KETRAMPILAN"
+    },
+    {
+      "code": "4118",
+      "label": "EKONOMI"
+    },
+    {
+      "code": "4119",
+      "label": "ILMU PENGETAHUAN ALAM/FISIKA"
+    },
+    {
+      "code": "4120",
+      "label": "MATEMATIKA"
+    },
+    {
+      "code": "4121",
+      "label": "PROGRAM KOMPUTER"
+    },
+    {
+      "code": "4122",
+      "label": "BIOLOGI"
+    },
+    {
+      "code": "4123",
+      "label": "ILMU KIMIA"
+    },
+    {
+      "code": "4124",
+      "label": "KERJA KAYU"
+    },
+    {
+      "code": "4125",
+      "label": "TEKNIK MESIN"
+    },
+    {
+      "code": "4126",
+      "label": "TEKNIK SIPIL"
+    },
+    {
+      "code": "4127",
+      "label": "TEKNIK LISTRIK"
+    },
+    {
+      "code": "4128",
+      "label": "GEOGRAFI"
+    },
+    {
+      "code": "4129",
+      "label": "DIPLOMA I/AKTA I LAINNYA"
+    },
+    {
+      "code": "4199",
+      "label": "DIPLOMA I - TAK TERDEFINISI"
+    },
+    {
+      "code": "4000",
+      "label": "DIPLOMA II/AKTA II"
+    },
+    {
+      "code": "4201",
+      "label": "PENDIDIKAN"
+    },
+    {
+      "code": "4202",
+      "label": "PENDIDIKAN SOSIAL"
+    },
+    {
+      "code": "4203",
+      "label": "PENDIDIKAN LUAR SEKOLAH"
+    },
+    {
+      "code": "4204",
+      "label": "PSIKOLOGI"
+    },
+    {
+      "code": "4205",
+      "label": "PENDIDIKAN MORAL PANCASILA"
+    },
+    {
+      "code": "4206",
+      "label": "ANTROPOLOGI"
+    },
+    {
+      "code": "4207",
+      "label": "SEJARAH"
+    },
+    {
+      "code": "4208",
+      "label": "HUKUM"
+    },
+    {
+      "code": "4209",
+      "label": "PENDIDIKAN KESEJAHTERAAN KELUARGA"
+    },
+    {
+      "code": "4210",
+      "label": "EKONOMI"
+    },
+    {
+      "code": "4211",
+      "label": "KESENIAN"
+    },
+    {
+      "code": "4212",
+      "label": "KESEKRETARIATAN"
+    },
+    {
+      "code": "4213",
+      "label": "ADMINISTRASI"
+    },
+    {
+      "code": "4214",
+      "label": "MARKETING"
+    },
+    {
+      "code": "4215",
+      "label": "AKUTANSI"
+    },
+    {
+      "code": "4216",
+      "label": "OLAH RAGA"
+    },
+    {
+      "code": "4217",
+      "label": "BAHASA INDONESIA"
+    },
+    {
+      "code": "4218",
+      "label": "BAHASA INGGRIS"
+    },
+    {
+      "code": "4219",
+      "label": "BAHASA ARAB"
+    },
+    {
+      "code": "4220",
+      "label": "ILMU PENGETAHUAN ALAM"
+    },
+    {
+      "code": "4221",
+      "label": "GEOGRAFI"
+    },
+    {
+      "code": "4222",
+      "label": "MATEMATIKA"
+    },
+    {
+      "code": "4223",
+      "label": " BIOLOGI"
+    },
+    {
+      "code": "4224",
+      "label": "KETRAMPILAN"
+    },
+    {
+      "code": "4225",
+      "label": "KERJA KAYU"
+    },
+    {
+      "code": "4226",
+      "label": "TEKNIK SIPIL"
+    },
+    {
+      "code": "4227",
+      "label": "TEKNIK MESIN"
+    },
+    {
+      "code": "4228",
+      "label": "TEKNIK LISTRIK"
+    },
+    {
+      "code": "4229",
+      "label": "KIMIA"
+    },
+    {
+      "code": "4230",
+      "label": "DIPLOMA II/AKTA II LAINNYA"
+    },
+    {
+      "code": "4299",
+      "label": "DIPLOMA II - TAK TERDEFINISI"
+    },
+    {
+      "code": "5000",
+      "label": "DIPLOMA III/AKTA III/AKADEMI/S.MUDA"
+    },
+    {
+      "code": "5101",
+      "label": "FISIKA"
+    },
+    {
+      "code": "5102",
+      "label": "ASTRONOMI"
+    },
+    {
+      "code": "5103",
+      "label": "BIOLOGI"
+    },
+    {
+      "code": "5104",
+      "label": "GEOLOGI DAN PERTAMBANGAN"
+    },
+    {
+      "code": "5105",
+      "label": "METEOROLOGI DAN GEOFISIKA"
+    },
+    {
+      "code": "5106",
+      "label": "GEOGRAFI"
+    },
+    {
+      "code": "5107",
+      "label": "MATEMATIKA"
+    },
+    {
+      "code": "5108",
+      "label": "ILMU STATISTIK"
+    },
+    {
+      "code": "5109",
+      "label": "ILMU KOMPUTER"
+    },
+    {
+      "code": "5110",
+      "label": "KIMIA"
+    },
+    {
+      "code": "5111",
+      "label": "ILMU PASTI/ALAM LAINNYA"
+    },
+    {
+      "code": "5199",
+      "label": "ILMU PASTI - TAK TERDEFINISI"
+    },
+    {
+      "code": "5201",
+      "label": "TEKNIK GEODESI/GEOLOGI"
+    },
+    {
+      "code": "5202",
+      "label": "TEKNIK KIMIA"
+    },
+    {
+      "code": "5203",
+      "label": "TEKNIK SIPIL"
+    },
+    {
+      "code": "5204",
+      "label": "ARSITEKTUR"
+    },
+    {
+      "code": "5205",
+      "label": "TEKNIK LISTRIK"
+    },
+    {
+      "code": "5206",
+      "label": "TEKNIK MESIN"
+    },
+    {
+      "code": "5207",
+      "label": "TEKNIK INDUSTRI"
+    },
+    {
+      "code": "5208",
+      "label": "TEKNIK LOGAM"
+    },
+    {
+      "code": "5209",
+      "label": "TEKNIK PERTAMBANGAN DAN MINYAK"
+    },
+    {
+      "code": "5210",
+      "label": "FISIKA TEKNIK"
+    },
+    {
+      "code": "5211",
+      "label": "TEKNIK NUKLIR"
+    },
+    {
+      "code": "5212",
+      "label": "PENGOLAH GULA"
+    },
+    {
+      "code": "5213",
+      "label": "TEKNOLOGI KULIT"
+    },
+    {
+      "code": "5214",
+      "label": "TEKNOLOGI TEKSTIL"
+    },
+    {
+      "code": "5215",
+      "label": "TEKNOLOGI GRAFIKA"
+    },
+    {
+      "code": "5216",
+      "label": "TEKNOLOGI GAS DAN MINYAK BUMI"
+    },
+    {
+      "code": "5217",
+      "label": "TEKNOLOGI LAINNYA"
+    },
+    {
+      "code": "5299",
+      "label": "TEKNOLOGI - TAK TERDEFINISI"
+    },
+    {
+      "code": "5301",
+      "label": "PERTANIAN UMUM"
+    },
+    {
+      "code": "5302",
+      "label": "HORTIKULTURA"
+    },
+    {
+      "code": "5303",
+      "label": "HASIL PERTANIAN"
+    },
+    {
+      "code": "5304",
+      "label": "EKONOMI PERTANIAN"
+    },
+    {
+      "code": "5305",
+      "label": "TEKNOLOGI DAN ILMU MAKANAN"
+    },
+    {
+      "code": "5306",
+      "label": "ILMU TANAH DAN AIR"
+    },
+    {
+      "code": "5307",
+      "label": "KEDOKTERAN HEWAN"
+    },
+    {
+      "code": "5308",
+      "label": "PETERNAKAN"
+    },
+    {
+      "code": "5309",
+      "label": "PERIKANAN"
+    },
+    {
+      "code": "5310",
+      "label": "KEHUTANAN"
+    },
+    {
+      "code": "5311",
+      "label": "PERTANIAN LAINNYA"
+    },
+    {
+      "code": "5399",
+      "label": "PERTANIAN - TAK TERDEFINISI"
+    },
+    {
+      "code": "5401",
+      "label": "KEDOKTERAN UMUM"
+    },
+    {
+      "code": "5402",
+      "label": "KEDOKTERAN GIGI"
+    },
+    {
+      "code": "5403",
+      "label": "FARMASI"
+    },
+    {
+      "code": "5404",
+      "label": "PENILIK KESEHATAN/HYGINE/GIZI"
+    },
+    {
+      "code": "5405",
+      "label": "ANASTESI"
+    },
+    {
+      "code": "5406",
+      "label": "FISIOTERAPI"
+    },
+    {
+      "code": "5407",
+      "label": "PERAWAT"
+    },
+    {
+      "code": "5408",
+      "label": "PENATA RONTGEN"
+    },
+    {
+      "code": "5409",
+      "label": "KESEHATAN LAINNYA"
+    },
+    {
+      "code": "5499",
+      "label": "KESEHATAN - TAK TERDEFINISI"
+    },
+    {
+      "code": "5501",
+      "label": "EKONOMI"
+    },
+    {
+      "code": "5502",
+      "label": "AKUNTANSI"
+    },
+    {
+      "code": "5503",
+      "label": "KEUANGAN DAN PAJAK"
+    },
+    {
+      "code": "5504",
+      "label": "HUKUM"
+    },
+    {
+      "code": "5505",
+      "label": "ILMU POLITIK"
+    },
+    {
+      "code": "5506",
+      "label": "SOSIOLOGI"
+    },
+    {
+      "code": "5507",
+      "label": "ANTROPOLOGI"
+    },
+    {
+      "code": "5508",
+      "label": "GEOGRAFI"
+    },
+    {
+      "code": "5509",
+      "label": "ADMINISTRASI"
+    },
+    {
+      "code": "5510",
+      "label": "SEKRETARIS"
+    },
+    {
+      "code": "5511",
+      "label": "MANAJEMENT"
+    },
+    {
+      "code": "5512",
+      "label": "PSIKOLOGI"
+    },
+    {
+      "code": "5513",
+      "label": "SEJARAH"
+    },
+    {
+      "code": "5514",
+      "label": "ARKEOLOGI"
+    },
+    {
+      "code": "5515",
+      "label": "FILSAFAT"
+    },
+    {
+      "code": "5516",
+      "label": "BAHASA INDONESIA"
+    },
+    {
+      "code": "5517",
+      "label": "BAHASA DAERAH"
+    },
+    {
+      "code": "5518",
+      "label": "BAHASA INGGRIS"
+    },
+    {
+      "code": "5519",
+      "label": "BAHASA JERMAN"
+    },
+    {
+      "code": "5520",
+      "label": "BAHASA PERANCIS"
+    },
+    {
+      "code": "5521",
+      "label": "BAHASA BELANDA"
+    }
+  ],
+  "ipk3.3": [
+    {
+      "code": "1",
+      "label": "1"
+    },
+    {
+      "code": "",
+      "label": "ANGGOTA ANGKATAN BERSENJATA (KECUALI KEPOLISIAN)"
+    },
+    {
+      "code": "110",
+      "label": "ANGGOTA ANGKATAN BERSENJATA"
+    },
+    {
+      "code": "1",
+      "label": "ANGGOTA BADAN LEGISLATIF, PEJABAT TINGGI PEMERINTAH"
+    },
+    {
+      "code": "1110",
+      "label": "ANGGOTA BADAN LEGISLATIF"
+    },
+    {
+      "code": "1120",
+      "label": "PEJABAT TINGGI PEMERINTAH"
+    },
+    {
+      "code": "1130",
+      "label": "KEPALA DESA DAN LURAH"
+    },
+    {
+      "code": "1141",
+      "label": "PEMIMPIN ORGANISASI PARTAI POLITIK"
+    },
+    {
+      "code": "1142",
+      "label": "PIMPINAN ORGANISASI PENGUSAHA, PEKERJA DAN ORGANISASI YANG BERKAITAN DENGAN KEPENTINGAN DARI ORGANISASI EKONOMI"
+    },
+    {
+      "code": "1143",
+      "label": "PIMPINAN ORGANISASI KEMANUSIAAN DAN ORGANISASI KHUSUS"
+    },
+    {
+      "code": "1210",
+      "label": "DIREKTUR DAN KEPALA EKSEKUTIF"
+    },
+    {
+      "code": "1221",
+      "label": "MANAJER PRODUKSI DAN OPERASI DALAM BIDANG PERTANIAN PERBURUAN DAN PERIKANAN"
+    },
+    {
+      "code": "1223",
+      "label": "MANAJER PRODUKSI DAN OPERASI DALAM BIDANG KONSTRUKSI"
+    },
+    {
+      "code": "1224",
+      "label": "MANAJER PRODUKSI DAN OPERASI DOKUMEN DALAM BIDANG PERDAGANGAN BESAR DAN ECERAN"
+    },
+    {
+      "code": "1225",
+      "label": "MANAJER PRODUKSI DAN OPERASI DALAM BIDANG HOTEL DAN RESTORAN"
+    },
+    {
+      "code": "1226",
+      "label": "MANAJER PRODUKSI DAN OPERASI DALAM BIDANG ANGKUTAN (LAYANAN TELEKOMUNIKASI) PERGUDANGAN & KOMUNIKASI"
+    },
+    {
+      "code": "1227",
+      "label": "MANAJER PRODUKSI DAN OPERASI DALAM BIDANG PERUSAHAAN JASA"
+    },
+    {
+      "code": "1228",
+      "label": "MANAJER PRODUKSI DAN OPERASI DALAM BIDANG KESEJAHTERAAN DAN KEBERSIHAN"
+    },
+    {
+      "code": "1229",
+      "label": "MANAJER PRODUKSI DAN OPERASI TIDAK DAPAT DIKLASIFIKASIKAN PADA 1221-1228"
+    },
+    {
+      "code": "1231",
+      "label": "MANAJER KEUANGAN DAN ADMINISTRASI"
+    },
+    {
+      "code": "1232",
+      "label": "MANAJER PEMASARAN DAN HUBUNGAN INDUSTRI"
+    },
+    {
+      "code": "1233",
+      "label": "MANAJER PENJUALAN DAN PEMASARAN"
+    },
+    {
+      "code": "1234",
+      "label": "MANAJER HUBUNGAN MASYARAKAT DAN PERIKLANAN"
+    },
+    {
+      "code": "1235",
+      "label": "MANAJER PENYEDIAAN DAN DISTRIBUSI"
+    },
+    {
+      "code": "1236",
+      "label": "MANAJER JASA PERHITUNGAN"
+    },
+    {
+      "code": "1237",
+      "label": "MANAJER PENELITIAN DAN PEMASARAN"
+    },
+    {
+      "code": "1311",
+      "label": "MANAJER UMUM PERTANIAN, PERBURUAN KEHUTANAN DAN PERIKANAN"
+    },
+    {
+      "code": "1314",
+      "label": "MANAJER UMUM PERDAGANGAN BESAR DAN ECERAN"
+    },
+    {
+      "code": "1315",
+      "label": "MANAJER UMUM HOTEL DAN RESTORAN"
+    },
+    {
+      "code": "1316",
+      "label": "MANAJER UMUM ANGKUTAN, PERGUDANGAN DAN KOMUNIKASI"
+    },
+    {
+      "code": "1317",
+      "label": "MANAJER UMUM PERUSAHAAN JASA"
+    },
+    {
+      "code": "1318",
+      "label": "MANAJER UMUM PERAWATAN PRIBADI KEBERSIHAN DAN JASA YANG SEJENIS"
+    },
+    {
+      "code": "1319",
+      "label": "MANAJER UMUM YANG TIDAK DAPAT DIKLASIFIKASIKAN PADA SUB GOL 1311 SAMPAI DENGAN 1318"
+    },
+    {
+      "code": "2",
+      "label": "TENAGA PROFESIONAL"
+    },
+    {
+      "code": "2111",
+      "label": "PAKAR FISIKA DAN ASTRONOMI"
+    },
+    {
+      "code": "2112",
+      "label": "PAKAR METEOROLOGI"
+    },
+    {
+      "code": "2113",
+      "label": "PAKAR KIMIA"
+    },
+    {
+      "code": "2114",
+      "label": "PAKAR GEOLOGI DAN GEOFISIKA"
+    },
+    {
+      "code": "2121",
+      "label": "PAKAR MATEMATIKA DAN PROFESI YANG SEJENIS"
+    },
+    {
+      "code": "2122",
+      "label": "PAKAR STATISTIK"
+    },
+    {
+      "code": "2131",
+      "label": "PERANCANG DAN ANALIS SISTEM KOMPUTER"
+    },
+    {
+      "code": "2132",
+      "label": "PROGRAMER KOMPUTER"
+    },
+    {
+      "code": "2139",
+      "label": "PAKAR KOMPUTER YTDL"
+    },
+    {
+      "code": "2141",
+      "label": "ARSITEK PERENCANA TATA KOTA & LALU LINTAS"
+    },
+    {
+      "code": "2142",
+      "label": "PEREKAYASA SIPIL"
+    },
+    {
+      "code": "2143",
+      "label": "PEREKAYASA ELEKTRO"
+    },
+    {
+      "code": "2144",
+      "label": "PERAKAYASA ELEKTRONIKA & TELEKOMUNIKASI"
+    },
+    {
+      "code": "2145",
+      "label": "PEREKAYASA MESIN"
+    },
+    {
+      "code": "2146",
+      "label": "PEREKAYASA KIMIA"
+    },
+    {
+      "code": "2147",
+      "label": "PEREKAYASA PERTAMBANGAN METALURGI DAN PROFESI SEJENIS"
+    },
+    {
+      "code": "2148",
+      "label": "KARTOGRAFER DAN SURVEYOR"
+    },
+    {
+      "code": "2149",
+      "label": "ARSITEK PEREKAYASA DAN PROFESI SEJENIS YANG TIDAK DIKLASIFIKASIKAN PADA 2141, 2142 S/D 2148"
+    },
+    {
+      "code": "2211",
+      "label": "BIOLOGI BOTANI, ZOOLOGI DAN PROFESI SEJENIS"
+    },
+    {
+      "code": "2212",
+      "label": "PARMAKOLOG, PHATOLOG DAN PROFESI YANG SEJENIS"
+    },
+    {
+      "code": "2213",
+      "label": "ARGONOMI DAN PROFESI SEJENIS"
+    },
+    {
+      "code": "2221",
+      "label": "DOKTER UMUM"
+    },
+    {
+      "code": "2222",
+      "label": "DOKTER GIGI"
+    },
+    {
+      "code": "2230",
+      "label": "PERAWAT DAN BIDAN"
+    },
+    {
+      "code": "2310",
+      "label": "PENGAJAR PROFESIONAL AKADEMI, UNIVERSITAS DAN PENDIDIKAN TINGGI LAINNYA"
+    },
+    {
+      "code": "2320",
+      "label": "PENGAJAR PROFESIONAL PENDIDIKAN MENENGAH ATAS"
+    },
+    {
+      "code": "2330",
+      "label": "UNIVERSITAS DAN PENDIDIKAN TINGGI LAINNYA"
+    },
+    {
+      "code": "2331",
+      "label": "PENGAJAR SEKOLAH DASAR"
+    },
+    {
+      "code": "2332",
+      "label": "PROFESIONALIS GURU PENDIDIKAN PRA SEKOLAH DASAR"
+    },
+    {
+      "code": "2340",
+      "label": "GURU SEKOLAH LUAR BIASA"
+    },
+    {
+      "code": "2351",
+      "label": "SPESIALIS METODA PENDIDIKAN"
+    },
+    {
+      "code": "2352",
+      "label": "PENILIK SEKOLAH"
+    },
+    {
+      "code": "2411",
+      "label": "AKUNTAN"
+    },
+    {
+      "code": "2412",
+      "label": "TENAGA PROFESIONAL TENAGA KEPEGAWAIAN"
+    },
+    {
+      "code": "2419",
+      "label": "TENAGA PROFESIONAL BIDANG BISNIS YANG TIDAK DAPAT DIKLASIFIKASIKAN PADA SUB GOLONGAN 2411 DAN 2412"
+    },
+    {
+      "code": "2421",
+      "label": "PENGACARA"
+    },
+    {
+      "code": "2422",
+      "label": "HAKIM"
+    },
+    {
+      "code": "2429",
+      "label": "PAKAR HUKUM YTD PADA SUB GOL 2421 & 2422"
+    },
+    {
+      "code": "2431",
+      "label": "ARSIPARIS DAN KURATOR"
+    },
+    {
+      "code": "2432",
+      "label": "PUSTAKAWAN DAN PEMBERI INFORMASI YANG SEJENIS"
+    },
+    {
+      "code": "2441",
+      "label": "PAKAR EKONOMI"
+    },
+    {
+      "code": "2442",
+      "label": "PAKAR SOSIOLOGI, ANTROPOLOGI DAN YANG SEJENIS"
+    },
+    {
+      "code": "2443",
+      "label": "PAKAR FILSAFAT, SEJARAH DAN ILMU POLITIK"
+    },
+    {
+      "code": "2444",
+      "label": "PAKAR BAHASA, PENTERJEMAH DAN JURU BAHASA"
+    },
+    {
+      "code": "2445",
+      "label": "PSIKOLOG"
+    },
+    {
+      "code": "2446",
+      "label": "PEKERJA SOSIAL PROFESIONAL"
+    },
+    {
+      "code": "2451",
+      "label": "PENGARANG, WARTAWAN DAN PENULIS LAINNYA"
+    },
+    {
+      "code": "2452",
+      "label": "PEMAHAT, PELUKIS DAN SENIMAN YANG SEJENIS"
+    },
+    {
+      "code": "2453",
+      "label": "PENGUBAH LAGU, PEMUSIK DAN PENYANYI"
+    },
+    {
+      "code": "2454",
+      "label": "PENCIPTA TARI DAN PENARI"
+    },
+    {
+      "code": "2455",
+      "label": "PEMAIN FILM, SUTRADARA FILM, DIREKTUR PANGGUNG DAN YANG SEJENIS"
+    },
+    {
+      "code": "2460",
+      "label": "PAKAR KEAGAMAAN"
+    },
+    {
+      "code": "3",
+      "label": "TEKNISI DAN KELOMPOK JABATAN YANG SEJENIS"
+    },
+    {
+      "code": "3111",
+      "label": "TEKNISI ILMU KIMIA DAN FISIKA"
+    },
+    {
+      "code": "3112",
+      "label": "TEKNISI PEREKAYASAAN SIPIL"
+    },
+    {
+      "code": "3113",
+      "label": "TEKNISI PEREKAYASAAN LISTRIK"
+    },
+    {
+      "code": "3114",
+      "label": "TEKNISI PEREKAYASAAN ELEKTRONIKA & TELEKOMUNIKASI"
+    },
+    {
+      "code": "3115",
+      "label": "TEKNISI PEREKAYASAAN MEKANIK"
+    },
+    {
+      "code": "3116",
+      "label": "TEKNISI PEREKAYASAAN KIMIA"
+    },
+    {
+      "code": "3117",
+      "label": "TEKNISI PERTAMBANGAN DAN METALURGI"
+    },
+    {
+      "code": "3118",
+      "label": "PERANCANG GAMBAR"
+    },
+    {
+      "code": "3119",
+      "label": "TEKNISI ILMU FISIKA DAN PEREKAYASAAN YANG TIDAK DAPAT DIKLASIFKASIKAN DI 3111 S/D 3118"
+    },
+    {
+      "code": "3121",
+      "label": "ASISTEN KOMPUTER"
+    },
+    {
+      "code": "3122",
+      "label": "OPERATOR PERLENGKAPAN KOMPUTER"
+    },
+    {
+      "code": "3123",
+      "label": "PENGONTROL ROBOT INDUSTRI"
+    },
+    {
+      "code": "3131",
+      "label": "PHOTOGRAFER OPERATOR PERALATAN REKAMAN GAMBAR DAN SUARA"
+    },
+    {
+      "code": "3132",
+      "label": "OPERATOR PERLENGKAPAN RADIO DAN TELEKOMUNIKASI"
+    },
+    {
+      "code": "3133",
+      "label": "OPERATOR PERALATAN MEDIK"
+    },
+    {
+      "code": "3141",
+      "label": "PEREKAYASA KAPAL LAUT"
+    },
+    {
+      "code": "3142",
+      "label": "PERWIRA DEK KAPAL LAUT DAN PILOT"
+    },
+    {
+      "code": "3143",
+      "label": "PILOT PESAWAT UDARA & PROFESIONALIS SEJENIS"
+    },
+    {
+      "code": "3145",
+      "label": "PENGONTROL LALULINTAS UDARA"
+    },
+    {
+      "code": "3151",
+      "label": "PENGAWAS BANGUNAN DAN KEBAKARAN"
+    },
+    {
+      "code": "3152",
+      "label": "PENGAWAS KESELAMATAN KESEHATAN DAN KUALITAS"
+    },
+    {
+      "code": "3211",
+      "label": "TEKNISI ILMU HAYAT"
+    },
+    {
+      "code": "3212",
+      "label": "TEKNISI AGRONOMI DAN KEHUTANAN"
+    },
+    {
+      "code": "3213",
+      "label": "PENASEHAT PERTANIAN DAN KEHUTANAN"
+    },
+    {
+      "code": "3221",
+      "label": "ASISTEN MEDIKAL"
+    },
+    {
+      "code": "3222",
+      "label": "SANITARIAN"
+    },
+    {
+      "code": "3223",
+      "label": "NUTRISIS DAN DIESTRISIAN"
+    },
+    {
+      "code": "3224",
+      "label": "OPTOMETRIS DAN OPTOSIAN"
+    },
+    {
+      "code": "3225",
+      "label": "ASISTEN DOKTER GIGI"
+    },
+    {
+      "code": "3226",
+      "label": "PHISIOTERAPIS DAN PROFESIONALIS SEJENIS"
+    },
+    {
+      "code": "3227",
+      "label": "ASISTEN DOKTER HEWAN"
+    },
+    {
+      "code": "3228",
+      "label": "ASISTEN PHARMASI"
+    },
+    {
+      "code": "3229",
+      "label": "PROFESIONALIS KESEHATAN MODERN (KECUALI PERAWAT)YTDL"
+    },
+    {
+      "code": "3231",
+      "label": "PROFESIONALIS PERAWAT"
+    },
+    {
+      "code": "3232",
+      "label": "BIDAN PROFESIONALIS"
+    },
+    {
+      "code": "3241",
+      "label": "PRAKTISI PENGOBATAN TRADISIONAL"
+    },
+    {
+      "code": "3242",
+      "label": "PENYEMBUH KEBATINAN"
+    },
+    {
+      "code": "3310",
+      "label": "PROFESIONALIS GURU PENDIDIKAN DASAR"
+    },
+    {
+      "code": "3320",
+      "label": "ASOSIASI PROFESI GURU PENDIDIKAN PRA SEKOLAH DASAR"
+    },
+    {
+      "code": "3330",
+      "label": "ASOSIASI PROFESI GURU PENDIDIKAN KHUSUS"
+    },
+    {
+      "code": "3340",
+      "label": "PROFESIONALIS KELOMPOK GURU LAINNYA"
+    },
+    {
+      "code": "3411",
+      "label": "PEDAGANG DAN MAKELAR SURAT BERHARGA DAN KEUANGAN"
+    },
+    {
+      "code": "3412",
+      "label": "PENCARI PELANGGAN ASURANSI"
+    },
+    {
+      "code": "3413",
+      "label": "AGEN PROPERTI"
+    },
+    {
+      "code": "3414",
+      "label": "KONSULTAN DAN PENYUSUN PERJALANAN"
+    },
+    {
+      "code": "3415",
+      "label": "WAKIL PENJUAL TEKNIS DAN KOMERSIAL"
+    },
+    {
+      "code": "3416",
+      "label": "PEMBELI"
+    },
+    {
+      "code": "3417",
+      "label": "PENAKSIR, PENILAI DAN PELELANG"
+    },
+    {
+      "code": "3421",
+      "label": "MAKELAR PERDAGANGAN"
+    },
+    {
+      "code": "3422",
+      "label": "AGEN KLIRING DAN PENGIRIMAN"
+    },
+    {
+      "code": "3423",
+      "label": "AGEN KETENAGAKERJAAN DAN PENGERAH TENAGA KERJA"
+    },
+    {
+      "code": "3429",
+      "label": "AGEN USAHA JASA DAN MAKELAR PERDAGANGAN YTDL"
+    },
+    {
+      "code": "3431",
+      "label": "SEKRETARIS ADMINISTRASI DAN ASOSIASI PROFESI SEJENIS"
+    },
+    {
+      "code": "3432",
+      "label": "ASOSIASI PROFESI, PERDAGANGAN DAN HUKUM"
+    },
+    {
+      "code": "3433",
+      "label": "PEMEGANG BUKU"
+    },
+    {
+      "code": "3434",
+      "label": "KELOMPOK PROFESIONALIS STATISTIK, MATEMATIKA DAN SEJENISNYA"
+    },
+    {
+      "code": "3439",
+      "label": "ASOSIASI PROFESI ADMINISTRASI YANG TIDAK DAPAT DIKLASIFIKASIKAN PADA SUB GOLONGAN 3431 S/D 3434"
+    },
+    {
+      "code": "3441",
+      "label": "INSPEKTUR BEA CUKAI DAN PABEAN"
+    },
+    {
+      "code": "3442",
+      "label": "PETUGAS PAJAK DAN BEA CUKAI PEMERINTAH"
+    },
+    {
+      "code": "3443",
+      "label": "PETUGAS PENGHITUNG KEUNTUNGAN SOSIAL PEMERINTAH"
+    },
+    {
+      "code": "3444",
+      "label": "PETUGAS PERIJINAN PEMERINTAH"
+    },
+    {
+      "code": "3449",
+      "label": "ASOSIASI PROFESI BEA CUKAI, PAJAK DAN PEJABAT PEMERINTAH YTDL"
+    },
+    {
+      "code": "3450",
+      "label": "INSPEKTUR POLISI DAN DETEKTIF"
+    },
+    {
+      "code": "3460",
+      "label": "ASOSIASI PROFESI PEKERJA SOSIAL"
+    },
+    {
+      "code": "3471",
+      "label": "DEKORATOR DAN PERANCANG KOMERSIAL"
+    },
+    {
+      "code": "3472",
+      "label": "PENYIAR RADIO, TV DAN PENYIAR LAINNYA"
+    },
+    {
+      "code": "3473",
+      "label": "MUSIKUS, PENARI DAN PENARI JALANAN KLUB MALAM DAN SEJENISNYA"
+    },
+    {
+      "code": "3474",
+      "label": "BADUT, PESULAP, PEMAIN AKROBAT DAN ASOSIASI PROFESI SEJENIS"
+    },
+    {
+      "code": "3475",
+      "label": "PEMAIN ATLETIK DAN OLAHRAGAWAN DAN KELOMPOK PROFESIONAL SEJENIS"
+    },
+    {
+      "code": "3480",
+      "label": "ASOSIASI PROFESI KEAGAMAAN"
+    },
+    {
+      "code": "4",
+      "label": "PENATA USAHA"
+    },
+    {
+      "code": "4111",
+      "label": "STENOGRAF DAN PENGETIK"
+    },
+    {
+      "code": "4112",
+      "label": "OPERATOR PENGOLAH DATA DAN SEJENIS"
+    },
+    {
+      "code": "4113",
+      "label": "OPERATOR DATA ENTRI"
+    },
+    {
+      "code": "4114",
+      "label": "OPERATOR MESIN PENGHITUNG"
+    },
+    {
+      "code": "4115",
+      "label": "SEKRETARIS"
+    },
+    {
+      "code": "4121",
+      "label": "PENATA USAHA AKUNTAN PEMBUKUAN"
+    },
+    {
+      "code": "4122",
+      "label": "PENATA USAHA STATISTIK DAN KEUANGAN"
+    },
+    {
+      "code": "4131",
+      "label": "PENATA USAHA PERSEDIAAN"
+    },
+    {
+      "code": "4132",
+      "label": "PENATA USAHA PRODUKSI"
+    },
+    {
+      "code": "4133",
+      "label": "PENATA USAHA ANGKUTAN"
+    },
+    {
+      "code": "4141",
+      "label": "PENATA USAHA PERPUSTAKAAN DAN ARSIP"
+    },
+    {
+      "code": "4142",
+      "label": "PENATA USAHA PENGIRIMAN DAN PENYORTITAN SURAT"
+    },
+    {
+      "code": "4143",
+      "label": "PENATA USAHA PENGKODEAN, CETAK BACAAN DAN SEJENIS"
+    },
+    {
+      "code": "4144",
+      "label": "PENULIS DAN PEKERJA SEJENIS"
+    },
+    {
+      "code": "4190",
+      "label": "PENATA USAHA KANTOR LAINNYA"
+    },
+    {
+      "code": "4211",
+      "label": "KASIR DAN PENATA USAHA TIKET"
+    },
+    {
+      "code": "4212",
+      "label": "TELER DAN PENATA USAHA TEMPAT PEMBAYARAN LAINNYA"
+    },
+    {
+      "code": "4213",
+      "label": "BANDAR DAN PRAMU JUDI"
+    },
+    {
+      "code": "4214",
+      "label": "PEMILIK RUMAH GADAI DAN PEMBERI PINJAMAN UANG"
+    },
+    {
+      "code": "4215",
+      "label": "PENAGIH HUTANG DAN PEKERJA SEJENIS"
+    },
+    {
+      "code": "4222",
+      "label": "RESEPSIONIS DAN PENATA USAHA INFORMASI"
+    },
+    {
+      "code": "4223",
+      "label": "OPERATOR PAPAN PENYAMBUNGAN TELEPON"
+    },
+    {
+      "code": "5",
+      "label": "TENAGA USAHA JASA DAN PENJUAL DAGANGAN DI TOKO DAN PASAR"
+    },
+    {
+      "code": "5111",
+      "label": "PRAMUGARA DAN PRAMUGARI PERJALANAN"
+    },
+    {
+      "code": "5112",
+      "label": "KONDEKTUR PERJALANAN"
+    },
+    {
+      "code": "5113",
+      "label": "PEMANDU PERJALANAN"
+    },
+    {
+      "code": "5121",
+      "label": "PELAYAN, PRAMU RUMAH TANGGA DAN YANG SEJENIS"
+    },
+    {
+      "code": "5122",
+      "label": "JURU MASAK"
+    },
+    {
+      "code": "5123",
+      "label": "PRAMU RESTORAN DAN BAR"
+    },
+    {
+      "code": "5131",
+      "label": "PENGASUH ANAK"
+    },
+    {
+      "code": "5132",
+      "label": "PENGASUH PADA LEMBAGA PERORANGAN"
+    },
+    {
+      "code": "5139",
+      "label": "PERAWAT PERORANGAN DAN YANG SEJENIS"
+    },
+    {
+      "code": "5141",
+      "label": "PEMANGKAS RAMBUT, PENATA RAMBUT PERAWAT KECANTIKAN DAN YANG SEJENIS"
+    },
+    {
+      "code": "5142",
+      "label": "PRAMURIA DAN PELAYAN PRIA"
+    },
+    {
+      "code": "5143",
+      "label": "PENGURUS PEMAKAMAN DAN PEMBALSEMAN JENASAH"
+    },
+    {
+      "code": "5149",
+      "label": "PEKERJA JASA PERORANGAN YANG TIDAK DAPAT DIKLASIFIKASIKAN DI TEMPAT LAIN"
+    }
+  ],
+  "ipk3.4": [
+    {
+      "code": "1",
+      "label": "1"
+    },
+    {
+      "code": "1000",
+      "label": "SEKOLAH DASAR"
+    },
+    {
+      "code": "1101",
+      "label": "TIDAK TAMAT SD"
+    },
+    {
+      "code": "1102",
+      "label": "TAMAT SD"
+    },
+    {
+      "code": "1103",
+      "label": "SETINGKAT SD"
+    },
+    {
+      "code": "1199",
+      "label": "SD - TAK TERDEFINISI"
+    },
+    {
+      "code": "2000",
+      "label": "PENDIDIKAN MENENGAH PERTAMA"
+    },
+    {
+      "code": "2101",
+      "label": "SEKOLAH MENENGAH PERTAMA"
+    },
+    {
+      "code": "2102",
+      "label": "MADRASAH DINIYAH SANAWIYAH"
+    },
+    {
+      "code": "2103",
+      "label": "LAINNYA"
+    },
+    {
+      "code": "2104",
+      "label": "SLTP KEJURUAN"
+    },
+    {
+      "code": "2199",
+      "label": "SLTP - TAK TERDEFINISI"
+    },
+    {
+      "code": "3000",
+      "label": "PENDIDIKAN MENENGAH ATAS"
+    },
+    {
+      "code": "3101",
+      "label": "TEKNIK BANGUNAN"
+    },
+    {
+      "code": "3102",
+      "label": "TEKNIK PLUMBING DAN SANITASI"
+    },
+    {
+      "code": "3103",
+      "label": "TEKNIK SURVEI DAN PEMETAAN"
+    },
+    {
+      "code": "3104",
+      "label": "TEKNIK KETENAGALISTRIKAN"
+    },
+    {
+      "code": "3105",
+      "label": "TEKNIK PENDINGINAN DAN TATA UDARA"
+    },
+    {
+      "code": "3106",
+      "label": "TEKNIK MESIN"
+    },
+    {
+      "code": "3107",
+      "label": "TEKNIK OTOMOTIF"
+    },
+    {
+      "code": "3108",
+      "label": "TEKNOLOGI PESAWAT UDARA"
+    },
+    {
+      "code": "3109",
+      "label": "TEKNIK PERKAPALAN"
+    },
+    {
+      "code": "3110",
+      "label": "TEKNOLOGI TEKSTIL"
+    },
+    {
+      "code": "3111",
+      "label": "TEKNIK GRAFIKA"
+    },
+    {
+      "code": "3112",
+      "label": "GEOLOGI PERTAMBANGAN"
+    },
+    {
+      "code": "3113",
+      "label": "INSTRUMENTASI INDUSTRI"
+    },
+    {
+      "code": "3114",
+      "label": "TEKNIK KIMIA"
+    },
+    {
+      "code": "3115",
+      "label": "PELAYARAN"
+    },
+    {
+      "code": "3116",
+      "label": "TEKNIK INDUSTRI"
+    },
+    {
+      "code": "3117",
+      "label": "TEKNIK PERMINYAKAN"
+    },
+    {
+      "code": "3118",
+      "label": "TEKNIK ELEKTRONIKA"
+    },
+    {
+      "code": "3201",
+      "label": "TEKNIK TELEKOMUNIKASI"
+    },
+    {
+      "code": "3202",
+      "label": "TEKNIK KOMPUTER DAN INFORMATIKA"
+    },
+    {
+      "code": "3203",
+      "label": "TEKNIK BROADCASTING"
+    },
+    {
+      "code": "3301",
+      "label": "KESEHATAN"
+    },
+    {
+      "code": "3302",
+      "label": "PERAWATAN SOSIAL"
+    },
+    {
+      "code": "3401",
+      "label": "SENI RUPA"
+    },
+    {
+      "code": "3402",
+      "label": "DESAIN DAN PRODUKSI KRIA"
+    },
+    {
+      "code": "3403",
+      "label": "SENI PERTUNJUKAN"
+    },
+    {
+      "code": "3404",
+      "label": "PARIWISATA"
+    },
+    {
+      "code": "3405",
+      "label": "TATA BOGA"
+    },
+    {
+      "code": "3406",
+      "label": "TATA KECANTIKAN"
+    },
+    {
+      "code": "3407",
+      "label": "TATA BUSANA"
+    },
+    {
+      "code": "3501",
+      "label": "AGRIBISNIS PRODUKSI TANAMAN"
+    },
+    {
+      "code": "3502",
+      "label": "AGRIBISNIS PRODUKSI TERNAK"
+    },
+    {
+      "code": "3503",
+      "label": "AGRIBISNIS PRODUKSI SUMBERDAYA PERAIRAN"
+    },
+    {
+      "code": "3504",
+      "label": "MEKANISASI PERTANIAN"
+    },
+    {
+      "code": "3505",
+      "label": "AGRIBISNIS HASIL PERTANIAN"
+    },
+    {
+      "code": "3506",
+      "label": "PENYULUHAN PERTANIAN"
+    },
+    {
+      "code": "3507",
+      "label": "KEHUTANAN"
+    },
+    {
+      "code": "3601",
+      "label": "ADMINISTRASI"
+    },
+    {
+      "code": "3602",
+      "label": "KEUANGAN"
+    },
+    {
+      "code": "3603",
+      "label": "TATA NIAGA"
+    },
+    {
+      "code": "3701",
+      "label": "SLTA LAINNYA"
+    },
+    {
+      "code": "3702",
+      "label": "SLTA - TAK TERDEFINISI"
+    },
+    {
+      "code": "3801",
+      "label": "SMU"
+    },
+    {
+      "code": "3802",
+      "label": "MADRASAH DINIYAH ALIYAH"
+    },
+    {
+      "code": "4000",
+      "label": "DIPLOMA I / AKTA I"
+    },
+    {
+      "code": "4101",
+      "label": "PENDIDIKAN"
+    },
+    {
+      "code": "4102",
+      "label": "PENDIDIKAN LUAR SEKOLAH"
+    },
+    {
+      "code": "4103",
+      "label": "PENDIDIKAN KESEJAHTERAAN SOSIAL"
+    },
+    {
+      "code": "4104",
+      "label": "PSIKOLOGI"
+    },
+    {
+      "code": "4105",
+      "label": "ILMU PENGETAHUAN SOSIAL"
+    },
+    {
+      "code": "4106",
+      "label": "PENDIDIKAN MORAL PANCASILA"
+    },
+    {
+      "code": "4107",
+      "label": "ADMINISTRASI KEUANGAN"
+    },
+    {
+      "code": "4108",
+      "label": "ANTROPOLOGI"
+    },
+    {
+      "code": "4109",
+      "label": "SEJARAH"
+    },
+    {
+      "code": "4110",
+      "label": "HUKUM"
+    },
+    {
+      "code": "4111",
+      "label": "KESEKRETARIATAN"
+    },
+    {
+      "code": "4112",
+      "label": "OLAH RAGA KESEHATAN"
+    },
+    {
+      "code": "4113",
+      "label": "KESENIAN"
+    },
+    {
+      "code": "4114",
+      "label": "BAHASA INDONESIA"
+    },
+    {
+      "code": "4115",
+      "label": "BAHASA INGGRIS"
+    },
+    {
+      "code": "4116",
+      "label": "BAHASA ARAB"
+    },
+    {
+      "code": "4117",
+      "label": "KETRAMPILAN"
+    },
+    {
+      "code": "4118",
+      "label": "EKONOMI"
+    },
+    {
+      "code": "4119",
+      "label": "ILMU PENGETAHUAN ALAM/FISIKA"
+    },
+    {
+      "code": "4120",
+      "label": "MATEMATIKA"
+    },
+    {
+      "code": "4121",
+      "label": "PROGRAM KOMPUTER"
+    },
+    {
+      "code": "4122",
+      "label": "BIOLOGI"
+    },
+    {
+      "code": "4123",
+      "label": "ILMU KIMIA"
+    },
+    {
+      "code": "4124",
+      "label": "KERJA KAYU"
+    },
+    {
+      "code": "4125",
+      "label": "TEKNIK MESIN"
+    },
+    {
+      "code": "4126",
+      "label": "TEKNIK SIPIL"
+    },
+    {
+      "code": "4127",
+      "label": "TEKNIK LISTRIK"
+    },
+    {
+      "code": "4128",
+      "label": "GEOGRAFI"
+    },
+    {
+      "code": "4129",
+      "label": "DIPLOMA I/AKTA I LAINNYA"
+    },
+    {
+      "code": "4199",
+      "label": "DIPLOMA I - TAK TERDEFINISI"
+    },
+    {
+      "code": "4200",
+      "label": "DIPLOMA II / AKTA II"
+    },
+    {
+      "code": "4201",
+      "label": "PENDIDIKAN"
+    },
+    {
+      "code": "4202",
+      "label": "PENDIDIKAN SOSIAL"
+    },
+    {
+      "code": "4203",
+      "label": "PENDIDIKAN LUAR SEKOLAH"
+    },
+    {
+      "code": "4204",
+      "label": "PSIKOLOGI"
+    },
+    {
+      "code": "4205",
+      "label": "PENDIDIKAN MORAL PANCASILA"
+    },
+    {
+      "code": "4206",
+      "label": "ANTROPOLOGI"
+    },
+    {
+      "code": "4207",
+      "label": "SEJARAH"
+    },
+    {
+      "code": "4208",
+      "label": "HUKUM"
+    },
+    {
+      "code": "4209",
+      "label": "PENDIDIKAN KESEJAHTERAAN KELUARGA"
+    },
+    {
+      "code": "4210",
+      "label": "EKONOMI"
+    },
+    {
+      "code": "4211",
+      "label": "KESENIAN"
+    },
+    {
+      "code": "4212",
+      "label": "KESEKRETARIATAN"
+    },
+    {
+      "code": "4213",
+      "label": "ADMINISTRASI"
+    },
+    {
+      "code": "4214",
+      "label": "MARKETING"
+    },
+    {
+      "code": "4215",
+      "label": "AKUTANSI"
+    },
+    {
+      "code": "4216",
+      "label": "OLAH RAGA"
+    },
+    {
+      "code": "4217",
+      "label": "BAHASA INDONESIA"
+    },
+    {
+      "code": "4218",
+      "label": "BAHASA INGGRIS"
+    },
+    {
+      "code": "4219",
+      "label": "BAHASA ARAB"
+    },
+    {
+      "code": "4220",
+      "label": "ILMU PENGETAHUAN ALAM"
+    },
+    {
+      "code": "4221",
+      "label": "GEOGRAFI"
+    },
+    {
+      "code": "4222",
+      "label": "MATEMATIKA"
+    },
+    {
+      "code": "4223",
+      "label": "BIOLOGI"
+    },
+    {
+      "code": "4224",
+      "label": "KETRAMPILAN"
+    },
+    {
+      "code": "4225",
+      "label": "KERJA KAYU"
+    },
+    {
+      "code": "4226",
+      "label": "TEKNIK SIPIL"
+    },
+    {
+      "code": "4227",
+      "label": "TEKNIK MESIN"
+    },
+    {
+      "code": "4228",
+      "label": "TEKNIK LISTRIK"
+    },
+    {
+      "code": "4229",
+      "label": "KIMIA"
+    },
+    {
+      "code": "4230",
+      "label": "DIPLOMA II/AKTA II LAINNYA"
+    },
+    {
+      "code": "4299",
+      "label": "DIPLOMA II - TAK TERDEFINISI"
+    },
+    {
+      "code": "5000",
+      "label": "DIPLOMA III/AKTA III/AKADEMI/S.MUDA"
+    },
+    {
+      "code": "5101",
+      "label": "FISIKA"
+    },
+    {
+      "code": "5102",
+      "label": "ASTRONOMI"
+    },
+    {
+      "code": "5103",
+      "label": "BIOLOGI"
+    },
+    {
+      "code": "5104",
+      "label": "GEOLOGI DAN PERTAMBANGAN"
+    },
+    {
+      "code": "5105",
+      "label": "METEOROLOGI DAN GEOFISIKA"
+    },
+    {
+      "code": "5106",
+      "label": "GEOGRAFI"
+    },
+    {
+      "code": "5107",
+      "label": "MATEMATIKA"
+    },
+    {
+      "code": "5108",
+      "label": "ILMU STATISTIK"
+    },
+    {
+      "code": "5109",
+      "label": "ILMU KOMPUTER"
+    },
+    {
+      "code": "5110",
+      "label": "KIMIA"
+    },
+    {
+      "code": "5111",
+      "label": "ILMU PASTI/ALAM LAINNYA"
+    },
+    {
+      "code": "5199",
+      "label": "ILMU PASTI - TAK TERDEFINISI"
+    },
+    {
+      "code": "5201",
+      "label": "TEKNIK GEODESI/GEOLOGI"
+    },
+    {
+      "code": "5202",
+      "label": "TEKNIK KIMIA"
+    },
+    {
+      "code": "5203",
+      "label": "TEKNIK SIPIL"
+    },
+    {
+      "code": "5204",
+      "label": "ARSITEKTUR"
+    },
+    {
+      "code": "5205",
+      "label": "TEKNIK LISTRIK"
+    },
+    {
+      "code": "5206",
+      "label": "TEKNIK MESIN"
+    },
+    {
+      "code": "5207",
+      "label": "TEKNIK INDUSTRI"
+    },
+    {
+      "code": "5208",
+      "label": "TEKNIK LOGAM"
+    },
+    {
+      "code": "5209",
+      "label": "TEKNIK PERTAMBANGAN DAN MINYAK"
+    },
+    {
+      "code": "5210",
+      "label": "FISIKA TEKNIK"
+    },
+    {
+      "code": "5211",
+      "label": "TEKNIK NUKLIR"
+    },
+    {
+      "code": "5212",
+      "label": "PENGOLAH GULA"
+    },
+    {
+      "code": "5213",
+      "label": "TEKNOLOGI KULIT"
+    },
+    {
+      "code": "5214",
+      "label": "TEKNOLOGI TEKSTIL"
+    },
+    {
+      "code": "5215",
+      "label": "TEKNOLOGI GRAFIKA"
+    },
+    {
+      "code": "5216",
+      "label": "TEKNOLOGI GAS DAN MINYAK BUMI"
+    },
+    {
+      "code": "5217",
+      "label": "TEKNOLOGI LAINNYA"
+    },
+    {
+      "code": "5299",
+      "label": "TEKNOLOGI - TAK TERDEFINISI"
+    },
+    {
+      "code": "5301",
+      "label": "PERTANIAN UMUM"
+    },
+    {
+      "code": "5302",
+      "label": "HORTIKULTURA"
+    },
+    {
+      "code": "5303",
+      "label": "HASIL PERTANIAN"
+    },
+    {
+      "code": "5304",
+      "label": "EKONOMI PERTANIAN"
+    },
+    {
+      "code": "5305",
+      "label": "TEKNOLOGI DAN ILMU MAKANAN"
+    },
+    {
+      "code": "5306",
+      "label": "ILMU TANAH DAN AIR"
+    },
+    {
+      "code": "5307",
+      "label": "KEDOKTERAN HEWAN"
+    },
+    {
+      "code": "5308",
+      "label": "PETERNAKAN"
+    },
+    {
+      "code": "5309",
+      "label": "PERIKANAN"
+    },
+    {
+      "code": "5310",
+      "label": "KEHUTANAN"
+    },
+    {
+      "code": "5311",
+      "label": "PERTANIAN LAINNYA"
+    },
+    {
+      "code": "5399",
+      "label": "PERTANIAN - TAK TERDEFINISI"
+    },
+    {
+      "code": "5401",
+      "label": "KEDOKTERAN UMUM"
+    },
+    {
+      "code": "5402",
+      "label": "KEDOKTERAN GIGI"
+    },
+    {
+      "code": "5403",
+      "label": "FARMASI"
+    },
+    {
+      "code": "5404",
+      "label": "PENILIK KESEHATAN/HYGINE/GIZI"
+    },
+    {
+      "code": "5405",
+      "label": "ANASTESI"
+    },
+    {
+      "code": "5406",
+      "label": "FISIOTERAPI"
+    },
+    {
+      "code": "5407",
+      "label": "PERAWAT"
+    },
+    {
+      "code": "5408",
+      "label": "PENATA RONTGEN"
+    },
+    {
+      "code": "5409",
+      "label": "KESEHATAN LAINNYA"
+    },
+    {
+      "code": "5499",
+      "label": "KESEHATAN - TAK TERDEFINISI"
+    },
+    {
+      "code": "5501",
+      "label": "EKONOMI"
+    },
+    {
+      "code": "5502",
+      "label": "AKUNTANSI"
+    },
+    {
+      "code": "5503",
+      "label": "KEUANGAN DAN PAJAK"
+    },
+    {
+      "code": "5504",
+      "label": "HUKUM"
+    },
+    {
+      "code": "5505",
+      "label": "ILMU POLITIK"
+    },
+    {
+      "code": "5506",
+      "label": "SOSIOLOGI"
+    },
+    {
+      "code": "5507",
+      "label": "ANTROPOLOGI"
+    },
+    {
+      "code": "5508",
+      "label": "GEOGRAFI"
+    },
+    {
+      "code": "5509",
+      "label": "ADMINISTRASI"
+    },
+    {
+      "code": "5510",
+      "label": "SEKRETARIS"
+    },
+    {
+      "code": "5511",
+      "label": "MANAJEMENT"
+    },
+    {
+      "code": "5512",
+      "label": "PSIKOLOGI"
+    },
+    {
+      "code": "5513",
+      "label": "SEJARAH"
+    },
+    {
+      "code": "5514",
+      "label": "ARKEOLOGI"
+    },
+    {
+      "code": "5515",
+      "label": "FILSAFAT"
+    },
+    {
+      "code": "5516",
+      "label": "BAHASA INDONESIA"
+    },
+    {
+      "code": "5517",
+      "label": "BAHASA DAERAH"
+    },
+    {
+      "code": "5518",
+      "label": "BAHASA INGGRIS"
+    },
+    {
+      "code": "5519",
+      "label": "BAHASA JERMAN"
+    },
+    {
+      "code": "5520",
+      "label": "BAHASA PERANCIS"
+    },
+    {
+      "code": "5521",
+      "label": "BAHASA BELANDA"
+    }
+  ],
+  "ipk3.5": [
+    {
+      "code": "1",
+      "label": "1"
+    },
+    {
+      "code": "",
+      "label": "ANGGOTA ANGKATAN BERSENJATA (KECUALI KEPOLISIAN)"
+    },
+    {
+      "code": "110",
+      "label": "ANGGOTA ANGKATAN BERSENJATA"
+    },
+    {
+      "code": "1",
+      "label": "ANGGOTA BADAN LEGISLATIF, PEJABAT TINGGI PEMERINTAH"
+    },
+    {
+      "code": "1110",
+      "label": "ANGGOTA BADAN LEGISLATIF"
+    },
+    {
+      "code": "1120",
+      "label": "PEJABAT TINGGI PEMERINTAH"
+    },
+    {
+      "code": "1130",
+      "label": "KEPALA DESA DAN LURAH"
+    },
+    {
+      "code": "1141",
+      "label": "PEMIMPIN ORGANISASI PARTAI POLITIK"
+    },
+    {
+      "code": "1142",
+      "label": "PIMPINAN ORGANISASI PENGUSAHA, PEKERJA DAN ORGANISASI YANG BERKAITAN DENGAN KEPENTINGAN DARI ORGANISASI EKONOMI"
+    },
+    {
+      "code": "1143",
+      "label": "PIMPINAN ORGANISASI KEMANUSIAAN DAN ORGANISASI KHUSUS"
+    },
+    {
+      "code": "1210",
+      "label": "DIREKTUR DAN KEPALA EKSEKUTIF"
+    },
+    {
+      "code": "1221",
+      "label": "MANAJER PRODUKSI DAN OPERASI DALAM BIDANG PERTANIAN PERBURUAN DAN PERIKANAN"
+    },
+    {
+      "code": "1223",
+      "label": "MANAJER PRODUKSI DAN OPERASI DALAM BIDANG KONSTRUKSI"
+    },
+    {
+      "code": "1224",
+      "label": "MANAJER PRODUKSI DAN OPERASI DOKUMEN DALAM BIDANG PERDAGANGA BESAR DAN ECERAN"
+    },
+    {
+      "code": "1225",
+      "label": "MANAJER PRODUKSI DAN OPERASI DALAM BIDANG HOTEL DAN RESTORAN"
+    },
+    {
+      "code": "1226",
+      "label": "MANAJER PRODUKSI DAN OPERASI DALAM BIDANG ANGKUTAN (LAYANAN TELEKOMUNIKASI) PERGUDANGAN & KOMUNIKASI"
+    },
+    {
+      "code": "1227",
+      "label": "MANAJER PRODUKSI DAN OPERASI DALAM BIDANG PERUSAHAAN JASA"
+    },
+    {
+      "code": "1228",
+      "label": "MANAJER PRODUKSI DAN OPERASI DALAM BIDANG KESEJAHTERAAN DAN KEBERSIHAN"
+    },
+    {
+      "code": "1229",
+      "label": "MANAJER PRODUKSI DAN OPERASI TIDAK DAPAT DIKLASIFIKASIKAN PADA 1221-1228"
+    },
+    {
+      "code": "1231",
+      "label": "MANAJER KEUANGAN DAN ADMINISTRASI"
+    },
+    {
+      "code": "1232",
+      "label": "MANAJER PEMASARAN DAN HUBUNGAN INDUSTRI"
+    },
+    {
+      "code": "1233",
+      "label": "MANAJER PENJUALAN DAN PEMASARAN"
+    },
+    {
+      "code": "1234",
+      "label": "MANAJER HUBUNGAN MASYARAKAT DAN PERIKLANAN"
+    },
+    {
+      "code": "1235",
+      "label": "MANAJER PENYEDIAAN DAN DISTRIBUSI"
+    },
+    {
+      "code": "1236",
+      "label": "MANAJER JASA PERHITUNGAN"
+    },
+    {
+      "code": "1237",
+      "label": "MANAJER PENELITIAN DAN PEMASARAN"
+    },
+    {
+      "code": "1311",
+      "label": "MANAJER UMUM PERTANIAN, PERBURUAN KEHUTANAN DAN PERIKANAN"
+    },
+    {
+      "code": "1314",
+      "label": "MANAJER UMUM PERDAGANGAN BESAR DAN ECERAN"
+    },
+    {
+      "code": "1315",
+      "label": "MANAJER UMUM HOTEL DAN RESTORAN"
+    },
+    {
+      "code": "1316",
+      "label": "MANAJER UMUM ANGKUTAN, PERGUDANGAN DAN KOMUNIKASI"
+    },
+    {
+      "code": "1317",
+      "label": "MANAJER UMUM PERUSAHAAN JASA"
+    },
+    {
+      "code": "1318",
+      "label": "MANAJER UMUM PERAWATAN PRIBADI KEBERSIHAN DAN JASA YANG SEJENIS"
+    },
+    {
+      "code": "1319",
+      "label": "MANAJER UMUM YANG TIDAK DAPAT DIKLASIFIKASIKAN PADA SUB GOL 1311 SAMPAI DENGAN 1318"
+    },
+    {
+      "code": "2",
+      "label": "TENAGA PROFESIONAL"
+    },
+    {
+      "code": "2111",
+      "label": "PAKAR FISIKA DAN ASTRONOMI"
+    },
+    {
+      "code": "2112",
+      "label": "PAKAR METEOROLOGI"
+    },
+    {
+      "code": "2113",
+      "label": "PAKAR KIMIA"
+    },
+    {
+      "code": "2114",
+      "label": "PAKAR GEOLOGI DAN GEOFISIKA"
+    },
+    {
+      "code": "2121",
+      "label": "PAKAR MATEMATIKA DAN PROFESI YANG SEJENIS"
+    },
+    {
+      "code": "2122",
+      "label": "PAKAR STATISTIK"
+    },
+    {
+      "code": "2131",
+      "label": "PERANCANG DAN ANALIS SISTEM KOMPUTER"
+    },
+    {
+      "code": "2132",
+      "label": "PROGRAMER KOMPUTER"
+    },
+    {
+      "code": "2139",
+      "label": "PAKAR KOMPUTER YTDL"
+    },
+    {
+      "code": "2141",
+      "label": "ARSITEK PERENCANA TATA KOTA & LALU LINTAS"
+    },
+    {
+      "code": "2142",
+      "label": "PEREKAYASA SIPIL"
+    },
+    {
+      "code": "2143",
+      "label": "PEREKAYASA ELEKTRO"
+    },
+    {
+      "code": "2144",
+      "label": "PERAKAYASA ELEKTRONIKA & TELEKOMUNIKASI"
+    },
+    {
+      "code": "2145",
+      "label": "PEREKAYASA MESIN"
+    },
+    {
+      "code": "2146",
+      "label": "PEREKAYASA KIMIA"
+    },
+    {
+      "code": "2147",
+      "label": "PEREKAYASA PERTAMBANGAN METALURGI DAN PROFESI SEJENIS"
+    },
+    {
+      "code": "2148",
+      "label": "KARTOGRAFER DAN SURVEYOR"
+    },
+    {
+      "code": "2149",
+      "label": "ARSITEK PEREKAYASA DAN PROFESI SEJENIS YANG TIDAK DIKLASIFIKASIKAN PADA 2141, 2142 S/D 2148"
+    },
+    {
+      "code": "2211",
+      "label": "BIOLOGI BOTANI, ZOOLOGI DAN PROFESI SEJENIS"
+    },
+    {
+      "code": "2212",
+      "label": "PARMAKOLOG, PHATOLOG DAN PROFESI YANG SEJENIS"
+    },
+    {
+      "code": "2213",
+      "label": "ARGONOMI DAN PROFESI SEJENIS"
+    },
+    {
+      "code": "2221",
+      "label": "DOKTER UMUM"
+    },
+    {
+      "code": "2222",
+      "label": "DOKTER GIGI"
+    },
+    {
+      "code": "2230",
+      "label": "PERAWAT DAN BIDAN"
+    },
+    {
+      "code": "2310",
+      "label": "PENGAJAR PROFESIONAL AKADEMI, UNIVERSITAS DAN PENDIDIKAN TINGGI LAINNYA"
+    },
+    {
+      "code": "2320",
+      "label": "PENGAJAR PROFESIONAL PENDIDIKAN MENENGAH ATAS"
+    },
+    {
+      "code": "2330",
+      "label": "UNIVERSITAS DAN PENDIDIKAN TINGGI LAINNYA"
+    },
+    {
+      "code": "2331",
+      "label": "PENGAJAR SEKOLAH DASAR"
+    },
+    {
+      "code": "2332",
+      "label": "PROFESIONALIS GURU PENDIDIKAN PRA SEKOLAH DASAR"
+    },
+    {
+      "code": "2340",
+      "label": "GURU SEKOLAH LUAR BIASA"
+    },
+    {
+      "code": "2351",
+      "label": "SPESIALIS METODA PENDIDIKAN"
+    },
+    {
+      "code": "2352",
+      "label": "PENILIK SEKOLAH"
+    },
+    {
+      "code": "2411",
+      "label": "AKUNTAN"
+    },
+    {
+      "code": "2412",
+      "label": "TENAGA PROFESIONAL TENAGA KEPEGAWAIAN"
+    },
+    {
+      "code": "2419",
+      "label": "TENAGA PROFESIONAL BIDANG BISNIS YANG TIDAK DAPATDIKLASIFIKASIKAN PADA SUB GOLONGAN 2411 DAN 2412"
+    },
+    {
+      "code": "2421",
+      "label": "PENGACARA"
+    },
+    {
+      "code": "2422",
+      "label": "HAKIM"
+    },
+    {
+      "code": "2429",
+      "label": "PAKAR HUKUM YTD PADA SUB GOL 2421 & 2422"
+    },
+    {
+      "code": "2431",
+      "label": "ARSIPARIS DAN KURATOR"
+    },
+    {
+      "code": "2432",
+      "label": "PUSTAKAWAN DAN PEMBERI INFORMASI YANG SEJENIS"
+    },
+    {
+      "code": "2441",
+      "label": "PAKAR EKONOMI"
+    },
+    {
+      "code": "2442",
+      "label": "PAKAR SOSIOLOGI, ANTROPOLOGI DAN YANG SEJENIS"
+    },
+    {
+      "code": "2443",
+      "label": "PAKAR FILSAFAT, SEJARAH DAN ILMU POLITIK"
+    },
+    {
+      "code": "2444",
+      "label": "PAKAR BAHASA, PENTERJEMAH DAN JURU BAHASA"
+    },
+    {
+      "code": "2445",
+      "label": "PSIKOLOG"
+    },
+    {
+      "code": "2446",
+      "label": "PEKERJA SOSIAL PROFESIONAL"
+    },
+    {
+      "code": "2451",
+      "label": "PENGARANG, WARTAWAN DAN PENULIS LAINNYA"
+    },
+    {
+      "code": "2452",
+      "label": "PEMAHAT, PELUKIS DAN SENIMAN YANG SEJENIS"
+    },
+    {
+      "code": "2453",
+      "label": "PENGUBAH LAGU, PEMUSIK DAN PENYANYI"
+    },
+    {
+      "code": "2454",
+      "label": "PENCIPTA TARI DAN PENARI"
+    },
+    {
+      "code": "2455",
+      "label": "PEMAIN FILM, SUTRADARA FILM, DIREKTUR PANGGUNG DAN YANG SEJENIS"
+    },
+    {
+      "code": "2460",
+      "label": "PAKAR KEAGAMAAN"
+    },
+    {
+      "code": "3",
+      "label": "TEKNISI DAN KELOMPOK JABATAN YANG SEJENIS"
+    },
+    {
+      "code": "3111",
+      "label": "TEKNISI ILMU KIMIA DAN FISIKA"
+    },
+    {
+      "code": "3112",
+      "label": "TEKNISI PEREKAYASAAN SIPIL"
+    },
+    {
+      "code": "3113",
+      "label": "TEKNISI PEREKAYASAAN LISTRIK"
+    },
+    {
+      "code": "3114",
+      "label": "TEKNISI PEREKAYASAAN ELEKTRONIKA & TELEKOMUNIKASI"
+    },
+    {
+      "code": "3115",
+      "label": "TEKNISI PEREKAYASAAN MEKANIK"
+    },
+    {
+      "code": "3116",
+      "label": "TEKNISI PEREKAYASAAN KIMIA"
+    },
+    {
+      "code": "3117",
+      "label": "TEKNISI PERTAMBANGAN DAN METALURGI"
+    },
+    {
+      "code": "3118",
+      "label": "PERANCANG GAMBAR"
+    },
+    {
+      "code": "3119",
+      "label": "TEKNISI ILMU FISIKA DAN PEREKAYASAAN YANG TIDAK DAPAT DIKLASIFKASIKAN DI 3111 S/D 3118"
+    },
+    {
+      "code": "3121",
+      "label": "ASISTEN KOMPUTER"
+    },
+    {
+      "code": "3122",
+      "label": "OPERATOR PERLENGKAPAN KOMPUTER"
+    },
+    {
+      "code": "3123",
+      "label": "PENGONTROL ROBOT INDUSTRI"
+    },
+    {
+      "code": "3131",
+      "label": "PHOTOGRAFER OPERATOR PERALATAN REKAMAN GAMBAR DAN SUARA"
+    },
+    {
+      "code": "3132",
+      "label": "OPERATOR PERLENGKAPAN RADIO DAN TELEKOMUNIKASI"
+    },
+    {
+      "code": "3133",
+      "label": "OPERATOR PERALATAN MEDIK"
+    },
+    {
+      "code": "3141",
+      "label": "PEREKAYASA KAPAL LAUT"
+    },
+    {
+      "code": "3142",
+      "label": "PERWIRA DEK KAPAL LAUT DAN PILOT"
+    },
+    {
+      "code": "3143",
+      "label": "PILOT PESAWAT UDARA & PROFESIONALIS SEJENIS"
+    },
+    {
+      "code": "3145",
+      "label": "PENGONTROL LALULINTAS UDARA"
+    },
+    {
+      "code": "3151",
+      "label": "PENGAWAS BANGUNAN DAN KEBAKARAN"
+    },
+    {
+      "code": "3152",
+      "label": "PENGAWAS KESELAMATAN KESEHATAN DAN KUALITAS"
+    },
+    {
+      "code": "3211",
+      "label": "TEKNISI ILMU HAYAT"
+    },
+    {
+      "code": "3212",
+      "label": "TEKNISI AGRONOMI DAN KEHUTANAN"
+    },
+    {
+      "code": "3213",
+      "label": "PENASEHAT PERTANIAN DAN KEHUTANAN"
+    },
+    {
+      "code": "3221",
+      "label": "ASISTEN MEDIKAL"
+    },
+    {
+      "code": "3222",
+      "label": "SANITARIAN"
+    },
+    {
+      "code": "3223",
+      "label": "NUTRISIS DAN DIESTRISIAN"
+    },
+    {
+      "code": "3224",
+      "label": "OPTOMETRIS DAN OPTOSIAN"
+    },
+    {
+      "code": "3225",
+      "label": "ASISTEN DOKTER GIGI"
+    },
+    {
+      "code": "3226",
+      "label": "PHISIOTERAPIS DAN PROFESIONALIS SEJENIS"
+    },
+    {
+      "code": "3227",
+      "label": "ASISTEN DOKTER HEWAN"
+    },
+    {
+      "code": "3228",
+      "label": "ASISTEN PHARMASI"
+    },
+    {
+      "code": "3229",
+      "label": "PROFESIONALIS KESEHATAN MODERN (KECUALI PERAWAT)YTDL"
+    },
+    {
+      "code": "3231",
+      "label": "PROFESIONALIS PERAWAT"
+    },
+    {
+      "code": "3232",
+      "label": "BIDAN PROFESIONALIS"
+    },
+    {
+      "code": "3241",
+      "label": "PRAKTISI PENGOBATAN TRADISIONAL"
+    },
+    {
+      "code": "3242",
+      "label": "PENYEMBUH KEBATINAN"
+    },
+    {
+      "code": "3310",
+      "label": "PROFESIONALIS GURU PENDIDIKAN DASAR"
+    },
+    {
+      "code": "3320",
+      "label": "ASOSIASI PROFESI GURU PENDIDIKAN PRA SEKOLAH DASAR"
+    },
+    {
+      "code": "3330",
+      "label": "ASOSIASI PROFESI GURU PENDIDIKAN KHUSUS"
+    },
+    {
+      "code": "3340",
+      "label": "PROFESIONALIS KELOMPOK GURU LAINNYA"
+    },
+    {
+      "code": "3411",
+      "label": "PEDAGANG DAN MAKELAR SURAT BERHARGA DAN KEUANGAN"
+    },
+    {
+      "code": "3412",
+      "label": "PENCARI PELANGGAN ASURANSI"
+    },
+    {
+      "code": "3413",
+      "label": "AGEN PROPERTI"
+    },
+    {
+      "code": "3414",
+      "label": "KONSULTAN DAN PENYUSUN PERJALANAN"
+    },
+    {
+      "code": "3415",
+      "label": "WAKIL PENJUAL TEKNIS DAN KOMERSIAL"
+    },
+    {
+      "code": "3416",
+      "label": "PEMBELI"
+    },
+    {
+      "code": "3417",
+      "label": "PENAKSIR, PENILAI DAN PELELANG"
+    },
+    {
+      "code": "3421",
+      "label": "MAKELAR PERDAGANGAN"
+    },
+    {
+      "code": "3422",
+      "label": "AGEN KLIRING DAN PENGIRIMAN"
+    },
+    {
+      "code": "3423",
+      "label": "AGEN KETENAGAKERJAAN DAN PENGERAH TENAGA KERJA"
+    },
+    {
+      "code": "3429",
+      "label": "AGEN USAHA JASA DAN MAKELAR PERDAGANGAN YTDL"
+    },
+    {
+      "code": "3431",
+      "label": "SEKRETARIS ADMINISTRASI DAN ASOSIASI PROFESI SEJENIS"
+    },
+    {
+      "code": "3432",
+      "label": "ASOSIASI PROFESI, PERDAGANGAN DAN HUKUM"
+    },
+    {
+      "code": "3433",
+      "label": "PEMEGANG BUKU"
+    },
+    {
+      "code": "3434",
+      "label": "KELOMPOK PROFESIONALIS STATISTIK, MATEMATI DAN SEJENISNYA"
+    },
+    {
+      "code": "3439",
+      "label": "ASOSIASI PROFESI ADMINISTRASI YANG TIDAK DAPAT DIKLASIFIKASIKAN PADA SUB GOLONGAN 3431 S/D 3434"
+    },
+    {
+      "code": "3441",
+      "label": "INSPEKTUR BEA CUKAI DAN PABEAN"
+    },
+    {
+      "code": "3442",
+      "label": "PETUGAS PAJAK DAN BEA CUKAI PEMERINTAH"
+    },
+    {
+      "code": "3443",
+      "label": "PETUGAS PENGHITUNG KEUNTUNGAN SOSIAL PEMERINTAH"
+    },
+    {
+      "code": "3444",
+      "label": "PETUGAS PERIJINAN PEMERINTAH"
+    },
+    {
+      "code": "3449",
+      "label": "ASOSIASI PROFESI BEA CUKAI, PAJAK DAN PEJABAT PEMERINTAH YTDL"
+    },
+    {
+      "code": "3450",
+      "label": "INSPEKTUR POLISI DAN DETEKTIF"
+    },
+    {
+      "code": "3460",
+      "label": "ASOSIASI PROFESI EKERJA SOSIAL"
+    },
+    {
+      "code": "3471",
+      "label": "DEKORATOR DAN PERANCANG KOMERSIAL"
+    },
+    {
+      "code": "3472",
+      "label": "PENYIAR RADIO, TV DAN PENYIAR LAINNYA"
+    },
+    {
+      "code": "3473",
+      "label": "MUSIKUS, PENARI DAN PENARI JALANAN KLUB MALAM DAN SEJENISNYA"
+    },
+    {
+      "code": "3474",
+      "label": "BADUT, PESULAP, PEMAIN AKROBAT DAN ASOSIASI PROFESI SEJENIS"
+    },
+    {
+      "code": "3475",
+      "label": "PEMAIN ATLETIK DAN OLAHRAGAWAN DAN KELOMPOK PROFESIONAL SEJENIS"
+    },
+    {
+      "code": "3480",
+      "label": "ASOSIASI PROFESI KEAGAMAAN"
+    },
+    {
+      "code": "4",
+      "label": "PENATA USAHA"
+    },
+    {
+      "code": "4111",
+      "label": "STENOGRAF DAN PENGETIK"
+    },
+    {
+      "code": "4112",
+      "label": "OPERATOR PENGOLAH DATA DAN SEJENIS"
+    },
+    {
+      "code": "4113",
+      "label": "OPERATOR DATA ENTRI"
+    },
+    {
+      "code": "4114",
+      "label": "OPERATOR MESIN PENGHITUNG"
+    },
+    {
+      "code": "4115",
+      "label": "SEKRETARIS"
+    },
+    {
+      "code": "4121",
+      "label": "PENATA USAHA AKUNTAN PEMBUKUAN"
+    },
+    {
+      "code": "4122",
+      "label": "PENATA USAHA STATISTIK DAN KEUANGAN"
+    },
+    {
+      "code": "4131",
+      "label": "PENATA USAHA PERSEDIAAN"
+    },
+    {
+      "code": "4132",
+      "label": "PENATA USAHA PRODUKSI"
+    },
+    {
+      "code": "4133",
+      "label": "PENATA USAHA ANGKUTAN"
+    },
+    {
+      "code": "4141",
+      "label": "PENATA USAHA PERPUSTAKAAN DAN ARSIP"
+    },
+    {
+      "code": "4142",
+      "label": "PENATA USAHA PENGIRIMAN DAN PENYORTITAN SURAT"
+    },
+    {
+      "code": "4143",
+      "label": "PENATA USAHA PENGKODEAN, CETAK BACAAN DAN SEJENIS"
+    },
+    {
+      "code": "4144",
+      "label": "PENULIS DAN PEKERJA SEJENIS"
+    },
+    {
+      "code": "4190",
+      "label": "PENATA USAHA KANTOR LAINNYA"
+    },
+    {
+      "code": "4211",
+      "label": "KASIR DAN PENATA USAHA TIKET"
+    },
+    {
+      "code": "4212",
+      "label": "TELER DAN PENATA USAHA TEMPAT PEMBAYARAN LAINNYA"
+    },
+    {
+      "code": "4213",
+      "label": "BANDAR DAN PRAMU JUDI"
+    },
+    {
+      "code": "4214",
+      "label": "PEMILIK RUMAH GADAI DAN PEMBERI PINJAMAN UANG"
+    },
+    {
+      "code": "4215",
+      "label": "PENAGIH HUTANG DAN PEKERJA SEJENIS"
+    },
+    {
+      "code": "4222",
+      "label": "RESEPSIONIS DAN PENATA USAHA INFORMASI"
+    },
+    {
+      "code": "4223",
+      "label": "OPERATOR PAPAN PENYAMBUNGAN TELEPON"
+    },
+    {
+      "code": "5",
+      "label": "TENAGA USAHA JASA DAN PENJUAL DAGANGAN DI TOKO DAN PASAR"
+    },
+    {
+      "code": "5111",
+      "label": "PRAMUGARA DAN PRAMUGARI PERJALANAN"
+    },
+    {
+      "code": "5112",
+      "label": "KONDEKTUR PERJALANAN"
+    },
+    {
+      "code": "5113",
+      "label": "PEMANDU PERJALANAN"
+    },
+    {
+      "code": "5121",
+      "label": "PELAYAN, PRAMU RUMAH TANGGA DAN YANG SEJENIS"
+    },
+    {
+      "code": "5122",
+      "label": "JURU MASAK"
+    },
+    {
+      "code": "5123",
+      "label": "PRAMU RESTORAN DAN BAR"
+    },
+    {
+      "code": "5131",
+      "label": "PENGASUH ANAK"
+    },
+    {
+      "code": "5132",
+      "label": "PENGASUH PADA LEMBAGA PERORANGAN"
+    },
+    {
+      "code": "5139",
+      "label": "PERAWAT PERORANGAN DAN YANG SEJENIS"
+    },
+    {
+      "code": "5141",
+      "label": "PEMANGKAS RAMBUT, PENATA RAMBUT PERAWATKECANTIKAN DAN YANG SEJENIS"
+    },
+    {
+      "code": "5142",
+      "label": "PRAMURIA DAN PELAYAN PRIA"
+    },
+    {
+      "code": "5143",
+      "label": "PENGURUS PEMAKAMAN DAN PEMBALSEMAN JENASAH"
+    },
+    {
+      "code": "5149",
+      "label": "PEKERJA JASA PERORANGAN YANG TIDAK DAPAT DIKLASIFIKASIKAN DI TEMPAT LAIN"
+    }
+  ],
+  "ipk.3.6": [
+    {
+      "code": "1",
+      "label": "1"
+    },
+    {
+      "code": "A",
+      "label": "PERTANIAN, KEHUTANAN DAN PERIKANAN"
+    },
+    {
+      "code": "11",
+      "label": "PERTANIAN TANAMAN SEMUSIM"
+    },
+    {
+      "code": "12",
+      "label": "PERTANIAN TANAMAN TAHUNAN"
+    },
+    {
+      "code": "13",
+      "label": "PERTANIAN TANAMAN HIAS DAN PENGEMBANGBIAKAN TANAMAN"
+    },
+    {
+      "code": "14",
+      "label": "PETERNAKAN"
+    },
+    {
+      "code": "16",
+      "label": "JASA PENUNJANG PERTANIAN DAN PASCA PANEN"
+    },
+    {
+      "code": "17",
+      "label": "PERBURUAN, PENANGKAPAN DAN PENANGKARAN SATWA LIAR"
+    },
+    {
+      "code": "21",
+      "label": "PENGUSAHAAN HUTAN"
+    },
+    {
+      "code": "22",
+      "label": "PENEBANGAN DAN PEMUNGUTAN KAYU"
+    },
+    {
+      "code": "23",
+      "label": "PEMUNGUTAN HASIL HUTAN BUKAN KAYU"
+    },
+    {
+      "code": "24",
+      "label": "JASA PENUNJANG KEHUTANAN"
+    },
+    {
+      "code": "31",
+      "label": "PERIKANAN TANGKAP"
+    },
+    {
+      "code": "32",
+      "label": "PERIKANAN BUDIDAYA"
+    },
+    {
+      "code": "B",
+      "label": "PERTAMBANGAN DAN PENGGALIAN"
+    },
+    {
+      "code": "51",
+      "label": "PERTAMBANGAN BATU BARA"
+    },
+    {
+      "code": "52",
+      "label": "PERTAMBANGAN LIGNIT"
+    },
+    {
+      "code": "61",
+      "label": "PERTAMBANGAN MINYAK BUMI"
+    },
+    {
+      "code": "62",
+      "label": "PERTAMBANGAN GAS ALAM DAN PANAS BUMI"
+    },
+    {
+      "code": "71",
+      "label": "PERTAMBANGAN PASIR BESI DAN BIJIH BESI"
+    },
+    {
+      "code": "72",
+      "label": "PERTAMBANGAN BIJIH LOGAM YANG TIDAK MENGANDUNG BESI,TIDAK TERMASUK BIJIH LOGAM MULIA"
+    },
+    {
+      "code": "73",
+      "label": "PERTAMBANGAN BIJIH LOGAM MULIA"
+    },
+    {
+      "code": "81",
+      "label": "PENGGALIAN BATU, PASIR DAN TANAH LIAT"
+    },
+    {
+      "code": "89",
+      "label": "PERTAMBANGAN DAN PENGGALIAN LAINNYA YTDL"
+    },
+    {
+      "code": "91",
+      "label": "JASA PERTAMBANGAN MINYAK BUMI DAN GAS ALAM"
+    },
+    {
+      "code": "99",
+      "label": "JASA PERTAMBANGAN DAN PENGGALIAN LAINNYA"
+    },
+    {
+      "code": "C",
+      "label": "INDUSTRI PENGOLAHAN"
+    },
+    {
+      "code": "101",
+      "label": "INDUSTRI PENGOLAHAN DAN PENGAWETAN DAGING"
+    },
+    {
+      "code": "102",
+      "label": "INDUSTRI PENGOLAHAN DAN PENGAWETAN IKAN DAN BIOTA AIR"
+    },
+    {
+      "code": "103",
+      "label": "INDUSTRI PENGOLAHAN DAN PENGAWETAN BUAH-BUAHAN DAN SAYURAN"
+    },
+    {
+      "code": "104",
+      "label": "INDUSTRI MINYAK MAKAN DAN LEMAK NABATI DAN HEWANI"
+    },
+    {
+      "code": "105",
+      "label": "INDUSTRI PENGOLAHAN SUSU, PRODUK DARI SUSU DAN ES KRIM"
+    },
+    {
+      "code": "106",
+      "label": "INDUSTRI PENGGILINGAN PADI-PADIAN, TEPUNG DAN PATI"
+    },
+    {
+      "code": "107",
+      "label": "INDUSTRI MAKANAN LAINNYA"
+    },
+    {
+      "code": "108",
+      "label": "INDUSTRI MAKANAN HEWAN"
+    },
+    {
+      "code": "110",
+      "label": "INDUSTRI MINUMAN"
+    },
+    {
+      "code": "120",
+      "label": "INDUSTRI PENGOLAHAN TEMBAKAU"
+    },
+    {
+      "code": "131",
+      "label": "INDUSTRI PEMINTALAN, PENENUNAN DAN PENYELESAIAN AKHIR TEKSTIL"
+    },
+    {
+      "code": "139",
+      "label": "INDUSTRI TEKSTIL LAINNYA"
+    },
+    {
+      "code": "141",
+      "label": "INDUSTRI PAKAIAN JADI DAN PERLENGKAPANNYA, BUKAN PAKAIAN JADI DARI KULIT BERBULU"
+    },
+    {
+      "code": "142",
+      "label": "INDUSTRI PAKAIAN JADI DAN BARANG DARI KULIT BERBULU"
+    },
+    {
+      "code": "143",
+      "label": "INDUSTRI PAKAIAN JADI RAJUTAN DAN SULAMAN/BORDIR"
+    },
+    {
+      "code": "151",
+      "label": "INDUSTRI KULIT DAN BARANG DARI KULIT, TERMASUK KULIT BUATAN"
+    },
+    {
+      "code": "152",
+      "label": "INDUSTRI ALAS KAKI"
+    },
+    {
+      "code": "161",
+      "label": "INDUSTRI PENGGERGAJIAN DAN PENGAWETAN KAYU, ROTAN, BAMBU DAN SEJENISNYA"
+    },
+    {
+      "code": "162",
+      "label": "INDUSTRI BARANG DARI KAYU; INDUSTRI BARANG DARI GABUS DAN BARANG ANYAMAN DARI JERAMI, ROTAN, BAMBU DAN SEJENIS LAINNYA"
+    },
+    {
+      "code": "170",
+      "label": "INDUSTRI KERTAS DAN BARANG DARI KERTAS"
+    },
+    {
+      "code": "181",
+      "label": "INDUSTRI PENCETAKAN DAN KEGIATAN YBDI"
+    },
+    {
+      "code": "182",
+      "label": "REPRODUKSI MEDIA REKAMAN"
+    },
+    {
+      "code": "191",
+      "label": "INDUSTRI PRODUK DARI BATU BARA"
+    },
+    {
+      "code": "192",
+      "label": "INDUSTRI PRODUK PENGILANGAN MINYAK BUMI"
+    },
+    {
+      "code": "201",
+      "label": "INDUSTRI BAHAN KIMIA"
+    },
+    {
+      "code": "202",
+      "label": "INDUSTRI BARANG KIMIA LAINNYA"
+    },
+    {
+      "code": "203",
+      "label": "INDUSTRI SERAT BUATAN"
+    },
+    {
+      "code": "210",
+      "label": "INDUSTRI FARMASI, PRODUK OBAT KIMIA DAN OBAT TRADISIONAL"
+    },
+    {
+      "code": "221",
+      "label": "INDUSTRI KARET DAN BARANG DARI KARET"
+    },
+    {
+      "code": "222",
+      "label": "INDUSTRI BARANG DARI PLASTIK"
+    },
+    {
+      "code": "231",
+      "label": "INDUSTRI KACA DAN BARANG DARI KACA"
+    },
+    {
+      "code": "239",
+      "label": "INDUSTRI BARANG GALIAN BUKAN LOGAM LAINNYA"
+    },
+    {
+      "code": "241",
+      "label": "INDUSTRI LOGAM DASAR BESI DAN BAJA"
+    },
+    {
+      "code": "242",
+      "label": "INDUSTRI LOGAM DASAR MULIA DAN LOGAM DASAR BUKAN BESI LAINNYA"
+    },
+    {
+      "code": "243",
+      "label": "INDUSTRI PENGECORAN LOGAM"
+    },
+    {
+      "code": "251",
+      "label": "INDUSTRI BARANG LOGAM SIAP PASANG UNTUK BANGUNAN, TANGKI, TANDON AIR DAN GENERATOR UAP"
+    },
+    {
+      "code": "252",
+      "label": "INDUSTRI SENJATA DAN AMUNISI"
+    },
+    {
+      "code": "259",
+      "label": "INDUSTRI BARANG LOGAM LAINNYA DAN JASA PEMBUATAN BARANG LOGAM"
+    },
+    {
+      "code": "261",
+      "label": "INDUSTRI KOMPONEN DAN PAPAN ELEKTRONIK"
+    },
+    {
+      "code": "262",
+      "label": "INDUSTRI KOMPUTER DAN PERLENGKAPANNYA"
+    },
+    {
+      "code": "263",
+      "label": "INDUSTRI PERALATAN KOMUNIKASI"
+    },
+    {
+      "code": "264",
+      "label": "INDUSTRI PERALATAN AUDIO DAN VIDEO ELEKTRONIK"
+    },
+    {
+      "code": "265",
+      "label": "INDUSTRI ALAT UKUR, ALAT UJI, PERALATAN NAVIGASI DAN KONTROL DAN ALAT UKUR WAKTU"
+    },
+    {
+      "code": "266",
+      "label": "INDUSTRI PERALATAN IRADIASI, ELEKTROMEDIKAL DAN ELEKTROTERAPI"
+    },
+    {
+      "code": "267",
+      "label": "INDUSTRI PERALATAN FOTOGRAFI DAN INSTRUMEN OPTIK BUKAN KACA MATA"
+    },
+    {
+      "code": "268",
+      "label": "INDUSTRI MEDIA MAGNETIK DAN MEDIA OPTIK"
+    },
+    {
+      "code": "271",
+      "label": "INDUSTRI MOTOR LISTRIK, GENERATOR, TRANSFORMATOR DAN PERALATAN PENGONTROL DAN PENDISTRIBUSIAN LISTRIK"
+    },
+    {
+      "code": "272",
+      "label": "INDUSTRI BATU BATERAI DAN AKUMULATOR LISTRIK"
+    },
+    {
+      "code": "273",
+      "label": "INDUSTRI KABEL DAN PERLENGKAPANNYA"
+    },
+    {
+      "code": "274",
+      "label": "INDUSTRI PERALATAN PENERANGAN LISTRIK (TERMASUK PERALATAN PENERANGAN BUKAN LISTRIK)"
+    },
+    {
+      "code": "275",
+      "label": "INDUSTRI PERALATAN RUMAH TANGGA"
+    },
+    {
+      "code": "279",
+      "label": "INDUSTRI PERALATAN LISTRIK LAINNYA"
+    },
+    {
+      "code": "281",
+      "label": "INDUSTRI MESIN UNTUK KEPERLUAN UMUM"
+    },
+    {
+      "code": "282",
+      "label": "INDUSTRI MESIN UNTUK KEPERLUAN KHUSUS"
+    },
+    {
+      "code": "291",
+      "label": "INDUSTRI KENDARAAN BERMOTOR RODA EMPAT ATAU LEBIH"
+    },
+    {
+      "code": "292",
+      "label": "INDUSTRI KAROSERI KENDARAAN BERMOTOR RODA EMPAT ATAU LEBIH DAN INDUSTRI TRAILER DAN SEMI TRAILER"
+    },
+    {
+      "code": "293",
+      "label": "INDUSTRI SUKU CADANG DAN AKSESORI KENDARAAN BERMOTOR RODA EMPAT ATAU LEBIH"
+    },
+    {
+      "code": "301",
+      "label": "INDUSTRI PEMBUATAN KAPAL DAN PERAHU"
+    },
+    {
+      "code": "302",
+      "label": "INDUSTRI LOKOMOTIF DAN GERBONG KERETA"
+    },
+    {
+      "code": "303",
+      "label": "INDUSTRI PESAWAT TERBANG DAN PERLENGKAPANNYA"
+    },
+    {
+      "code": "304",
+      "label": "INDUSTRI KENDARAAN PERANG"
+    },
+    {
+      "code": "309",
+      "label": "INDUSTRI ALAT ANGKUTAN LAINNYA YTDL"
+    },
+    {
+      "code": "310",
+      "label": "INDUSTRI FURNITUR"
+    },
+    {
+      "code": "321",
+      "label": "INDUSTRI BARANG PERHIASAN DAN BARANG BERHARGA"
+    },
+    {
+      "code": "322",
+      "label": "INDUSTRI ALAT MUSIK"
+    },
+    {
+      "code": "323",
+      "label": "INDUSTRI ALAT OLAHRAGA"
+    },
+    {
+      "code": "324",
+      "label": "INDUSTRI ALAT PERMAINAN DAN MAINAN ANAK-ANAK"
+    },
+    {
+      "code": "325",
+      "label": "INDUSTRI PERALATAN KEDOKTERAN DAN KEDOKTERAN GIGI SERTA PERLENGKAPANNYA"
+    },
+    {
+      "code": "329",
+      "label": "INDUSTRI PENGOLAHAN LAINNYA YTDL"
+    },
+    {
+      "code": "331",
+      "label": "JASA REPARASI PRODUK LOGAM PABRIKASI, MESIN DAN PERALATAN"
+    },
+    {
+      "code": "332",
+      "label": "JASA PEMASANGAN MESIN DAN PERALATAN INDUSTRI"
+    },
+    {
+      "code": "D",
+      "label": "PENGADAAN LISTRIK, GAS, UAP/AIR PANAS DAN UDARA DINGIN"
+    },
+    {
+      "code": "351",
+      "label": "KETENAGALISTRIKAN"
+    },
+    {
+      "code": "352",
+      "label": "GAS ALAM DAN BUATAN"
+    },
+    {
+      "code": "353",
+      "label": "PENGADAAN UAP/AIR PANAS, UDARA DINGIN DAN PRODUKSI ES"
+    },
+    {
+      "code": "E",
+      "label": "PENGADAAN AIR, PENGOLAHAN SAMPAHDAN DAUR ULANG, PEMBUANGAN DAN PEMBERSIHAN LIMBAH DAN SAMPAH"
+    },
+    {
+      "code": "360",
+      "label": "PENGADAAN AIR"
+    },
+    {
+      "code": "370",
+      "label": "PENGELOLAAN LIMBAH"
+    },
+    {
+      "code": "381",
+      "label": "PENGUMPULAN SAMPAH"
+    },
+    {
+      "code": "382",
+      "label": "PENGELOLAAN DAN PEMBUANGAN SAMPAH"
+    },
+    {
+      "code": "383",
+      "label": "DAUR ULANG"
+    },
+    {
+      "code": "390",
+      "label": "JASA PEMBERSIHAN DAN PENGELOLAAN SAMPAH LAINNYA"
+    },
+    {
+      "code": "F",
+      "label": "KONSTRUKSI"
+    },
+    {
+      "code": "410",
+      "label": "KONSTRUKSI GEDUNG"
+    },
+    {
+      "code": "421",
+      "label": "KONSTRUKSI JALAN DAN REL KERETA API"
+    },
+    {
+      "code": "422",
+      "label": "KONSTRUKSI JARINGAN SALURAN UNTUK IRIGASI, KOMUNIKASI DAN LIMBAH"
+    },
+    {
+      "code": "429",
+      "label": "KONSTRUKSI BANGUNAN SIPIL LAINNYA"
+    },
+    {
+      "code": "431",
+      "label": "PEMBONGKARAN DAN PENYIAPAN LAHAN"
+    },
+    {
+      "code": "432",
+      "label": "INSTALASI SISTEM KELISTRIKAN, AIR (PIPA) DAN INSTALASI KONSTRUKSI LAINNYA"
+    },
+    {
+      "code": "433",
+      "label": "PENYELESAIAN KONSTRUKSI BANGUNAN"
+    },
+    {
+      "code": "439",
+      "label": "KONSTRUKSI KHUSUS LAINNYA"
+    },
+    {
+      "code": "G",
+      "label": "PERDAGANGAN BESAR DAN ECERAN; REPARASI DAN PERAWATAN MOBIL DAN SEPEDA MOTOR"
+    },
+    {
+      "code": "451",
+      "label": "PERDAGANGAN MOBIL"
+    },
+    {
+      "code": "452",
+      "label": "REPARASI DAN PERAWATAN MOBIL"
+    },
+    {
+      "code": "453",
+      "label": "PERDAGANGAN SUKU CADANG DAN AKSESORI MOBIL"
+    },
+    {
+      "code": "454",
+      "label": "PERDAGANGAN, REPARASI DAN PERAWATAN SEPEDA MOTOR DAN PERDAGANGAN SUKU CADANG DAN AKSESORINYA"
+    },
+    {
+      "code": "461",
+      "label": "PERDAGANGAN BESAR ATAS DASAR BALAS JASA (FEE) ATAU KONTRAK"
+    },
+    {
+      "code": "462",
+      "label": "PERDAGANGAN BESAR HASIL PERTANIAN DAN HEWAN HIDUP"
+    },
+    {
+      "code": "463",
+      "label": "PERDAGANGAN BESAR MAKANAN, MINUMAN DAN TEMBAKAU"
+    },
+    {
+      "code": "464",
+      "label": "PERDAGANGAN BESAR BARANG KEPERLUAN RUMAH TANGGA"
+    },
+    {
+      "code": "465",
+      "label": "PERDAGANGAN BESAR MESIN, PERALATAN DAN PERLENGKAPANNYA"
+    },
+    {
+      "code": "466",
+      "label": "PERDAGANGAN BESAR KHUSUS LAINNYA"
+    },
+    {
+      "code": "469",
+      "label": "PERDAGANGAN BESAR BERBAGAI MACAM BARANG"
+    },
+    {
+      "code": "471",
+      "label": "PERDAGANGAN ECERAN BERBAGAI MACAM BARANG DI TOKO"
+    },
+    {
+      "code": "472",
+      "label": "PERDAGANGAN ECERAN KHUSUS MAKANAN, MINUMAN DAN TEMBAKAU DI TOKO"
+    },
+    {
+      "code": "473",
+      "label": "PERDAGANGAN ECERAN KHUSUS BAHAN BAKAR KENDARAAN BERMOTOR"
+    },
+    {
+      "code": "474",
+      "label": "PERDAGANGAN ECERAN KHUSUS PERALATAN INFORMASI DAN KOMUNIKASI DI TOKO"
+    },
+    {
+      "code": "475",
+      "label": "PERDAGANGAN ECERAN KHUSUS PERLENGKAPAN RUMAH TANGGA LAINYA DI TOKO"
+    },
+    {
+      "code": "476",
+      "label": "PERDAGANGAN ECERAN KHUSUS BARANG BUDAYA DAN REKREASI DI TOKO"
+    },
+    {
+      "code": "477",
+      "label": "PERDAGANGAN ECERAN KHUSUS BARANG LAINNYA DI TOKO"
+    },
+    {
+      "code": "478",
+      "label": "PERDAGANGAN ECERAN KAKI LIMA DAN LOS PASAR"
+    },
+    {
+      "code": "479",
+      "label": "PERDAGANGAN ECERAN BUKAN DI TOKO, KAKI LIMA DAN LOS PASAR"
+    },
+    {
+      "code": "H",
+      "label": "TRANSPORTASI DAN PERGUDANGAN"
+    },
+    {
+      "code": "491",
+      "label": "ANGKUTAN JALAN REL"
+    },
+    {
+      "code": "492",
+      "label": "ANGKUTAN BUS"
+    },
+    {
+      "code": "493",
+      "label": "ANGKUTAN MELALUI SALURAN PIPA"
+    },
+    {
+      "code": "494",
+      "label": "ANGKUTAN DARAT BUKAN BUS"
+    },
+    {
+      "code": "501",
+      "label": "ANGKUTAN LAUT"
+    },
+    {
+      "code": "502",
+      "label": "ANGKUTAN SUNGAI, DANAU DAN PENYEBERANGAN"
+    },
+    {
+      "code": "511",
+      "label": "ANGKUTAN UDARA UNTUK PENUMPANG"
+    },
+    {
+      "code": "512",
+      "label": "ANGKUTAN UDARA UNTUK BARANG"
+    },
+    {
+      "code": "521",
+      "label": "PERGUDANGAN"
+    },
+    {
+      "code": "522",
+      "label": "JASA PENUNJANG ANGKUTAN"
+    },
+    {
+      "code": "531",
+      "label": "POS"
+    },
+    {
+      "code": "532",
+      "label": "KURIR"
+    },
+    {
+      "code": "I",
+      "label": "PENYEDIAAN AKOMODASI DAN PENYEDIAAN MAKAN MINUM"
+    },
+    {
+      "code": "551",
+      "label": "PENYEDIAAN AKOMODASI JANGKA PENDEK"
+    },
+    {
+      "code": "559",
+      "label": "PENYEDIAAN AKOMODASI LAINNYA"
+    },
+    {
+      "code": "561",
+      "label": "RESTORAN DAN PENYEDIAAN MAKANAN KELILING"
+    },
+    {
+      "code": "562",
+      "label": "JASA BOGA UNTUK SUATU EVENT TERTENTU (EVENT CATERING) DAN PENYEDIAAN MAKANAN LAINNYA"
+    },
+    {
+      "code": "563",
+      "label": "PENYEDIAAN MINUMAN"
+    },
+    {
+      "code": "J",
+      "label": "INFORMASI DAN KOMUNIKASI"
+    },
+    {
+      "code": "581",
+      "label": "PENERBITAN BUKU, MAJALAH DAN TERBITAN LAINNYA"
+    },
+    {
+      "code": "582",
+      "label": "PENERBITAN PIRANTI LUNAK (SOFTWARE)"
+    },
+    {
+      "code": "591",
+      "label": "PRODUKSI GAMBAR BERGERAK, VIDEO DAN PROGRAM TELEVISI"
+    },
+    {
+      "code": "592",
+      "label": "PEREKAMAN SUARA DAN PENERBITAN MUSIK"
+    },
+    {
+      "code": "601",
+      "label": "PENYIARAN RADIO"
+    },
+    {
+      "code": "602",
+      "label": "PENYIARAN DAN PEMROGRAMAN TELEVISI"
+    },
+    {
+      "code": "611",
+      "label": "TELEKOMUNIKASI DENGAN KABEL"
+    },
+    {
+      "code": "612",
+      "label": "TELEKOMUNIKASI TANPA KABEL"
+    },
+    {
+      "code": "613",
+      "label": "TELEKOMUNIKASI SATELIT"
+    },
+    {
+      "code": "619",
+      "label": "TELEKOMUNIKASI LAINNYA"
+    },
+    {
+      "code": "620",
+      "label": "KEGIATAN PEMROGRAMAN, KONSULTASI KOMPUTER DAN KEGIATAN YBDI"
+    },
+    {
+      "code": "631",
+      "label": "KEGIATAN PENGOLAHAN DATA, PENYIMPANAN DATA DI SERVER (HOSTING) DAN KEGIATAN YBDI; PORTAL WEB"
+    },
+    {
+      "code": "639",
+      "label": "KEGIATAN JASA INFORMASI LAINNYA"
+    },
+    {
+      "code": "K",
+      "label": "JASA KEUANGAN DAN ASURANSI"
+    },
+    {
+      "code": "641",
+      "label": "PERANTARA MONETER"
+    },
+    {
+      "code": "642",
+      "label": "KEGIATAN PERUSAHAAN HOLDING"
+    },
+    {
+      "code": "643",
+      "label": "TRUST, PEMBIAYAAN DAN ENTITAS KEUANGAN SEJENIS"
+    },
+    {
+      "code": "649",
+      "label": "JASA KEUANGAN LAINNYA, BUKAN ASURANSI DAN DANA PENSIUN"
+    },
+    {
+      "code": "651",
+      "label": "ASURANSI"
+    },
+    {
+      "code": "652",
+      "label": "REASURANSI"
+    },
+    {
+      "code": "653",
+      "label": "DANA PENSIUN"
+    },
+    {
+      "code": "661",
+      "label": "JASA PENUNJANG JASA KEUANGAN, BUKAN ASURANSI DAN DANA PENSIUN"
+    },
+    {
+      "code": "662",
+      "label": "JASA PENUNJANG ASURANSI DAN DANA PENSIUN"
+    },
+    {
+      "code": "663",
+      "label": "JASA MANAJEMEN DANA"
+    },
+    {
+      "code": "L",
+      "label": "REAL ESTATE"
+    },
+    {
+      "code": "681",
+      "label": "REAL ESTATE YANG DIMILIKI SENDIRI ATAU DISEWA DAN KAWASAN PARIWISATA"
+    },
+    {
+      "code": "682",
+      "label": "REAL ESTATE ATAS DASAR BALAS JASA (FEE) ATAU KONTRAK"
+    },
+    {
+      "code": "M",
+      "label": "JASA PROFESIONAL, ILMIAH DAN TEKNIS"
+    },
+    {
+      "code": "691",
+      "label": "JASA HUKUM"
+    },
+    {
+      "code": "692",
+      "label": "JASA AKUNTANSI, PEMBUKUAN DAN PEMERIKSA; KONSULTASI PAJAK"
+    },
+    {
+      "code": "701",
+      "label": "KEGIATAN KANTOR PUSAT"
+    },
+    {
+      "code": "702",
+      "label": "KEGIATAN KONSULTASI MANAJEMEN"
+    },
+    {
+      "code": "711",
+      "label": "JASA ARSITEKTUR DAN TEKNIK SIPIL SERTA KONSULTASI TEKNIS YBDI"
+    },
+    {
+      "code": "712",
+      "label": "ANALISIS DAN UJI TEKNIS"
+    },
+    {
+      "code": "721",
+      "label": "PENELITIAN DAN PENGEMBANGAN ILMU PENGETAHUAN ALAM DAN ILMU TEKNOLOGI DAN REKAYASA"
+    }
+  ],
+  "ipk.3.7": [
+    {
+      "code": "1",
+      "label": "2"
+    },
+    {
+      "code": "1001",
+      "label": "BH & TIDAK TAMAT SD"
+    },
+    {
+      "code": "1101",
+      "label": "TIDAK TAMAT SD"
+    },
+    {
+      "code": "1002",
+      "label": "S.D"
+    },
+    {
+      "code": "1102",
+      "label": "TAMAT SD"
+    },
+    {
+      "code": "1103",
+      "label": "SETINGKAT SD"
+    },
+    {
+      "code": "2001",
+      "label": "SLTP UMUM"
+    },
+    {
+      "code": "2101",
+      "label": "SEKOLAH MENENGAH PERTAMA"
+    },
+    {
+      "code": "2002",
+      "label": "SLTP KEJURUAN"
+    },
+    {
+      "code": "2104",
+      "label": "SLTP KEJURUAN"
+    },
+    {
+      "code": "2003",
+      "label": "SETINGKAT SLTP"
+    },
+    {
+      "code": "2103",
+      "label": "SLTP - LAINNYA"
+    },
+    {
+      "code": "3001",
+      "label": "SMU"
+    },
+    {
+      "code": "3801",
+      "label": "SMU"
+    },
+    {
+      "code": "3802",
+      "label": "MADRASAH DINIYAH ALIYAH"
+    },
+    {
+      "code": "3100",
+      "label": "SMK - TEKNOLOGI DAN REKAYASA"
+    },
+    {
+      "code": "3101",
+      "label": "TEKNIK BANGUNAN"
+    },
+    {
+      "code": "3102",
+      "label": "TEKNIK PLUMBING DAN SANITASI"
+    },
+    {
+      "code": "3103",
+      "label": "TEKNIK SURVEI DAN PEMETAAN"
+    },
+    {
+      "code": "3104",
+      "label": "TEKNIK KETENAGALISTRIKAN"
+    },
+    {
+      "code": "3105",
+      "label": "TEKNIK PENDINGINAN DAN TATA UDARA"
+    },
+    {
+      "code": "3106",
+      "label": "TEKNIK MESIN"
+    },
+    {
+      "code": "3107",
+      "label": "TEKNIK OTOMOTIF"
+    },
+    {
+      "code": "3108",
+      "label": "TEKNOLOGI PESAWAT UDARA"
+    },
+    {
+      "code": "3109",
+      "label": "TEKNIK PERKAPALAN"
+    },
+    {
+      "code": "3110",
+      "label": "TEKNOLOGI TEKSTIL"
+    },
+    {
+      "code": "3111",
+      "label": "TEKNIK GRAFIKA"
+    },
+    {
+      "code": "3112",
+      "label": "GEOLOGI PERTAMBANGAN"
+    },
+    {
+      "code": "3113",
+      "label": "INSTRUMENTASI INDUSTRI"
+    },
+    {
+      "code": "3114",
+      "label": "TEKNIK KIMIA"
+    },
+    {
+      "code": "3115",
+      "label": "PELAYARAN"
+    },
+    {
+      "code": "3116",
+      "label": "TEKNIK INDUSTRI"
+    },
+    {
+      "code": "3117",
+      "label": "TEKNIK PERMINYAKAN"
+    },
+    {
+      "code": "3118",
+      "label": "TEKNIK ELEKTRONIKA"
+    },
+    {
+      "code": "3119",
+      "label": "TEKNIK LAINNYA"
+    },
+    {
+      "code": "3200",
+      "label": "SMK - TEKNOLOGI INFORMASI DAN KOMUNIKASI"
+    },
+    {
+      "code": "3201",
+      "label": "TEKNIK TELEKOMUNIKASI"
+    },
+    {
+      "code": "3202",
+      "label": "TEKNIK KOMPUTER DAN INFORMATIKA"
+    },
+    {
+      "code": "3203",
+      "label": "TEKNIK BROADCASTING"
+    },
+    {
+      "code": "3300",
+      "label": "SMK - KESEHATAN"
+    },
+    {
+      "code": "3301",
+      "label": "KESEHATAN"
+    },
+    {
+      "code": "3302",
+      "label": "PERAWATAN SOSIAL"
+    },
+    {
+      "code": "3400",
+      "label": "SMK - SENI, KERAJINAN DAN PARIWISATA"
+    },
+    {
+      "code": "3401",
+      "label": "SENI RUPA"
+    },
+    {
+      "code": "3402",
+      "label": "DESAIN DAN PRODUKSI KRIA"
+    },
+    {
+      "code": "3403",
+      "label": "SENI PERTUNJUKAN"
+    },
+    {
+      "code": "3404",
+      "label": "PARIWISATA"
+    },
+    {
+      "code": "3405",
+      "label": "TATA BOGA"
+    },
+    {
+      "code": "3406",
+      "label": "TATA KECANTIKAN"
+    },
+    {
+      "code": "3407",
+      "label": "TATA BUSANA"
+    },
+    {
+      "code": "3500",
+      "label": "SMK - AGRISBISNIS DAN AGROTEKNOLOGI"
+    },
+    {
+      "code": "3501",
+      "label": "AGRIBISNIS PRODUKSI TANAMAN"
+    },
+    {
+      "code": "3502",
+      "label": "AGRIBISNIS PRODUKSI TERNAK"
+    },
+    {
+      "code": "3503",
+      "label": "AGRIBISNIS PRODUKSI SUMBERDAYA PERAIRAN"
+    },
+    {
+      "code": "3504",
+      "label": "MEKANISASI PERTANIAN"
+    },
+    {
+      "code": "3505",
+      "label": "AGRIBISNIS HASIL PERTANIAN"
+    },
+    {
+      "code": "3506",
+      "label": "PENYULUHAN PERTANIAN"
+    },
+    {
+      "code": "3507",
+      "label": "KEHUTANAN"
+    },
+    {
+      "code": "3600",
+      "label": "SMK - BISNIS DAN MANAJEMEN"
+    },
+    {
+      "code": "3601",
+      "label": "ADMINISTRASI"
+    },
+    {
+      "code": "3602",
+      "label": "KEUANGAN"
+    },
+    {
+      "code": "3603",
+      "label": "TATA NIAGA"
+    },
+    {
+      "code": "3700",
+      "label": "SETINGKAT SMU LAINNYA"
+    },
+    {
+      "code": "3701",
+      "label": "SLTA LAINNYA"
+    },
+    {
+      "code": "3702",
+      "label": "SLTA - TAK TERDEFINISI"
+    },
+    {
+      "code": "4100",
+      "label": "DIPLOMA I / AKTA I"
+    },
+    {
+      "code": "4101",
+      "label": "PENDIDIKAN"
+    },
+    {
+      "code": "4102",
+      "label": "PENDIDIKAN LUAR SEKOLAH"
+    },
+    {
+      "code": "4103",
+      "label": "PENDIDIKAN KESEJAHTERAAN SOSIAL"
+    },
+    {
+      "code": "4104",
+      "label": "PSIKOLOGI"
+    },
+    {
+      "code": "4105",
+      "label": "ILMU PENGETAHUAN SOSIAL"
+    },
+    {
+      "code": "4106",
+      "label": "PENDIDIKAN MORAL PANCASILA"
+    },
+    {
+      "code": "4107",
+      "label": "ADMINISTRASI KEUANGAN"
+    },
+    {
+      "code": "4108",
+      "label": "ANTROPOLOGI"
+    },
+    {
+      "code": "4109",
+      "label": "SEJARAH"
+    },
+    {
+      "code": "4110",
+      "label": "HUKUM"
+    },
+    {
+      "code": "4111",
+      "label": "KESEKRETARIATAN"
+    },
+    {
+      "code": "4112",
+      "label": "OLAH RAGA KESEHATAN"
+    },
+    {
+      "code": "4113",
+      "label": "KESENIAN"
+    },
+    {
+      "code": "4114",
+      "label": "BAHASA INDONESIA"
+    },
+    {
+      "code": "4115",
+      "label": "BAHASA INGGRIS"
+    },
+    {
+      "code": "4116",
+      "label": "BAHASA ARAB"
+    },
+    {
+      "code": "4117",
+      "label": "KETRAMPILAN"
+    },
+    {
+      "code": "4118",
+      "label": "EKONOMI"
+    },
+    {
+      "code": "4119",
+      "label": "ILMU PENGETAHUAN ALAM/FISIKA"
+    },
+    {
+      "code": "4120",
+      "label": "MATEMATIKA"
+    },
+    {
+      "code": "4121",
+      "label": "PROGRAM KOMPUTER"
+    },
+    {
+      "code": "4122",
+      "label": "BIOLOGI"
+    },
+    {
+      "code": "4123",
+      "label": "ILMU KIMIA"
+    },
+    {
+      "code": "4124",
+      "label": "KERJA KAYU"
+    },
+    {
+      "code": "4125",
+      "label": "TEKNIK MESIN"
+    },
+    {
+      "code": "4126",
+      "label": "TEKNIK SIPIL"
+    },
+    {
+      "code": "4127",
+      "label": "TEKNIK LISTRIK"
+    },
+    {
+      "code": "4128",
+      "label": "GEOGRAFI"
+    },
+    {
+      "code": "4129",
+      "label": "DIPLOMA I/AKTA I LAINNYA"
+    },
+    {
+      "code": "4130",
+      "label": "DIPLOMA I - TAK TERDEFINISI"
+    },
+    {
+      "code": "4200",
+      "label": "DIPLOMA II / AKTA II"
+    },
+    {
+      "code": "4201",
+      "label": "PENDIDIKAN"
+    },
+    {
+      "code": "4202",
+      "label": "PENDIDIKAN SOSIAL"
+    },
+    {
+      "code": "4203",
+      "label": "PENDIDIKAN LUAR SEKOLAH"
+    },
+    {
+      "code": "4204",
+      "label": "PSIKOLOGI"
+    },
+    {
+      "code": "4205",
+      "label": "PENDIDIKAN MORAL PANCASILA"
+    },
+    {
+      "code": "4206",
+      "label": "ANTROPOLOGI"
+    },
+    {
+      "code": "4207",
+      "label": "SEJARAH"
+    },
+    {
+      "code": "4208",
+      "label": "HUKUM"
+    },
+    {
+      "code": "4209",
+      "label": "PENDIDIKAN KESEJAHTERAAN KELUARGA"
+    },
+    {
+      "code": "4210",
+      "label": "EKONOMI"
+    },
+    {
+      "code": "4211",
+      "label": "KESENIAN"
+    },
+    {
+      "code": "4212",
+      "label": "KESEKRETARIATAN"
+    },
+    {
+      "code": "4213",
+      "label": "ADMINISTRASI"
+    },
+    {
+      "code": "4214",
+      "label": "MARKETING"
+    },
+    {
+      "code": "4215",
+      "label": "AKUTANSI"
+    },
+    {
+      "code": "4216",
+      "label": "OLAH RAGA"
+    },
+    {
+      "code": "4217",
+      "label": "BAHASA INDONESIA"
+    },
+    {
+      "code": "4218",
+      "label": "BAHASA INGGRIS"
+    },
+    {
+      "code": "4219",
+      "label": "BAHASA ARAB"
+    },
+    {
+      "code": "4220",
+      "label": "ILMU PENGETAHUAN ALAM"
+    },
+    {
+      "code": "4221",
+      "label": "GEOGRAFI"
+    },
+    {
+      "code": "4222",
+      "label": "MATEMATIKA"
+    },
+    {
+      "code": "4223",
+      "label": "BIOLOGI"
+    },
+    {
+      "code": "4224",
+      "label": "KETRAMPILAN"
+    },
+    {
+      "code": "4225",
+      "label": "KERJA KAYU"
+    },
+    {
+      "code": "4226",
+      "label": "TEKNIK SIPIL"
+    },
+    {
+      "code": "4227",
+      "label": "TEKNIK MESIN"
+    },
+    {
+      "code": "4228",
+      "label": "TEKNIK LISTRIK"
+    },
+    {
+      "code": "4229",
+      "label": "KIMIA"
+    },
+    {
+      "code": "4230",
+      "label": "DIPLOMA II/AKTA II LAINNYA"
+    },
+    {
+      "code": "4231",
+      "label": "DIPLOMA II - TAK TERDEFINISI"
+    },
+    {
+      "code": "5100",
+      "label": "DIII - ILMU PASTI/ILMU ALAM"
+    },
+    {
+      "code": "5101",
+      "label": "FISIKA"
+    },
+    {
+      "code": "5102",
+      "label": "ASTRONOMI"
+    },
+    {
+      "code": "5103",
+      "label": "BIOLOGI"
+    },
+    {
+      "code": "5104",
+      "label": "GEOLOGI DAN PERTAMBANGAN"
+    },
+    {
+      "code": "5105",
+      "label": "METEOROLOGI DAN GEOFISIKA"
+    },
+    {
+      "code": "5106",
+      "label": "GEOGRAFI"
+    },
+    {
+      "code": "5107",
+      "label": "MATEMATIKA"
+    },
+    {
+      "code": "5108",
+      "label": "ILMU STATISTIK"
+    },
+    {
+      "code": "5109",
+      "label": "ILMU KOMPUTER"
+    },
+    {
+      "code": "5110",
+      "label": "KIMIA"
+    },
+    {
+      "code": "5111",
+      "label": "ILMU PASTI/ALAM LAINNYA"
+    },
+    {
+      "code": "5112",
+      "label": "ILMU PASTI - TAK TERDEFINISI"
+    },
+    {
+      "code": "5200",
+      "label": "DIII - TEKNOLOGI"
+    },
+    {
+      "code": "5201",
+      "label": "TEKNIK GEODESI/GEOLOGI"
+    },
+    {
+      "code": "5202",
+      "label": "TEKNIK KIMIA"
+    },
+    {
+      "code": "5203",
+      "label": "TEKNIK SIPIL"
+    },
+    {
+      "code": "5204",
+      "label": "ARSITEKTUR"
+    },
+    {
+      "code": "5205",
+      "label": "TEKNIK LISTRIK"
+    },
+    {
+      "code": "5206",
+      "label": "TEKNIK MESIN"
+    },
+    {
+      "code": "5207",
+      "label": "TEKNIK INDUSTRI"
+    },
+    {
+      "code": "5208",
+      "label": "TEKNIK LOGAM"
+    },
+    {
+      "code": "5209",
+      "label": "TEKNIK PERTAMBANGAN DAN MINYAK"
+    },
+    {
+      "code": "5210",
+      "label": "FISIKA TEKNIK"
+    },
+    {
+      "code": "5211",
+      "label": "TEKNIK NUKLIR"
+    },
+    {
+      "code": "5212",
+      "label": "PENGOLAH GULA"
+    },
+    {
+      "code": "5213",
+      "label": "TEKNOLOGI KULIT"
+    },
+    {
+      "code": "5214",
+      "label": "TEKNOLOGI TEKSTIL"
+    },
+    {
+      "code": "5215",
+      "label": "TEKNOLOGI GRAFIKA"
+    },
+    {
+      "code": "5216",
+      "label": "TEKNOLOGI GAS DAN MINYAK BUMI"
+    },
+    {
+      "code": "5217",
+      "label": "TEKNOLOGI LAINNYA"
+    },
+    {
+      "code": "5218",
+      "label": "TEKNOLOGI - TAK TERDEFINISI"
+    },
+    {
+      "code": "5219",
+      "label": "D3 KEJURUAN"
+    },
+    {
+      "code": "5220",
+      "label": "TEKNIK INFORMATIKA"
+    },
+    {
+      "code": "5221",
+      "label": "TEKNIK ELEKTRO"
+    },
+    {
+      "code": "5222",
+      "label": "MANAJEMEN INFORMATIKA"
+    },
+    {
+      "code": "5300",
+      "label": "DIII - PERTANIAN"
+    },
+    {
+      "code": "5301",
+      "label": "PERTANIAN UMUM"
+    },
+    {
+      "code": "5302",
+      "label": "HORTIKULTURA"
+    },
+    {
+      "code": "5303",
+      "label": "HASIL PERTANIAN"
+    },
+    {
+      "code": "5304",
+      "label": "EKONOMI PERTANIAN"
+    },
+    {
+      "code": "5305",
+      "label": "TEKNOLOGI DAN ILMU MAKANAN"
+    },
+    {
+      "code": "5306",
+      "label": "ILMU TANAH DAN AIR"
+    },
+    {
+      "code": "5307",
+      "label": "KEDOKTERAN HEWAN"
+    },
+    {
+      "code": "5308",
+      "label": "PETERNAKAN"
+    },
+    {
+      "code": "5309",
+      "label": "PERIKANAN"
+    },
+    {
+      "code": "5310",
+      "label": "KEHUTANAN"
+    },
+    {
+      "code": "5311",
+      "label": "PERTANIAN LAINNYA"
+    },
+    {
+      "code": "5312",
+      "label": "PERTANIAN - TAK TERDEFINISI"
+    },
+    {
+      "code": "5400",
+      "label": "DIII - KESEHATAN"
+    },
+    {
+      "code": "5401",
+      "label": "KEDOKTERAN UMUM"
+    },
+    {
+      "code": "5402",
+      "label": "KEDOKTERAN GIGI"
+    },
+    {
+      "code": "5403",
+      "label": "FARMASI"
+    },
+    {
+      "code": "5404",
+      "label": "PENILIK KESEHATAN/HYGINE/GIZI"
+    },
+    {
+      "code": "5405",
+      "label": "ANASTESI"
+    },
+    {
+      "code": "5406",
+      "label": "FISIOTERAPI"
+    },
+    {
+      "code": "5407",
+      "label": "PERAWAT"
+    },
+    {
+      "code": "5408",
+      "label": "PENATA RONTGEN"
+    },
+    {
+      "code": "5409",
+      "label": "KESEHATAN LAINNYA"
+    },
+    {
+      "code": "5410",
+      "label": "KESEHATAN - TAK TERDEFINISI"
+    },
+    {
+      "code": "5411",
+      "label": "MANAJEMEN INDUSTRI"
+    },
+    {
+      "code": "5500",
+      "label": "DIII - ILMU PENGETAHUAN SOSIAL/BUDAYA"
+    },
+    {
+      "code": "5501",
+      "label": "EKONOMI"
+    },
+    {
+      "code": "5502",
+      "label": "AKUNTANSI"
+    }
+  ],
+  "ipk.3.8": [
+    {
+      "code": "Kode",
+      "label": "I . Tingkat Pendidikan Pencari Kerja yg ditempatkan"
+    },
+    {
+      "code": "Kode",
+      "label": "I . Tingkat Pendidikan Pencari Kerja yg ditempatkan"
+    },
+    {
+      "code": "1",
+      "label": "2"
+    },
+    {
+      "code": "1",
+      "label": "NON"
+    },
+    {
+      "code": "2",
+      "label": "SD"
+    },
+    {
+      "code": "3",
+      "label": "SLTP"
+    },
+    {
+      "code": "4",
+      "label": "SLTA"
+    },
+    {
+      "code": "5",
+      "label": "DIPLOMA 1"
+    },
+    {
+      "code": "6",
+      "label": "DIPLOMA 2"
+    },
+    {
+      "code": "7",
+      "label": "D3/SARJANA MUDA"
+    },
+    {
+      "code": "8",
+      "label": "D4/SARJANA SAINS TERAPAN"
+    },
+    {
+      "code": "9",
+      "label": "AKTA 2"
+    },
+    {
+      "code": "10",
+      "label": "AKTA 3"
+    },
+    {
+      "code": "11",
+      "label": "SARJANA"
+    },
+    {
+      "code": "12",
+      "label": "MAGISTER"
+    },
+    {
+      "code": "13",
+      "label": "DOKTORAL"
+    },
+    {
+      "code": "No",
+      "label": "II. Penerima Pencari Kerja"
+    },
+    {
+      "code": "No",
+      "label": "II. Penerima Pencari Kerja"
+    },
+    {
+      "code": "No",
+      "label": "II. Penerima Pencari Kerja"
+    },
+    {
+      "code": "1",
+      "label": "INSTANSI PEMERINTAH"
+    },
+    {
+      "code": "2",
+      "label": "BUMN/BUMD"
+    },
+    {
+      "code": "3",
+      "label": "KOPERASI"
+    },
+    {
+      "code": "4",
+      "label": "PERUSAHAAN SWASTA"
+    },
+    {
+      "code": "5",
+      "label": "BADAN USAHA LAINNYA"
+    },
+    {
+      "code": "6",
+      "label": "PERORANGAN"
+    }
+  ]
+}
