@@ -24,7 +24,7 @@ import {
 } from "../../../services/profile";
 import { presignUpload, upsertAk1Document } from "../../../services/ak1";
 import { listDistricts, listVillages } from "../../../services/wilayah";
-import { getEducationGroups } from "../../../services/site";
+import { getPublicEducationGroups } from "../../../services/site";
 
 export default function RegisterCandidate() {
   const router = useRouter();
@@ -148,7 +148,7 @@ export default function RegisterCandidate() {
   useEffect(() => {
     async function loadOptions() {
       try {
-        const eduResp = await getEducationGroups();
+        const eduResp = await getPublicEducationGroups();
         const eduRaw = eduResp.data || eduResp;
         const eduData = Array.isArray(eduRaw) ? eduRaw : eduRaw.groups || [];
         setEducationOptions(transformGroupsToOptions(eduData, "name"));

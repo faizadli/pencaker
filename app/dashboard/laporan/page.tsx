@@ -1,10 +1,10 @@
 "use client";
 import * as ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Card from "../../../components/ui/Card";
 import { useToast } from "../../../components/ui/Toast";
-import { TABS } from "../../../components/laporan/types";
+import { TABS, GenericRow } from "../../../components/laporan/types";
 import {
   getSheetTitle,
   formatDateIndo,
@@ -19,6 +19,32 @@ import {
   exportIPK3_7,
   exportIPK3_8,
 } from "../../../utils/export-laporan";
+import {
+  getEducationGroups,
+  getPositionGroups,
+  getJobCategoryGroups,
+} from "../../../services/site";
+
+interface EduGroup {
+  id: string;
+  code: string;
+  name: string;
+  items: { id: string; code: string; name: string }[];
+}
+
+interface PositionGroup {
+  id: string;
+  code: string;
+  name: string;
+  items: { id: string; code: string; name: string }[];
+}
+
+interface JobCategoryGroup {
+  id: string;
+  code: string;
+  name: string;
+  items: { id: string; code: string; name: string }[];
+}
 
 export default function LaporanPage() {
   const { showSuccess, showError } = useToast();
@@ -26,8 +52,200 @@ export default function LaporanPage() {
   const [activeTab, setActiveTab] = useState("ipk3.1");
   const [startDate, setStartDate] = useState("2025-08-01");
   const [endDate, setEndDate] = useState("2025-08-31");
+  const [educationData, setEducationData] = useState<GenericRow[]>([]);
 
   const headerDateString = `PADA TANGGAL : ${formatDateIndo(startDate)} s/d ${formatDateIndo(endDate)}`;
+
+  useEffect(() => {
+    if (activeTab === "ipk3.2" || activeTab === "ipk3.4") {
+      getEducationGroups()
+        .then((res: unknown) => {
+          const response = res as { data: EduGroup[] };
+          const data = response.data;
+
+          // Sort groups by code
+          data.sort((a, b) =>
+            a.code.localeCompare(b.code, undefined, { numeric: true }),
+          );
+
+          const rows: GenericRow[] = [];
+          data.forEach((group) => {
+            // Sort items within group by code
+            group.items.sort((a, b) =>
+              a.code.localeCompare(b.code, undefined, { numeric: true }),
+            );
+
+            // Add Header Row (Group)
+            // Ensure code is single char for header detection
+            rows.push({
+              code: group.code,
+              label: group.name,
+              lastMonth: { l: 0, w: 0 },
+              registered: { l: 0, w: 0 },
+              placed: { l: 0, w: 0 },
+              removed: { l: 0, w: 0 },
+              thisMonth: { l: 0, w: 0 },
+              isHeader: true,
+            });
+
+            // Add Item Rows (Levels)
+            group.items.forEach((item) => {
+              rows.push({
+                code: item.code,
+                label: item.name,
+                lastMonth: { l: 0, w: 0 },
+                registered: { l: 0, w: 0 },
+                placed: { l: 0, w: 0 },
+                removed: { l: 0, w: 0 },
+                thisMonth: { l: 0, w: 0 },
+                isHeader: false,
+              });
+            });
+          });
+
+          // Add JUMLAH row
+          rows.push({
+            code: "JUMLAH",
+            label: "JUMLAH",
+            lastMonth: { l: 0, w: 0 },
+            registered: { l: 0, w: 0 },
+            placed: { l: 0, w: 0 },
+            removed: { l: 0, w: 0 },
+            thisMonth: { l: 0, w: 0 },
+          });
+
+          setEducationData(rows);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch education groups", err);
+          showError("Gagal mengambil data pendidikan");
+        });
+    } else if (activeTab === "ipk3.3" || activeTab === "ipk3.5") {
+      getPositionGroups()
+        .then((res: unknown) => {
+          const response = res as { data: PositionGroup[] };
+          const data = response.data;
+
+          // Sort groups by code
+          data.sort((a, b) =>
+            a.code.localeCompare(b.code, undefined, { numeric: true }),
+          );
+
+          const rows: GenericRow[] = [];
+          data.forEach((group) => {
+            // Sort items within group by code
+            group.items.sort((a, b) =>
+              a.code.localeCompare(b.code, undefined, { numeric: true }),
+            );
+
+            // Add Header Row (Group)
+            rows.push({
+              code: group.code,
+              label: group.name,
+              lastMonth: { l: 0, w: 0 },
+              registered: { l: 0, w: 0 },
+              placed: { l: 0, w: 0 },
+              removed: { l: 0, w: 0 },
+              thisMonth: { l: 0, w: 0 },
+              isHeader: true,
+            });
+
+            // Add Item Rows (Titles)
+            group.items.forEach((item) => {
+              rows.push({
+                code: item.code,
+                label: item.name,
+                lastMonth: { l: 0, w: 0 },
+                registered: { l: 0, w: 0 },
+                placed: { l: 0, w: 0 },
+                removed: { l: 0, w: 0 },
+                thisMonth: { l: 0, w: 0 },
+                isHeader: false,
+              });
+            });
+          });
+
+          // Add JUMLAH row
+          rows.push({
+            code: "JUMLAH",
+            label: "JUMLAH",
+            lastMonth: { l: 0, w: 0 },
+            registered: { l: 0, w: 0 },
+            placed: { l: 0, w: 0 },
+            removed: { l: 0, w: 0 },
+            thisMonth: { l: 0, w: 0 },
+          });
+
+          setEducationData(rows);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch position groups", err);
+          showError("Gagal mengambil data jabatan");
+        });
+    } else if (activeTab === "ipk3.6") {
+      getJobCategoryGroups()
+        .then((res: unknown) => {
+          const response = res as { data: JobCategoryGroup[] };
+          const data = response.data;
+
+          // Sort groups by code
+          data.sort((a, b) =>
+            a.code.localeCompare(b.code, undefined, { numeric: true }),
+          );
+
+          const rows: GenericRow[] = [];
+          data.forEach((group) => {
+            // Sort items within group by code
+            group.items.sort((a, b) =>
+              a.code.localeCompare(b.code, undefined, { numeric: true }),
+            );
+
+            // Add Header Row (Group)
+            rows.push({
+              code: group.code,
+              label: group.name,
+              lastMonth: { l: 0, w: 0 },
+              registered: { l: 0, w: 0 },
+              placed: { l: 0, w: 0 },
+              removed: { l: 0, w: 0 },
+              thisMonth: { l: 0, w: 0 },
+              isHeader: true,
+            });
+
+            // Add Item Rows (Categories)
+            group.items.forEach((item) => {
+              rows.push({
+                code: item.code,
+                label: item.name,
+                lastMonth: { l: 0, w: 0 },
+                registered: { l: 0, w: 0 },
+                placed: { l: 0, w: 0 },
+                removed: { l: 0, w: 0 },
+                thisMonth: { l: 0, w: 0 },
+                isHeader: false,
+              });
+            });
+          });
+
+          // Add JUMLAH row
+          rows.push({
+            code: "JUMLAH",
+            label: "JUMLAH",
+            lastMonth: { l: 0, w: 0 },
+            registered: { l: 0, w: 0 },
+            placed: { l: 0, w: 0 },
+            removed: { l: 0, w: 0 },
+            thisMonth: { l: 0, w: 0 },
+          });
+
+          setEducationData(rows);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch job category groups", err);
+          showError("Gagal mengambil data golongan pokok lapangan usaha");
+        });
+    }
+  }, [activeTab, showError]);
 
   const handleExportExcel = async () => {
     try {
@@ -71,6 +289,7 @@ export default function LaporanPage() {
           leftAlignment,
           activeTab,
           headerDateString,
+          educationData.length > 0 ? educationData : undefined,
         );
       } else if (activeTab === "ipk3.7") {
         exportIPK3_7(
@@ -155,7 +374,10 @@ export default function LaporanPage() {
             {TABS.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setEducationData([]);
+                }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === tab.id
                     ? "bg-primary text-white"
@@ -180,6 +402,7 @@ export default function LaporanPage() {
               <GenericIPKTable
                 activeTab={activeTab}
                 headerDateString={headerDateString}
+                data={educationData.length > 0 ? educationData : undefined}
               />
             )}
 

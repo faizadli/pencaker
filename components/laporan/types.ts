@@ -25,6 +25,7 @@ export interface GenericRow {
   placed: { l: number; w: number };
   removed: { l: number; w: number };
   thisMonth: { l: number; w: number };
+  isHeader?: boolean;
 }
 
 export interface IPK3_7Row {

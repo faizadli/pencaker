@@ -1,43 +1,22 @@
 import React from "react";
-import {
-  ipk32Data,
-  ipk33Data,
-  ipk34Data,
-  ipk35Data,
-  ipk36Data,
-} from "./real-data";
 import { getSheetTitle, getLabelHeader } from "./helpers";
 import { GenericRow } from "./types";
 
 interface GenericIPKTableProps {
   activeTab: string;
   headerDateString: string;
+  data?: GenericRow[];
 }
 
 export default function GenericIPKTable({
   activeTab,
   headerDateString,
+  data: propData,
 }: GenericIPKTableProps) {
-  let data: GenericRow[] = [];
+  let data: GenericRow[] = propData || [];
 
-  switch (activeTab) {
-    case "ipk3.2":
-      data = ipk32Data;
-      break;
-    case "ipk3.3":
-      data = ipk33Data;
-      break;
-    case "ipk3.4":
-      data = ipk34Data;
-      break;
-    case "ipk3.5":
-      data = ipk35Data;
-      break;
-    case "ipk3.6":
-      data = ipk36Data;
-      break;
-    default:
-      data = ipk32Data;
+  if (data.length === 0) {
+    data = [];
   }
 
   return (
@@ -126,51 +105,86 @@ export default function GenericIPKTable({
       </thead>
       <tbody>
         {data.map((row, idx) => {
-          const isHeader = row.code.endsWith("000");
+          const isHeader =
+            row.isHeader || row.code.length === 1 || row.code.endsWith("000");
+          const isJumlah = row.code === "JUMLAH";
+
           return (
             <tr key={`row-${row.code}-${idx}`}>
-              <td
-                className={`border border-black p-1 text-center ${isHeader ? "font-bold" : ""}`}
-              >
-                {row.code}
-              </td>
-              <td
-                className={`border border-black p-1 text-left ${isHeader ? "font-bold" : ""}`}
-              >
-                {row.label}
-              </td>
+              {isJumlah ? (
+                <td
+                  colSpan={2}
+                  className="border border-black p-1 text-center font-bold"
+                >
+                  JUMLAH
+                </td>
+              ) : (
+                <>
+                  <td
+                    className={`border border-black p-1 text-center ${isHeader ? "font-bold" : ""}`}
+                  >
+                    {row.code}
+                  </td>
+                  <td
+                    className={`border border-black p-1 text-left ${isHeader ? "font-bold" : ""}`}
+                  >
+                    {row.label}
+                  </td>
+                </>
+              )}
+
               {isHeader ? (
                 <td colSpan={10} className="border border-black p-1"></td>
               ) : (
                 <>
-                  <td className="border border-black p-1 text-center">
+                  <td
+                    className={`border border-black p-1 text-center ${isJumlah ? "font-bold" : ""}`}
+                  >
                     {row.lastMonth.l}
                   </td>
-                  <td className="border border-black p-1 text-center">
+                  <td
+                    className={`border border-black p-1 text-center ${isJumlah ? "font-bold" : ""}`}
+                  >
                     {row.lastMonth.w}
                   </td>
-                  <td className="border border-black p-1 text-center">
+                  <td
+                    className={`border border-black p-1 text-center ${isJumlah ? "font-bold" : ""}`}
+                  >
                     {row.registered.l}
                   </td>
-                  <td className="border border-black p-1 text-center">
+                  <td
+                    className={`border border-black p-1 text-center ${isJumlah ? "font-bold" : ""}`}
+                  >
                     {row.registered.w}
                   </td>
-                  <td className="border border-black p-1 text-center">
+                  <td
+                    className={`border border-black p-1 text-center ${isJumlah ? "font-bold" : ""}`}
+                  >
                     {row.placed.l}
                   </td>
-                  <td className="border border-black p-1 text-center">
+                  <td
+                    className={`border border-black p-1 text-center ${isJumlah ? "font-bold" : ""}`}
+                  >
                     {row.placed.w}
                   </td>
-                  <td className="border border-black p-1 text-center">
+                  <td
+                    className={`border border-black p-1 text-center ${isJumlah ? "font-bold" : ""}`}
+                  >
                     {row.removed.l}
                   </td>
-                  <td className="border border-black p-1 text-center">
+                  <td
+                    className={`border border-black p-1 text-center ${isJumlah ? "font-bold" : ""}`}
+                  >
                     {row.removed.w}
                   </td>
-                  <td className="border border-black p-1 text-center">
+                  <td
+                    className={`border border-black p-1 text-center ${isJumlah ? "font-bold" : ""}`}
+                  >
                     {row.thisMonth.l}
                   </td>
-                  <td className="border border-black p-1 text-center">
+                  <td
+                    className={`border border-black p-1 text-center ${isJumlah ? "font-bold" : ""}`}
+                  >
                     {row.thisMonth.w}
                   </td>
                 </>

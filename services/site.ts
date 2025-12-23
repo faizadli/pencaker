@@ -116,9 +116,15 @@ export async function upsertJobCategoryGroups(payload: {
 }
 
 export async function getEducationGroups() {
-  const resp = await fetch(`${BASE}/api/public/education-groups`, {
+  const resp = await fetch(`${BASE}/api/admin/education-groups`, {
     headers: { ...authHeader() },
   });
+  if (!resp.ok) throw new Error("Gagal mengambil grup pendidikan");
+  return resp.json();
+}
+
+export async function getPublicEducationGroups() {
+  const resp = await fetch(`${BASE}/api/public/education-groups`);
   if (!resp.ok) throw new Error("Gagal mengambil grup pendidikan");
   return resp.json();
 }

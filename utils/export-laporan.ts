@@ -2,11 +2,6 @@ import * as ExcelJS from "exceljs";
 import { getSheetTitle, getLabelHeader } from "../components/laporan/helpers";
 import {
   initialData,
-  ipk32Data,
-  ipk33Data,
-  ipk34Data,
-  ipk35Data,
-  ipk36Data,
   ipk37Data,
   ipk38Data,
 } from "../components/laporan/real-data";
@@ -275,29 +270,14 @@ export const exportGeneric12Col = (
   left: Partial<ExcelJS.Alignment>,
   tabId: string,
   headerDateString: string,
+  providedData?: GenericRow[],
 ) => {
   // Use thinBorder as default, ignoring passed defaultBorder for precision
   const defaultBorder = thinBorder;
 
-  let data: GenericRow[] = [];
-  switch (tabId) {
-    case "ipk3.2":
-      data = ipk32Data;
-      break;
-    case "ipk3.3":
-      data = ipk33Data;
-      break;
-    case "ipk3.4":
-      data = ipk34Data;
-      break;
-    case "ipk3.5":
-      data = ipk35Data;
-      break;
-    case "ipk3.6":
-      data = ipk36Data;
-      break;
-    default:
-      data = ipk32Data;
+  let data: GenericRow[] = providedData || [];
+  if (data.length === 0) {
+    data = [];
   }
 
   worksheet.mergeCells("A1:M1");
@@ -348,29 +328,79 @@ export const exportGeneric12Col = (
 
   let currentRow = 7;
   data.forEach((row) => {
+    const isHeader =
+      row.isHeader || row.code.length === 1 || row.code.endsWith("000");
+    const isJumlah = row.code === "JUMLAH";
+
     worksheet.getCell(currentRow, 1).value = row.code;
     worksheet.getCell(currentRow, 2).value = row.label;
-    worksheet.getCell(currentRow, 3).value = row.lastMonth.l;
-    worksheet.getCell(currentRow, 4).value = row.lastMonth.w;
-    worksheet.getCell(currentRow, 5).value = row.registered.l;
-    worksheet.getCell(currentRow, 6).value = row.registered.w;
-    worksheet.getCell(currentRow, 7).value = row.placed.l;
-    worksheet.getCell(currentRow, 8).value = row.placed.w;
-    worksheet.getCell(currentRow, 9).value = row.removed.l;
-    worksheet.getCell(currentRow, 10).value = row.removed.w;
-    worksheet.getCell(currentRow, 11).value = row.thisMonth.l;
-    worksheet.getCell(currentRow, 12).value = row.thisMonth.w;
 
-    for (let c = 1; c <= 12; c++) {
-      setBorder(currentRow, c);
-      const cell = worksheet.getCell(currentRow, c);
-      cell.font = { size: 11, name: "Calibri" };
-      if (c === 2) cell.alignment = left;
-      else cell.alignment = center;
+    if (isHeader) {
+      // Bold Code and Label
+      worksheet.getCell(currentRow, 1).font = {
+        bold: true,
+        size: 11,
+        name: "Calibri",
+      };
+      worksheet.getCell(currentRow, 2).font = {
+        bold: true,
+        size: 11,
+        name: "Calibri",
+      };
 
-      // Bold totals (SISA AKHIR BULAN INI)
-      if (c >= 11) {
-        cell.font = { bold: true, size: 11, name: "Calibri" };
+      // Merge data columns (3-12)
+      worksheet.mergeCells(currentRow, 3, currentRow, 12);
+      const mergedCell = worksheet.getCell(currentRow, 3);
+      mergedCell.value = "";
+      mergedCell.border = defaultBorder;
+
+      // Apply borders to A and B
+      worksheet.getCell(currentRow, 1).border = defaultBorder;
+      worksheet.getCell(currentRow, 2).border = defaultBorder;
+
+      // Alignment
+      worksheet.getCell(currentRow, 1).alignment = center;
+      worksheet.getCell(currentRow, 2).alignment = left;
+
+      // Apply borders to the rest of the merged area to ensure it looks right
+      // (ExcelJS mergeCells usually handles this but explicit borders on the range helps)
+      applyBorderToRange(
+        worksheet,
+        currentRow,
+        1,
+        currentRow,
+        12,
+        defaultBorder,
+      );
+    } else {
+      // Normal Row
+      worksheet.getCell(currentRow, 3).value = row.lastMonth.l;
+      worksheet.getCell(currentRow, 4).value = row.lastMonth.w;
+      worksheet.getCell(currentRow, 5).value = row.registered.l;
+      worksheet.getCell(currentRow, 6).value = row.registered.w;
+      worksheet.getCell(currentRow, 7).value = row.placed.l;
+      worksheet.getCell(currentRow, 8).value = row.placed.w;
+      worksheet.getCell(currentRow, 9).value = row.removed.l;
+      worksheet.getCell(currentRow, 10).value = row.removed.w;
+      worksheet.getCell(currentRow, 11).value = row.thisMonth.l;
+      worksheet.getCell(currentRow, 12).value = row.thisMonth.w;
+
+      if (isJumlah) {
+        worksheet.mergeCells(currentRow, 1, currentRow, 2);
+        worksheet.getCell(currentRow, 1).value = "JUMLAH";
+      }
+
+      for (let c = 1; c <= 12; c++) {
+        setBorder(currentRow, c);
+        const cell = worksheet.getCell(currentRow, c);
+        cell.font = { size: 11, name: "Calibri" };
+        if (c === 2 && !isJumlah) cell.alignment = left;
+        else cell.alignment = center;
+
+        // Bold if isJumlah
+        if (isJumlah) {
+          cell.font = { bold: true, size: 11, name: "Calibri" };
+        }
       }
     }
     currentRow++;
