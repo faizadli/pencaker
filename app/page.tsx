@@ -41,6 +41,11 @@ export default function HomePage() {
       foto?: string;
     }>[];
     running_text: SiteContentItem<{ text?: string }>[];
+    holiday_greetings: SiteContentItem<{
+      title?: string;
+      description?: string;
+      image?: string;
+    }>[];
     // stats removed from API; shown as dummy cards
   };
   type SiteSettingsShape = {
@@ -247,6 +252,9 @@ export default function HomePage() {
   const [runningTexts, setRunningTexts] = useState<
     Array<{ id: string; text: string }>
   >([]);
+  const [holidayGreetings, setHolidayGreetings] = useState<
+    Array<{ id: string; title: string; description: string; image: string }>
+  >([]);
   const [bannerRatio, setBannerRatio] = useState<number | null>(null);
 
   useEffect(() => {
@@ -340,6 +348,17 @@ export default function HomePage() {
           rtItems.map((rt) => ({
             id: String(rt.id || Math.random()),
             text: String(rt.data?.text || ""),
+          })),
+        );
+        const hgItems = Array.isArray(hc.holiday_greetings)
+          ? hc.holiday_greetings
+          : [];
+        setHolidayGreetings(
+          hgItems.map((h) => ({
+            id: String(h.id || Math.random()),
+            title: String(h.data?.title || ""),
+            description: String(h.data?.description || ""),
+            image: String(h.data?.image || ""),
           })),
         );
       } catch {
@@ -455,6 +474,42 @@ export default function HomePage() {
           }
         `}</style>
       </section>
+
+      {holidayGreetings.length > 0 && (
+        <section className="py-8 bg-white relative z-20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div
+              className={`grid grid-cols-1 ${holidayGreetings.length > 1 ? "md:grid-cols-2" : ""} gap-6 justify-center`}
+            >
+              {holidayGreetings.map((h) => (
+                <div key={h.id} className="relative group">
+                  <div className="p-6 pb-4 text-center">
+                    <h3 className="text-xl md:text-2xl font-bold mb-2 text-primary">
+                      {h.title}
+                    </h3>
+                    {h.description && (
+                      <p className="text-gray-600 text-sm md:text-base line-clamp-3">
+                        {h.description}
+                      </p>
+                    )}
+                  </div>
+                  <div className="relative w-full">
+                    <Image
+                      src={h.image}
+                      alt={h.title}
+                      width={0}
+                      height={0}
+                      sizes="100vw"
+                      style={{ width: "100%", height: "auto" }}
+                      className="transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="py-16 md:py-20 bg-gray-50 relative z-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
