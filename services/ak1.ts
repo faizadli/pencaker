@@ -44,6 +44,15 @@ export async function upsertAk1Document(payload: {
   return resp.json();
 }
 
+export async function requestAk1Renewal() {
+  const resp = await fetch(`${BASE}/api/profile/candidate/ak1/renewal`, {
+    method: "POST",
+    headers: { ...authHeader() },
+  });
+  if (!resp.ok) throw new Error("Gagal mengajukan perpanjangan AK1");
+  return resp.json();
+}
+
 export type Ak1LayoutField = {
   token: string;
   x: number;

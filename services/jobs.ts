@@ -252,6 +252,7 @@ export async function createApplicationByAdmin(payload: {
   candidate_id: string;
   job_id: string;
   note?: string;
+  status?: "process" | "accepted";
 }) {
   const resp = await fetch(`${BASE}/api/admin/jobs/applicants`, {
     method: "POST",
@@ -284,9 +285,7 @@ export async function createApplicationByAdmin(payload: {
 export async function updateApplication(
   id: string,
   payload: {
-    status?: "pending" | "test" | "interview" | "approve" | "rejected";
-    schedule_start?: string | null;
-    schedule_end?: string | null;
+    status?: "pending" | "process" | "accepted" | "rejected";
     note?: string | null;
   },
 ) {

@@ -256,7 +256,7 @@ export function SearchableSelect({
           res.push(currentGroup);
           groupAdded = true;
         }
-        if (itemMatches) res.push(o);
+        res.push(o);
       }
     });
     return res;

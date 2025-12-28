@@ -39,7 +39,7 @@ export default function PelamarLowonganPage() {
   const jobId = String(params?.id || "");
   const [jobTitle, setJobTitle] = useState("");
   const [loading, setLoading] = useState(true);
-  type AppStatus = "pending" | "test" | "interview" | "approve" | "rejected";
+  type AppStatus = "pending" | "process" | "accepted" | "rejected";
   const [rows, setRows] = useState<
     Array<{
       id: string;
@@ -49,8 +49,6 @@ export default function PelamarLowonganPage() {
       kecamatan?: string;
       kelurahan?: string;
       status?: AppStatus;
-      schedule_start?: string | null;
-      schedule_end?: string | null;
       note?: string | null;
       is_admin_created?: boolean;
       createdAt?: string;
@@ -67,8 +65,6 @@ export default function PelamarLowonganPage() {
     candidate_id: string;
     name: string;
     status?: AppStatus;
-    schedule_start?: string | null;
-    schedule_end?: string | null;
     note?: string | null;
   } | null>(null);
   const [detailProfile, setDetailProfile] = useState<Record<
@@ -78,8 +74,6 @@ export default function PelamarLowonganPage() {
   const [editStatus, setEditStatus] = useState<AppStatus | undefined>(
     undefined,
   );
-  const [editStart, setEditStart] = useState<string | null>(null);
-  const [editEnd, setEditEnd] = useState<string | null>(null);
   const [editNote, setEditNote] = useState<string | null>(null);
 
   const [filterAgeMin, setFilterAgeMin] = useState<string>("");
@@ -202,6 +196,9 @@ export default function PelamarLowonganPage() {
   >([]);
   const [selectedCandidateId, setSelectedCandidateId] = useState("");
   const [addNote, setAddNote] = useState("");
+  const [addStatus, setAddStatus] = useState<"process" | "accepted">(
+    "accepted",
+  );
   const [isSearchingCandidate, setIsSearchingCandidate] = useState(false);
 
   useEffect(() => {
@@ -249,11 +246,12 @@ export default function PelamarLowonganPage() {
   const toStatus = useCallback((s?: string): AppStatus | undefined => {
     switch (s) {
       case "pending":
-      case "test":
-      case "interview":
-      case "approve":
+      case "process":
+      case "accepted":
       case "rejected":
         return s;
+      case "approve":
+        return "accepted";
       default:
         return undefined;
     }
@@ -499,9 +497,8 @@ export default function PelamarLowonganPage() {
   const statusOptions = useMemo(
     () => [
       { value: "pending", label: "Pending" },
-      { value: "test", label: "Test" },
-      { value: "interview", label: "Interview" },
-      { value: "approve", label: "Diterima" },
+      { value: "process", label: "Diproses" },
+      { value: "accepted", label: "Diterima" },
       { value: "rejected", label: "Ditolak" },
     ],
     [],
@@ -512,8 +509,6 @@ export default function PelamarLowonganPage() {
     candidate_id: string;
     name: string;
     status?: AppStatus;
-    schedule_start?: string | null;
-    schedule_end?: string | null;
     note?: string | null;
   }) => {
     try {
@@ -534,14 +529,10 @@ export default function PelamarLowonganPage() {
     candidate_id: string;
     name: string;
     status?: AppStatus;
-    schedule_start?: string | null;
-    schedule_end?: string | null;
     note?: string | null;
   }) => {
     setSelected(row);
     setEditStatus(row.status);
-    setEditStart(row.schedule_start || null);
-    setEditEnd(row.schedule_end || null);
     setEditNote(row.note || null);
     setShowEditModal(true);
   };
@@ -552,20 +543,7 @@ export default function PelamarLowonganPage() {
       setSaving(selected.id);
       await updateApplication(selected.id, {
         status: editStatus,
-        schedule_start:
-          editStatus === "test" || editStatus === "interview"
-            ? editStart || null
-            : null,
-        schedule_end:
-          editStatus === "test" || editStatus === "interview"
-            ? editEnd || null
-            : null,
-        note:
-          editStatus === "test" || editStatus === "interview"
-            ? typeof editNote === "string"
-              ? editNote
-              : null
-            : null,
+        note: editNote || null,
       });
       const resp = await listApplications({ job_id: jobId });
       const baseApps = hasData(resp) ? resp.data : resp;
@@ -933,6 +911,21 @@ export default function PelamarLowonganPage() {
                 isLoading={isSearchingCandidate}
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status Awal
+              </label>
+              <SearchableSelect
+                options={[
+                  { value: "process", label: "Diproses" },
+                  { value: "accepted", label: "Diterima" },
+                ]}
+                value={addStatus}
+                onChange={(v) => setAddStatus(v as "process" | "accepted")}
+                placeholder="Pilih status..."
+                className="w-full"
+              />
+            </div>
             <Input
               label="Catatan (Wajib)"
               placeholder="Contoh: Rekomendasi dari Kepala Dinas"
@@ -1205,64 +1198,16 @@ export default function PelamarLowonganPage() {
                   />
                 </div>
               </div>
-              {(editStatus === "test" || editStatus === "interview") && (
-                <div className="bg-white rounded-lg p-4 border">
-                  <div className="text-sm text-gray-500 mb-1">Catatan</div>
-                  <textarea
-                    value={editNote || ""}
-                    onChange={(e) => setEditNote(e.target.value)}
-                    rows={4}
-                    className="w-full border border-gray-200 rounded px-3 py-2 text-sm resize-y text-gray-900 bg-white placeholder-gray-400"
-                    placeholder="Tambahkan catatan..."
-                  />
-                </div>
-              )}
-              {(editStatus === "test" || editStatus === "interview") && (
-                <div className="bg-white rounded-lg p-4 border grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">
-                      Jadwal Mulai
-                    </div>
-                    <Input
-                      type="datetime-local"
-                      value={
-                        editStart
-                          ? new Date(editStart).toISOString().slice(0, 16)
-                          : ""
-                      }
-                      onChange={(e) =>
-                        setEditStart(
-                          e.target.value
-                            ? new Date(e.target.value).toISOString()
-                            : null,
-                        )
-                      }
-                      className="w-full px-2 py-2 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">
-                      Jadwal Selesai
-                    </div>
-                    <Input
-                      type="datetime-local"
-                      value={
-                        editEnd
-                          ? new Date(editEnd).toISOString().slice(0, 16)
-                          : ""
-                      }
-                      onChange={(e) =>
-                        setEditEnd(
-                          e.target.value
-                            ? new Date(e.target.value).toISOString()
-                            : null,
-                        )
-                      }
-                      className="w-full px-2 py-2 text-sm"
-                    />
-                  </div>
-                </div>
-              )}
+              <div className="bg-white rounded-lg p-4 border">
+                <div className="text-sm text-gray-500 mb-1">Catatan</div>
+                <textarea
+                  value={editNote || ""}
+                  onChange={(e) => setEditNote(e.target.value)}
+                  rows={4}
+                  className="w-full border border-gray-200 rounded px-3 py-2 text-sm resize-y text-gray-900 bg-white placeholder-gray-400"
+                  placeholder="Tambahkan catatan..."
+                />
+              </div>
             </div>
           )}
         </Modal>

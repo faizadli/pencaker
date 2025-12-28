@@ -34,12 +34,12 @@ type AppRow = {
   job_id: string;
   application_date?: string;
   status?: string;
-  schedule_start?: string | null;
-  schedule_end?: string | null;
   note?: string | null;
   job_title?: string;
   company_name?: string;
   is_admin_created?: boolean | number;
+  placement?: string;
+  job_type?: string;
 };
 
 export default function LamaranPage() {
@@ -61,7 +61,15 @@ export default function LamaranPage() {
   const [rows, setRows] = useState<AppRow[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [jobInfo, setJobInfo] = useState<
-    Record<string, { job_title: string; company_name: string }>
+    Record<
+      string,
+      {
+        job_title: string;
+        company_name: string;
+        placement: string;
+        job_type: string;
+      }
+    >
   >({});
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -162,8 +170,15 @@ export default function LamaranPage() {
       const results = await Promise.allSettled(
         ids.map((jid) => getJobById(jid)),
       );
-      const map: Record<string, { job_title: string; company_name: string }> =
-        {};
+      const map: Record<
+        string,
+        {
+          job_title: string;
+          company_name: string;
+          placement: string;
+          job_type: string;
+        }
+      > = {};
       results.forEach((res, idx) => {
         if (res.status === "fulfilled") {
           const out = res.value as unknown as { data?: unknown } | unknown;
@@ -180,7 +195,20 @@ export default function LamaranPage() {
             typeof obj["company_name"] === "string"
               ? (obj["company_name"] as string)
               : "";
-          map[ids[idx]] = { job_title: title, company_name: cname };
+          const placement =
+            typeof obj["placement"] === "string"
+              ? (obj["placement"] as string)
+              : "";
+          const job_type =
+            typeof obj["job_type"] === "string"
+              ? (obj["job_type"] as string)
+              : "";
+          map[ids[idx]] = {
+            job_title: title,
+            company_name: cname,
+            placement,
+            job_type,
+          };
         }
       });
       setJobInfo(map);
@@ -191,9 +219,9 @@ export default function LamaranPage() {
   const statusLabel = (s?: string) => {
     const v = String(s || "").toLowerCase();
     if (v === "pending") return "Menunggu";
-    if (v === "test") return "Tes";
+    if (v === "process") return "Diproses";
     if (v === "interview") return "Wawancara";
-    if (v === "approve") return "Diterima";
+    if (v === "accepted" || v === "approve") return "Diterima";
     if (v === "rejected") return "Ditolak";
     return "-";
   };
@@ -202,10 +230,10 @@ export default function LamaranPage() {
     switch (label) {
       case "Menunggu":
         return "bg-yellow-100 text-yellow-800";
-      case "Tes":
+      case "Diproses":
         return "bg-blue-100 text-blue-800";
       case "Wawancara":
-        return "bg-indigo-100 text-indigo-800";
+        return "bg-purple-100 text-purple-800";
       case "Diterima":
         return "bg-green-100 text-green-800";
       case "Ditolak":
@@ -238,6 +266,8 @@ export default function LamaranPage() {
         company_name:
           (jobInfo[r.job_id]?.company_name || r.company_name || "").trim() ||
           r.company_id,
+        placement: jobInfo[r.job_id]?.placement || "",
+        job_type: jobInfo[r.job_id]?.job_type || "",
       })),
     [rows, jobInfo],
   );
@@ -248,6 +278,8 @@ export default function LamaranPage() {
         r.note || "",
         r.job_id || "",
         r.company_id || "",
+        r.job_title || "",
+        r.company_name || "",
       ].some((x) => String(x).toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesStatus =
         statusFilter === "all" || statusLabel(r.status) === statusFilter;
@@ -259,6 +291,11 @@ export default function LamaranPage() {
     () => filtered.slice((page - 1) * pageSize, page * pageSize),
     [filtered, page, pageSize],
   );
+
+  const shouldShowNote = (status?: string) => {
+    const s = String(status || "").toLowerCase();
+    return ["process", "accepted", "rejected", "approve"].includes(s);
+  };
 
   if (loading) {
     return (
@@ -294,9 +331,7 @@ export default function LamaranPage() {
             title="Diproses"
             value={
               rows.filter((r) =>
-                ["pending", "test", "interview"].includes(
-                  String(r.status || "").toLowerCase(),
-                ),
+                ["process"].includes(String(r.status || "").toLowerCase()),
               ).length
             }
             change=""
@@ -306,8 +341,10 @@ export default function LamaranPage() {
           <StatCard
             title="Diterima"
             value={
-              rows.filter(
-                (r) => String(r.status || "").toLowerCase() === "approve",
+              rows.filter((r) =>
+                ["accepted", "approve"].includes(
+                  String(r.status || "").toLowerCase(),
+                ),
               ).length
             }
             change=""
@@ -333,7 +370,7 @@ export default function LamaranPage() {
               <Input
                 icon="ri-search-line"
                 type="text"
-                placeholder="Cari catatan, perusahaan, atau ID lowongan"
+                placeholder="Cari posisi atau perusahaan"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full py-3"
@@ -346,8 +383,7 @@ export default function LamaranPage() {
                 options={[
                   { value: "all", label: "Semua Status" },
                   { value: "Menunggu", label: "Menunggu" },
-                  { value: "Tes", label: "Tes" },
-                  { value: "Wawancara", label: "Wawancara" },
+                  { value: "Diproses", label: "Diproses" },
                   { value: "Diterima", label: "Diterima" },
                   { value: "Ditolak", label: "Ditolak" },
                 ]}
@@ -369,7 +405,7 @@ export default function LamaranPage() {
             {paginated.map((r) => (
               <div
                 key={`card-${r.id}`}
-                className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
+                className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow flex flex-col"
               >
                 <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
                   <div className="flex items-start justify-between gap-2">
@@ -377,7 +413,7 @@ export default function LamaranPage() {
                       <p className="font-bold text-primary text-sm leading-tight truncate">
                         {r.job_title}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">
+                      <p className="text-xs text-gray-500 truncate mt-1">
                         {r.company_name}
                       </p>
                       {r.is_admin_created ? (
@@ -396,21 +432,34 @@ export default function LamaranPage() {
                     </span>
                   </div>
                 </div>
-                <div className="p-4 space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-700">Tanggal</span>
-                    <span className="font-medium text-gray-900">
-                      {formatDate(r.application_date)}
+                <div className="p-4 space-y-3 flex-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <i className="ri-map-pin-line text-primary"></i>
+                    <span>{r.placement || "Lokasi tidak tersedia"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <i className="ri-briefcase-line text-primary"></i>
+                    <span className="capitalize">
+                      {r.job_type
+                        ? r.job_type.replace("-", " ")
+                        : "Tipe tidak tersedia"}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-700">Jadwal</span>
-                    <span className="font-medium text-gray-900">{`${formatDate(r.schedule_start)} - ${formatDate(r.schedule_end)}`}</span>
+                  <div className="flex items-center gap-2 text-xs text-gray-400 mt-2 pt-2 border-t border-dashed border-gray-100">
+                    <i className="ri-calendar-line"></i>
+                    <span>Dilamar pada {formatDate(r.application_date)}</span>
                   </div>
                 </div>
-                <div className="p-4 border-t border-gray-200">
-                  <div className="text-sm text-gray-500">{r.note || "-"}</div>
-                </div>
+                {shouldShowNote(r.status) && r.note ? (
+                  <div className="p-3 border-t border-gray-200 bg-yellow-50/50">
+                    <p className="text-xs font-semibold text-gray-500 mb-1 flex items-center gap-1">
+                      <i className="ri-chat-1-line"></i> Catatan
+                    </p>
+                    <p className="text-sm text-gray-700 italic">
+                      &quot;{r.note}&quot;
+                    </p>
+                  </div>
+                ) : null}
               </div>
             ))}
           </CardGrid>
@@ -419,20 +468,19 @@ export default function LamaranPage() {
             <Table className="hidden sm:block">
               <TableHead>
                 <tr>
-                  <TH>Tanggal</TH>
                   <TH>Lowongan</TH>
                   <TH>Perusahaan</TH>
+                  <TH>Lokasi</TH>
                   <TH>Status</TH>
-                  <TH>Jadwal</TH>
                   <TH>Catatan</TH>
                 </tr>
               </TableHead>
               <TableBody>
                 {paginated.map((r) => (
                   <TableRow key={r.id}>
-                    <TD>{formatDate(r.application_date)}</TD>
-                    <TD className="text-gray-900">{r.job_title}</TD>
-                    <TD className="text-gray-900">{r.company_name}</TD>
+                    <TD className="text-gray-900 font-medium">{r.job_title}</TD>
+                    <TD className="text-gray-600">{r.company_name}</TD>
+                    <TD className="text-gray-600">{r.placement || "-"}</TD>
                     <TD>
                       <span
                         className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(statusLabel(r.status))}`}
@@ -440,13 +488,9 @@ export default function LamaranPage() {
                         {statusLabel(r.status)}
                       </span>
                     </TD>
-                    <TD>
-                      <div className="text-xs text-gray-500">
-                        <div>{formatDate(r.schedule_start)}</div>
-                        <div>{formatDate(r.schedule_end)}</div>
-                      </div>
+                    <TD className="text-gray-500 text-sm">
+                      {shouldShowNote(r.status) ? r.note || "-" : "-"}
                     </TD>
-                    <TD className="text-gray-500 text-sm">{r.note || "-"}</TD>
                   </TableRow>
                 ))}
               </TableBody>
@@ -455,7 +499,7 @@ export default function LamaranPage() {
               {paginated.map((r) => (
                 <div
                   key={`m-${r.id}`}
-                  className="border border-gray-200 rounded-lg p-3"
+                  className="border border-gray-200 rounded-lg p-3 bg-white shadow-sm"
                 >
                   <div className="flex items-start justify-between">
                     <div className="min-w-0">
@@ -472,16 +516,26 @@ export default function LamaranPage() {
                       {statusLabel(r.status)}
                     </span>
                   </div>
-                  <div className="mt-2 text-xs text-gray-500">
-                    <div>{formatDate(r.application_date)}</div>
-                    <div>
-                      {formatDate(r.schedule_start)} -{" "}
-                      {formatDate(r.schedule_end)}
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <i className="ri-map-pin-line"></i>
+                      <span className="truncate">{r.placement || "-"}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <i className="ri-briefcase-line"></i>
+                      <span className="truncate capitalize">
+                        {r.job_type ? r.job_type.replace("-", " ") : "-"}
+                      </span>
                     </div>
                   </div>
-                  <div className="mt-2 text-sm text-gray-500">
-                    {r.note || "-"}
-                  </div>
+                  {shouldShowNote(r.status) && r.note && (
+                    <div className="mt-3 p-2 bg-yellow-50 rounded border border-yellow-100">
+                      <p className="text-[10px] font-semibold text-gray-500 mb-0.5">
+                        Catatan
+                      </p>
+                      <p className="text-xs text-gray-700 italic">{r.note}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

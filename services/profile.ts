@@ -21,6 +21,7 @@ type CandidateProfilePayload = {
   graduation_year: number;
   status_perkawinan: string;
   cv_file?: string;
+  no_handphone?: string;
 };
 
 type ApiEnvelope<T = unknown> = { message?: string; data?: T };
@@ -35,6 +36,7 @@ export async function upsertCompanyProfile(payload: {
   company_type?: string;
   nib?: string;
   company_logo?: string;
+  no_handphone?: string;
   kecamatan: string;
   kelurahan: string;
   address: string;
@@ -99,6 +101,7 @@ export async function upsertCandidateProfile(payload: {
   graduation_year: number;
   status_perkawinan: string;
   cv_file?: string;
+  no_handphone?: string;
 }): Promise<ApiEnvelope> {
   const resp = await fetch(`${BASE}/api/profile/candidate/upsert`, {
     method: "POST",

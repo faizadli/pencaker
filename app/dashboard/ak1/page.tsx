@@ -23,6 +23,7 @@ import {
   presignDownload,
   getAk1Layout,
   getAk1Template,
+  requestAk1Renewal,
 } from "../../../services/ak1";
 import { useRouter } from "next/navigation";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
@@ -68,6 +69,11 @@ export default function Ak1Page() {
     candidate_id?: string;
     id?: string;
     keterampilan?: string[] | string;
+    expired1?: string;
+    expired2?: string;
+    expired3?: string;
+    expired4?: string;
+    renewal_requested_at?: string;
   } & {
     ktp_file?: string;
     ijazah_file?: string;
@@ -559,280 +565,190 @@ export default function Ak1Page() {
           )}
 
           {role === "candidate" && !!doc && (
-            <>
+            <div className="grid gap-6 md:grid-cols-2 mb-6">
               {(() => {
-                const hasCard = Boolean(doc?.card_file);
-                const statusRaw = String(
-                  (doc || {}).status || "PENDING",
-                ).toUpperCase();
-                const ui = apiToUIStatusAk1[statusRaw] || "Menunggu Verifikasi";
-                const expired = (() => {
-                  const raw = (doc || {}).card_expired_at
-                    ? String(doc?.card_expired_at)
-                    : "";
-                  if (!raw) return false;
-                  const d = new Date(raw);
-                  if (Number.isNaN(d.getTime())) return false;
+                // Calculate expiration
+                const d = doc;
+                const statusRaw = String(d.status || "PENDING").toUpperCase();
+                const uiStatus =
+                  apiToUIStatusAk1[statusRaw] || "Menunggu Verifikasi";
+                const statusColor = getStatusColor(uiStatus);
+
+                const currentExpiryDate = d.card_expired_at
+                  ? new Date(d.card_expired_at)
+                  : d.expired1
+                    ? new Date(d.expired1)
+                    : null;
+
+                let daysLeft: number | null = null;
+                if (
+                  currentExpiryDate &&
+                  !Number.isNaN(currentExpiryDate.getTime())
+                ) {
                   const today = new Date();
                   today.setHours(0, 0, 0, 0);
-                  d.setHours(0, 0, 0, 0);
-                  return d < today;
-                })();
-                if (!hasCard) {
-                  if (permissions.includes("ak1.generate")) {
-                    return (
-                      <Card
-                        className="mb-6"
-                        header={
-                          <h2 className="text-lg font-semibold text-primary">
-                            Dokumen diterima — siap generate
-                          </h2>
-                        }
-                      >
-                        <p className="text-sm text-gray-700">
-                          Semua dokumen telah diunggah. Anda dapat membuat kartu
-                          AK1 sekarang.
-                        </p>
-                        <div className="mt-3">
-                          <button
-                            className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
-                            onClick={async () => {
-                              try {
-                                const cid = String(
-                                  rows[0]?.candidate_id ||
-                                    doc?.candidate_id ||
-                                    "",
-                                );
-                                setGenMeta({
-                                  ak1_document_id: String(
-                                    rows[0]?.ak1_document_id || doc?.id || "",
-                                  ),
-                                  candidate_id: cid,
-                                  no_urut_pendaftaran: "",
-                                  card_created_at: "",
-                                  card_expired_at: "",
-                                });
-                                setGenCandidate(profile);
-                                setGenDocDetail(doc);
-                                const tpResp = (await getAk1Template()) as {
-                                  data?: {
-                                    name?: string;
-                                    file_template?: string | null;
-                                  };
-                                };
-                                const t = tpResp.data || null;
-                                const name = t?.name
-                                  ? String(t.name)
-                                  : undefined;
-                                if (t?.file_template)
-                                  setFrontSrcUrl(String(t.file_template));
+                  currentExpiryDate.setHours(0, 0, 0, 0);
+                  const diffTime =
+                    currentExpiryDate.getTime() - today.getTime();
+                  daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                }
 
-                                try {
-                                  const backTp = (await getAk1Template(
-                                    "Kartu AK1 Tampak Belakang",
-                                  )) as {
-                                    data?: { file_template?: string | null };
-                                  };
-                                  const bt = backTp.data || null;
-                                  if (bt?.file_template)
-                                    setBackSrcUrl(String(bt.file_template));
-                                } catch {}
+                const renewalStatus =
+                  (d as { renewal_status?: string }).renewal_status || "NONE";
+                const isRenewRequested = renewalStatus === "REQUESTED";
 
-                                const lyResp = await getAk1Layout(name);
-                                let lyData =
-                                  (lyResp as { data?: Ak1Layout | null })
-                                    .data || null;
-                                if (lyData && lyData.coordinates) {
-                                  lyData.coordinates = lyData.coordinates.map(
-                                    (c) => ({ ...c, side: c.side || "front" }),
-                                  );
-                                }
+                // Can renew if close to expiry (e.g. 7 days) and not pending renewal request
+                const canRenew =
+                  currentExpiryDate &&
+                  daysLeft !== null &&
+                  daysLeft <= 7 &&
+                  !isRenewRequested &&
+                  statusRaw === "APPROVED";
 
-                                try {
-                                  const backLy = await getAk1Layout(
-                                    "Kartu AK1 Tampak Belakang",
-                                  );
-                                  let backData =
-                                    (backLy as { data?: Ak1Layout | null })
-                                      .data || null;
-
-                                  if (
-                                    !backData ||
-                                    !backData.coordinates ||
-                                    backData.coordinates.length === 0
-                                  ) {
-                                    backData = {
-                                      ...(backData || {
-                                        name: "Kartu AK1 Tampak Belakang",
-                                        front_width: FRONT_BASE.w,
-                                        front_height: FRONT_BASE.h,
-                                      }),
-                                      coordinates: [
-                                        {
-                                          token: "ak1_doc:expired1",
-                                          x: 2558,
-                                          y: 296,
-                                          size: 40,
-                                          w: 195,
-                                          h: 70,
-                                          kind: "text",
-                                        },
-                                        {
-                                          token: "ak1_doc:expired2",
-                                          x: 2558,
-                                          y: 457,
-                                          size: 40,
-                                          w: 200,
-                                          h: 70,
-                                          kind: "text",
-                                        },
-                                        {
-                                          token: "ak1_doc:expired3",
-                                          x: 2566,
-                                          y: 618,
-                                          size: 40,
-                                          w: 200,
-                                          h: 70,
-                                          kind: "text",
-                                        },
-                                        {
-                                          token: "ak1_doc:expired4",
-                                          x: 2566,
-                                          y: 779,
-                                          size: 40,
-                                          w: 200,
-                                          h: 70,
-                                          kind: "text",
-                                        },
-                                      ] as unknown as Ak1LayoutField[],
-                                    } as Ak1Layout;
-                                  }
-
-                                  if (
-                                    backData &&
-                                    backData.coordinates &&
-                                    lyData
-                                  ) {
-                                    const backCoords = backData.coordinates.map(
-                                      (c) => ({ ...c, side: "back" as const }),
-                                    );
-                                    const newCoords = [
-                                      ...(lyData.coordinates || []),
-                                      ...backCoords,
-                                    ];
-                                    const newW = Math.max(
-                                      lyData.front_width || 0,
-                                      backData.front_width || 0,
-                                    );
-                                    const newH = Math.max(
-                                      lyData.front_height || 0,
-                                      backData.front_height || 0,
-                                    );
-                                    lyData = {
-                                      ...lyData,
-                                      coordinates:
-                                        newCoords as Ak1LayoutField[],
-                                      front_width: newW,
-                                      front_height: newH,
-                                    };
-                                  }
-                                } catch {}
-                                setLayout(lyData);
-                                try {
-                                  const rawPhoto = String(
-                                    (doc || {}).pas_photo_file || "",
-                                  );
-                                  if (rawPhoto) {
-                                    const pre = await presignDownload(rawPhoto);
-                                    setGenPasPhotoUrl(pre.url);
-                                  } else {
-                                    setGenPasPhotoUrl(null);
-                                  }
-                                } catch {
-                                  setGenPasPhotoUrl(null);
-                                }
-                              } catch {}
-                              setShowGenerateModal(true);
-                            }}
+                return (
+                  <>
+                    <Card>
+                      <div className="flex flex-col gap-4">
+                        <div className="border-b pb-4">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            Status Dokumen
+                          </h3>
+                          <div
+                            className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${statusColor}`}
                           >
-                            Generate Kartu
+                            {uiStatus}
+                          </div>
+                          {statusRaw === "PENDING" && (
+                            <p className="text-sm text-gray-600 mt-2">
+                              Dokumen Anda sedang dalam proses verifikasi oleh
+                              petugas.
+                            </p>
+                          )}
+                          {isRenewRequested && (
+                            <div className="mt-3 p-3 bg-blue-50 text-blue-800 rounded-lg text-sm border border-blue-200">
+                              <p className="font-semibold mb-1">
+                                Perpanjangan Diajukan
+                              </p>
+                              <p>
+                                Pengajuan perpanjangan kartu Anda sedang
+                                menunggu persetujuan admin.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {currentExpiryDate && (
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                              Masa Berlaku
+                            </h3>
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-gray-600">
+                                Berlaku sampai:
+                              </span>
+                              <span className="font-medium">
+                                {currentExpiryDate.toLocaleDateString("id-ID", {
+                                  dateStyle: "long",
+                                })}
+                              </span>
+                            </div>
+
+                            <div
+                              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
+                                daysLeft !== null && daysLeft < 0
+                                  ? "bg-red-100 text-red-800"
+                                  : daysLeft !== null && daysLeft < 60
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-green-100 text-green-800"
+                              }`}
+                            >
+                              <i className="ri-time-line"></i>
+                              {daysLeft !== null && daysLeft < 0
+                                ? `Kadaluarsa ${Math.abs(daysLeft)} hari`
+                                : `${daysLeft} hari lagi`}
+                            </div>
+                          </div>
+                        )}
+
+                        {canRenew && (
+                          <div className="pt-4 border-t">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                              Perpanjangan
+                            </h3>
+                            <p className="text-sm text-gray-600 mb-3">
+                              Masa berlaku kartu Anda akan segera habis. Silakan
+                              ajukan perpanjangan.
+                            </p>
+                            <button
+                              onClick={async () => {
+                                if (
+                                  confirm(
+                                    "Apakah anda yakin ingin mengajukan perpanjangan?",
+                                  )
+                                ) {
+                                  try {
+                                    setLoading(true);
+                                    await requestAk1Renewal();
+                                    showSuccess(
+                                      "Pengajuan perpanjangan berhasil dikirim",
+                                    );
+                                    window.location.reload();
+                                  } catch {
+                                    showError("Gagal mengajukan perpanjangan");
+                                    setLoading(false);
+                                  }
+                                }
+                              }}
+                              className="w-full py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 font-medium transition-colors flex justify-center items-center gap-2"
+                            >
+                              <i className="ri-refresh-line"></i>
+                              Ajukan Perpanjangan
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+
+                    {d.card_file && (
+                      <Card>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                          Kartu AK1 Digital
+                        </h3>
+                        <div className="bg-gray-50 p-4 rounded-lg flex items-center justify-between border border-gray-200">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-white rounded shadow-sm border border-gray-100">
+                              <i className="ri-file-pdf-line text-red-500 text-2xl"></i>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                Kartu AK1.pdf
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Dokumen Digital
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              const signed = await presignDownload(
+                                d.card_file!,
+                              );
+                              window.open(signed.url, "_blank");
+                            }}
+                            className="px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
+                          >
+                            Unduh
                           </button>
                         </div>
                       </Card>
-                    );
-                  }
-                  return (
-                    <Card
-                      className="mb-6"
-                      header={
-                        <h2 className="text-lg font-semibold text-primary">
-                          Menunggu Generate
-                        </h2>
-                      }
-                    >
-                      <p className="text-sm text-gray-700">
-                        Dokumen Anda sudah diterima. Petugas akan melakukan
-                        generate kartu AK1.
-                      </p>
-                    </Card>
-                  );
-                }
-                return (
-                  <Card
-                    className="mb-6"
-                    header={
-                      <h2 className="text-lg font-semibold text-primary">
-                        Status Kartu AK1
-                      </h2>
-                    }
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(ui)}`}
-                      >
-                        {expired ? "Kadaluarsa" : ui}
-                      </span>
-                      {doc?.card_file ? (
-                        <button
-                          className="text-primary underline"
-                          onClick={async () => {
-                            const d = await presignDownload(
-                              String(doc?.card_file),
-                            );
-                            window.open(d.url, "_blank");
-                          }}
-                        >
-                          Unduh Kartu
-                        </button>
-                      ) : null}
-                    </div>
-                    {expired && (
-                      <div className="mt-3 flex gap-2">
-                        <button
-                          className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
-                          onClick={() => {
-                            setRenewForm({
-                              ktp_file: String(doc?.ktp_file || ""),
-                              ijazah_file: String(doc?.ijazah_file || ""),
-                              pas_photo_file: String(doc?.pas_photo_file || ""),
-                              certificate_file: String(
-                                doc?.certificate_file || "",
-                              ),
-                            });
-                            setShowRenewModal(true);
-                          }}
-                        >
-                          Perpanjang Kartu
-                        </button>
-                      </div>
                     )}
-                  </Card>
+                  </>
                 );
               })()}
-            </>
+            </div>
           )}
 
-          {(role !== "candidate" || !!doc) && (
+          {role !== "candidate" && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <StatCard

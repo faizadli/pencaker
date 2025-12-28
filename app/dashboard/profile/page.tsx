@@ -163,6 +163,7 @@ export default function ProfilePage() {
           company_type: companyForm.company_type || undefined,
           nib: companyForm.nib || undefined,
           company_logo: companyForm.company_logo || undefined,
+          no_handphone: companyForm.no_handphone || undefined,
           kecamatan: companyForm.kecamatan,
           kelurahan: companyForm.kelurahan,
           address: companyForm.address,
@@ -189,6 +190,7 @@ export default function ProfilePage() {
           graduation_year: Number(candidateForm.graduation_year || 0),
           status_perkawinan: candidateForm.status_perkawinan,
           cv_file: candidateForm.cv_file || undefined,
+          no_handphone: candidateForm.no_handphone || undefined,
         });
         showSuccess("Profil pencaker berhasil disimpan");
       } else {
@@ -938,9 +940,10 @@ export default function ProfilePage() {
                         }
                         options={[
                           { value: "", label: "Pilih..." },
-                          { value: "Belum Menikah", label: "Belum Menikah" },
-                          { value: "Menikah", label: "Menikah" },
-                          { value: "Cerai", label: "Cerai" },
+                          { value: "belum kawin", label: "Belum Kawin" },
+                          { value: "kawin", label: "Kawin" },
+                          { value: "cerai hidup", label: "Cerai Hidup" },
+                          { value: "cerai mati", label: "Cerai Mati" },
                         ]}
                         className="w-full"
                       />
