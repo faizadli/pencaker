@@ -208,16 +208,34 @@ export default function RegisterCompany() {
       setLogoFile(null);
       setLogoPreview("");
       setCompany({ ...company, company_logo: "" });
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next.company_logo;
+        return next;
+      });
       return;
     }
-    if (!(file.type && file.type.startsWith("image/")) && tooLarge(file)) {
-      setError(
-        `Ukuran logo terlalu besar (> ${limitMB}MB). Unggah versi lebih kecil.`,
-      );
-      return;
-    }
+
     setLogoFile(file);
-    setLogoPreview(URL.createObjectURL(file));
+
+    if (file.type.startsWith("image/")) {
+      setLogoPreview(URL.createObjectURL(file));
+    } else {
+      setLogoPreview("");
+    }
+
+    // Validate using Zod schema immediately for feedback
+    const result = companyProfileSchema.shape.company_logo.safeParse(file);
+    if (!result.success) {
+      const msg = result.error.issues[0].message;
+      setFieldErrors((prev) => ({ ...prev, company_logo: msg }));
+    } else {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next.company_logo;
+        return next;
+      });
+    }
   };
 
   const finalize = async () => {
@@ -692,6 +710,7 @@ export default function RegisterCompany() {
                     </p>
                     <Input
                       type="file"
+                      accept=".png, .jpg, .jpeg"
                       onChange={(e) =>
                         uploadLogo(
                           (e.target as HTMLInputElement).files?.[0] ||
