@@ -116,59 +116,63 @@ export default function DetailPerusahaanPage() {
     else setPermsLoaded(true);
   }, [role, userId]);
 
+  const fetchCompanyData = async (companyId: string) => {
+    console.log("Fetching company with ID:", companyId);
+    let finalData = null;
+
+    // Try standard endpoint
+    const resp = await getCompanyById(companyId);
+    console.log("Fetch company response:", resp);
+
+    if (resp && resp.data) {
+      finalData = resp.data;
+    } else if (resp && !resp.data && Object.keys(resp).length > 1) {
+      // If resp is the data itself (no data wrapper)
+      finalData = resp;
+    }
+
+    // If standard endpoint failed to return data, try public endpoint
+    if (
+      !finalData ||
+      (typeof finalData === "object" && !finalData.company_name)
+    ) {
+      console.log("Data is null/empty, trying public endpoint...");
+      try {
+        const publicResp = await getPublicCompanyById(companyId);
+        console.log("Public fetch response:", publicResp);
+        if (publicResp && publicResp.data) {
+          finalData = publicResp.data;
+        } else if (publicResp) {
+          finalData = publicResp;
+        }
+      } catch (e) {
+        console.error("Public fetch failed", e);
+      }
+    }
+
+    if (!finalData) throw new Error("Data tidak diterima dari server (null)");
+
+    // Validation check
+    if (!finalData.company_name && !finalData.id) {
+      console.error("Invalid data structure:", finalData);
+      throw new Error("Struktur data perusahaan tidak valid");
+    }
+
+    return finalData;
+  };
+
   useEffect(() => {
     if (!id) return;
     (async () => {
       try {
-        console.log("Fetching company with ID:", id);
-        let finalData = null;
-
-        // Try standard endpoint
-        const resp = await getCompanyById(id);
-        console.log("Fetch company response:", resp);
-
-        if (resp && resp.data) {
-          finalData = resp.data;
-        } else if (resp && !resp.data && Object.keys(resp).length > 1) {
-          // If resp is the data itself (no data wrapper)
-          finalData = resp;
-        }
-
-        // If standard endpoint failed to return data, try public endpoint
-        if (
-          !finalData ||
-          (typeof finalData === "object" && !finalData.company_name)
-        ) {
-          console.log("Data is null/empty, trying public endpoint...");
-          try {
-            const publicResp = await getPublicCompanyById(id);
-            console.log("Public fetch response:", publicResp);
-            if (publicResp && publicResp.data) {
-              finalData = publicResp.data;
-            } else if (publicResp) {
-              finalData = publicResp;
-            }
-          } catch (e) {
-            console.error("Public fetch failed", e);
-          }
-        }
-
-        if (!finalData)
-          throw new Error("Data tidak diterima dari server (null)");
-
-        // Validation check
-        if (!finalData.company_name && !finalData.id) {
-          console.error("Invalid data structure:", finalData);
-          throw new Error("Struktur data perusahaan tidak valid");
-        }
-
-        setCompany(finalData);
+        const data = await fetchCompanyData(id);
+        setCompany(data);
       } catch (e) {
         console.error("Fetch company error:", e);
         setError(
           e instanceof Error ? e.message : "Gagal mengambil data perusahaan",
         );
-        setCompany(null); // Ensure company is null so error state renders
+        setCompany(null);
       } finally {
         setLoading(false);
       }
@@ -182,8 +186,8 @@ export default function DetailPerusahaanPage() {
     }
     try {
       await approveCompany(company.id, disnakerId);
-      const resp = await getCompanyById(company.id);
-      setCompany(resp.data || resp);
+      const data = await fetchCompanyData(company.id);
+      setCompany(data);
       showSuccess("Perusahaan diverifikasi");
     } catch {
       showError("Gagal verifikasi perusahaan");
@@ -195,8 +199,8 @@ export default function DetailPerusahaanPage() {
     if (!confirm("Yakin ingin menolak verifikasi perusahaan ini?")) return;
     try {
       await rejectCompany(company.id, disnakerId);
-      const resp = await getCompanyById(company.id);
-      setCompany(resp.data || resp);
+      const data = await fetchCompanyData(company.id);
+      setCompany(data);
       showSuccess("Verifikasi perusahaan ditolak");
     } catch {
       showError("Gagal menolak verifikasi perusahaan");

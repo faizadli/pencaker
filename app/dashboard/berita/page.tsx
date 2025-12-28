@@ -144,10 +144,11 @@ export default function BeritaPage() {
   const [editBerita, setEditBerita] = useState<Berita | null>(null);
   const [beritaList, setBeritaList] = useState<Berita[]>([]);
   const { showSuccess, showError } = useToast();
-  const [contentSubmitted, setContentSubmitted] = useState(false);
+  const [, setContentSubmitted] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [fieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     (async () => {
@@ -487,12 +488,7 @@ export default function BeritaPage() {
                     setEditBerita({ ...editBerita, judul: e.target.value })
                   }
                   placeholder="Masukkan judul berita"
-                  required
-                  error={
-                    contentSubmitted && !editBerita.judul
-                      ? "Judul wajib diisi"
-                      : ""
-                  }
+                  error={fieldErrors["judul"]}
                 />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <SearchableSelect
@@ -511,6 +507,7 @@ export default function BeritaPage() {
                     onChange={(v) =>
                       setEditBerita({ ...editBerita, kategori: v })
                     }
+                    error={fieldErrors["kategori"]}
                   />
                   <SearchableSelect
                     label="Status Publikasi"
@@ -525,10 +522,11 @@ export default function BeritaPage() {
                         status: v as Berita["status"],
                       })
                     }
+                    error={fieldErrors["status"]}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-primary mb-1">
                     Gambar Utama
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition cursor-pointer relative">
@@ -560,13 +558,7 @@ export default function BeritaPage() {
                   label="Isi Berita"
                   value={editBerita.isi}
                   onChange={(v) => setEditBerita({ ...editBerita, isi: v })}
-                  required
-                  error={
-                    contentSubmitted &&
-                    (!editBerita.isi || editBerita.isi === "<p></p>")
-                      ? "Isi berita wajib diisi"
-                      : ""
-                  }
+                  error={fieldErrors["isi"]}
                 />
                 <div className="flex justify-end gap-2 mt-6">
                   <button

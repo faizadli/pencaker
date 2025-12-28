@@ -74,6 +74,9 @@ export default function UsersPage() {
     status: "Aktif",
   });
   const [submitted, setSubmitted] = useState(false);
+  // const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  // const [isSaving, setIsSaving] = useState(false);
+  const fieldErrors: Record<string, string> = {};
 
   const roles = ["Superadmin", "Perusahaan", "Pencaker"];
 
@@ -524,6 +527,7 @@ export default function UsersPage() {
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 submitted={submitted}
+                error={fieldErrors.email}
               />
               <SearchableSelect
                 label="Role"
@@ -531,6 +535,7 @@ export default function UsersPage() {
                 onChange={(v) => setForm({ ...form, role: v })}
                 options={roles.map((r) => ({ value: r, label: r }))}
                 submitted={submitted}
+                error={fieldErrors.role}
               />
               <Input
                 type="password"
@@ -544,6 +549,7 @@ export default function UsersPage() {
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 required={!editUser}
                 submitted={submitted}
+                error={fieldErrors.password}
               />
             </div>
           </Modal>

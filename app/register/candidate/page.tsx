@@ -11,6 +11,12 @@ import {
 } from "../../../components/ui/field";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
 import {
+  candidateAccountSchema,
+  candidateProfileSchema,
+  candidateAk1FilesSchema,
+  ak1CardSchema,
+} from "../../../utils/zod-schemas";
+import {
   login,
   registerUser,
   checkUser,
@@ -53,12 +59,7 @@ export default function RegisterCandidate() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<{
-    email?: string;
-    no_handphone?: string;
-    password?: string;
-    confirm?: string;
-  }>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const checkAvailability = async (
     field: "email" | "no_handphone",
@@ -132,8 +133,8 @@ export default function RegisterCandidate() {
   const [skills, setSkills] = useState<string[]>([]);
   const [finalized, setFinalized] = useState(false);
 
-  const limitMB = 8;
-  const tooLarge = (f: File) => f.size > limitMB * 1024 * 1024;
+  // const limitMB = 8;
+  // const tooLarge = (f: File) => f.size > limitMB * 1024 * 1024;
   const [districts, setDistricts] = useState<{ id: string; name: string }[]>(
     [],
   );
@@ -248,48 +249,26 @@ export default function RegisterCandidate() {
   const submitAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setFieldErrors({});
 
-    // Custom validation check
-    const newFieldErrors: typeof fieldErrors = {};
-    let hasError = false;
+    // Zod validation
+    const result = candidateAccountSchema.safeParse(account);
+    const newErrors: Record<string, string> = {};
 
-    const phone = String(account.no_handphone || "").trim();
-    if (!phone) {
-      newFieldErrors.no_handphone = "Nomor Handphone wajib diisi";
-      hasError = true;
+    if (!result.success) {
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) {
+          newErrors[err.path[0] as string] = err.message;
+        }
+      });
     }
 
-    if (!account.password) {
-      newFieldErrors.password = "Password wajib diisi";
-      hasError = true;
-    } else if (account.password.length < 8) {
-      newFieldErrors.password = "Password minimal 8 karakter";
-      hasError = true;
+    if (!otpVerified && !otp) {
+      newErrors["otp"] = "Kode OTP wajib diisi";
     }
 
-    if (!account.confirm) {
-      newFieldErrors.confirm = "Konfirmasi password wajib diisi";
-      hasError = true;
-    } else if (account.password !== account.confirm) {
-      newFieldErrors.confirm = "Konfirmasi password tidak sama";
-      hasError = true;
-    }
-
-    // Check if there are any existing uniqueness errors
-    if (
-      fieldErrors.no_handphone &&
-      fieldErrors.no_handphone !== "Nomor Handphone wajib diisi"
-    ) {
-      newFieldErrors.no_handphone = fieldErrors.no_handphone;
-      hasError = true;
-    }
-    if (fieldErrors.email) {
-      newFieldErrors.email = fieldErrors.email;
-      hasError = true;
-    }
-
-    if (hasError) {
-      setFieldErrors(newFieldErrors);
+    if (Object.keys(newErrors).length > 0) {
+      setFieldErrors(newErrors);
       return;
     }
 
@@ -333,35 +312,31 @@ export default function RegisterCandidate() {
   const submitProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (
-      cvFile &&
-      !(cvFile.type && cvFile.type.startsWith("image/")) &&
-      tooLarge(cvFile)
-    ) {
-      setError(
-        `Ukuran CV terlalu besar (> ${limitMB}MB). Kompres PDF atau unggah versi lebih kecil.`,
-      );
+    setFieldErrors({});
+
+    const dataToValidate = {
+      ...profile,
+      photo: photoFile,
+      cv: cvFile,
+    };
+
+    const result = candidateProfileSchema.safeParse(dataToValidate);
+
+    if (!result.success) {
+      const formattedErrors: Record<string, string> = {};
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) {
+          formattedErrors[err.path[0] as string] = err.message;
+        }
+      });
+      setFieldErrors(formattedErrors);
+      // Show general error if needed, or rely on inline errors
+      if (Object.keys(formattedErrors).length > 0) {
+        setError("Mohon lengkapi data profil dengan benar.");
+      }
       return;
     }
-    const required = [
-      profile.full_name,
-      profile.nik,
-      profile.place_of_birth,
-      profile.birthdate,
-      profile.gender,
-      profile.status_perkawinan,
-      profile.kecamatan,
-      profile.kelurahan,
-      profile.address,
-      profile.postal_code,
-      profile.last_education,
-      profile.graduation_year,
-    ];
-    const allFilled = required.every((v) => String(v || "").trim().length > 0);
-    if (!allFilled) {
-      setError("Lengkapi semua data profil terlebih dahulu.");
-      return;
-    }
+
     setStep(3);
   };
 
@@ -376,38 +351,63 @@ export default function RegisterCandidate() {
     setAk1Files({ ...ak1Files, [field]: file });
   };
 
-  const submitAk1 = async () => {
+  const submitAk1 = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError("");
+    setFieldErrors({});
+
     if (hasAk1Card === "ya") {
-      if (!ak1CardFile) {
-        setError("Unggah file kartu AK1 terlebih dahulu.");
+      const dataToValidate = {
+        file: ak1CardFile,
+        created_at: ak1CreatedAt,
+        registration_number: ak1NoReg,
+      };
+      const result = ak1CardSchema.safeParse(dataToValidate);
+      if (!result.success) {
+        const formattedErrors: Record<string, string> = {};
+        result.error.issues.forEach((err) => {
+          if (err.path[0]) formattedErrors[err.path[0] as string] = err.message;
+        });
+        setFieldErrors(formattedErrors);
+        // Map specific file errors to generic error if needed or rely on inline
+        if (formattedErrors.file) setError(formattedErrors.file);
+        else if (formattedErrors.registration_number)
+          setError(formattedErrors.registration_number);
+        else setError("Mohon lengkapi data Kartu AK1 dengan benar.");
         return;
       }
-      if (!ak1CreatedAt) {
-        setError("Isi tanggal kartu dibuat terlebih dahulu.");
-        return;
-      }
-      if (!ak1NoReg) {
-        setError("Isi nomor pendaftaran pencari kerja terlebih dahulu.");
+    } else {
+      const dataToValidate = {
+        ktp: ak1Files.ktp,
+        ijazah: ak1Files.ijazah,
+        pas_photo: ak1Files.pas_photo,
+        certificate: ak1Files.certificate,
+      };
+      const result = candidateAk1FilesSchema.safeParse(dataToValidate);
+      if (!result.success) {
+        const formattedErrors: Record<string, string> = {};
+        result.error.issues.forEach((err) => {
+          if (err.path[0]) formattedErrors[err.path[0] as string] = err.message;
+        });
+        setFieldErrors(formattedErrors);
+        // Map specific file errors
+        if (formattedErrors.ktp) setError(formattedErrors.ktp);
+        else if (formattedErrors.ijazah) setError(formattedErrors.ijazah);
+        else if (formattedErrors.pas_photo) setError(formattedErrors.pas_photo);
+        else setError("Mohon lengkapi dokumen AK1 dengan benar.");
         return;
       }
     }
-    if (
-      hasAk1Card !== "ya" &&
-      !(ak1Files.ktp && ak1Files.ijazah && ak1Files.pas_photo)
-    ) {
-      setError("Lengkapi dokumen AK1: KTP, Ijazah, dan Pas Foto.");
-      return;
-    }
+
     setStep(4);
   };
 
-  const canSaveAk1 =
-    hasAk1Card === "ya"
-      ? Boolean(ak1CardFile && ak1CreatedAt && ak1NoReg)
-      : hasAk1Card === "tidak"
-        ? Boolean(ak1Files.ktp && ak1Files.ijazah && ak1Files.pas_photo)
-        : false;
+  // const canSaveAk1 =
+  //   hasAk1Card === "ya"
+  //     ? Boolean(ak1CardFile && ak1CreatedAt && ak1NoReg)
+  //     : hasAk1Card === "tidak"
+  //       ? Boolean(ak1Files.ktp && ak1Files.ijazah && ak1Files.pas_photo)
+  //       : false;
 
   const finalize = async () => {
     if (finalized || loading) return;
@@ -793,6 +793,7 @@ export default function RegisterCandidate() {
             <form
               onSubmit={submitAccount}
               className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-6"
+              noValidate
             >
               <h2 className="text-lg font-semibold text-primary">Data Akun</h2>
               {error && (
@@ -869,6 +870,7 @@ export default function RegisterCandidate() {
                     className="w-full rounded-lg"
                     placeholder="Minimal 8 karakter"
                     required
+                    error={fieldErrors.password}
                   />
                 </div>
                 <div>
@@ -890,6 +892,7 @@ export default function RegisterCandidate() {
                     className="w-full rounded-lg"
                     placeholder="Ulangi password"
                     required
+                    error={fieldErrors.confirm}
                   />
                 </div>
               </div>
@@ -931,6 +934,7 @@ export default function RegisterCandidate() {
                     className="w-full rounded-lg"
                     placeholder="6 digit kode"
                     disabled={otpVerified}
+                    error={fieldErrors.otp}
                   />
                   {!otpVerified && (
                     <button
@@ -1024,6 +1028,7 @@ export default function RegisterCandidate() {
             <form
               onSubmit={submitProfile}
               className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5"
+              noValidate
             >
               <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
                 <i className="ri-profile-line"></i>
@@ -1064,6 +1069,7 @@ export default function RegisterCandidate() {
                           setPhotoPreview("");
                         }
                       }}
+                      error={fieldErrors.photo}
                     />
                   </div>
                 </div>
@@ -1074,6 +1080,7 @@ export default function RegisterCandidate() {
                     setProfile({ ...profile, full_name: e.target.value })
                   }
                   required
+                  error={fieldErrors.full_name}
                 />
                 <Input
                   label="NIK"
@@ -1082,6 +1089,7 @@ export default function RegisterCandidate() {
                     setProfile({ ...profile, nik: e.target.value })
                   }
                   required
+                  error={fieldErrors.nik}
                 />
                 <Input
                   label="Tempat Lahir"
@@ -1090,6 +1098,7 @@ export default function RegisterCandidate() {
                     setProfile({ ...profile, place_of_birth: e.target.value })
                   }
                   required
+                  error={fieldErrors.place_of_birth}
                 />
                 <Input
                   label="Tanggal Lahir"
@@ -1099,6 +1108,7 @@ export default function RegisterCandidate() {
                     setProfile({ ...profile, birthdate: e.target.value })
                   }
                   required
+                  error={fieldErrors.birthdate}
                 />
                 <SearchableSelect
                   label="Jenis Kelamin"
@@ -1108,6 +1118,7 @@ export default function RegisterCandidate() {
                   ]}
                   value={profile.gender}
                   onChange={(v) => setProfile({ ...profile, gender: v })}
+                  error={fieldErrors.gender}
                 />
                 <SearchableSelect
                   label="Status Perkawinan"
@@ -1121,6 +1132,7 @@ export default function RegisterCandidate() {
                   onChange={(v) =>
                     setProfile({ ...profile, status_perkawinan: v })
                   }
+                  error={fieldErrors.status_perkawinan}
                 />
                 <SearchableSelect
                   label="Kecamatan"
@@ -1132,6 +1144,7 @@ export default function RegisterCandidate() {
                   onChange={(v) =>
                     setProfile({ ...profile, kecamatan: v, kelurahan: "" })
                   }
+                  error={fieldErrors.kecamatan}
                 />
                 <SearchableSelect
                   label="Kelurahan"
@@ -1141,6 +1154,7 @@ export default function RegisterCandidate() {
                   ]}
                   value={profile.kelurahan}
                   onChange={(v) => setProfile({ ...profile, kelurahan: v })}
+                  error={fieldErrors.kelurahan}
                 />
                 <div className="sm:col-span-2">
                   <Textarea
@@ -1151,6 +1165,7 @@ export default function RegisterCandidate() {
                     }
                     required
                     rows={3}
+                    error={fieldErrors.address}
                   />
                 </div>
                 <Input
@@ -1160,6 +1175,7 @@ export default function RegisterCandidate() {
                     setProfile({ ...profile, postal_code: e.target.value })
                   }
                   required
+                  error={fieldErrors.postal_code}
                 />
 
                 <SearchableSelect
@@ -1169,6 +1185,7 @@ export default function RegisterCandidate() {
                   onChange={(value) =>
                     setProfile({ ...profile, last_education: value })
                   }
+                  error={fieldErrors.last_education}
                 />
                 <Input
                   label="Tahun Lulus"
@@ -1178,6 +1195,7 @@ export default function RegisterCandidate() {
                     setProfile({ ...profile, graduation_year: e.target.value })
                   }
                   required
+                  error={fieldErrors.graduation_year}
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1190,6 +1208,7 @@ export default function RegisterCandidate() {
                         (e.target as HTMLInputElement).files?.[0] || null,
                       )
                     }
+                    error={fieldErrors.cv}
                   />
                 </div>
               </div>
@@ -1215,7 +1234,11 @@ export default function RegisterCandidate() {
           )}
 
           {step === 3 && (
-            <div className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5">
+            <form
+              onSubmit={submitAk1}
+              className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5"
+              noValidate
+            >
               <h2 className="text-lg font-semibold text-primary">AK1</h2>
               {error && (
                 <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
@@ -1233,24 +1256,28 @@ export default function RegisterCandidate() {
               {hasAk1Card === "ya" ? (
                 <div className="grid grid-cols-1 gap-3">
                   <Input
-                    label="File Kartu AK1 (PDF/JPG)"
+                    label="File Kartu AK1 (PDF)"
                     type="file"
+                    accept=".pdf"
                     onChange={(e) =>
                       setAk1CardFile(
                         (e.target as HTMLInputElement).files?.[0] || null,
                       )
                     }
+                    error={fieldErrors.file}
                   />
                   <Input
                     label="Nomor Pendaftaran Pencari Kerja"
                     value={ak1NoReg}
                     onChange={(e) => setAk1NoReg(e.target.value)}
+                    error={fieldErrors.registration_number}
                   />
                   <Input
                     label="Tanggal Kartu Dibuat"
                     type="date"
                     value={ak1CreatedAt}
                     onChange={(e) => setAk1CreatedAt(e.target.value)}
+                    error={fieldErrors.created_at}
                   />
                   <Input
                     label="Tanggal Lapor 1"
@@ -1283,7 +1310,7 @@ export default function RegisterCandidate() {
               ) : (
                 <div className="grid grid-cols-1 gap-3">
                   <Input
-                    label="Scan KTP"
+                    label="Scan KTP (JPG/PNG)"
                     type="file"
                     onChange={(e) =>
                       uploadFile(
@@ -1291,9 +1318,10 @@ export default function RegisterCandidate() {
                         (e.target as HTMLInputElement).files?.[0] || undefined,
                       )
                     }
+                    error={fieldErrors.ktp}
                   />
                   <Input
-                    label="Ijazah"
+                    label="Ijazah (PDF)"
                     type="file"
                     onChange={(e) =>
                       uploadFile(
@@ -1301,9 +1329,10 @@ export default function RegisterCandidate() {
                         (e.target as HTMLInputElement).files?.[0] || undefined,
                       )
                     }
+                    error={fieldErrors.ijazah}
                   />
                   <Input
-                    label="Pas Foto"
+                    label="Pas Foto (JPG/PNG)"
                     type="file"
                     onChange={(e) =>
                       uploadFile(
@@ -1311,9 +1340,10 @@ export default function RegisterCandidate() {
                         (e.target as HTMLInputElement).files?.[0] || undefined,
                       )
                     }
+                    error={fieldErrors.pas_photo}
                   />
                   <Input
-                    label="Sertifikat (Opsional)"
+                    label="Sertifikat (PDF, Opsional)"
                     type="file"
                     onChange={(e) =>
                       uploadFile(
@@ -1321,6 +1351,7 @@ export default function RegisterCandidate() {
                         (e.target as HTMLInputElement).files?.[0] || undefined,
                       )
                     }
+                    error={fieldErrors.certificate}
                   />
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1388,17 +1419,25 @@ export default function RegisterCandidate() {
                     Lewati
                   </button>
                   <button
-                    type="button"
-                    disabled={!canSaveAk1 || loading}
-                    onClick={submitAk1}
-                    className={`px-5 py-2.5 rounded-xl flex items-center gap-2 ${canSaveAk1 ? "bg-primary text-white hover:bg-primary-600" : "bg-gray-200 text-gray-500"}`}
+                    type="submit"
+                    disabled={loading}
+                    className={`px-5 py-2.5 rounded-xl flex items-center gap-2 ${loading ? "bg-gray-200 text-gray-500" : "bg-primary text-white hover:bg-primary-600"}`}
                   >
-                    <span>Lanjut</span>
-                    <i className="ri-arrow-right-line"></i>
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Memproses...
+                      </>
+                    ) : (
+                      <>
+                        <span>Lanjut</span>
+                        <i className="ri-arrow-right-line"></i>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
-            </div>
+            </form>
           )}
 
           {step === 4 && (

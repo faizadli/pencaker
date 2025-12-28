@@ -9,7 +9,7 @@ import {
   updateApplication,
 } from "../../../../../../services/jobs";
 import { useToast } from "../../../../../../components/ui/Toast";
-import { Input } from "../../../../../../components/ui/field";
+import { Input, SearchableSelect } from "../../../../../../components/ui/field";
 
 type CandidateDetail = {
   id: string;
@@ -75,13 +75,26 @@ export default function ApplicantDetailPage() {
 
         if (apps && apps.length > 0) {
           const app = apps[0];
-          setApplication({
-            id: app.id,
-            status: app.status,
-            note: app.note,
-          });
-          setEditStatus(app.status || "pending");
-          setEditNote(app.note || "");
+          // Resolve ID correctly (similar to list page logic)
+          const objA = app as Record<string, unknown>;
+          const appId =
+            typeof objA["application_id"] === "string"
+              ? (objA["application_id"] as string)
+              : typeof app.id === "string"
+                ? app.id
+                : typeof objA["jobs_applications_id"] === "string"
+                  ? (objA["jobs_applications_id"] as string)
+                  : "";
+
+          if (appId) {
+            setApplication({
+              id: appId,
+              status: app.status,
+              note: app.note,
+            });
+            setEditStatus(app.status || "pending");
+            setEditNote(app.note || "");
+          }
         }
       } catch (e) {
         console.error(e);
@@ -158,16 +171,17 @@ export default function ApplicantDetailPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Status
                   </label>
-                  <select
+                  <SearchableSelect
                     value={editStatus}
-                    onChange={(e) => setEditStatus(e.target.value as AppStatus)}
-                    className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm p-2 border"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="process">Diproses (Interview/Test)</option>
-                    <option value="accepted">Diterima</option>
-                    <option value="rejected">Ditolak</option>
-                  </select>
+                    onChange={(v) => setEditStatus(v as AppStatus)}
+                    options={[
+                      { value: "pending", label: "Pending" },
+                      { value: "process", label: "Diproses" },
+                      { value: "accepted", label: "Diterima" },
+                      { value: "rejected", label: "Ditolak" },
+                    ]}
+                    className="w-full"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">

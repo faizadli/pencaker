@@ -20,6 +20,12 @@ import {
   presignCandidateProfileUpload,
   presignDisnakerProfileUpload,
 } from "../../../services/profile";
+import {
+  passwordChangeSchema,
+  companyProfileUpdateSchema,
+  candidateProfileUpdateSchema,
+  disnakerProfileUpdateSchema,
+} from "../../../utils/zod-schemas";
 import { listDistricts, listVillages } from "../../../services/wilayah";
 import { useToast } from "../../../components/ui/Toast";
 
@@ -39,6 +45,7 @@ export default function ProfilePage() {
     terakhirLogin: "",
   });
   const [loading, setLoading] = useState(true);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Initialize with empty strings to prevent undefined values
   const [companyForm, setCompanyForm] = useState({
@@ -224,21 +231,38 @@ export default function ProfilePage() {
 
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!passwordForm.oldPassword || !passwordForm.newPassword) {
-      showError("Semua field wajib diisi!");
+    setFieldErrors({});
+
+    const result = passwordChangeSchema.safeParse(passwordForm);
+    if (!result.success) {
+      const newErrors: Record<string, string> = {};
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) newErrors[err.path[0] as string] = err.message;
+      });
+      setFieldErrors(newErrors);
+      showError("Mohon periksa input anda");
       return;
     }
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      showError("Konfirmasi password tidak cocok.");
-      return;
-    }
+
     showSuccess("Kata sandi berhasil diubah!");
     setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
   };
 
   const handleSaveProfile = async () => {
+    setFieldErrors({});
     try {
       if (role === "company") {
+        const result = companyProfileUpdateSchema.safeParse(companyForm);
+        if (!result.success) {
+          const newErrors: Record<string, string> = {};
+          result.error.issues.forEach((err) => {
+            if (err.path[0]) newErrors[err.path[0] as string] = err.message;
+          });
+          setFieldErrors(newErrors);
+          showError("Mohon periksa input anda");
+          return;
+        }
+
         await upsertCompanyProfile({
           user_id: userId,
           company_name: companyForm.company_name,
@@ -254,6 +278,17 @@ export default function ProfilePage() {
         });
         showSuccess("Profil perusahaan berhasil disimpan");
       } else if (role === "candidate") {
+        const result = candidateProfileUpdateSchema.safeParse(candidateForm);
+        if (!result.success) {
+          const newErrors: Record<string, string> = {};
+          result.error.issues.forEach((err) => {
+            if (err.path[0]) newErrors[err.path[0] as string] = err.message;
+          });
+          setFieldErrors(newErrors);
+          showError("Mohon periksa input anda");
+          return;
+        }
+
         await upsertCandidateProfile({
           user_id: userId,
           full_name: candidateForm.full_name,
@@ -276,6 +311,17 @@ export default function ProfilePage() {
         });
         showSuccess("Profil pencaker berhasil disimpan");
       } else {
+        const result = disnakerProfileUpdateSchema.safeParse(disnakerForm);
+        if (!result.success) {
+          const newErrors: Record<string, string> = {};
+          result.error.issues.forEach((err) => {
+            if (err.path[0]) newErrors[err.path[0] as string] = err.message;
+          });
+          setFieldErrors(newErrors);
+          showError("Mohon periksa input anda");
+          return;
+        }
+
         await upsertDisnakerProfile({
           user_id: userId,
           full_name: disnakerForm.full_name,
@@ -608,6 +654,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["company_name"]}
                       />
                     </div>
                     <div>
@@ -637,6 +684,7 @@ export default function ProfilePage() {
                           { value: "PERORANGAN", label: "PERORANGAN" },
                         ]}
                         className="w-full"
+                        error={fieldErrors["company_type"]}
                       />
                     </div>
                     <div>
@@ -653,6 +701,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["nib"]}
                       />
                     </div>
                     <div>
@@ -669,6 +718,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["no_handphone"]}
                       />
                     </div>
                     <div>
@@ -689,6 +739,7 @@ export default function ProfilePage() {
                           ...districtOptions,
                         ]}
                         className="w-full"
+                        error={fieldErrors["kecamatan"]}
                       />
                     </div>
                     <div>
@@ -705,6 +756,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["website"]}
                       />
                     </div>
                     <div>
@@ -721,6 +773,7 @@ export default function ProfilePage() {
                           ...villageOptionsCompany,
                         ]}
                         className="w-full"
+                        error={fieldErrors["kelurahan"]}
                       />
                     </div>
                     <div className="md:col-span-2">
@@ -736,6 +789,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["address"]}
                       />
                     </div>
                     <div className="md:col-span-2">
@@ -751,6 +805,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl md:col-span-2"
+                        error={fieldErrors["about_company"]}
                       />
                     </div>
                   </React.Fragment>
@@ -771,6 +826,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["full_name"]}
                       />
                     </div>
                     <div>
@@ -787,6 +843,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["birthdate"]}
                       />
                     </div>
                     <div>
@@ -803,6 +860,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["place_of_birth"]}
                       />
                     </div>
                     <div>
@@ -819,6 +877,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["nik"]}
                       />
                     </div>
                     <div>
@@ -839,6 +898,7 @@ export default function ProfilePage() {
                           ...districtOptions,
                         ]}
                         className="w-full"
+                        error={fieldErrors["kecamatan"]}
                       />
                     </div>
                     <div>
@@ -855,6 +915,7 @@ export default function ProfilePage() {
                           ...villageOptionsCandidate,
                         ]}
                         className="w-full"
+                        error={fieldErrors["kelurahan"]}
                       />
                     </div>
                     <div className="md:col-span-2">
@@ -870,6 +931,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["address"]}
                       />
                     </div>
                     <div>
@@ -886,6 +948,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["postal_code"]}
                       />
                     </div>
                     <div>
@@ -903,6 +966,7 @@ export default function ProfilePage() {
                           { value: "P", label: "Perempuan" },
                         ]}
                         className="w-full"
+                        error={fieldErrors["gender"]}
                       />
                     </div>
                     <div>
@@ -919,6 +983,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["no_handphone"]}
                       />
                     </div>
                     <div>
@@ -941,6 +1006,7 @@ export default function ProfilePage() {
                           { value: "S2", label: "S2" },
                         ]}
                         className="w-full"
+                        error={fieldErrors["last_education"]}
                       />
                     </div>
                     <div>
@@ -957,6 +1023,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["graduation_year"]}
                       />
                     </div>
                     <div>
@@ -979,6 +1046,7 @@ export default function ProfilePage() {
                           { value: "cerai mati", label: "Cerai Mati" },
                         ]}
                         className="w-full"
+                        error={fieldErrors["status_perkawinan"]}
                       />
                     </div>
                     <div>
@@ -1030,6 +1098,7 @@ export default function ProfilePage() {
                           }
                         }}
                         className="w-full px-4 py-3 rounded-xl md:col-span-2"
+                        error={fieldErrors["cv_file"]}
                       />
                     </div>
                   </React.Fragment>
@@ -1050,6 +1119,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["full_name"]}
                       />
                     </div>
                     <div>
@@ -1066,6 +1136,7 @@ export default function ProfilePage() {
                           })
                         }
                         className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["nip"]}
                       />
                     </div>
                   </React.Fragment>
@@ -1116,6 +1187,7 @@ export default function ProfilePage() {
                         })
                       }
                       className="w-full px-4 py-3 rounded-xl"
+                      error={fieldErrors["oldPassword"]}
                     />
                   </div>
                   <div>
@@ -1132,6 +1204,7 @@ export default function ProfilePage() {
                         })
                       }
                       className="w-full px-4 py-3 rounded-xl"
+                      error={fieldErrors["newPassword"]}
                     />
                   </div>
                   <div>
@@ -1148,6 +1221,7 @@ export default function ProfilePage() {
                         })
                       }
                       className="w-full px-4 py-3 rounded-xl"
+                      error={fieldErrors["confirmPassword"]}
                     />
                   </div>
                 </div>

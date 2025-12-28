@@ -35,6 +35,7 @@ import {
   TrainingParticipant,
 } from "../../../services/training";
 import { searchCandidates, CandidateProfile } from "../../../services/users";
+import { trainingSchema } from "../../../utils/zod-schemas";
 
 export default function PelatihanPage() {
   const { showSuccess, showError } = useToast();
@@ -52,6 +53,7 @@ export default function PelatihanPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Participants Modal state
   const [participantsModalOpen, setParticipantsModalOpen] = useState(false);
@@ -120,6 +122,7 @@ export default function PelatihanPage() {
       quota: 0,
       status: "open",
     });
+    setFieldErrors({});
     setIsEditing(false);
     setSelectedId(null);
     setModalOpen(true);
@@ -136,6 +139,7 @@ export default function PelatihanPage() {
       quota: training.quota,
       status: training.status,
     });
+    setFieldErrors({});
     setIsEditing(true);
     setSelectedId(training.id);
     setModalOpen(true);
@@ -143,8 +147,28 @@ export default function PelatihanPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
+    setFieldErrors({});
+
+    const validationPayload = {
+      ...formData,
+      quota: Number.isNaN(Number(formData.quota)) ? 0 : Number(formData.quota),
+    };
+
+    const result = trainingSchema.safeParse(validationPayload);
+
+    if (!result.success) {
+      const newErrors: Record<string, string> = {};
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) newErrors[err.path[0] as string] = err.message;
+      });
+      setFieldErrors(newErrors);
+      showError("Mohon periksa input anda");
+      setSubmitting(false);
+      return;
+    }
+
     try {
-      setSubmitting(true);
       if (isEditing && selectedId) {
         await updateTraining({ id: selectedId, ...formData });
         showSuccess("Berhasil memperbarui pelatihan");
@@ -317,7 +341,7 @@ export default function PelatihanPage() {
         <div className="px-4 sm:px-6">
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-primary">
-              Manajemen Pelatihan & BLK
+              Manajemen Pelatihan
             </h1>
             <p className="text-sm text-gray-500 mt-1">
               Kelola program pelatihan, peserta, kehadiran, dan hasil kelulusan
@@ -625,7 +649,7 @@ export default function PelatihanPage() {
         onClose={() => setModalOpen(false)}
         size="lg"
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <Input
             label="Judul Pelatihan"
             placeholder="Contoh: Pelatihan Web Development"
@@ -633,18 +657,18 @@ export default function PelatihanPage() {
             onChange={(e) =>
               setFormData({ ...formData, title: e.target.value })
             }
-            required
+            error={fieldErrors["title"]}
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Instruktur/Penyelenggara"
-              placeholder="Contoh: BLK Kota Bandung"
+              placeholder="Contoh: Pelatihan Kota Bandung"
               value={formData.instructor}
               onChange={(e) =>
                 setFormData({ ...formData, instructor: e.target.value })
               }
-              required
+              error={fieldErrors["instructor"]}
             />
             <Input
               label="Lokasi"
@@ -653,7 +677,7 @@ export default function PelatihanPage() {
               onChange={(e) =>
                 setFormData({ ...formData, location: e.target.value })
               }
-              required
+              error={fieldErrors["location"]}
             />
           </div>
 
@@ -665,7 +689,7 @@ export default function PelatihanPage() {
               onChange={(e) =>
                 setFormData({ ...formData, start_date: e.target.value })
               }
-              required
+              error={fieldErrors["start_date"]}
             />
             <Input
               label="Tanggal Selesai"
@@ -674,7 +698,7 @@ export default function PelatihanPage() {
               onChange={(e) =>
                 setFormData({ ...formData, end_date: e.target.value })
               }
-              required
+              error={fieldErrors["end_date"]}
             />
             <Input
               label="Kuota"
@@ -683,7 +707,7 @@ export default function PelatihanPage() {
               onChange={(e) =>
                 setFormData({ ...formData, quota: parseInt(e.target.value) })
               }
-              required
+              error={fieldErrors["quota"]}
             />
           </div>
 
@@ -701,6 +725,7 @@ export default function PelatihanPage() {
                 { value: "closed", label: "Pendaftaran Tutup" },
                 { value: "completed", label: "Selesai" },
               ]}
+              error={fieldErrors["status"]}
             />
           </div>
 
@@ -708,6 +733,7 @@ export default function PelatihanPage() {
             label="Deskripsi"
             value={formData.description || ""}
             onChange={(v) => setFormData({ ...formData, description: v })}
+            error={fieldErrors["description"]}
           />
 
           <div className="flex justify-end gap-2 pt-4">

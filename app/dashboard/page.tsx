@@ -2,15 +2,23 @@
 import dynamic from "next/dynamic";
 import FullPageLoading from "../../components/ui/FullPageLoading";
 import StatCard from "../../components/ui/StatCard";
-import Card from "../../components/ui/Card";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { listRoles, getRolePermissions } from "../../services/rbac";
-import { listCandidates, getCompanyProfile } from "../../services/profile";
-import { listJobs, listApplications } from "../../services/jobs";
+import {
+  listCandidates,
+  getCompanyProfile,
+  getCandidateProfile,
+} from "../../services/profile";
+import { getAk1Document } from "../../services/ak1";
+import {
+  listJobs,
+  listApplications,
+  listMyApplications,
+} from "../../services/jobs";
 import { listCompanies } from "../../services/company";
 
 const ensureArray = (v: unknown): unknown[] => {
+  if (!v) return [];
   const d = (v as { data?: unknown }).data;
   if (Array.isArray(d)) return d as unknown[];
   return Array.isArray(v) ? (v as unknown[]) : [];
@@ -28,8 +36,101 @@ function DashboardPageComponent() {
           return null;
         })()
       : null;
+  type AppRow = {
+    id: string;
+    candidate_id: string;
+    company_id: string;
+    job_id: string;
+    application_date?: string;
+    status?: string;
+    note?: string | null;
+    job_title?: string;
+    company_name?: string;
+    is_admin_created?: boolean | number;
+    placement?: string;
+    job_type?: string;
+  };
+
   const [role] = useState<string | null>(initialRole);
   const [permissions, setPermissions] = useState<string[]>([]);
+
+  // State yang disalin dari lamaran/page.tsx
+  const [rows, setRows] = useState<AppRow[]>([]);
+
+  // ... (kode useEffect loadPerms tetap sama) ...
+
+  useEffect(() => {
+    async function loadLamaran() {
+      if (role !== "candidate") return;
+
+      try {
+        // setLoadingLamaran(true);
+
+        // Ambil candidate_id dari profil
+        const uid =
+          typeof window !== "undefined"
+            ? localStorage.getItem("id") ||
+              localStorage.getItem("user_id") ||
+              ""
+            : "";
+        let candidateId = "";
+
+        if (uid) {
+          try {
+            const cp = await getCandidateProfile(uid);
+            const data = cp.data || cp;
+            candidateId = String(data?.id || "");
+          } catch {}
+        }
+
+        // Prioritaskan mengambil milik sendiri (berbasis user_id), lalu fallback ke candidate_id
+        let rawResp: unknown = null;
+        try {
+          rawResp = await listMyApplications();
+        } catch {
+          if (candidateId) {
+            rawResp = await listApplications({ candidate_id: candidateId });
+          } else {
+            // Jika gagal keduanya dan tidak ada candidateId, lempar error atau biarkan kosong
+            // Sesuai logika lamaran/page.tsx, di sini throw error
+            throw new Error("Tidak bisa memuat lamaran");
+          }
+        }
+
+        const envelope = rawResp as { data?: unknown } | unknown;
+        const raw = (
+          envelope && (envelope as { data?: unknown }).data
+            ? (envelope as { data?: unknown }).data
+            : envelope
+        ) as AppRow[];
+
+        const normalized = raw.map((r) => {
+          const obj = r as Record<string, unknown>;
+          const id =
+            typeof obj["id"] === "string"
+              ? (obj["id"] as string)
+              : String(
+                  obj["application_id"] || obj["jobs_applications_id"] || "",
+                );
+          const is_admin_created = !!(
+            obj["is_admin_created"] || r.is_admin_created
+          );
+          return id
+            ? { ...r, id, is_admin_created }
+            : { ...r, is_admin_created };
+        });
+        setRows(normalized);
+      } catch {
+        setRows([]);
+      } finally {
+        // setLoadingLamaran(false);
+      }
+    }
+
+    if (role === "candidate") {
+      loadLamaran();
+    }
+  }, [role]);
 
   useEffect(() => {
     const loadPerms = async () => {
@@ -101,11 +202,62 @@ function DashboardPageComponent() {
     processCount: 0,
     isVerified: true,
   });
+  const [candidateStats, setCandidateStats] = useState({
+    ak1Status: "Belum Mengajukan",
+    ak1Color: secondaryColor,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadStats = async () => {
       setLoading(true);
+
+      if (isCandidate) {
+        try {
+          const uid =
+            typeof window !== "undefined"
+              ? localStorage.getItem("id") ||
+                localStorage.getItem("user_id") ||
+                ""
+              : "";
+          if (uid) {
+            const [ak1Resp] = await Promise.all([
+              getAk1Document(uid).catch(() => null),
+            ]);
+
+            // Handle AK1 Status
+            const ak1Doc = (ak1Resp?.data || ak1Resp) as {
+              status?: string;
+            } | null;
+            let ak1Status = "Belum Mengajukan";
+            let ak1Color = secondaryColor;
+
+            if (ak1Doc && ak1Doc.status) {
+              const s = String(ak1Doc.status).toLowerCase();
+              if (s === "process") {
+                ak1Status = "Verifikasi";
+                ak1Color = "#EAB308"; // Yellow
+              } else if (s === "generate") {
+                ak1Status = "Pembuatan";
+                ak1Color = "#3B82F6"; // Blue
+              } else if (s === "approved") {
+                ak1Status = "Aktif";
+                ak1Color = "#22C55E"; // Green
+              } else {
+                ak1Status = s; // Fallback
+                ak1Color = secondaryColor;
+              }
+            }
+
+            setCandidateStats({
+              ak1Status,
+              ak1Color,
+            });
+          }
+        } catch {}
+        setLoading(false);
+        return;
+      }
 
       if (isCompany) {
         try {
@@ -301,6 +453,8 @@ function DashboardPageComponent() {
     canSeeOverview,
     isDashboardAdmin,
     isCompany,
+    isCandidate,
+    secondaryColor,
   ]);
 
   if (loading) {
@@ -325,54 +479,49 @@ function DashboardPageComponent() {
                 Dashboard Pencaker
               </h1>
               <p className="text-sm text-gray-500 mt-1">
-                Lihat profil, status AK1, dan rekomendasi lowongan
+                Lihat profil dan status lamaran anda
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
                 <StatCard
                   title="Status AK1"
-                  value="Aktif"
-                  change="Valid 6 bulan"
-                  color={secondaryColor}
+                  value={candidateStats.ak1Status}
+                  change="Status terkini"
+                  color={candidateStats.ak1Color}
                   icon="ri-id-card-line"
                 />
                 <StatCard
                   title="Lamaran Terkirim"
-                  value={5}
-                  change="Minggu ini"
+                  value={rows.length}
+                  change="Total lamaran"
                   color={primaryColor}
                   icon="ri-send-plane-2-line"
                 />
                 <StatCard
-                  title="Wawancara Terjadwal"
-                  value={2}
-                  change="Jadwal terbaru"
+                  title="Sedang Diproses"
+                  value={
+                    rows.filter((r) =>
+                      ["process"].includes(
+                        String(r.status || "").toLowerCase(),
+                      ),
+                    ).length
+                  }
+                  change="Interview / Tes"
                   color={foregroundColor}
-                  icon="ri-calendar-check-line"
+                  icon="ri-loader-4-line"
+                />
+                <StatCard
+                  title="Lamaran Ditolak"
+                  value={
+                    rows.filter(
+                      (r) =>
+                        String(r.status || "").toLowerCase() === "rejected",
+                    ).length
+                  }
+                  change="Perlu ditingkatkan"
+                  color={primaryDark}
+                  icon="ri-close-circle-line"
                 />
               </div>
-              <Card
-                className="mt-8"
-                header={
-                  <h2 className="text-lg font-semibold text-primary">
-                    Rekomendasi Lowongan
-                  </h2>
-                }
-              >
-                <ul className="space-y-3 text-sm text-primary">
-                  <li className="flex justify-between">
-                    <span>Frontend Developer - PT Solusi Digital</span>
-                    <Link href="/jobs" className="text-primary">
-                      Lihat
-                    </Link>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>Teknisi Jaringan - CV Makmur Abadi</span>
-                    <Link href="/jobs" className="text-primary">
-                      Lihat
-                    </Link>
-                  </li>
-                </ul>
-              </Card>
             </div>
           )}
 

@@ -36,24 +36,14 @@ export async function listJobs(params?: {
   if (params?.page) q.set("page", String(params.page));
   if (params?.limit) q.set("limit", String(params.limit));
   const url = `${BASE}/api/jobs${q.toString() ? `?${q.toString()}` : ""}`;
-  const key = `cache:listJobs:${q.toString()}`;
-  if (typeof window !== "undefined") {
-    try {
-      const raw = sessionStorage.getItem(key);
-      if (raw) {
-        const obj = JSON.parse(raw) as { t: number; d: unknown };
-        if (Date.now() - obj.t < 30000) return obj.d as unknown;
-      }
-    } catch {}
-  }
-  const resp = await fetch(url, { headers: { ...authHeader() } });
+
+  const resp = await fetch(url, {
+    headers: { ...authHeader() },
+    cache: "no-store",
+  });
   if (!resp.ok) throw new Error("Gagal mengambil jobs");
   const data = await resp.json();
-  if (typeof window !== "undefined") {
-    try {
-      sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data }));
-    } catch {}
-  }
+
   return data;
 }
 
@@ -117,6 +107,7 @@ export async function getJobById(id: string) {
 export async function getDashboardJobById(id: string) {
   const resp = await fetch(`${BASE}/api/jobs/${encodeURIComponent(id)}`, {
     headers: { ...authHeader() },
+    cache: "no-store",
   });
   if (!resp.ok) throw new Error("Gagal mengambil detail job");
   return resp.json();

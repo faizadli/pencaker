@@ -39,6 +39,7 @@ import {
   getJobCategoryGroups,
   getEducationGroups,
 } from "../../../services/site";
+import { jobSchema } from "../../../utils/zod-schemas";
 
 import FullPageLoading from "../../../components/ui/FullPageLoading";
 
@@ -50,6 +51,7 @@ export default function LowonganPage() {
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [role] = useState<string>(() =>
     typeof window !== "undefined" ? localStorage.getItem("role") || "" : "",
   );
@@ -537,13 +539,39 @@ export default function LowonganPage() {
       return;
     }
     setSubmittedJob(true);
-    if (!newJob.posisi || !newJob.batasAkhir) {
+    setFieldErrors({});
+
+    const validationPayload = {
+      position_id: newJob.position_id || "",
+      tipe: newJob.tipe,
+      work_setup: newJob.work_setup as "WFO" | "WFH" | "Hybrid",
+      min_salary: Number.isFinite(newJob.min_salary) ? newJob.min_salary : 0,
+      max_salary: Number.isFinite(newJob.max_salary) ? newJob.max_salary : 0,
+      batasAkhir: newJob.batasAkhir,
+      sektor: newJob.sektor || "",
+      experience_required: newJob.experience_required || "",
+      education_required: newJob.education_required || "",
+      placement: newJob.placement || "",
+      deskripsi: newJob.deskripsi || "",
+      skills_required: newJob.skills_required || "",
+    };
+
+    const result = jobSchema.safeParse(validationPayload);
+
+    if (!result.success) {
+      const newErrors: Record<string, string> = {};
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) newErrors[err.path[0] as string] = err.message;
+      });
+      setFieldErrors(newErrors);
+      showError("Mohon periksa input anda");
       return;
     }
+
     try {
       const payload = {
         company_id: companyId,
-        job_title: newJob.posisi,
+        job_title: newJob.posisi, // Still use posisi from state which is synced with position_id label
         position_id: newJob.position_id,
         job_type: jobTypeMap[newJob.tipe],
         job_description: newJob.deskripsi || "",
@@ -760,6 +788,7 @@ export default function LowonganPage() {
               setShowForm(false);
               setEditingId(null);
               setNewJob(EMPTY_NEW_JOB);
+              setFieldErrors({});
             }}
             size="xl"
             actions={
@@ -769,6 +798,7 @@ export default function LowonganPage() {
                     setShowForm(false);
                     setEditingId(null);
                     setNewJob(EMPTY_NEW_JOB);
+                    setFieldErrors({});
                   }}
                   className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
                 >
@@ -797,6 +827,7 @@ export default function LowonganPage() {
                 }}
                 options={positionOptions}
                 submitted={submittedJob}
+                error={fieldErrors["position_id"]}
               />
               <SearchableSelect
                 label="Tipe"
@@ -810,6 +841,7 @@ export default function LowonganPage() {
                   { value: "Kontrak", label: "Kontrak" },
                 ]}
                 submitted={submittedJob}
+                error={fieldErrors["tipe"]}
               />
               <SearchableSelect
                 label="Skema Kerja"
@@ -821,6 +853,7 @@ export default function LowonganPage() {
                   { value: "Hybrid", label: "Hybrid" },
                 ]}
                 submitted={submittedJob}
+                error={fieldErrors["work_setup"]}
               />
               <Input
                 label="Gaji Minimum"
@@ -831,6 +864,7 @@ export default function LowonganPage() {
                   setNewJob({ ...newJob, min_salary: Number(e.target.value) })
                 }
                 submitted={submittedJob}
+                error={fieldErrors["min_salary"]}
               />
               <Input
                 label="Gaji Maksimum"
@@ -841,6 +875,7 @@ export default function LowonganPage() {
                   setNewJob({ ...newJob, max_salary: Number(e.target.value) })
                 }
                 submitted={submittedJob}
+                error={fieldErrors["max_salary"]}
               />
               <Input
                 label="Batas Akhir"
@@ -850,6 +885,7 @@ export default function LowonganPage() {
                   setNewJob({ ...newJob, batasAkhir: e.target.value })
                 }
                 submitted={submittedJob}
+                error={fieldErrors["batasAkhir"]}
               />
               <SearchableSelect
                 label="Kategori"
@@ -857,6 +893,7 @@ export default function LowonganPage() {
                 onChange={(v) => setNewJob({ ...newJob, sektor: v })}
                 options={categoryOptions}
                 submitted={submittedJob}
+                error={fieldErrors["sektor"]}
               />
               <Input
                 label="Pengalaman"
@@ -867,6 +904,7 @@ export default function LowonganPage() {
                   setNewJob({ ...newJob, experience_required: e.target.value })
                 }
                 submitted={submittedJob}
+                error={fieldErrors["experience_required"]}
               />
               <SearchableSelect
                 label="Pendidikan"
@@ -876,6 +914,7 @@ export default function LowonganPage() {
                 }
                 options={educationOptions}
                 submitted={submittedJob}
+                error={fieldErrors["education_required"]}
               />
               <SearchableSelect
                 label="Penempatan"
@@ -883,6 +922,7 @@ export default function LowonganPage() {
                 onChange={(v) => setNewJob({ ...newJob, placement: v })}
                 options={placementOptions}
                 submitted={submittedJob}
+                error={fieldErrors["placement"]}
               />
               <div className="md:col-span-2">
                 <TextEditor
@@ -891,6 +931,7 @@ export default function LowonganPage() {
                   onChange={(v) => setNewJob({ ...newJob, deskripsi: v })}
                   placeholder="Detail tugas, tanggung jawab, dan kualifikasi"
                   submitted={submittedJob}
+                  error={fieldErrors["deskripsi"]}
                 />
               </div>
               <div className="md:col-span-2">
@@ -902,6 +943,7 @@ export default function LowonganPage() {
                   onChange={(e) =>
                     setNewJob({ ...newJob, skills_required: e.target.value })
                   }
+                  error={fieldErrors["skills_required"]}
                 />
               </div>
             </div>

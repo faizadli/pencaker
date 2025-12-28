@@ -24,6 +24,8 @@ import {
   presignDownload,
   deleteAk1Template,
 } from "../../../services/ak1";
+import { instansiSchema, bannerSchema } from "../../../utils/zod-schemas";
+import { ZodIssue } from "zod";
 import {
   getSiteSettings,
   upsertSiteSettings,
@@ -230,6 +232,7 @@ export default function PengaturanPage() {
   const [bannerUrl, setBannerUrl] = useState<string>("");
   const { showSuccess, showError } = useToast();
   const [settingsSubmitted, setSettingsSubmitted] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     (async () => {
@@ -367,6 +370,7 @@ export default function PengaturanPage() {
 
   const handleEdit = (field: string, value: string | string[]) => {
     setEditField(field);
+    setFieldErrors({});
     if (field === "kategoriGroups") {
       try {
         const json = JSON.stringify(kategoriGroups, null, 2);
@@ -437,30 +441,41 @@ export default function PengaturanPage() {
       const keys = editField.split(".");
       const val = String(tempValue || "").trim();
       if (keys[0] === "instansi") {
-        const required = [
-          "nama",
-          "alamat",
-          "telepon",
-          "email",
-          "website",
-          "jamLayanan",
-        ];
-        if (required.includes(keys[1]) && !val) {
-          showError("Field instansi wajib diisi");
-          setSettingsSubmitted(false);
-          return;
-        }
         const k = keys[1] as keyof Instansi;
         nextInstansi[k] = tempValue as Instansi[typeof k];
-      } else if (keys[0] === "banner") {
-        const required = ["judul", "ctaText", "ctaLink"];
-        if (required.includes(keys[1]) && !val) {
-          showError("Field banner wajib diisi");
-          setSettingsSubmitted(false);
-          return;
+
+        const result = instansiSchema.safeParse(nextInstansi);
+        if (!result.success) {
+          const errors: Record<string, string> = {};
+          result.error.issues.forEach((err: ZodIssue) => {
+            if (err.path[0]) {
+              errors[err.path[0].toString()] = err.message;
+            }
+          });
+          if (errors[k]) {
+            setFieldErrors({ [editField]: errors[k] });
+            setSettingsSubmitted(false);
+            return;
+          }
         }
+      } else if (keys[0] === "banner") {
         const k = keys[1] as keyof Banner;
         nextBanner[k] = tempValue as Banner[typeof k];
+
+        const result = bannerSchema.safeParse(nextBanner);
+        if (!result.success) {
+          const errors: Record<string, string> = {};
+          result.error.issues.forEach((err: ZodIssue) => {
+            if (err.path[0]) {
+              errors[err.path[0].toString()] = err.message;
+            }
+          });
+          if (errors[k]) {
+            setFieldErrors({ [editField]: errors[k] });
+            setSettingsSubmitted(false);
+            return;
+          }
+        }
       } else if (keys[0] === "maintenance") {
         if (nextMaintenance.aktif && !val) {
           showError("Field maintenance wajib diisi");
@@ -474,6 +489,7 @@ export default function PengaturanPage() {
       }
     }
 
+    setFieldErrors({});
     setInstansi(nextInstansi);
     setBanner(nextBanner);
     setMaintenance(nextMaintenance);
@@ -1440,6 +1456,7 @@ export default function PengaturanPage() {
                             className="w-full"
                             required
                             submitted={settingsSubmitted}
+                            error={fieldErrors[`banner.${key}`]}
                           />
                         ) : (
                           <Input
@@ -1449,6 +1466,7 @@ export default function PengaturanPage() {
                             className="w-full"
                             required
                             submitted={settingsSubmitted}
+                            error={fieldErrors[`banner.${key}`]}
                           />
                         )}
                         <div className="flex gap-2">

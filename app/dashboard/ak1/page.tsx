@@ -45,6 +45,10 @@ import type {
   Ak1Template,
 } from "../../../services/ak1";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
+import {
+  ak1CardSchema,
+  candidateAk1FilesSchema,
+} from "../../../utils/zod-schemas";
 
 export default function Ak1Page() {
   const router = useRouter();
@@ -74,6 +78,7 @@ export default function Ak1Page() {
     expired3?: string;
     expired4?: string;
     renewal_requested_at?: string;
+    note?: string;
   } & {
     ktp_file?: string;
     ijazah_file?: string;
@@ -120,7 +125,8 @@ export default function Ak1Page() {
     card_created_at?: string;
     card_expired_at?: string;
     file?: string;
-  }>({ ak1_document_id: "", status: "APPROVED" });
+    note?: string;
+  }>({ ak1_document_id: "", status: "APPROVED", note: "" });
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [genMeta, setGenMeta] = useState<{
     ak1_document_id?: string;
@@ -182,6 +188,286 @@ export default function Ak1Page() {
     full_name?: string;
     nip?: string;
   } | null>(null);
+
+  // Submission state
+  const [hasAk1Card, setHasAk1Card] = useState<string>("ya");
+  const [ak1Files, setAk1Files] = useState<{
+    ktp?: File | null;
+    ijazah?: File | null;
+    pas_photo?: File | null;
+    certificate?: File | null;
+  }>({ ktp: null, ijazah: null, pas_photo: null, certificate: null });
+  const [ak1CardFile, setAk1CardFile] = useState<File | null>(null);
+  const [ak1CreatedAt, setAk1CreatedAt] = useState<string>("");
+  const [ak1NoReg, setAk1NoReg] = useState<string>("");
+  const [ak1Expired1, setAk1Expired1] = useState<string>("");
+  const [ak1Expired2, setAk1Expired2] = useState<string>("");
+  const [ak1Expired3, setAk1Expired3] = useState<string>("");
+  const [ak1Expired4, setAk1Expired4] = useState<string>("");
+  const [skills, setSkills] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const uploadFile = async (
+    field: "ktp" | "ijazah" | "pas_photo" | "certificate",
+    file: File | undefined,
+  ) => {
+    if (!file) {
+      setAk1Files({ ...ak1Files, [field]: null });
+      return;
+    }
+    setAk1Files({ ...ak1Files, [field]: file });
+  };
+
+  const compressImage = (file: File) =>
+    new Promise<Blob>((resolve, reject) => {
+      const img = document.createElement("img");
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const maxW = 800;
+        const scale = img.width > maxW ? maxW / img.width : 1;
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          URL.revokeObjectURL(url);
+          reject(new Error("ctx"));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(
+          (b) => {
+            URL.revokeObjectURL(url);
+            if (b) resolve(b);
+            else reject(new Error("blob"));
+          },
+          "image/jpeg",
+          0.7,
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("img"));
+      };
+      img.src = url;
+    });
+
+  const putSigned = async (
+    url: string,
+    body: Blob | File,
+    contentType: string,
+    publicUrl?: string,
+  ) => {
+    const base =
+      publicUrl || (url.includes("?") ? url.slice(0, url.indexOf("?")) : url);
+    const attempt = async () =>
+      fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": contentType },
+        body,
+      });
+    let tries = 0;
+    const delays = [300, 700, 1500];
+    while (tries < delays.length) {
+      try {
+        const resp = await attempt();
+        if (resp.ok) return base;
+      } catch {}
+      await new Promise((r) => setTimeout(r, delays[tries]));
+      tries++;
+    }
+    const resp = await attempt();
+    return resp.ok ? base : undefined;
+  };
+
+  const handleSubmitAk1 = async () => {
+    setSubmissionError("");
+    setFieldErrors({});
+    setSubmitting(true);
+    try {
+      const uid =
+        localStorage.getItem("id") || localStorage.getItem("user_id") || "";
+      const limitMB = 8;
+
+      // Zod Validation
+      if (hasAk1Card === "ya") {
+        const payload = {
+          file: ak1CardFile,
+          created_at: ak1CreatedAt,
+          registration_number: ak1NoReg,
+        };
+        const result = ak1CardSchema.safeParse(payload);
+        if (!result.success) {
+          const newErrors: Record<string, string> = {};
+          result.error.issues.forEach((err) => {
+            if (err.path[0]) newErrors[err.path[0] as string] = err.message;
+          });
+          setFieldErrors(newErrors);
+          setSubmissionError("Mohon periksa input anda");
+          setSubmitting(false);
+          return;
+        }
+      } else {
+        const payload = {
+          ktp: ak1Files.ktp,
+          ijazah: ak1Files.ijazah,
+          pas_photo: ak1Files.pas_photo,
+          certificate: ak1Files.certificate,
+        };
+        const result = candidateAk1FilesSchema.safeParse(payload);
+        if (!result.success) {
+          const newErrors: Record<string, string> = {};
+          result.error.issues.forEach((err) => {
+            if (err.path[0]) newErrors[err.path[0] as string] = err.message;
+          });
+          setFieldErrors(newErrors);
+          setSubmissionError("Mohon periksa input anda");
+          setSubmitting(false);
+          return;
+        }
+      }
+
+      const tooLarge = (f: File) => f.size > limitMB * 1024 * 1024;
+
+      if (
+        ak1CardFile &&
+        !(ak1CardFile.type && ak1CardFile.type.startsWith("image/")) &&
+        tooLarge(ak1CardFile)
+      ) {
+        setSubmissionError(
+          `Ukuran file AK1 terlalu besar (> ${limitMB}MB). Kompres atau unggah versi lebih kecil.`,
+        );
+        return;
+      }
+
+      const ak1CardPromise =
+        hasAk1Card === "ya" && ak1CardFile
+          ? (async () => {
+              if (ak1CardFile.type && ak1CardFile.type.startsWith("image/")) {
+                const blob = await compressImage(ak1CardFile);
+                const filename = ak1CardFile.name.replace(/\.[^.]+$/, ".jpg");
+                const pre = await presignUpload(
+                  `candidate/ak1`,
+                  filename,
+                  "image/jpeg",
+                );
+                return await putSigned(
+                  pre.url,
+                  blob,
+                  "image/jpeg",
+                  pre.public_url,
+                );
+              }
+              const pre = await presignUpload(
+                `candidate/ak1`,
+                ak1CardFile.name,
+                ak1CardFile.type || "application/octet-stream",
+              );
+              return await putSigned(
+                pre.url,
+                ak1CardFile,
+                ak1CardFile.type || "application/octet-stream",
+                pre.public_url,
+              );
+            })()
+          : Promise.resolve(undefined);
+
+      const ak1Url = await ak1CardPromise;
+      const candidateId = profile?.user_id || uid; // Fallback, though profile should have it
+
+      // We need real candidate ID from profile if possible
+      // In this component, 'profile' is CandidateProfileLite which has user_id, but maybe not candidate_id directly exposed in type
+      // But we can fetch it or rely on profile if it has it.
+      // Actually `upsertAk1Document` in frontend might need candidate_id.
+      // Let's check `upsertAk1Document` service in frontend.
+      // It takes `candidate_id`.
+
+      // profile state is CandidateProfileLite.
+      // Let's assume we can get candidate_id from profile or user_id.
+      // The backend upsert uses user_id from token to find candidate if not provided?
+      // No, frontend service `upsertAk1Document` usually sends payload.
+      // The backend controller `upsertDocument` looks up candidate by `user_id` from token!
+      // So `candidate_id` in payload is actually overwritten/ignored or used for validation?
+      // Controller: `const payload = { ...req.body, candidate_id: candidate?.id };`
+      // So we don't strictly need to send candidate_id if the token is valid.
+
+      if (hasAk1Card === "ya" && ak1Url) {
+        await upsertAk1Document({
+          candidate_id: candidateId, // Optional if backend handles it
+          card_file: ak1Url,
+          card_created_at: ak1CreatedAt || undefined,
+          no_pendaftaran_pencari_kerja: ak1NoReg || undefined,
+          expired1: ak1Expired1 || undefined,
+          expired2: ak1Expired2 || undefined,
+          expired3: ak1Expired3 || undefined,
+          expired4: ak1Expired4 || undefined,
+        });
+      } else if (
+        hasAk1Card !== "ya" &&
+        ak1Files.ktp &&
+        ak1Files.ijazah &&
+        ak1Files.pas_photo
+      ) {
+        const prepare = async (f: File) => {
+          if (f.type && f.type.startsWith("image/")) {
+            const blob = await compressImage(f);
+            return {
+              filename: f.name.replace(/\.[^.]+$/, ".jpg"),
+              contentType: "image/jpeg",
+              body: blob,
+            } as { filename: string; contentType: string; body: Blob };
+          }
+          return {
+            filename: f.name,
+            contentType: f.type || "application/octet-stream",
+            body: f,
+          } as { filename: string; contentType: string; body: Blob | File };
+        };
+        const put = async (folder: string, f: File) => {
+          const p = await prepare(f);
+          const pre = await presignUpload(folder, p.filename, p.contentType);
+          return await putSigned(
+            pre.url,
+            p.body,
+            p.contentType,
+            pre.public_url,
+          );
+        };
+        const [ktpUrl, ijazahUrl, pasUrl, certUrl] = await Promise.all([
+          put(`ak1/${uid}/ktp`, ak1Files.ktp),
+          put(`ak1/${uid}/ijazah`, ak1Files.ijazah),
+          put(`ak1/${uid}/pasfoto`, ak1Files.pas_photo),
+          ak1Files.certificate
+            ? put(`ak1/${uid}/sertifikat`, ak1Files.certificate)
+            : Promise.resolve(undefined),
+        ]);
+
+        if (ktpUrl && ijazahUrl && pasUrl) {
+          await upsertAk1Document({
+            candidate_id: candidateId,
+            ktp_file: ktpUrl,
+            ijazah_file: ijazahUrl,
+            pas_photo_file: pasUrl,
+            certificate_file: certUrl,
+            keterampilan: skills,
+          });
+        }
+      }
+
+      showSuccess("Data AK1 berhasil disimpan");
+      window.location.reload();
+    } catch (e) {
+      setSubmissionError(
+        e instanceof Error ? e.message : "Gagal menyimpan data AK1",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -259,8 +545,13 @@ export default function Ak1Page() {
       ({
         APPROVED: "Aktif",
         PENDING: "Menunggu Verifikasi",
+        PROCESS: "Menunggu Verifikasi",
+        GENERATE: "Menunggu Pembuatan",
         REJECTED: "Ditolak",
-      }) as Record<string, "Aktif" | "Menunggu Verifikasi" | "Ditolak">,
+      }) as Record<
+        string,
+        "Aktif" | "Menunggu Verifikasi" | "Ditolak" | "Menunggu Pembuatan"
+      >,
     [],
   );
   const getStatusColor = (status: string) => {
@@ -269,6 +560,8 @@ export default function Ak1Page() {
         return "bg-green-100 text-green-800";
       case "Menunggu Verifikasi":
         return "bg-yellow-100 text-yellow-800";
+      case "Menunggu Pembuatan":
+        return "bg-blue-100 text-blue-800";
       case "Ditolak":
         return "bg-red-100 text-red-800";
       default:
@@ -527,7 +820,7 @@ export default function Ak1Page() {
             role === "candidate" &&
             !requiredComplete &&
             permissions.includes("ak1.submit") &&
-            !doc && (
+            (!doc || !doc.status) && (
               <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-xl mb-6">
                 <div className="flex items-start gap-3">
                   <i className="ri-alert-line mt-0.5"></i>
@@ -549,22 +842,218 @@ export default function Ak1Page() {
               </div>
             )}
 
-          {!loading && role === "candidate" && !doc && (
-            <Card
-              className="mb-6"
-              header={
-                <h2 className="text-lg font-semibold text-primary">
-                  Status AK1
-                </h2>
-              }
-            >
-              <p className="text-sm text-gray-700">
-                Belum ada pengajuan AK1 untuk akun ini.
-              </p>
-            </Card>
-          )}
+          {!loading &&
+            role === "candidate" &&
+            (!doc || !doc.status) &&
+            requiredComplete && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center">
+                    <span className="text-blue-600 text-xl font-bold">#</span>
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Pengajuan Kartu AK1
+                  </h2>
+                </div>
 
-          {role === "candidate" && !!doc && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status Kepemilikan Kartu AK1
+                  </label>
+                  <SegmentedToggle
+                    options={[
+                      { value: "ya", label: "Sudah punya kartu fisik" },
+                      { value: "tidak", label: "Belum punya kartu" },
+                    ]}
+                    value={hasAk1Card}
+                    onChange={(v) => setHasAk1Card(v)}
+                  />
+                </div>
+
+                {hasAk1Card === "ya" ? (
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                      <p className="text-sm text-blue-800">
+                        Silakan unggah foto kartu AK1 Anda dan lengkapi data
+                        sesuai yang tertera pada kartu untuk verifikasi.
+                      </p>
+                    </div>
+
+                    <Input
+                      label="Kartu AK1 (PDF)"
+                      type="file"
+                      accept=".pdf"
+                      error={fieldErrors["file"]}
+                      onChange={(e) => {
+                        const file = (e.target as HTMLInputElement).files?.[0];
+                        if (file) setAk1CardFile(file);
+                      }}
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        label="Nomor Pendaftaran Pencari Kerja"
+                        value={ak1NoReg}
+                        onChange={(e) => setAk1NoReg(e.target.value)}
+                        placeholder="Contoh: 3507..."
+                        error={fieldErrors["registration_number"]}
+                      />
+                      <Input
+                        label="Tanggal Dibuat"
+                        type="date"
+                        value={ak1CreatedAt}
+                        onChange={(e) => setAk1CreatedAt(e.target.value)}
+                        error={fieldErrors["created_at"]}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        label="Lapor Tanggal 1"
+                        type="date"
+                        value={ak1Expired1}
+                        onChange={(e) => setAk1Expired1(e.target.value)}
+                      />
+                      <Input
+                        label="Lapor Tanggal 2"
+                        type="date"
+                        value={ak1Expired2}
+                        onChange={(e) => setAk1Expired2(e.target.value)}
+                      />
+                      <Input
+                        label="Lapor Tanggal 3"
+                        type="date"
+                        value={ak1Expired3}
+                        onChange={(e) => setAk1Expired3(e.target.value)}
+                      />
+                      <Input
+                        label="Lapor Tanggal 4"
+                        type="date"
+                        value={ak1Expired4}
+                        onChange={(e) => setAk1Expired4(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4" key="ak1-new">
+                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                      <p className="text-sm text-blue-800">
+                        Untuk pembuatan kartu AK1 baru, silakan lengkapi dokumen
+                        persyaratan di bawah ini.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        label="Scan KTP (JPG/PNG)"
+                        type="file"
+                        accept="image/*"
+                        error={fieldErrors["ktp"]}
+                        onChange={(e) =>
+                          uploadFile(
+                            "ktp",
+                            (e.target as HTMLInputElement).files?.[0],
+                          )
+                        }
+                      />
+                      <Input
+                        label="Ijazah Terakhir (PDF)"
+                        type="file"
+                        accept=".pdf"
+                        error={fieldErrors["ijazah"]}
+                        onChange={(e) =>
+                          uploadFile(
+                            "ijazah",
+                            (e.target as HTMLInputElement).files?.[0],
+                          )
+                        }
+                      />
+                      <Input
+                        label="Pas Foto (3x4)"
+                        type="file"
+                        accept="image/*"
+                        hint="Format gambar (JPG/PNG)"
+                        error={fieldErrors["pas_photo"]}
+                        onChange={(e) =>
+                          uploadFile(
+                            "pas_photo",
+                            (e.target as HTMLInputElement).files?.[0],
+                          )
+                        }
+                      />
+                      <Input
+                        label="Sertifikat Kompetensi (PDF - Opsional)"
+                        type="file"
+                        accept=".pdf"
+                        error={fieldErrors["certificate"]}
+                        onChange={(e) =>
+                          uploadFile(
+                            "certificate",
+                            (e.target as HTMLInputElement).files?.[0],
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Keterampilan / Skill
+                      </label>
+                      <Input
+                        placeholder="Ketik keahlian lalu tekan Enter"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const val = e.currentTarget.value.trim();
+                            if (val && !skills.includes(val)) {
+                              setSkills([...skills, val]);
+                              e.currentTarget.value = "";
+                            }
+                          }
+                        }}
+                      />
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {skills.map((s) => (
+                          <span
+                            key={s}
+                            className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center gap-1"
+                          >
+                            {s}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSkills(skills.filter((x) => x !== s))
+                              }
+                              className="hover:text-blue-900 ml-1"
+                            >
+                              &times;
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {submissionError && (
+                  <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-100">
+                    {submissionError}
+                  </div>
+                )}
+
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={handleSubmitAk1}
+                    disabled={submitting}
+                    className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium shadow-sm"
+                  >
+                    {submitting ? "Menyimpan..." : "Simpan Pengajuan"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+          {role === "candidate" && !!doc && !!doc.status && (
             <div className="grid gap-6 md:grid-cols-2 mb-6">
               {(() => {
                 // Calculate expiration
@@ -623,6 +1112,17 @@ export default function Ak1Page() {
                               Dokumen Anda sedang dalam proses verifikasi oleh
                               petugas.
                             </p>
+                          )}
+                          {statusRaw === "REJECTED" && (
+                            <div className="mt-3 p-3 bg-red-50 text-red-800 rounded-lg text-sm border border-red-200">
+                              <p className="font-semibold mb-1">
+                                Pengajuan Ditolak
+                              </p>
+                              <p>
+                                {d.note ||
+                                  "Mohon perbaiki data Anda dan ajukan kembali."}
+                              </p>
+                            </div>
                           )}
                           {isRenewRequested && (
                             <div className="mt-3 p-3 bg-blue-50 text-blue-800 rounded-lg text-sm border border-blue-200">
@@ -3847,6 +4347,7 @@ export default function Ak1Page() {
                       await verifyAk1({
                         ak1_document_id: verifyPayload.ak1_document_id,
                         status: verifyPayload.status,
+                        note: verifyPayload.note,
                       });
                       setRows((prev) =>
                         prev.map((r) =>
@@ -3885,6 +4386,23 @@ export default function Ak1Page() {
                   <option value="REJECTED">REJECTED</option>
                 </select>
               </label>
+              {verifyPayload.status === "REJECTED" && (
+                <label className="text-sm text-gray-700">
+                  Catatan Penolakan
+                  <textarea
+                    className="mt-1 w-full border rounded p-2"
+                    rows={3}
+                    value={verifyPayload.note || ""}
+                    onChange={(e) =>
+                      setVerifyPayload({
+                        ...verifyPayload,
+                        note: e.target.value,
+                      })
+                    }
+                    placeholder="Alasan penolakan..."
+                  />
+                </label>
+              )}
               <div className="text-sm text-gray-700 space-y-2">
                 <div>
                   Nama: {(detailData?.candidate || profile)?.full_name || "-"}

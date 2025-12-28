@@ -121,7 +121,11 @@ export default function DetailLowonganPage() {
     (async () => {
       try {
         const resp = await getDashboardJobById(id);
-        setJob(resp.data || resp);
+        const data = resp.data || resp;
+        if (data && !data.id) {
+          data.id = data.jobs_id || id;
+        }
+        setJob(data);
       } catch (e) {
         console.error("Fetch job error:", e);
         setError(
@@ -141,7 +145,9 @@ export default function DetailLowonganPage() {
     try {
       await approveJob(job.id, disnakerId);
       const resp = await getDashboardJobById(job.id);
-      setJob(resp.data || resp);
+      const data = resp.data || resp;
+      if (data && !data.id) data.id = job.id;
+      setJob(data);
       showSuccess("Lowongan disetujui");
     } catch {
       showError("Gagal menyetujui lowongan");
@@ -154,7 +160,9 @@ export default function DetailLowonganPage() {
     try {
       await rejectJob(job.id, disnakerId);
       const resp = await getDashboardJobById(job.id);
-      setJob(resp.data || resp);
+      const data = resp.data || resp;
+      if (data && !data.id) data.id = job.id;
+      setJob(data);
       showSuccess("Lowongan ditolak");
     } catch {
       showError("Gagal menolak lowongan");

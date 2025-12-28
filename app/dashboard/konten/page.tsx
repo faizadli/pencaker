@@ -1,4 +1,5 @@
 "use client";
+import { ZodIssue } from "zod";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
@@ -19,6 +20,16 @@ import {
 } from "../../../services/site";
 import { useToast } from "../../../components/ui/Toast";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
+import {
+  faqSchema,
+  partnerSchema,
+  testimonialSchema,
+  bkkSchema,
+  holidayGreetingSchema,
+  richTextContentSchema,
+  simpleContentSchema,
+  teamMemberSchema,
+} from "../../../utils/zod-schemas";
 
 type SiteContentItem<T> = {
   id: string;
@@ -155,6 +166,7 @@ export default function KontenPage() {
   const [runningText, setRunningText] = useState<RunningText | null>(null);
   const { showSuccess, showError } = useToast();
   const [contentSubmitted, setContentSubmitted] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     (async () => {
@@ -552,13 +564,19 @@ export default function KontenPage() {
     const upsertId = id === "__new__" ? undefined : id;
     if (section === "faq" && editFaq) {
       setContentSubmitted(true);
-      if (
-        !String(editFaq.pertanyaan || "").trim() ||
-        !String(editFaq.jawaban || "").trim()
-      ) {
-        showError("Lengkapi pertanyaan dan jawaban");
+      setFieldErrors({});
+
+      const result = faqSchema.safeParse(editFaq);
+      if (!result.success) {
+        const newErrors: Record<string, string> = {};
+        result.error.issues.forEach((err: ZodIssue) => {
+          if (err.path[0]) newErrors[err.path[0] as string] = err.message;
+        });
+        setFieldErrors(newErrors);
+        showError("Mohon periksa input anda");
         return;
       }
+
       setFaqList(
         faqList.map((item) => (item.id === id ? { ...editFaq } : item)),
       );
@@ -612,10 +630,19 @@ export default function KontenPage() {
       } catch {}
     } else if (section === "partners" && editPartner) {
       setContentSubmitted(true);
-      if (!String(editPartner.name || "").trim()) {
-        showError("Nama mitra wajib diisi");
+      setFieldErrors({});
+
+      const result = partnerSchema.safeParse(editPartner);
+      if (!result.success) {
+        const newErrors: Record<string, string> = {};
+        result.error.issues.forEach((err: ZodIssue) => {
+          if (err.path[0]) newErrors[err.path[0] as string] = err.message;
+        });
+        setFieldErrors(newErrors);
+        showError("Mohon periksa input anda");
         return;
       }
+
       try {
         await upsertSiteContent({
           id: upsertId,
@@ -646,13 +673,19 @@ export default function KontenPage() {
       setContentModal(null);
     } else if (section === "testimonials" && editTestimonial) {
       setContentSubmitted(true);
-      if (
-        !String(editTestimonial.nama || "").trim() ||
-        !String(editTestimonial.testimoni || "").trim()
-      ) {
-        showError("Nama dan testimoni wajib diisi");
+      setFieldErrors({});
+
+      const result = testimonialSchema.safeParse(editTestimonial);
+      if (!result.success) {
+        const newErrors: Record<string, string> = {};
+        result.error.issues.forEach((err: ZodIssue) => {
+          if (err.path[0]) newErrors[err.path[0] as string] = err.message;
+        });
+        setFieldErrors(newErrors);
+        showError("Mohon periksa input anda");
         return;
       }
+
       try {
         await upsertSiteContent({
           id: upsertId,
@@ -709,10 +742,19 @@ export default function KontenPage() {
       setContentModal(null);
     } else if (section === "bkk" && editBkk) {
       setContentSubmitted(true);
-      if (!String(editBkk.nama || "").trim()) {
-        showError("Nama BKK wajib diisi");
+      setFieldErrors({});
+
+      const result = bkkSchema.safeParse(editBkk);
+      if (!result.success) {
+        const newErrors: Record<string, string> = {};
+        result.error.issues.forEach((err: ZodIssue) => {
+          if (err.path[0]) newErrors[err.path[0] as string] = err.message;
+        });
+        setFieldErrors(newErrors);
+        showError("Mohon periksa input anda");
         return;
       }
+
       try {
         await upsertSiteContent({
           id: upsertId,
@@ -760,10 +802,19 @@ export default function KontenPage() {
       setContentModal(null);
     } else if (section === "holiday_greetings" && editHolidayGreeting) {
       setContentSubmitted(true);
-      if (!String(editHolidayGreeting.title || "").trim()) {
-        showError("Judul wajib diisi");
+      setFieldErrors({});
+
+      const result = holidayGreetingSchema.safeParse(editHolidayGreeting);
+      if (!result.success) {
+        const newErrors: Record<string, string> = {};
+        result.error.issues.forEach((err) => {
+          if (err.path[0]) newErrors[err.path[0] as string] = err.message;
+        });
+        setFieldErrors(newErrors);
+        showError("Mohon periksa input anda");
         return;
       }
+
       try {
         await upsertSiteContent({
           id: upsertId,
@@ -811,11 +862,9 @@ export default function KontenPage() {
       } catch {}
       setContentModal(null);
     } else if (section === "about_profile") {
-      const htmlEmpty =
-        String(profileHtml || "")
-          .replace(/<[^>]*>/g, "")
-          .trim() === "";
-      if (htmlEmpty) {
+      setFieldErrors({});
+      const result = richTextContentSchema.safeParse({ content: profileHtml });
+      if (!result.success) {
         showError("Profil instansi wajib diisi");
         return;
       }
@@ -840,11 +889,9 @@ export default function KontenPage() {
         showSuccess("Profil disimpan");
       } catch {}
     } else if (section === "about_vision") {
-      const htmlEmpty =
-        String(visionHtml || "")
-          .replace(/<[^>]*>/g, "")
-          .trim() === "";
-      if (htmlEmpty) {
+      setFieldErrors({});
+      const result = richTextContentSchema.safeParse({ content: visionHtml });
+      if (!result.success) {
         showError("Visi wajib diisi");
         return;
       }
@@ -869,7 +916,9 @@ export default function KontenPage() {
         showSuccess("Visi disimpan");
       } catch {}
     } else if (section === "about_focus" && editFocus) {
-      if (!String(editFocus.text || "").trim()) {
+      setFieldErrors({});
+      const result = simpleContentSchema.safeParse(editFocus);
+      if (!result.success) {
         showError("Teks fokus wajib diisi");
         return;
       }
@@ -903,7 +952,9 @@ export default function KontenPage() {
         showSuccess("Fokus disimpan");
       } catch {}
     } else if (section === "about_mission" && editMission) {
-      if (!String(editMission.text || "").trim()) {
+      setFieldErrors({});
+      const result = simpleContentSchema.safeParse(editMission);
+      if (!result.success) {
         showError("Teks misi wajib diisi");
         return;
       }
@@ -939,12 +990,15 @@ export default function KontenPage() {
         showSuccess("Misi disimpan");
       } catch {}
     } else if (section === "about_team" && editTeam) {
-      if (
-        !String(editTeam.name || "").trim() ||
-        !String(editTeam.position || "").trim() ||
-        !String(editTeam.role || "").trim()
-      ) {
-        showError("Lengkapi nama, posisi, dan peran");
+      setFieldErrors({});
+      const result = teamMemberSchema.safeParse(editTeam);
+      if (!result.success) {
+        const newErrors: Record<string, string> = {};
+        result.error.issues.forEach((err) => {
+          if (err.path[0]) newErrors[err.path[0] as string] = err.message;
+        });
+        setFieldErrors(newErrors);
+        showError("Mohon periksa input anda");
         return;
       }
       setTeamList(
@@ -1893,6 +1947,7 @@ export default function KontenPage() {
                       value={profileHtml}
                       onChange={(v) => setProfileHtml(v)}
                       placeholder="Tulis profil instansi..."
+                      error={fieldErrors.content_html}
                     />
                   )}
                   {aboutModal.section === "vision" && (
@@ -1900,6 +1955,7 @@ export default function KontenPage() {
                       value={visionHtml}
                       onChange={(v) => setVisionHtml(v)}
                       placeholder="Tulis visi..."
+                      error={fieldErrors.content_html}
                     />
                   )}
                   {aboutModal.section === "focus_areas" && editFocus && (
@@ -1913,6 +1969,7 @@ export default function KontenPage() {
                           )
                         }
                         className="w-full"
+                        error={fieldErrors.text}
                       />
                       <SearchableSelect
                         value={editFocus.status}
@@ -1925,6 +1982,7 @@ export default function KontenPage() {
                           { value: "Draft", label: "Draft" },
                           { value: "Publikasi", label: "Publikasi" },
                         ]}
+                        error={fieldErrors.status}
                       />
                     </div>
                   )}
@@ -1939,6 +1997,7 @@ export default function KontenPage() {
                           )
                         }
                         className="w-full"
+                        error={fieldErrors.text}
                       />
                       <SearchableSelect
                         value={editMission.status}
@@ -1951,6 +2010,7 @@ export default function KontenPage() {
                           { value: "Draft", label: "Draft" },
                           { value: "Publikasi", label: "Publikasi" },
                         ]}
+                        error={fieldErrors.status}
                       />
                     </div>
                   )}
@@ -1966,6 +2026,7 @@ export default function KontenPage() {
                         placeholder="Teks"
                         className="w-full"
                         rows={4}
+                        error={fieldErrors.text}
                       />
                     </div>
                   )}
@@ -1980,6 +2041,7 @@ export default function KontenPage() {
                           )
                         }
                         className="w-full"
+                        error={fieldErrors.name}
                       />
                       <Input
                         type="text"
@@ -1990,6 +2052,7 @@ export default function KontenPage() {
                           )
                         }
                         className="w-full"
+                        error={fieldErrors.position}
                       />
                       <Input
                         type="text"
@@ -2000,6 +2063,7 @@ export default function KontenPage() {
                           )
                         }
                         className="w-full"
+                        error={fieldErrors.role}
                       />
                       <Input
                         type="file"
@@ -2009,6 +2073,7 @@ export default function KontenPage() {
                           const f = (e.target as HTMLInputElement).files?.[0];
                           if (f) uploadContentImage("team", f);
                         }}
+                        error={fieldErrors.image}
                       />
                       {teamImagePreview && (
                         <Image
@@ -2030,6 +2095,7 @@ export default function KontenPage() {
                           { value: "Draft", label: "Draft" },
                           { value: "Publikasi", label: "Publikasi" },
                         ]}
+                        error={fieldErrors.status}
                       />
                     </div>
                   )}
@@ -2230,6 +2296,7 @@ export default function KontenPage() {
                     className="w-full"
                     required
                     submitted={contentSubmitted}
+                    error={fieldErrors.name}
                   />
                   <Input
                     type="file"
@@ -2239,6 +2306,7 @@ export default function KontenPage() {
                       const f = (e.target as HTMLInputElement).files?.[0];
                       if (f) uploadContentImage("partners", f);
                     }}
+                    error={fieldErrors.logo}
                   />
                   {partnerLogoPreview && (
                     <Image
@@ -2263,6 +2331,7 @@ export default function KontenPage() {
                     ]}
                     required
                     submitted={contentSubmitted}
+                    error={fieldErrors.status}
                   />
                 </div>
               )}
@@ -2281,6 +2350,7 @@ export default function KontenPage() {
                     className="w-full"
                     required
                     submitted={contentSubmitted}
+                    error={fieldErrors.nama}
                   />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <Input
@@ -2293,6 +2363,7 @@ export default function KontenPage() {
                         })
                       }
                       placeholder="Pekerjaan"
+                      error={fieldErrors.pekerjaan}
                     />
                     <Input
                       type="text"
@@ -2304,6 +2375,7 @@ export default function KontenPage() {
                         })
                       }
                       placeholder="Perusahaan"
+                      error={fieldErrors.perusahaan}
                     />
                   </div>
                   <Textarea
@@ -2319,6 +2391,7 @@ export default function KontenPage() {
                     className="w-full"
                     required
                     submitted={contentSubmitted}
+                    error={fieldErrors.testimoni}
                   />
                   <Input
                     type="file"
@@ -2328,6 +2401,7 @@ export default function KontenPage() {
                       const f = (e.target as HTMLInputElement).files?.[0];
                       if (f) uploadContentImage("testimonials", f);
                     }}
+                    error={fieldErrors.foto}
                   />
                   {testimonialPhotoPreview && (
                     <Image
@@ -2352,6 +2426,7 @@ export default function KontenPage() {
                     ]}
                     required
                     submitted={contentSubmitted}
+                    error={fieldErrors.status}
                   />
                 </div>
               )}
@@ -2370,6 +2445,7 @@ export default function KontenPage() {
                     className="w-full"
                     required
                     submitted={contentSubmitted}
+                    error={fieldErrors.pertanyaan}
                   />
                   <Textarea
                     value={editFaq.jawaban}
@@ -2384,6 +2460,7 @@ export default function KontenPage() {
                     className="w-full"
                     required
                     submitted={contentSubmitted}
+                    error={fieldErrors.jawaban}
                   />
                   <SearchableSelect
                     value={editFaq.status}
@@ -2399,6 +2476,7 @@ export default function KontenPage() {
                     ]}
                     required
                     submitted={contentSubmitted}
+                    error={fieldErrors.status}
                   />
                 </div>
               )}
@@ -2414,6 +2492,7 @@ export default function KontenPage() {
                     className="w-full"
                     required
                     submitted={contentSubmitted}
+                    error={fieldErrors.nama}
                   />
                   <Textarea
                     value={editBkk.alamat}
@@ -2426,6 +2505,7 @@ export default function KontenPage() {
                     rows={3}
                     placeholder="Alamat"
                     className="w-full"
+                    error={fieldErrors.alamat}
                   />
                   <Input
                     type="text"
@@ -2438,6 +2518,7 @@ export default function KontenPage() {
                     }
                     placeholder="Website"
                     className="w-full"
+                    error={fieldErrors.website}
                   />
                   <SearchableSelect
                     value={editBkk.status}
@@ -2453,6 +2534,7 @@ export default function KontenPage() {
                     ]}
                     required
                     submitted={contentSubmitted}
+                    error={fieldErrors.status}
                   />
                 </div>
               )}
@@ -2472,6 +2554,7 @@ export default function KontenPage() {
                       className="w-full"
                       required
                       submitted={contentSubmitted}
+                      error={fieldErrors.title}
                     />
                     <Textarea
                       value={editHolidayGreeting.description}
@@ -2484,6 +2567,7 @@ export default function KontenPage() {
                       rows={3}
                       placeholder="Deskripsi"
                       className="w-full"
+                      error={fieldErrors.description}
                     />
                     <Input
                       type="file"
@@ -2493,6 +2577,7 @@ export default function KontenPage() {
                         const f = (e.target as HTMLInputElement).files?.[0];
                         if (f) uploadContentImage("holiday_greetings", f);
                       }}
+                      error={fieldErrors.image}
                     />
                     {holidayGreetingImagePreview && (
                       <Image
@@ -2517,6 +2602,7 @@ export default function KontenPage() {
                       ]}
                       required
                       submitted={contentSubmitted}
+                      error={fieldErrors.status}
                     />
                   </div>
                 )}

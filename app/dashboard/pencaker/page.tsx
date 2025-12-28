@@ -1,9 +1,15 @@
 "use client";
-import { useEffect, useState } from "react";
+import { ZodIssue } from "zod";
+import { useEffect, useState, useCallback } from "react";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
 import Image from "next/image";
 import Link from "next/link";
-import { Input, SearchableSelect } from "../../../components/ui/field";
+import {
+  Input,
+  SearchableSelect,
+  SearchableSelectOption,
+  Textarea,
+} from "../../../components/ui/field";
 import Pagination from "../../../components/ui/Pagination";
 import Modal from "../../../components/ui/Modal";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
@@ -12,6 +18,10 @@ import {
   createCandidateProfile,
   updateCandidateProfile,
 } from "../../../services/profile";
+import {
+  candidateProfileUpdateSchema,
+  createPencakerSchema,
+} from "../../../utils/zod-schemas";
 import { getEducationGroups } from "../../../services/site";
 import { useRouter } from "next/navigation";
 import {
@@ -27,6 +37,14 @@ import { useToast } from "../../../components/ui/Toast";
 import { listDistricts, listVillages } from "../../../services/wilayah";
 
 import StatCard from "../../../components/ui/StatCard";
+
+type GroupItem = { id?: string; code?: string; name: string };
+type GroupData = {
+  id?: string;
+  code?: string;
+  name: string;
+  items?: GroupItem[];
+};
 
 export default function PencakerPage() {
   const router = useRouter();
@@ -45,9 +63,45 @@ export default function PencakerPage() {
   const [filterEducationLevel, setFilterEducationLevel] = useState<string>("");
   const [filterEducationMajor, setFilterEducationMajor] = useState<string>("");
 
-  const [educationGroups, setEducationGroups] = useState<
-    { id: string; name: string; items: { id: string; name: string }[] }[]
+  const [educationGroups, setEducationGroups] = useState<GroupData[]>([]);
+
+  const [educationOptions, setEducationOptions] = useState<
+    SearchableSelectOption[]
   >([]);
+
+  const transformGroupsToOptions = useCallback(
+    (
+      groups: GroupData[],
+      valueKey: "id" | "name" = "name",
+      appendGroup = false,
+    ) => {
+      const opts: SearchableSelectOption[] = [];
+      groups.forEach((g) => {
+        opts.push({
+          value: `group-${g.id || g.name}`,
+          label: g.name,
+          isGroup: true,
+        });
+        if (Array.isArray(g.items)) {
+          g.items.forEach((item: GroupItem) => {
+            opts.push({
+              value: String(item[valueKey] || ""),
+              label: appendGroup ? `${item.name} - ${g.name}` : item.name,
+              indent: true,
+            });
+          });
+        }
+      });
+      return opts;
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (educationGroups.length > 0) {
+      setEducationOptions(transformGroupsToOptions(educationGroups, "name"));
+    }
+  }, [educationGroups, transformGroupsToOptions]);
 
   const [role] = useState<string>(() =>
     typeof window !== "undefined" ? localStorage.getItem("role") || "" : "",
@@ -96,6 +150,7 @@ export default function PencakerPage() {
   const { showSuccess, showError } = useToast();
   const [pageSize, setPageSize] = useState(10);
   const [showFormModal, setShowFormModal] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [editingCandidateId, setEditingCandidateId] = useState<string | null>(
     null,
   );
@@ -391,7 +446,7 @@ export default function PencakerPage() {
           (g) => g.name === filterEducationLevel,
         );
         if (selectedGroup) {
-          const itemNames = selectedGroup.items.map((i) =>
+          const itemNames = (selectedGroup.items || []).map((i) =>
             i.name.toLowerCase(),
           );
           if (!itemNames.includes(pencaker.pendidikan.toLowerCase())) {
@@ -440,7 +495,7 @@ export default function PencakerPage() {
     if (!filterEducationLevel) return [];
     const group = educationGroups.find((g) => g.name === filterEducationLevel);
     if (!group) return [];
-    return group.items.map((i) => ({ value: i.name, label: i.name }));
+    return (group.items || []).map((i) => ({ value: i.name, label: i.name }));
   };
 
   return (
@@ -855,6 +910,7 @@ export default function PencakerPage() {
                 </button>
                 <button
                   onClick={async () => {
+                    setFieldErrors({});
                     try {
                       if (editingCandidateId) {
                         const src = rawCandidates.find(
@@ -873,10 +929,27 @@ export default function PencakerPage() {
                           gender: formCandidate.gender,
                           photo_profile: formCandidate.photo_profile,
                           last_education: formCandidate.last_education,
-                          graduation_year: formCandidate.graduation_year,
+                          graduation_year: Number(
+                            formCandidate.graduation_year,
+                          ),
                           status_perkawinan: formCandidate.status_perkawinan,
                           cv_file: formCandidate.cv_file,
+                          no_handphone: formCandidate.no_handphone,
                         };
+
+                        const result =
+                          candidateProfileUpdateSchema.safeParse(updatePayload);
+                        if (!result.success) {
+                          const errors: Record<string, string> = {};
+                          result.error.issues.forEach((issue: ZodIssue) => {
+                            if (issue.path[0])
+                              errors[issue.path[0].toString()] = issue.message;
+                          });
+                          setFieldErrors(errors);
+                          showError("Mohon periksa input anda");
+                          return;
+                        }
+
                         await updateCandidateProfile(
                           editingCandidateId,
                           updatePayload,
@@ -894,12 +967,35 @@ export default function PencakerPage() {
                           gender: formCandidate.gender,
                           photo_profile: formCandidate.photo_profile,
                           last_education: formCandidate.last_education,
-                          graduation_year: formCandidate.graduation_year,
+                          graduation_year: Number(
+                            formCandidate.graduation_year,
+                          ),
                           status_perkawinan: formCandidate.status_perkawinan,
                           cv_file: formCandidate.cv_file,
+                          no_handphone: formCandidate.no_handphone,
                           user_email: userEmail,
                           user_password: userPassword,
                         };
+
+                        const validationPayload = {
+                          ...createPayload,
+                          email: userEmail,
+                          password: userPassword,
+                        };
+
+                        const result =
+                          createPencakerSchema.safeParse(validationPayload);
+                        if (!result.success) {
+                          const errors: Record<string, string> = {};
+                          result.error.issues.forEach((issue: ZodIssue) => {
+                            if (issue.path[0])
+                              errors[issue.path[0].toString()] = issue.message;
+                          });
+                          setFieldErrors(errors);
+                          showError("Mohon periksa input anda");
+                          return;
+                        }
+
                         await createCandidateProfile(createPayload);
                       }
                       const resp = await listCandidates({
@@ -949,6 +1045,45 @@ export default function PencakerPage() {
             }
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="sm:col-span-2 flex flex-col items-center gap-4 mb-4">
+                <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center group">
+                  {formCandidate.photo_profile ? (
+                    <Image
+                      src={formCandidate.photo_profile}
+                      alt="Preview"
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <i className="ri-user-line text-4xl text-gray-300"></i>
+                  )}
+                </div>
+                <div className="w-full max-w-xs text-center">
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Foto Profil
+                  </p>
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const f = (e.target as HTMLInputElement).files?.[0];
+                      if (!f) {
+                        setFormCandidate({
+                          ...formCandidate,
+                          photo_profile: "",
+                        });
+                        return;
+                      }
+                      const r = new FileReader();
+                      r.onload = () =>
+                        setFormCandidate({
+                          ...formCandidate,
+                          photo_profile: String(r.result || ""),
+                        });
+                      r.readAsDataURL(f);
+                    }}
+                  />
+                </div>
+              </div>
               {!editingCandidateId && (
                 <>
                   <Input
@@ -956,12 +1091,14 @@ export default function PencakerPage() {
                     type="email"
                     value={userEmail}
                     onChange={(e) => setUserEmail(e.target.value)}
+                    error={fieldErrors.email}
                   />
                   <Input
                     label="Password"
                     type="password"
                     value={userPassword}
                     onChange={(e) => setUserPassword(e.target.value)}
+                    error={fieldErrors.password}
                   />
                 </>
               )}
@@ -974,6 +1111,26 @@ export default function PencakerPage() {
                     full_name: e.target.value,
                   })
                 }
+                error={fieldErrors.full_name}
+              />
+              <Input
+                label="NIK"
+                value={formCandidate.nik}
+                onChange={(e) =>
+                  setFormCandidate({ ...formCandidate, nik: e.target.value })
+                }
+                error={fieldErrors.nik}
+              />
+              <Input
+                label="Tempat Lahir"
+                value={formCandidate.place_of_birth}
+                onChange={(e) =>
+                  setFormCandidate({
+                    ...formCandidate,
+                    place_of_birth: e.target.value,
+                  })
+                }
+                error={fieldErrors.place_of_birth}
               />
               <Input
                 label="Tanggal Lahir"
@@ -985,23 +1142,33 @@ export default function PencakerPage() {
                     birthdate: e.target.value,
                   })
                 }
+                error={fieldErrors.birthdate}
               />
-              <Input
-                label="Tempat Lahir"
-                value={formCandidate.place_of_birth}
-                onChange={(e) =>
-                  setFormCandidate({
-                    ...formCandidate,
-                    place_of_birth: e.target.value,
-                  })
+              <SearchableSelect
+                label="Jenis Kelamin"
+                options={[
+                  { value: "L", label: "Laki-laki" },
+                  { value: "P", label: "Perempuan" },
+                ]}
+                value={formCandidate.gender}
+                onChange={(v) =>
+                  setFormCandidate({ ...formCandidate, gender: v })
                 }
+                error={fieldErrors.gender}
               />
-              <Input
-                label="NIK"
-                value={formCandidate.nik}
-                onChange={(e) =>
-                  setFormCandidate({ ...formCandidate, nik: e.target.value })
+              <SearchableSelect
+                label="Status Perkawinan"
+                options={[
+                  { value: "belum kawin", label: "Belum Kawin" },
+                  { value: "kawin", label: "Kawin" },
+                  { value: "cerai hidup", label: "Cerai Hidup" },
+                  { value: "cerai mati", label: "Cerai Mati" },
+                ]}
+                value={formCandidate.status_perkawinan}
+                onChange={(v) =>
+                  setFormCandidate({ ...formCandidate, status_perkawinan: v })
                 }
+                error={fieldErrors.status_perkawinan}
               />
               <SearchableSelect
                 label="Kecamatan"
@@ -1014,6 +1181,7 @@ export default function PencakerPage() {
                     kelurahan: "",
                   })
                 }
+                error={fieldErrors.kecamatan}
               />
               <SearchableSelect
                 label="Kelurahan"
@@ -1022,17 +1190,22 @@ export default function PencakerPage() {
                 onChange={(v) =>
                   setFormCandidate({ ...formCandidate, kelurahan: v })
                 }
+                error={fieldErrors.kelurahan}
               />
-              <Input
-                label="Alamat"
-                value={formCandidate.address}
-                onChange={(e) =>
-                  setFormCandidate({
-                    ...formCandidate,
-                    address: e.target.value,
-                  })
-                }
-              />
+              <div className="sm:col-span-2">
+                <Textarea
+                  label="Alamat"
+                  value={formCandidate.address}
+                  onChange={(e) =>
+                    setFormCandidate({
+                      ...formCandidate,
+                      address: e.target.value,
+                    })
+                  }
+                  rows={3}
+                  error={fieldErrors.address}
+                />
+              </div>
               <Input
                 label="Kode Pos"
                 value={formCandidate.postal_code}
@@ -1042,13 +1215,7 @@ export default function PencakerPage() {
                     postal_code: e.target.value,
                   })
                 }
-              />
-              <Input
-                label="Jenis Kelamin"
-                value={formCandidate.gender}
-                onChange={(e) =>
-                  setFormCandidate({ ...formCandidate, gender: e.target.value })
-                }
+                error={fieldErrors.postal_code}
               />
               <Input
                 label="Telepon"
@@ -1059,34 +1226,16 @@ export default function PencakerPage() {
                     no_handphone: e.target.value,
                   })
                 }
+                error={fieldErrors.no_handphone}
               />
-              <Input
-                label="Foto"
-                type="file"
-                onChange={(e) => {
-                  const f = (e.target as HTMLInputElement).files?.[0];
-                  if (!f) {
-                    setFormCandidate({ ...formCandidate, photo_profile: "" });
-                    return;
-                  }
-                  const r = new FileReader();
-                  r.onload = () =>
-                    setFormCandidate({
-                      ...formCandidate,
-                      photo_profile: String(r.result || ""),
-                    });
-                  r.readAsDataURL(f);
-                }}
-              />
-              <Input
+              <SearchableSelect
                 label="Pendidikan Terakhir"
+                options={educationOptions}
                 value={formCandidate.last_education}
-                onChange={(e) =>
-                  setFormCandidate({
-                    ...formCandidate,
-                    last_education: e.target.value,
-                  })
+                onChange={(value) =>
+                  setFormCandidate({ ...formCandidate, last_education: value })
                 }
+                error={fieldErrors.last_education}
               />
               <Input
                 label="Tahun Lulus"
@@ -1098,35 +1247,29 @@ export default function PencakerPage() {
                     graduation_year: Number(e.target.value || 0),
                   })
                 }
+                error={fieldErrors.graduation_year}
               />
-              <Input
-                label="Status Perkawinan"
-                value={formCandidate.status_perkawinan}
-                onChange={(e) =>
-                  setFormCandidate({
-                    ...formCandidate,
-                    status_perkawinan: e.target.value,
-                  })
-                }
-              />
-              <Input
-                label="CV"
-                type="file"
-                onChange={(e) => {
-                  const f = (e.target as HTMLInputElement).files?.[0];
-                  if (!f) {
-                    setFormCandidate({ ...formCandidate, cv_file: "" });
-                    return;
-                  }
-                  const r = new FileReader();
-                  r.onload = () =>
-                    setFormCandidate({
-                      ...formCandidate,
-                      cv_file: String(r.result || ""),
-                    });
-                  r.readAsDataURL(f);
-                }}
-              />
+              <div className="sm:col-span-2">
+                <Input
+                  label="CV"
+                  type="file"
+                  onChange={(e) => {
+                    const f = (e.target as HTMLInputElement).files?.[0];
+                    if (!f) {
+                      setFormCandidate({ ...formCandidate, cv_file: "" });
+                      return;
+                    }
+                    const r = new FileReader();
+                    r.onload = () =>
+                      setFormCandidate({
+                        ...formCandidate,
+                        cv_file: String(r.result || ""),
+                      });
+                    r.readAsDataURL(f);
+                  }}
+                  error={fieldErrors.cv_file}
+                />
+              </div>
             </div>
           </Modal>
         </div>

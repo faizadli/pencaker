@@ -9,6 +9,10 @@ import {
 } from "../../../components/ui/field";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
 import {
+  companyAccountSchema,
+  companyProfileSchema,
+} from "../../../utils/zod-schemas";
+import {
   login,
   registerUser,
   startSession,
@@ -47,6 +51,7 @@ export default function RegisterCompany() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [company, setCompany] = useState({
     company_name: "",
@@ -136,63 +141,60 @@ export default function RegisterCompany() {
   const submitAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setFieldErrors({});
+
+    // Zod validation
+    const result = companyAccountSchema.safeParse(account);
+    const newErrors: Record<string, string> = {};
+
+    if (!result.success) {
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) {
+          newErrors[err.path[0] as string] = err.message;
+        }
+      });
+    }
+
+    if (!otpVerified && !otp) {
+      newErrors["otp"] = "Kode OTP wajib diisi";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setFieldErrors(newErrors);
+      return;
+    }
+
     if (!otpVerified) {
       setError("Silakan lakukan verifikasi OTP terlebih dahulu.");
       return;
     }
-    setLoading(true);
-    try {
-      const hasPhone = String(account.no_handphone || "").trim().length > 0;
-      if (!hasPhone) {
-        setError("Nomor HP wajib diisi.");
-        setLoading(false);
-        return;
-      }
-      if ((account.password || "").length < 8) {
-        setError("Password minimal 8 karakter.");
-        setLoading(false);
-        return;
-      }
-      if (account.password !== account.confirm) {
-        setError("Konfirmasi password tidak sama.");
-        setLoading(false);
-        return;
-      }
-      setStep(2);
-    } catch {
-      setError("Gagal membuat akun perusahaan.");
-    } finally {
-      setLoading(false);
-    }
+
+    setStep(2);
   };
 
   const submitProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setFieldErrors({});
+
+    const dataToValidate = {
+      ...company,
+      company_logo: logoFile,
+    };
+
+    const result = companyProfileSchema.safeParse(dataToValidate);
+
+    if (!result.success) {
+      const formattedErrors: Record<string, string> = {};
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) formattedErrors[err.path[0] as string] = err.message;
+      });
+      setFieldErrors(formattedErrors);
+      return;
+    }
+
     setLoading(true);
     try {
-      const required = [
-        company.company_name,
-        company.kecamatan,
-        company.kelurahan,
-        company.address,
-        company.about_company,
-      ];
-      const allFilled = required.every(
-        (v) => String(v || "").trim().length > 0,
-      );
-      if (!allFilled) {
-        setError(
-          "Lengkapi data perusahaan: Nama, Kecamatan, Kelurahan, Alamat, dan Tentang Perusahaan.",
-        );
-        setLoading(false);
-        return;
-      }
-      if (!logoFile) {
-        setError("Logo perusahaan wajib diunggah.");
-        setLoading(false);
-        return;
-      }
       setStep(4);
     } catch {
       setError("Gagal menyimpan profil perusahaan.");
@@ -461,6 +463,7 @@ export default function RegisterCompany() {
             <form
               onSubmit={submitAccount}
               className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-6"
+              noValidate
             >
               <h2 className="text-lg font-semibold text-primary">
                 Data Akun Administrator
@@ -481,6 +484,7 @@ export default function RegisterCompany() {
                   }}
                   placeholder="admin@perusahaan.com"
                   required={false}
+                  error={fieldErrors.email}
                 />
               </div>
               <div>
@@ -494,6 +498,7 @@ export default function RegisterCompany() {
                   }}
                   placeholder="08xxxxxxxxxx"
                   required
+                  error={fieldErrors.no_handphone}
                 />
               </div>
               <div>
@@ -507,6 +512,7 @@ export default function RegisterCompany() {
                   }
                   placeholder="Minimal 8 karakter"
                   required
+                  error={fieldErrors.password}
                 />
               </div>
               <div>
@@ -520,6 +526,7 @@ export default function RegisterCompany() {
                   }
                   placeholder="Ulangi password"
                   required
+                  error={fieldErrors.confirm}
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -561,6 +568,7 @@ export default function RegisterCompany() {
                     placeholder="6 digit kode"
                     required
                     disabled={otpVerified}
+                    error={fieldErrors.otp}
                   />
                   {!otpVerified && (
                     <button
@@ -654,6 +662,7 @@ export default function RegisterCompany() {
             <form
               onSubmit={submitProfile}
               className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5"
+              noValidate
             >
               {error && (
                 <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
@@ -689,6 +698,7 @@ export default function RegisterCompany() {
                             undefined,
                         )
                       }
+                      error={fieldErrors.company_logo}
                     />
                   </div>
                 </div>
@@ -699,6 +709,7 @@ export default function RegisterCompany() {
                     setCompany({ ...company, company_name: e.target.value })
                   }
                   required
+                  error={fieldErrors.company_name}
                 />
                 <SearchableSelect
                   label="Tipe Perusahaan"
@@ -718,6 +729,7 @@ export default function RegisterCompany() {
                     },
                     { value: "PERORANGAN", label: "PERORANGAN" },
                   ]}
+                  error={fieldErrors.company_type}
                 />
                 <Input
                   label="NIB"
@@ -725,6 +737,7 @@ export default function RegisterCompany() {
                   onChange={(e) =>
                     setCompany({ ...company, nib: e.target.value })
                   }
+                  error={fieldErrors.nib}
                 />
                 <SearchableSelect
                   label="Kecamatan"
@@ -736,6 +749,7 @@ export default function RegisterCompany() {
                   onChange={(v) =>
                     setCompany({ ...company, kecamatan: v, kelurahan: "" })
                   }
+                  error={fieldErrors.kecamatan}
                 />
                 <SearchableSelect
                   label="Kelurahan"
@@ -745,6 +759,7 @@ export default function RegisterCompany() {
                   ]}
                   value={company.kelurahan}
                   onChange={(v) => setCompany({ ...company, kelurahan: v })}
+                  error={fieldErrors.kelurahan}
                 />
                 <div className="sm:col-span-2 md:col-span-2">
                   <Textarea
@@ -755,6 +770,7 @@ export default function RegisterCompany() {
                     }
                     required
                     rows={3}
+                    error={fieldErrors.address}
                   />
                 </div>
               </div>
@@ -766,6 +782,7 @@ export default function RegisterCompany() {
                 }
                 required
                 rows={5}
+                error={fieldErrors.about_company}
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
@@ -774,6 +791,7 @@ export default function RegisterCompany() {
                   onChange={(e) =>
                     setCompany({ ...company, website: e.target.value })
                   }
+                  error={fieldErrors.website}
                 />
               </div>
               <div className="flex items-center justify-between">

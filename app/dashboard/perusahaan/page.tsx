@@ -6,6 +6,7 @@ import {
   Input,
   SearchableSelect,
   SegmentedToggle,
+  Textarea,
 } from "../../../components/ui/field";
 import Pagination from "../../../components/ui/Pagination";
 import Modal from "../../../components/ui/Modal";
@@ -30,6 +31,8 @@ import {
 } from "../../../services/company";
 import { listDistricts, listVillages } from "../../../services/wilayah";
 import { useToast } from "../../../components/ui/Toast";
+import { z, ZodIssue } from "zod";
+import { companyProfileUpdateSchema } from "../../../utils/zod-schemas";
 
 export default function PerusahaanPage() {
   const router = useRouter();
@@ -52,6 +55,7 @@ export default function PerusahaanPage() {
     id: string;
     user_id: string;
     company_name: string;
+    company_type?: string;
     nib?: string;
     company_logo?: string;
     no_handphone: string;
@@ -82,6 +86,7 @@ export default function PerusahaanPage() {
   const [formCompany, setFormCompany] = useState<{
     user_id?: string;
     company_name: string;
+    company_type: string;
     nib?: string;
     company_logo?: string;
     no_handphone: string;
@@ -92,6 +97,7 @@ export default function PerusahaanPage() {
     about_company: string;
   }>({
     company_name: "",
+    company_type: "",
     nib: "",
     company_logo: "",
     no_handphone: "",
@@ -102,6 +108,7 @@ export default function PerusahaanPage() {
     about_company: "",
   });
   const [submittedCompany, setSubmittedCompany] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [districts, setDistricts] = useState<{ id: string; name: string }[]>(
     [],
   );
@@ -391,6 +398,7 @@ export default function PerusahaanPage() {
                       setUserPasswordCompany("");
                       setFormCompany({
                         company_name: "",
+                        company_type: "",
                         nib: "",
                         company_logo: "",
                         no_handphone: "",
@@ -402,6 +410,7 @@ export default function PerusahaanPage() {
                       });
                       setShowFormModal(true);
                       setSubmittedCompany(false);
+                      setFieldErrors({});
                     }}
                     className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center"
                   >
@@ -487,6 +496,7 @@ export default function PerusahaanPage() {
                             setEditingCompanyUserId(p.user_id);
                             setFormCompany({
                               company_name: p.company_name || "",
+                              company_type: p.company_type || "",
                               company_logo: p.company_logo || "",
                               no_handphone: p.no_handphone || "",
                               kecamatan: p.kecamatan || "",
@@ -497,6 +507,7 @@ export default function PerusahaanPage() {
                             });
                             setShowFormModal(true);
                             setSubmittedCompany(false);
+                            setFieldErrors({});
                           }}
                           className="flex-1 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition"
                         >
@@ -585,6 +596,7 @@ export default function PerusahaanPage() {
                                 setEditingCompanyUserId(p.user_id);
                                 setFormCompany({
                                   company_name: p.company_name || "",
+                                  company_type: p.company_type || "",
                                   nib: p.nib || "",
                                   company_logo: p.company_logo || "",
                                   no_handphone: p.no_handphone || "",
@@ -661,6 +673,7 @@ export default function PerusahaanPage() {
                             setEditingCompanyUserId(p.user_id);
                             setFormCompany({
                               company_name: p.company_name || "",
+                              company_type: p.company_type || "",
                               company_logo: p.company_logo || "",
                               no_handphone: p.no_handphone || "",
                               kecamatan: p.kecamatan || "",
@@ -718,20 +731,49 @@ export default function PerusahaanPage() {
                 <button
                   onClick={async () => {
                     setSubmittedCompany(true);
-                    const requiredFilled =
-                      (!editingCompanyId
-                        ? userEmailCompany && userPasswordCompany
-                        : true) &&
-                      formCompany.company_name &&
-                      formCompany.no_handphone &&
-                      formCompany.kecamatan &&
-                      formCompany.kelurahan &&
-                      formCompany.address &&
-                      (typeof formCompany.website === "string"
-                        ? formCompany.website
-                        : "") &&
-                      formCompany.about_company;
-                    if (!requiredFilled) return;
+                    setFieldErrors({});
+
+                    const payload = {
+                      ...formCompany,
+                      nib: formCompany.nib || "",
+                      website: formCompany.website || "",
+                      company_logo: formCompany.company_logo || "",
+                    };
+
+                    let schema;
+                    let validationPayload: Record<string, unknown> = {
+                      ...payload,
+                    };
+
+                    if (!editingCompanyId) {
+                      schema = companyProfileUpdateSchema.extend({
+                        user_email: z.string().email("Email tidak valid"),
+                        user_password: z
+                          .string()
+                          .min(8, "Password minimal 8 karakter"),
+                      });
+                      validationPayload = {
+                        ...payload,
+                        user_email: userEmailCompany,
+                        user_password: userPasswordCompany,
+                      };
+                    } else {
+                      schema = companyProfileUpdateSchema;
+                    }
+
+                    const result = schema.safeParse(validationPayload);
+
+                    if (!result.success) {
+                      const newErrors: Record<string, string> = {};
+                      result.error.issues.forEach((err: ZodIssue) => {
+                        if (err.path[0])
+                          newErrors[err.path[0] as string] = err.message;
+                      });
+                      setFieldErrors(newErrors);
+                      showError("Mohon periksa input anda");
+                      return;
+                    }
+
                     try {
                       if (editingCompanyId) {
                         await updateCompanyProfile(editingCompanyId, {
@@ -770,6 +812,43 @@ export default function PerusahaanPage() {
             }
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="sm:col-span-2 md:col-span-2 flex flex-col items-center gap-4 mb-4">
+                <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center group">
+                  {formCompany.company_logo ? (
+                    <Image
+                      src={formCompany.company_logo}
+                      alt="Logo Preview"
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <i className="ri-building-line text-4xl text-gray-300"></i>
+                  )}
+                </div>
+                <div className="w-full max-w-xs text-center">
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Logo Perusahaan
+                  </p>
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const f = (e.target as HTMLInputElement).files?.[0];
+                      if (!f) {
+                        setFormCompany({ ...formCompany, company_logo: "" });
+                        return;
+                      }
+                      const r = new FileReader();
+                      r.onload = () =>
+                        setFormCompany({
+                          ...formCompany,
+                          company_logo: String(r.result || ""),
+                        });
+                      r.readAsDataURL(f);
+                    }}
+                    submitted={submittedCompany}
+                  />
+                </div>
+              </div>
               {!editingCompanyId && (
                 <>
                   <Input
@@ -777,14 +856,14 @@ export default function PerusahaanPage() {
                     type="email"
                     value={userEmailCompany}
                     onChange={(e) => setUserEmailCompany(e.target.value)}
-                    submitted={submittedCompany}
+                    error={fieldErrors["user_email"]}
                   />
                   <Input
                     label="Password"
                     type="password"
                     value={userPasswordCompany}
                     onChange={(e) => setUserPasswordCompany(e.target.value)}
-                    submitted={submittedCompany}
+                    error={fieldErrors["user_password"]}
                   />
                 </>
               )}
@@ -797,7 +876,29 @@ export default function PerusahaanPage() {
                     company_name: e.target.value,
                   })
                 }
-                submitted={submittedCompany}
+                error={fieldErrors["company_name"]}
+              />
+              <SearchableSelect
+                label="Tipe Perusahaan"
+                value={formCompany.company_type}
+                onChange={(v) =>
+                  setFormCompany({ ...formCompany, company_type: v })
+                }
+                options={[
+                  {
+                    value: "INSTANSI PEMERINTAH",
+                    label: "INSTANSI PEMERINTAH",
+                  },
+                  { value: "BUMN/BUMD", label: "BUMN/BUMD" },
+                  { value: "KOPERASI", label: "KOPERASI" },
+                  { value: "PERUSAHAAN SWASTA", label: "PERUSAHAAN SWASTA" },
+                  {
+                    value: "BADAN USAHA LAINNYA",
+                    label: "BADAN USAHA LAINNYA",
+                  },
+                  { value: "PERORANGAN", label: "PERORANGAN" },
+                ]}
+                error={fieldErrors["company_type"]}
               />
               <Input
                 label="NIB"
@@ -805,26 +906,7 @@ export default function PerusahaanPage() {
                 onChange={(e) =>
                   setFormCompany({ ...formCompany, nib: e.target.value })
                 }
-                submitted={submittedCompany}
-              />
-              <Input
-                label="Logo"
-                type="file"
-                onChange={(e) => {
-                  const f = (e.target as HTMLInputElement).files?.[0];
-                  if (!f) {
-                    setFormCompany({ ...formCompany, company_logo: "" });
-                    return;
-                  }
-                  const r = new FileReader();
-                  r.onload = () =>
-                    setFormCompany({
-                      ...formCompany,
-                      company_logo: String(r.result || ""),
-                    });
-                  r.readAsDataURL(f);
-                }}
-                submitted={submittedCompany}
+                error={fieldErrors["nib"]}
               />
               <Input
                 label="Telepon"
@@ -835,7 +917,7 @@ export default function PerusahaanPage() {
                     no_handphone: e.target.value,
                   })
                 }
-                submitted={submittedCompany}
+                error={fieldErrors["no_handphone"]}
               />
               <SearchableSelect
                 label="Kecamatan"
@@ -860,14 +942,6 @@ export default function PerusahaanPage() {
                 submitted={submittedCompany}
               />
               <Input
-                label="Alamat"
-                value={formCompany.address}
-                onChange={(e) =>
-                  setFormCompany({ ...formCompany, address: e.target.value })
-                }
-                submitted={submittedCompany}
-              />
-              <Input
                 label="Website"
                 value={formCompany.website || ""}
                 onChange={(e) =>
@@ -876,7 +950,18 @@ export default function PerusahaanPage() {
                 submitted={submittedCompany}
               />
               <div className="md:col-span-2">
-                <Input
+                <Textarea
+                  label="Alamat"
+                  value={formCompany.address}
+                  onChange={(e) =>
+                    setFormCompany({ ...formCompany, address: e.target.value })
+                  }
+                  submitted={submittedCompany}
+                  rows={3}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <Textarea
                   label="Tentang Perusahaan"
                   value={formCompany.about_company}
                   onChange={(e) =>
@@ -886,6 +971,7 @@ export default function PerusahaanPage() {
                     })
                   }
                   submitted={submittedCompany}
+                  rows={5}
                 />
               </div>
             </div>

@@ -148,6 +148,7 @@ export async function verifyAk1(payload: {
   expired2?: string;
   expired3?: string;
   expired4?: string;
+  note?: string;
 }) {
   const resp = await fetch(`${BASE}/api/profile/candidate/ak1/verify`, {
     method: "POST",

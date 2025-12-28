@@ -231,7 +231,7 @@ export default function PelatihanPage() {
                 Pelatihan yang Akan Datang
               </h2>
               <p className="text-gray-600 mt-2">
-                Tingkatkan keterampilan Anda dengan program BLK
+                Tingkatkan keterampilan Anda dengan program Pelatihan
               </p>
             </div>
             <Link

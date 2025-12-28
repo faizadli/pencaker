@@ -154,7 +154,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     }
 
     // For non-file inputs, ensure value is always defined
-    const inputValue = rest.value !== undefined ? rest.value : "";
+    const inputValue = rest.value ?? "";
     const hasOnChange = rest.onChange !== undefined;
 
     // If no onChange, use defaultValue to make it uncontrolled
