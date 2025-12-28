@@ -26,12 +26,14 @@ type CandidateProfilePayload = {
 type ApiEnvelope<T = unknown> = { message?: string; data?: T };
 
 function isObj(val: unknown): val is Record<string, unknown> {
-  return typeof val === 'object' && val !== null;
+  return typeof val === "object" && val !== null;
 }
 
 export async function upsertCompanyProfile(payload: {
   user_id: string;
   company_name: string;
+  company_type?: string;
+  nib?: string;
   company_logo?: string;
   kecamatan: string;
   kelurahan: string;
@@ -50,7 +52,10 @@ export async function upsertCompanyProfile(payload: {
 }
 
 export async function getCompanyProfile(user_id: string) {
-  const resp = await fetch(`${BASE}/api/profile/company?user_id=${encodeURIComponent(user_id)}`, { headers: { ...authHeader() } });
+  const resp = await fetch(
+    `${BASE}/api/profile/company?user_id=${encodeURIComponent(user_id)}`,
+    { headers: { ...authHeader() } },
+  );
   if (!resp.ok) throw new Error("Gagal mengambil profil perusahaan");
   return resp.json();
 }
@@ -71,7 +76,9 @@ export async function getCompanyProfileById(id: string) {
   if (!resp.ok) throw new Error("Gagal mengambil profil perusahaan");
   const data = await resp.json();
   if (typeof window !== "undefined") {
-    try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch {}
+    try {
+      sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data }));
+    } catch {}
   }
   return data;
 }
@@ -103,13 +110,22 @@ export async function upsertCandidateProfile(payload: {
     raw = await resp.json();
   } catch {}
   const obj = isObj(raw) ? (raw as Record<string, unknown>) : undefined;
-  const message = obj ? String(((obj['message'] as string | undefined) || (obj['errors'] as string | undefined) || '')) : undefined;
+  const message = obj
+    ? String(
+        (obj["message"] as string | undefined) ||
+          (obj["errors"] as string | undefined) ||
+          "",
+      )
+    : undefined;
   if (!resp.ok) throw new Error(message || "Gagal menyimpan profil pencaker");
   return (obj as unknown as ApiEnvelope) || {};
 }
 
 export async function getCandidateProfile(user_id: string) {
-  const resp = await fetch(`${BASE}/api/profile/candidate?user_id=${encodeURIComponent(user_id)}`, { headers: { ...authHeader() } });
+  const resp = await fetch(
+    `${BASE}/api/profile/candidate?user_id=${encodeURIComponent(user_id)}`,
+    { headers: { ...authHeader() } },
+  );
   if (!resp.ok) throw new Error("Gagal mengambil profil pencaker");
   return resp.json();
 }
@@ -119,21 +135,39 @@ export async function getCandidateProfileById(id: string) {
     const r = await fetch(url, { headers: { ...authHeader() } });
     if (!r.ok) return null;
     let out: unknown;
-    try { out = await r.json(); } catch { out = null; }
+    try {
+      out = await r.json();
+    } catch {
+      out = null;
+    }
     const env = out as { data?: unknown } | unknown;
-    const data = env && (env as { data?: unknown }).data !== undefined ? (env as { data?: unknown }).data : env;
+    const data =
+      env && (env as { data?: unknown }).data !== undefined
+        ? (env as { data?: unknown }).data
+        : env;
     return data || null;
   };
-  const byCandidate = await tryFetch(`${BASE}/api/profile/candidate?candidate_id=${encodeURIComponent(id)}`);
+  const byCandidate = await tryFetch(
+    `${BASE}/api/profile/candidate?candidate_id=${encodeURIComponent(id)}`,
+  );
   if (byCandidate) return { data: byCandidate };
-  const byId = await tryFetch(`${BASE}/api/profile/candidate?id=${encodeURIComponent(id)}`);
+  const byId = await tryFetch(
+    `${BASE}/api/profile/candidate?id=${encodeURIComponent(id)}`,
+  );
   if (byId) return { data: byId };
-  const byUser = await tryFetch(`${BASE}/api/profile/candidate?user_id=${encodeURIComponent(id)}`);
+  const byUser = await tryFetch(
+    `${BASE}/api/profile/candidate?user_id=${encodeURIComponent(id)}`,
+  );
   if (byUser) return { data: byUser };
   return { data: null };
 }
 
-export async function listCandidates(params?: { search?: string; status?: "APPROVED" | "REJECTED" | "PENDING"; page?: number; limit?: number }) {
+export async function listCandidates(params?: {
+  search?: string;
+  status?: "APPROVED" | "REJECTED" | "PENDING";
+  page?: number;
+  limit?: number;
+}) {
   const q = new URLSearchParams();
   if (params?.search) q.set("search", params.search);
   if (params?.status) q.set("status", params.status);
@@ -154,51 +188,91 @@ export async function listCandidates(params?: { search?: string; status?: "APPRO
   if (!resp.ok) throw new Error("Gagal mengambil data pencaker");
   const data = await resp.json();
   if (typeof window !== "undefined") {
-    try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch {}
+    try {
+      sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data }));
+    } catch {}
   }
   return data;
 }
 
-export async function createCandidateProfile(payload: Omit<CandidateProfilePayload, 'user_id'> & { user_email: string; user_password: string }): Promise<ApiEnvelope> {
-  const resp = await fetch(`${BASE}/api/candidates`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify(payload) });
+export async function createCandidateProfile(
+  payload: Omit<CandidateProfilePayload, "user_id"> & {
+    user_email: string;
+    user_password: string;
+  },
+): Promise<ApiEnvelope> {
+  const resp = await fetch(`${BASE}/api/candidates`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify(payload),
+  });
   let raw: unknown;
   try {
     raw = await resp.json();
   } catch {}
   const obj = isObj(raw) ? (raw as Record<string, unknown>) : undefined;
-  const message = obj ? String(((obj['message'] as string | undefined) || (obj['errors'] as string | undefined) || '')) : undefined;
+  const message = obj
+    ? String(
+        (obj["message"] as string | undefined) ||
+          (obj["errors"] as string | undefined) ||
+          "",
+      )
+    : undefined;
   if (!resp.ok) throw new Error(message || "Gagal membuat profil pencaker");
   return (obj as unknown as ApiEnvelope) || {};
 }
 
-export async function createCandidateProfileByUserId(payload: CandidateProfilePayload): Promise<ApiEnvelope> {
-  const resp = await fetch(`${BASE}/api/candidates`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify(payload) });
+export async function createCandidateProfileByUserId(
+  payload: CandidateProfilePayload,
+): Promise<ApiEnvelope> {
+  const resp = await fetch(`${BASE}/api/candidates`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify(payload),
+  });
   let raw: unknown;
   try {
     raw = await resp.json();
   } catch {}
   const obj = isObj(raw) ? (raw as Record<string, unknown>) : undefined;
-  const message = obj ? String(((obj['message'] as string | undefined) || (obj['errors'] as string | undefined) || '')) : undefined;
+  const message = obj
+    ? String(
+        (obj["message"] as string | undefined) ||
+          (obj["errors"] as string | undefined) ||
+          "",
+      )
+    : undefined;
   if (!resp.ok) throw new Error(message || "Gagal membuat profil pencaker");
   return (obj as unknown as ApiEnvelope) || {};
 }
 
-export async function updateCandidateProfile(id: string, payload: CandidateProfilePayload) {
-  const resp = await fetch(`${BASE}/api/candidates/${id}`, { method: "PUT", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify(payload) });
+export async function updateCandidateProfile(
+  id: string,
+  payload: CandidateProfilePayload,
+) {
+  const resp = await fetch(`${BASE}/api/candidates/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify(payload),
+  });
   if (!resp.ok) throw new Error("Gagal mengubah profil pencaker");
   return resp.json();
 }
 
 export async function deleteCandidateProfile(id: string) {
-  const resp = await fetch(`${BASE}/api/candidates/${id}`, { method: "DELETE", headers: { ...authHeader() } });
+  const resp = await fetch(`${BASE}/api/candidates/${id}`, {
+    method: "DELETE",
+    headers: { ...authHeader() },
+  });
   if (!resp.ok) throw new Error("Gagal menghapus profil pencaker");
   return resp.json();
 }
 
 export async function upsertDisnakerProfile(payload: {
   user_id: string;
-  divisi?: "superadmin" | "adminlayanan" | "adminpelatihan" | "adminpkwt";
   full_name: string;
+  nip: string;
+  photo_profile?: string;
 }) {
   const resp = await fetch(`${BASE}/api/profile/disnaker/upsert`, {
     method: "POST",
@@ -210,34 +284,103 @@ export async function upsertDisnakerProfile(payload: {
 }
 
 export async function getDisnakerProfile(user_id: string) {
-  const resp = await fetch(`${BASE}/api/profile/disnaker?user_id=${encodeURIComponent(user_id)}`, { headers: { ...authHeader() } });
+  const resp = await fetch(
+    `${BASE}/api/profile/disnaker?user_id=${encodeURIComponent(user_id)}`,
+    { headers: { ...authHeader() } },
+  );
   if (!resp.ok) throw new Error("Gagal mengambil profil disnaker");
   return resp.json();
 }
 
 export async function getUserById(user_id: string) {
-  const resp = await fetch(`${BASE}/api/user/by-id?user_id=${encodeURIComponent(user_id)}`, { headers: { ...authHeader() } });
+  const resp = await fetch(
+    `${BASE}/api/user/by-id?user_id=${encodeURIComponent(user_id)}`,
+    { headers: { ...authHeader() } },
+  );
   if (!resp.ok) throw new Error("Gagal mengambil data user");
   return resp.json();
 }
 
-export async function presignCandidateProfileUpload(folder: string, filename: string, content_type: string) {
-  const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
-  const resp = await fetch(`${BASE}/api/uploads/presign/candidate`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify({ action: "put", folder, filename, content_type, user_id: uid }) });
+export async function presignCandidateProfileUpload(
+  folder: string,
+  filename: string,
+  content_type: string,
+) {
+  const uid =
+    typeof window !== "undefined"
+      ? localStorage.getItem("id") || localStorage.getItem("user_id") || ""
+      : "";
+  const resp = await fetch(`${BASE}/api/uploads/presign/candidate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify({
+      action: "put",
+      folder,
+      filename,
+      content_type,
+      user_id: uid,
+    }),
+  });
   if (!resp.ok) throw new Error("Gagal presign upload candidate");
-  return (await resp.json()).data as { url: string; key: string };
+  return (await resp.json()).data as {
+    url: string;
+    key: string;
+    public_url?: string;
+  };
 }
 
-export async function presignCompanyProfileUpload(folder: string, filename: string, content_type: string) {
-  const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
-  const resp = await fetch(`${BASE}/api/uploads/presign/company`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify({ action: "put", folder, filename, content_type, user_id: uid }) });
+export async function presignCompanyProfileUpload(
+  folder: string,
+  filename: string,
+  content_type: string,
+) {
+  const uid =
+    typeof window !== "undefined"
+      ? localStorage.getItem("id") || localStorage.getItem("user_id") || ""
+      : "";
+  const resp = await fetch(`${BASE}/api/uploads/presign/company`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify({
+      action: "put",
+      folder,
+      filename,
+      content_type,
+      user_id: uid,
+    }),
+  });
   if (!resp.ok) throw new Error("Gagal presign upload company");
-  return (await resp.json()).data as { url: string; key: string };
+  return (await resp.json()).data as {
+    url: string;
+    key: string;
+    public_url?: string;
+  };
 }
 
-export async function presignDisnakerProfileUpload(folder: string, filename: string, content_type: string) {
-  const uid = typeof window !== "undefined" ? (localStorage.getItem("id") || localStorage.getItem("user_id") || "") : "";
-  const resp = await fetch(`${BASE}/api/uploads/presign/disnaker`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify({ action: "put", folder, filename, content_type, user_id: uid }) });
+export async function presignDisnakerProfileUpload(
+  folder: string,
+  filename: string,
+  content_type: string,
+) {
+  const uid =
+    typeof window !== "undefined"
+      ? localStorage.getItem("id") || localStorage.getItem("user_id") || ""
+      : "";
+  const resp = await fetch(`${BASE}/api/uploads/presign/disnaker`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify({
+      action: "put",
+      folder,
+      filename,
+      content_type,
+      user_id: uid,
+    }),
+  });
   if (!resp.ok) throw new Error("Gagal presign upload disnaker");
-  return (await resp.json()).data as { url: string; key: string };
+  return (await resp.json()).data as {
+    url: string;
+    key: string;
+    public_url?: string;
+  };
 }

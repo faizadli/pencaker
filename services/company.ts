@@ -8,6 +8,7 @@ function authHeader(): Record<string, string> {
 type CompanyProfilePayload = {
   user_id: string;
   company_name: string;
+  nib?: string;
   company_logo?: string;
   no_handphone?: string;
   kecamatan: string;
@@ -18,7 +19,12 @@ type CompanyProfilePayload = {
   disnaker_id?: string;
 };
 
-export async function listCompanies(params?: { status?: "APPROVED" | "PENDING" | "REJECTED"; search?: string; page?: number; limit?: number }) {
+export async function listCompanies(params?: {
+  status?: "APPROVED" | "PENDING" | "REJECTED";
+  search?: string;
+  page?: number;
+  limit?: number;
+}) {
   const q = new URLSearchParams();
   if (params?.status) q.set("status", params.status);
   if (params?.search) q.set("search", params.search);
@@ -39,7 +45,9 @@ export async function listCompanies(params?: { status?: "APPROVED" | "PENDING" |
   if (!resp.ok) throw new Error("Gagal mengambil perusahaan");
   const data = await resp.json();
   if (typeof window !== "undefined") {
-    try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch {}
+    try {
+      sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data }));
+    } catch {}
   }
   return data;
 }
@@ -55,40 +63,70 @@ export async function approveCompany(id: string, disnaker_id: string) {
 }
 
 export async function rejectCompany(id: string, disnaker_id: string) {
-  const resp = await fetch(`${BASE}/api/companies/${id}/reject`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify({ disnaker_id }) });
+  const resp = await fetch(`${BASE}/api/companies/${id}/reject`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify({ disnaker_id }),
+  });
   if (!resp.ok) throw new Error("Gagal menolak verifikasi perusahaan");
   return resp.json();
 }
 
 export async function getCompanyById(id: string) {
-  const resp = await fetch(`${BASE}/api/companies/${id}`, { headers: { ...authHeader() } });
+  const resp = await fetch(`${BASE}/api/companies/${id}`, {
+    headers: { ...authHeader() },
+  });
   if (!resp.ok) throw new Error("Gagal mengambil detail perusahaan");
   return resp.json();
 }
 
-export async function getPublicCompanyById(id: string, params?: { page?: number; limit?: number }) {
+export async function getPublicCompanyById(
+  id: string,
+  params?: { page?: number; limit?: number },
+) {
   const q = new URLSearchParams();
   if (params?.page) q.set("page", String(params.page));
   if (params?.limit) q.set("limit", String(params.limit));
-  const resp = await fetch(`${BASE}/api/public/companies/${id}${q.toString() ? `?${q.toString()}` : ""}`);
+  const resp = await fetch(
+    `${BASE}/api/public/companies/${id}${q.toString() ? `?${q.toString()}` : ""}`,
+  );
   if (!resp.ok) throw new Error("Gagal mengambil detail perusahaan");
   return resp.json();
 }
 
-export async function createCompanyProfile(payload: Omit<CompanyProfilePayload, 'user_id'> & { user_email: string; user_password: string }) {
-  const resp = await fetch(`${BASE}/api/companies`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify(payload) });
+export async function createCompanyProfile(
+  payload: Omit<CompanyProfilePayload, "user_id"> & {
+    user_email: string;
+    user_password: string;
+  },
+) {
+  const resp = await fetch(`${BASE}/api/companies`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify(payload),
+  });
   if (!resp.ok) throw new Error("Gagal membuat profil perusahaan");
   return resp.json();
 }
 
-export async function updateCompanyProfile(id: string, payload: CompanyProfilePayload) {
-  const resp = await fetch(`${BASE}/api/companies/${id}`, { method: "PUT", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify(payload) });
+export async function updateCompanyProfile(
+  id: string,
+  payload: CompanyProfilePayload,
+) {
+  const resp = await fetch(`${BASE}/api/companies/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify(payload),
+  });
   if (!resp.ok) throw new Error("Gagal mengubah profil perusahaan");
   return resp.json();
 }
 
 export async function deleteCompanyProfile(id: string) {
-  const resp = await fetch(`${BASE}/api/companies/${id}`, { method: "DELETE", headers: { ...authHeader() } });
+  const resp = await fetch(`${BASE}/api/companies/${id}`, {
+    method: "DELETE",
+    headers: { ...authHeader() },
+  });
   if (!resp.ok) throw new Error("Gagal menghapus profil perusahaan");
   return resp.json();
 }

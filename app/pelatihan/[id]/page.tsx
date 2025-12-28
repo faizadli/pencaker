@@ -171,7 +171,11 @@ export default function DetailPelatihanPage() {
                         <div className="flex flex-wrap gap-2 mt-1 mb-2">
                           {p.gender && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
-                              {p.gender === "L" ? "Laki-laki" : "Perempuan"}
+                              {p.gender === "L"
+                                ? "Laki-laki"
+                                : p.gender === "P"
+                                  ? "Perempuan"
+                                  : p.gender}
                             </span>
                           )}
                           {p.education && (

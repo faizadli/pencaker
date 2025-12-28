@@ -12,11 +12,28 @@ type AuthEnvelope = {
   token?: string;
 };
 
+export async function checkUser(payload: {
+  email?: string;
+  no_handphone?: string;
+}) {
+  const resp = await fetch(`${BASE}/api/user/check`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!resp.ok) {
+    const data = await resp.json();
+    throw new Error(data.message || "User check failed");
+  }
+  return true;
+}
+
 export async function registerUser(
   role: "company" | "candidate",
   emailOrPhone: { email?: string; no_handphone?: string },
   password: string,
   verification_code?: string,
+  verification_token?: string,
 ): Promise<AuthEnvelope> {
   const resp = await fetch(`${BASE}/api/user/register`, {
     method: "POST",
@@ -25,7 +42,11 @@ export async function registerUser(
       ...emailOrPhone,
       password,
       role,
-      ...(verification_code ? { verification_code } : {}),
+      ...(verification_token
+        ? { verification_token }
+        : verification_code
+          ? { verification_code }
+          : {}),
     }),
   });
   let data: AuthEnvelope | undefined;
@@ -108,7 +129,10 @@ export async function sendOtp(no_handphone: string) {
   return { ok: true };
 }
 
-export async function verifyOtp(no_handphone: string, code: string) {
+export async function verifyOtp(
+  no_handphone: string,
+  code: string,
+): Promise<{ ok: boolean; verification_token: string }> {
   const resp = await fetch(`${BASE}/api/public/otp/verify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -116,7 +140,7 @@ export async function verifyOtp(no_handphone: string, code: string) {
   });
   const data = await resp.json().catch(() => ({}));
   if (!resp.ok) throw new Error(String(data?.message || "Kode OTP salah"));
-  return { ok: true };
+  return { ok: true, verification_token: data.verification_token as string };
 }
 
 export async function sendEmailOtp(email: string) {

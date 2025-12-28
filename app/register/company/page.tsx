@@ -49,6 +49,8 @@ export default function RegisterCompany() {
 
   const [company, setCompany] = useState({
     company_name: "",
+    company_type: "",
+    nib: "",
     company_logo: "",
     no_handphone: "",
     kecamatan: "",
@@ -298,6 +300,8 @@ export default function RegisterCompany() {
       await upsertCompanyProfile({
         user_id: uid,
         company_name: company.company_name,
+        company_type: company.company_type || undefined,
+        nib: company.nib || undefined,
         kecamatan: company.kecamatan,
         kelurahan: company.kelurahan,
         address: company.address,
@@ -340,6 +344,8 @@ export default function RegisterCompany() {
         await upsertCompanyProfile({
           user_id: uid,
           company_name: company.company_name,
+          company_type: company.company_type || undefined,
+          nib: company.nib || undefined,
           company_logo: logoUrl,
           kecamatan: company.kecamatan,
           kelurahan: company.kelurahan,
@@ -653,6 +659,32 @@ export default function RegisterCompany() {
                     setCompany({ ...company, company_name: e.target.value })
                   }
                   required
+                />
+                <SearchableSelect
+                  label="Tipe Perusahaan"
+                  value={company.company_type}
+                  onChange={(v) => setCompany({ ...company, company_type: v })}
+                  options={[
+                    {
+                      value: "INSTANSI PEMERINTAH",
+                      label: "INSTANSI PEMERINTAH",
+                    },
+                    { value: "BUMN/BUMD", label: "BUMN/BUMD" },
+                    { value: "KOPERASI", label: "KOPERASI" },
+                    { value: "PERUSAHAAN SWASTA", label: "PERUSAHAAN SWASTA" },
+                    {
+                      value: "BADAN USAHA LAINNYA",
+                      label: "BADAN USAHA LAINNYA",
+                    },
+                    { value: "PERORANGAN", label: "PERORANGAN" },
+                  ]}
+                />
+                <Input
+                  label="NIB"
+                  value={company.nib}
+                  onChange={(e) =>
+                    setCompany({ ...company, nib: e.target.value })
+                  }
                 />
                 <SearchableSelect
                   label="Kecamatan"

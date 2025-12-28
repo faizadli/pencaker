@@ -265,7 +265,12 @@ export default function PencakerPage() {
             nama: c.full_name,
             nik: c.nik,
             ttl: `${c.place_of_birth || "-"}, ${c.birthdate ? new Date(c.birthdate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "-"}`,
-            jenisKelamin: c.gender || "-",
+            jenisKelamin:
+              c.gender === "L"
+                ? "Laki-laki"
+                : c.gender === "P"
+                  ? "Perempuan"
+                  : c.gender || "-",
             pendidikan: c.last_education || "-",
             telepon: c.no_handphone || "-",
             email: c.email || "-",

@@ -12,6 +12,7 @@ import FullPageLoading from "../../../components/ui/FullPageLoading";
 import {
   login,
   registerUser,
+  checkUser,
   startSession,
   sendOtp,
   verifyOtp,
@@ -51,6 +52,38 @@ export default function RegisterCandidate() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{
+    email?: string;
+    no_handphone?: string;
+    password?: string;
+    confirm?: string;
+  }>({});
+
+  const checkAvailability = async (
+    field: "email" | "no_handphone",
+    value: string,
+  ) => {
+    if (!value) return;
+
+    try {
+      await checkUser({ [field]: value });
+      setFieldErrors((prev) => ({ ...prev, [field]: "" }));
+    } catch (e: unknown) {
+      const msg =
+        e instanceof Error ? e.message : "Gagal mengecek ketersediaan";
+      if (
+        field === "no_handphone" &&
+        msg.includes("no handphone already exist")
+      ) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          no_handphone: "Nomor handphone sudah terdaftar",
+        }));
+      } else if (field === "email" && msg.includes("email already exist")) {
+        setFieldErrors((prev) => ({ ...prev, email: "Email sudah terdaftar" }));
+      }
+    }
+  };
 
   const [account, setAccount] = useState({
     email: "",
@@ -61,7 +94,7 @@ export default function RegisterCandidate() {
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
-  const [otpChannel, setOtpChannel] = useState<"sms" | "email">("sms");
+  const [otpChannel, setOtpChannel] = useState<"sms" | "wa">("sms");
 
   const [profile, setProfile] = useState({
     full_name: "",
@@ -89,8 +122,12 @@ export default function RegisterCandidate() {
   const [hasAk1Card, setHasAk1Card] = useState<string>("ya");
   const [ak1CardFile, setAk1CardFile] = useState<File | null>(null);
   const [ak1CreatedAt, setAk1CreatedAt] = useState<string>("");
-  const [ak1ExpiredAt, setAk1ExpiredAt] = useState<string>("");
+  const [ak1Expired1, setAk1Expired1] = useState<string>("");
+  const [ak1Expired2, setAk1Expired2] = useState<string>("");
+  const [ak1Expired3, setAk1Expired3] = useState<string>("");
+  const [ak1Expired4, setAk1Expired4] = useState<string>("");
   const [ak1NoReg, setAk1NoReg] = useState<string>("");
+  const [skills, setSkills] = useState<string[]>([]);
   const [finalized, setFinalized] = useState(false);
 
   const limitMB = 8;
@@ -161,6 +198,7 @@ export default function RegisterCandidate() {
 
   const [cooldown, setCooldown] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
+  const [verificationToken, setVerificationToken] = useState("");
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -208,28 +246,80 @@ export default function RegisterCandidate() {
   const submitAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Custom validation check
+    const newFieldErrors: typeof fieldErrors = {};
+    let hasError = false;
+
+    const phone = String(account.no_handphone || "").trim();
+    if (!phone) {
+      newFieldErrors.no_handphone = "Nomor Handphone wajib diisi";
+      hasError = true;
+    }
+
+    if (!account.password) {
+      newFieldErrors.password = "Password wajib diisi";
+      hasError = true;
+    } else if (account.password.length < 8) {
+      newFieldErrors.password = "Password minimal 8 karakter";
+      hasError = true;
+    }
+
+    if (!account.confirm) {
+      newFieldErrors.confirm = "Konfirmasi password wajib diisi";
+      hasError = true;
+    } else if (account.password !== account.confirm) {
+      newFieldErrors.confirm = "Konfirmasi password tidak sama";
+      hasError = true;
+    }
+
+    // Check if there are any existing uniqueness errors
+    if (
+      fieldErrors.no_handphone &&
+      fieldErrors.no_handphone !== "Nomor Handphone wajib diisi"
+    ) {
+      newFieldErrors.no_handphone = fieldErrors.no_handphone;
+      hasError = true;
+    }
+    if (fieldErrors.email) {
+      newFieldErrors.email = fieldErrors.email;
+      hasError = true;
+    }
+
+    if (hasError) {
+      setFieldErrors(newFieldErrors);
+      return;
+    }
+
+    // Double check availability before proceeding (in case user didn't blur)
+    try {
+      await checkUser({
+        email: account.email || undefined,
+        no_handphone: account.no_handphone,
+      });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Gagal mendaftar";
+      if (msg.includes("no handphone already exist")) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          no_handphone: "Nomor handphone sudah terdaftar",
+        }));
+        return;
+      } else if (msg.includes("email already exist")) {
+        setFieldErrors((prev) => ({ ...prev, email: "Email sudah terdaftar" }));
+        return;
+      } else {
+        setError(msg);
+        return;
+      }
+    }
+
     if (!otpVerified) {
       setError("Silakan lakukan verifikasi OTP terlebih dahulu.");
       return;
     }
     setLoading(true);
     try {
-      const hasPhone = String(account.no_handphone || "").trim().length > 0;
-      if (!hasPhone) {
-        setError("Nomor HP wajib diisi.");
-        setLoading(false);
-        return;
-      }
-      if ((account.password || "").length < 8) {
-        setError("Password minimal 8 karakter.");
-        setLoading(false);
-        return;
-      }
-      if (account.password !== account.confirm) {
-        setError("Konfirmasi password tidak sama.");
-        setLoading(false);
-        return;
-      }
       setStep(2);
     } catch {
       setError("Gagal mendaftar. Periksa isian Anda.");
@@ -295,10 +385,6 @@ export default function RegisterCandidate() {
         setError("Isi tanggal kartu dibuat terlebih dahulu.");
         return;
       }
-      if (!ak1ExpiredAt) {
-        setError("Isi tanggal kartu kadaluarsa terlebih dahulu.");
-        return;
-      }
       if (!ak1NoReg) {
         setError("Isi nomor pendaftaran pencari kerja terlebih dahulu.");
         return;
@@ -316,7 +402,7 @@ export default function RegisterCandidate() {
 
   const canSaveAk1 =
     hasAk1Card === "ya"
-      ? Boolean(ak1CardFile && ak1CreatedAt && ak1ExpiredAt && ak1NoReg)
+      ? Boolean(ak1CardFile && ak1CreatedAt && ak1NoReg)
       : hasAk1Card === "tidak"
         ? Boolean(ak1Files.ktp && ak1Files.ijazah && ak1Files.pas_photo)
         : false;
@@ -335,7 +421,8 @@ export default function RegisterCandidate() {
           no_handphone: String(account.no_handphone || "").trim() || undefined,
         },
         account.password,
-        otpVerified ? otp : undefined,
+        undefined,
+        verificationToken,
       );
       uid = String(reg?.id || "");
       const lg = await login(
@@ -390,8 +477,11 @@ export default function RegisterCandidate() {
         url: string,
         body: Blob | File,
         contentType: string,
+        publicUrl?: string,
       ) => {
-        const base = url.includes("?") ? url.slice(0, url.indexOf("?")) : url;
+        const base =
+          publicUrl ||
+          (url.includes("?") ? url.slice(0, url.indexOf("?")) : url);
         const attempt = async () =>
           fetch(url, {
             method: "PUT",
@@ -444,7 +534,7 @@ export default function RegisterCandidate() {
               filename,
               "image/jpeg",
             );
-            return await putSigned(pre.url, blob, "image/jpeg");
+            return await putSigned(pre.url, blob, "image/jpeg", pre.public_url);
           })()
         : Promise.resolve(undefined);
       const cvPromise = cvFile
@@ -457,7 +547,12 @@ export default function RegisterCandidate() {
                 filename,
                 "image/jpeg",
               );
-              return await putSigned(pre.url, blob, "image/jpeg");
+              return await putSigned(
+                pre.url,
+                blob,
+                "image/jpeg",
+                pre.public_url,
+              );
             }
             const pre = await presignCandidateProfileUpload(
               "candidate/cv",
@@ -468,6 +563,7 @@ export default function RegisterCandidate() {
               pre.url,
               cvFile,
               cvFile.type || "application/octet-stream",
+              pre.public_url,
             );
           })()
         : Promise.resolve(undefined);
@@ -482,7 +578,12 @@ export default function RegisterCandidate() {
                   filename,
                   "image/jpeg",
                 );
-                return await putSigned(pre.url, blob, "image/jpeg");
+                return await putSigned(
+                  pre.url,
+                  blob,
+                  "image/jpeg",
+                  pre.public_url,
+                );
               }
               const pre = await presignCandidateProfileUpload(
                 "candidate/ak1",
@@ -493,6 +594,7 @@ export default function RegisterCandidate() {
                 pre.url,
                 ak1CardFile,
                 ak1CardFile.type || "application/octet-stream",
+                pre.public_url,
               );
             })()
           : Promise.resolve(undefined);
@@ -535,8 +637,11 @@ export default function RegisterCandidate() {
           candidate_id: candidateId,
           card_file: ak1Url,
           card_created_at: ak1CreatedAt || undefined,
-          card_expired_at: ak1ExpiredAt || undefined,
           no_pendaftaran_pencari_kerja: ak1NoReg || undefined,
+          expired1: ak1Expired1 || undefined,
+          expired2: ak1Expired2 || undefined,
+          expired3: ak1Expired3 || undefined,
+          expired4: ak1Expired4 || undefined,
         });
       }
       if (
@@ -563,7 +668,12 @@ export default function RegisterCandidate() {
         const put = async (folder: string, f: File) => {
           const p = await prepare(f);
           const pre = await presignUpload(folder, p.filename, p.contentType);
-          return await putSigned(pre.url, p.body, p.contentType);
+          return await putSigned(
+            pre.url,
+            p.body,
+            p.contentType,
+            pre.public_url,
+          );
         };
         const [ktpUrl, ijazahUrl, pasUrl, certUrl] = await Promise.all([
           put(`ak1/${uid}/ktp`, ak1Files.ktp),
@@ -580,6 +690,7 @@ export default function RegisterCandidate() {
             ijazah_file: ijazahUrl,
             pas_photo_file: pasUrl,
             certificate_file: certUrl,
+            keterampilan: skills,
           });
         }
       }
@@ -702,10 +813,13 @@ export default function RegisterCandidate() {
                   value={account.email}
                   onChange={(e) => {
                     setAccount({ ...account, email: e.target.value });
+                    setFieldErrors({ ...fieldErrors, email: "" });
                   }}
+                  onBlur={(e) => checkAvailability("email", e.target.value)}
                   className="w-full rounded-lg"
                   placeholder="admin@contoh.com"
                   required={false}
+                  error={fieldErrors.email}
                 />
               </div>
               <div>
@@ -723,10 +837,14 @@ export default function RegisterCandidate() {
                   value={account.no_handphone}
                   onChange={(e) => {
                     setAccount({ ...account, no_handphone: e.target.value });
+                    setFieldErrors({ ...fieldErrors, no_handphone: "" });
                   }}
+                  onBlur={(e) =>
+                    checkAvailability("no_handphone", e.target.value)
+                  }
                   className="w-full rounded-lg"
                   placeholder="08xxxxxxxxxx"
-                  required
+                  error={fieldErrors.no_handphone}
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -810,7 +928,6 @@ export default function RegisterCandidate() {
                     onChange={(e) => setOtp(e.target.value)}
                     className="w-full rounded-lg"
                     placeholder="6 digit kode"
-                    required
                     disabled={otpVerified}
                   />
                   {!otpVerified && (
@@ -820,10 +937,11 @@ export default function RegisterCandidate() {
                       onClick={async () => {
                         setError("");
                         try {
-                          await verifyOtp(
+                          const res = await verifyOtp(
                             String(account.no_handphone).trim(),
                             otp,
                           );
+                          setVerificationToken(res.verification_token);
                           setOtpVerified(true);
                         } catch (e: unknown) {
                           const msg =
@@ -951,8 +1069,8 @@ export default function RegisterCandidate() {
                 <SearchableSelect
                   label="Jenis Kelamin"
                   options={[
-                    { value: "laki-laki", label: "Laki-laki" },
-                    { value: "perempuan", label: "Perempuan" },
+                    { value: "L", label: "Laki-laki" },
+                    { value: "P", label: "Perempuan" },
                   ]}
                   value={profile.gender}
                   onChange={(v) => setProfile({ ...profile, gender: v })}
@@ -1106,10 +1224,28 @@ export default function RegisterCandidate() {
                     onChange={(e) => setAk1CreatedAt(e.target.value)}
                   />
                   <Input
-                    label="Tanggal Kartu Kadaluarsa"
+                    label="Tanggal Lapor 1"
                     type="date"
-                    value={ak1ExpiredAt}
-                    onChange={(e) => setAk1ExpiredAt(e.target.value)}
+                    value={ak1Expired1}
+                    onChange={(e) => setAk1Expired1(e.target.value)}
+                  />
+                  <Input
+                    label="Tanggal Lapor 2"
+                    type="date"
+                    value={ak1Expired2}
+                    onChange={(e) => setAk1Expired2(e.target.value)}
+                  />
+                  <Input
+                    label="Tanggal Lapor 3"
+                    type="date"
+                    value={ak1Expired3}
+                    onChange={(e) => setAk1Expired3(e.target.value)}
+                  />
+                  <Input
+                    label="Tanggal Lapor 4"
+                    type="date"
+                    value={ak1Expired4}
+                    onChange={(e) => setAk1Expired4(e.target.value)}
                   />
                   <p className="text-xs text-gray-500">
                     Isi data kartu jika Anda sudah memiliki kartu AK1.
@@ -1157,6 +1293,48 @@ export default function RegisterCandidate() {
                       )
                     }
                   />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Keterampilan
+                    </label>
+                    <Input
+                      placeholder="Ketik keterampilan lalu tekan Enter"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const val = (
+                            e.target as HTMLInputElement
+                          ).value.trim();
+                          if (val && !skills.includes(val)) {
+                            setSkills([...skills, val]);
+                            (e.target as HTMLInputElement).value = "";
+                          }
+                        }
+                      }}
+                    />
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {skills.map((s) => (
+                        <span
+                          key={s}
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                        >
+                          {s}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSkills(skills.filter((x) => x !== s))
+                            }
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            <i className="ri-close-line"></i>
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Tekan Enter untuk menambah keterampilan.
+                    </p>
+                  </div>
                   <p className="text-xs text-gray-500">
                     Jika belum memiliki AK1, unggah dokumen untuk verifikasi
                     Disnaker.
