@@ -30,6 +30,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const [hasFile, setHasFile] = useState(false);
     const [fileName, setFileName] = useState<string | null>(null);
     const localFileRef = useRef<HTMLInputElement | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
     const setFileRef = (el: HTMLInputElement | null) => {
       localFileRef.current = el;
       if (typeof ref === "function") ref(el);
@@ -41,6 +42,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     if (rest.type === "file") {
       const showError = !!error || (!!submitted && isRequired && !hasFile);
       const errorText = error || (showError ? "Wajib diisi" : undefined);
+
       const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = (
         e,
       ) => {
@@ -49,6 +51,57 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         setFileName(f ? f.name : null);
         rest.onChange?.(e);
       };
+
+      const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(true);
+      };
+
+      const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+      };
+
+      const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+          const f = files[0];
+          setHasFile(true);
+          setFileName(f.name);
+
+          // Update the hidden input's files if possible
+          if (localFileRef.current) {
+            const dataTransfer = new DataTransfer();
+            Array.from(files).forEach((file) => dataTransfer.items.add(file));
+            localFileRef.current.files = dataTransfer.files;
+          }
+
+          // Trigger onChange with a synthetic event
+          if (rest.onChange) {
+            const syntheticEvent = {
+              target: {
+                files: files,
+                value: "", // value is usually fake path in file inputs, safe to ignore or set empty
+                type: "file",
+                ...localFileRef.current,
+              },
+              currentTarget: localFileRef.current,
+              preventDefault: () => {},
+              stopPropagation: () => {},
+              // Add other necessary properties if needed, usually target.files is what's used
+            } as unknown as React.ChangeEvent<HTMLInputElement>;
+
+            rest.onChange(syntheticEvent);
+          }
+        }
+      };
+
       return (
         <div className="w-full">
           {label && (
@@ -68,24 +121,28 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               className="sr-only"
             />
             <div
-              className={`flex items-center gap-3 w-full px-3 h-11 border ${showError ? "border-red-400" : "border-gray-300"} rounded-xl bg-white focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent ${className || ""}`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => localFileRef.current?.click()}
+              className={`flex flex-col items-center justify-center gap-2 w-full px-4 py-6 border-2 border-dashed transition-colors cursor-pointer rounded-xl bg-gray-50
+                ${showError ? "border-red-400 bg-red-50" : isDragging ? "border-primary bg-primary/5" : "border-gray-300 hover:border-primary hover:bg-gray-100"}
+                ${className || ""}`}
             >
-              <i className={`${icon || "ri-upload-2-line"} text-gray-500`}></i>
-              <button
-                type="button"
-                onClick={() => localFileRef.current?.click()}
-                className="px-3 py-2 rounded-lg bg-primary text-white text-sm hover:bg-primary"
-              >
-                Pilih File
-              </button>
-              <span className="text-sm text-gray-700 truncate flex-1">
-                {fileName || "Belum ada file"}
+              <i
+                className={`${icon || "ri-upload-cloud-2-line"} text-3xl ${isDragging ? "text-primary" : "text-gray-400"}`}
+              ></i>
+              <div className="text-center">
+                <span className="text-sm font-medium text-primary">
+                  Klik untuk upload
+                </span>
+                <span className="text-sm text-gray-500"> atau drag & drop</span>
+              </div>
+              <span className="text-xs text-gray-400 truncate max-w-full px-2">
+                {fileName || "Belum ada file yang dipilih"}
               </span>
             </div>
           </div>
-          {fileName && (
-            <p className="mt-1 text-xs text-gray-700 truncate">{fileName}</p>
-          )}
           {errorText && (
             <p className="mt-1 text-xs text-red-600">{errorText}</p>
           )}

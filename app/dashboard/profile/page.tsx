@@ -37,8 +37,6 @@ export default function ProfilePage() {
     username: "",
     status: "Aktif",
     terakhirLogin: "",
-    tema: "light",
-    notifikasi: true,
   });
   const [loading, setLoading] = useState(true);
 
@@ -100,6 +98,94 @@ export default function ProfilePage() {
     photo_profile: "",
   });
   const [disnakerPhotoPreview, setDisnakerPhotoPreview] = useState<string>("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+
+    setSelectedFile(f);
+    const objectUrl = URL.createObjectURL(f);
+
+    if (role === "company") {
+      setCompanyLogoPreview(objectUrl);
+    } else if (role === "candidate") {
+      setCandidatePhotoPreview(objectUrl);
+    } else {
+      setDisnakerPhotoPreview(objectUrl);
+    }
+  };
+
+  const handleSavePhoto = async () => {
+    if (!selectedFile) return;
+    setIsUploadingPhoto(true);
+
+    try {
+      let presign;
+      let objectUrl = "";
+
+      if (role === "company") {
+        presign = await presignCompanyProfileUpload(
+          "logo",
+          selectedFile.name,
+          selectedFile.type || "application/octet-stream",
+        );
+      } else if (role === "candidate") {
+        presign = await presignCandidateProfileUpload(
+          "photo",
+          selectedFile.name,
+          selectedFile.type || "application/octet-stream",
+        );
+      } else {
+        presign = await presignDisnakerProfileUpload(
+          "photo",
+          selectedFile.name,
+          selectedFile.type || "application/octet-stream",
+        );
+      }
+
+      const resp = await fetch(presign.url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": selectedFile.type || "application/octet-stream",
+        },
+        body: selectedFile,
+      });
+
+      if (!resp.ok) throw new Error("Upload failed");
+
+      objectUrl = presign.url.includes("?")
+        ? presign.url.slice(0, presign.url.indexOf("?"))
+        : presign.url;
+
+      if (role === "company") {
+        const newForm = { ...companyForm, company_logo: objectUrl };
+        setCompanyForm(newForm);
+        await upsertCompanyProfile({ user_id: userId, ...newForm });
+      } else if (role === "candidate") {
+        const newForm = { ...candidateForm, photo_profile: objectUrl };
+        setCandidateForm(newForm);
+        await upsertCandidateProfile({
+          user_id: userId,
+          ...newForm,
+          graduation_year: Number(newForm.graduation_year || 0),
+        });
+      } else {
+        const newForm = { ...disnakerForm, photo_profile: objectUrl };
+        setDisnakerForm(newForm);
+        await upsertDisnakerProfile({ user_id: userId, ...newForm });
+      }
+
+      showSuccess("Foto profil berhasil diperbarui");
+      setSelectedFile(null);
+    } catch (err) {
+      showError("Gagal memperbarui foto profil");
+      console.error(err);
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
   const [companyApproved, setCompanyApproved] = useState(false);
   const [companyFilled, setCompanyFilled] = useState(false);
 
@@ -135,10 +221,6 @@ export default function ProfilePage() {
       detail: "Ekspor data penempatan (Excel)",
     },
   ]);
-
-  const handleLogout = () => {
-    if (confirm("Yakin ingin keluar?")) window.location.href = "/";
-  };
 
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
@@ -405,12 +487,99 @@ export default function ProfilePage() {
             Profil Pengguna
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Kelola informasi pribadi, keamanan, dan preferensi
+            Kelola informasi pribadi dan keamanan
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-6">
           <div className="space-y-6">
+            <Card className="mb-6 py-8">
+              <div className="flex flex-col items-center justify-center gap-6">
+                <div className="relative group">
+                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-lg relative">
+                    {(
+                      role === "company"
+                        ? companyLogoPreview
+                        : role === "candidate"
+                          ? candidatePhotoPreview
+                          : disnakerPhotoPreview
+                    ) ? (
+                      <Image
+                        src={
+                          role === "company"
+                            ? companyLogoPreview
+                            : role === "candidate"
+                              ? candidatePhotoPreview
+                              : disnakerPhotoPreview
+                        }
+                        alt="Profile Preview"
+                        width={128}
+                        height={128}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+                        <i
+                          className={`ri-${
+                            role === "company" ? "building" : "user"
+                          }-line text-4xl`}
+                        ></i>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <h2 className="text-xl font-bold text-gray-800">
+                    {role === "company"
+                      ? companyForm.company_name
+                      : role === "candidate"
+                        ? candidateForm.full_name
+                        : disnakerForm.full_name || user.nama}
+                  </h2>
+                  <p className="text-sm text-gray-500 capitalize">
+                    {role === "company"
+                      ? "Perusahaan"
+                      : role === "candidate"
+                        ? "Pencari Kerja"
+                        : "Dinas Tenaga Kerja"}
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-center gap-3 w-full max-w-xs">
+                  <div className="w-full">
+                    <label className="block text-sm font-medium text-gray-700 mb-1 text-center">
+                      Ganti Foto Profil
+                    </label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      icon="ri-camera-line"
+                    />
+                  </div>
+                  {selectedFile && (
+                    <button
+                      onClick={handleSavePhoto}
+                      disabled={isUploadingPhoto}
+                      className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      {isUploadingPhoto ? (
+                        <>
+                          <i className="ri-loader-4-line animate-spin"></i>{" "}
+                          Menyimpan...
+                        </>
+                      ) : (
+                        <>
+                          <i className="ri-save-line"></i> Simpan Foto
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </Card>
             <Card
               className="overflow-hidden"
               header={
@@ -425,74 +594,6 @@ export default function ProfilePage() {
               >
                 {role === "company" && (
                   <React.Fragment>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-2">
-                        Logo Perusahaan
-                      </label>
-                      <Input
-                        icon="ri-file-3-line"
-                        type="file"
-                        onChange={async (e) => {
-                          const f = e.target.files?.[0];
-                          if (!f) {
-                            setCompanyForm({
-                              ...companyForm,
-                              company_logo: "",
-                            });
-                            setCompanyLogoPreview("");
-                            return;
-                          }
-                          try {
-                            const presign = await presignCompanyProfileUpload(
-                              "logo",
-                              f.name,
-                              f.type || "application/octet-stream",
-                            );
-                            const resp = await fetch(presign.url, {
-                              method: "PUT",
-                              headers: {
-                                "Content-Type":
-                                  f.type || "application/octet-stream",
-                              },
-                              body: f,
-                            });
-                            if (!resp.ok) {
-                              const txt = await resp.text();
-                              throw new Error(
-                                `Upload gagal (${resp.status}): ${txt}`,
-                              );
-                            }
-                            const objectUrl = presign.url.includes("?")
-                              ? presign.url.slice(0, presign.url.indexOf("?"))
-                              : presign.url;
-                            setCompanyForm({
-                              ...companyForm,
-                              company_logo: objectUrl,
-                            });
-                            setCompanyLogoPreview(URL.createObjectURL(f));
-                          } catch (err) {
-                            const msg =
-                              err instanceof Error
-                                ? err.message
-                                : "Gagal upload logo perusahaan";
-                            showError(msg);
-                          }
-                        }}
-                        className="w-full px-4 py-3 rounded-xl md:col-span-2"
-                      />
-                      {companyLogoPreview && (
-                        <div className="mt-2">
-                          <Image
-                            src={companyLogoPreview}
-                            alt="Logo Preview"
-                            width={96}
-                            height={96}
-                            className="w-24 h-24 rounded object-cover border"
-                            unoptimized
-                          />
-                        </div>
-                      )}
-                    </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-500 mb-2">
                         Nama Perusahaan
@@ -656,74 +757,6 @@ export default function ProfilePage() {
                 )}
                 {role === "candidate" && (
                   <React.Fragment>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-2">
-                        Foto Profil
-                      </label>
-                      <Input
-                        icon="ri-file-3-line"
-                        type="file"
-                        onChange={async (e) => {
-                          const f = e.target.files?.[0];
-                          if (!f) {
-                            setCandidateForm({
-                              ...candidateForm,
-                              photo_profile: "",
-                            });
-                            setCandidatePhotoPreview("");
-                            return;
-                          }
-                          try {
-                            const presign = await presignCandidateProfileUpload(
-                              "photo",
-                              f.name,
-                              f.type || "application/octet-stream",
-                            );
-                            const resp = await fetch(presign.url, {
-                              method: "PUT",
-                              headers: {
-                                "Content-Type":
-                                  f.type || "application/octet-stream",
-                              },
-                              body: f,
-                            });
-                            if (!resp.ok) {
-                              const txt = await resp.text();
-                              throw new Error(
-                                `Upload gagal (${resp.status}): ${txt}`,
-                              );
-                            }
-                            const objectUrl = presign.url.includes("?")
-                              ? presign.url.slice(0, presign.url.indexOf("?"))
-                              : presign.url;
-                            setCandidateForm({
-                              ...candidateForm,
-                              photo_profile: objectUrl,
-                            });
-                            setCandidatePhotoPreview(URL.createObjectURL(f));
-                          } catch (err) {
-                            const msg =
-                              err instanceof Error
-                                ? err.message
-                                : "Gagal upload foto profil";
-                            showError(msg);
-                          }
-                        }}
-                        className="w-full px-4 py-3 rounded-xl md:col-span-2"
-                      />
-                      {candidatePhotoPreview && (
-                        <div className="mt-2">
-                          <Image
-                            src={candidatePhotoPreview}
-                            alt="Foto Preview"
-                            width={96}
-                            height={96}
-                            className="w-24 h-24 rounded object-cover border"
-                            unoptimized
-                          />
-                        </div>
-                      )}
-                    </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-500 mb-2">
                         Nama Lengkap
@@ -1005,74 +1038,6 @@ export default function ProfilePage() {
                   <React.Fragment>
                     <div>
                       <label className="block text-sm font-medium text-gray-500 mb-2">
-                        Foto Profil
-                      </label>
-                      <Input
-                        icon="ri-file-3-line"
-                        type="file"
-                        onChange={async (e) => {
-                          const f = e.target.files?.[0];
-                          if (!f) {
-                            setDisnakerForm({
-                              ...disnakerForm,
-                              photo_profile: "",
-                            });
-                            setDisnakerPhotoPreview("");
-                            return;
-                          }
-                          try {
-                            const presign = await presignDisnakerProfileUpload(
-                              "photo",
-                              f.name,
-                              f.type || "application/octet-stream",
-                            );
-                            const resp = await fetch(presign.url, {
-                              method: "PUT",
-                              headers: {
-                                "Content-Type":
-                                  f.type || "application/octet-stream",
-                              },
-                              body: f,
-                            });
-                            if (!resp.ok) {
-                              const txt = await resp.text();
-                              throw new Error(
-                                `Upload gagal (${resp.status}): ${txt}`,
-                              );
-                            }
-                            const objectUrl = presign.url.includes("?")
-                              ? presign.url.slice(0, presign.url.indexOf("?"))
-                              : presign.url;
-                            setDisnakerForm({
-                              ...disnakerForm,
-                              photo_profile: objectUrl,
-                            });
-                            setDisnakerPhotoPreview(URL.createObjectURL(f));
-                          } catch (err) {
-                            const msg =
-                              err instanceof Error
-                                ? err.message
-                                : "Gagal upload foto profil";
-                            showError(msg);
-                          }
-                        }}
-                        className="w-full px-4 py-3 rounded-xl md:col-span-2"
-                      />
-                      {disnakerPhotoPreview && (
-                        <div className="mt-2">
-                          <Image
-                            src={disnakerPhotoPreview}
-                            alt="Foto Preview"
-                            width={96}
-                            height={96}
-                            className="w-24 h-24 rounded object-cover border"
-                            unoptimized
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-2">
                         Nama Lengkap
                       </label>
                       <Input
@@ -1113,13 +1078,6 @@ export default function ProfilePage() {
                 >
                   <i className="ri-save-line"></i>
                   Simpan Perubahan
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="w-full sm:w-auto px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm transition-all flex items-center justify-center gap-2"
-                >
-                  <i className="ri-logout-box-r-line"></i>
-                  Logout
                 </button>
               </div>
               {role === "company" && companyFilled && !companyApproved && (
@@ -1201,70 +1159,6 @@ export default function ProfilePage() {
                   Simpan Kata Sandi
                 </button>
               </form>
-            </Card>
-
-            <Card
-              className="overflow-hidden"
-              header={
-                <div className="flex items-center gap-2">
-                  <i className="ri-settings-3-line"></i>
-                  <span className="text-lg font-semibold text-primary">
-                    Preferensi
-                  </span>
-                </div>
-              }
-            >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <i className="ri-moon-line text-xl text-secondary"></i>
-                    <div>
-                      <p className="font-medium text-primary">Mode Gelap</p>
-                      <p className="text-sm text-gray-500">
-                        Ubah tampilan menjadi mode gelap
-                      </p>
-                    </div>
-                  </div>
-                  <label className="inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={user.tema === "dark"}
-                      onChange={() =>
-                        setUser({
-                          ...user,
-                          tema: user.tema === "light" ? "dark" : "light",
-                        })
-                      }
-                      className="sr-only peer"
-                    />
-                    <div className="relative w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
-                  </label>
-                </div>
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <i className="ri-notification-3-line text-xl text-secondary"></i>
-                    <div>
-                      <p className="font-medium text-primary">
-                        Notifikasi In-App
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Terima notifikasi di dalam aplikasi
-                      </p>
-                    </div>
-                  </div>
-                  <label className="inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={user.notifikasi}
-                      onChange={() =>
-                        setUser({ ...user, notifikasi: !user.notifikasi })
-                      }
-                      className="sr-only peer"
-                    />
-                    <div className="relative w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
-                  </label>
-                </div>
-              </div>
             </Card>
 
             <Card

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Input,
   Textarea,
@@ -82,6 +83,7 @@ export default function RegisterCompany() {
   }, [cooldown]);
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState("");
   const [finalized, setFinalized] = useState(false);
   const limitMB = 8;
   const tooLarge = (f: File) => f.size > limitMB * 1024 * 1024;
@@ -202,6 +204,7 @@ export default function RegisterCompany() {
   const uploadLogo = async (file: File | undefined) => {
     if (!file) {
       setLogoFile(null);
+      setLogoPreview("");
       setCompany({ ...company, company_logo: "" });
       return;
     }
@@ -212,6 +215,7 @@ export default function RegisterCompany() {
       return;
     }
     setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
   };
 
   const finalize = async () => {
@@ -271,7 +275,7 @@ export default function RegisterCompany() {
 
       const compressImage = (file: File) =>
         new Promise<Blob>((resolve, reject) => {
-          const img = new Image();
+          const img = document.createElement("img");
           const url = URL.createObjectURL(file);
           img.onload = () => {
             const maxW = 800;
@@ -660,6 +664,34 @@ export default function RegisterCompany() {
                 Data Perusahaan
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-3 md:gap-4">
+                <div className="sm:col-span-2 md:col-span-2 flex flex-col items-center gap-4 mb-4">
+                  <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center group">
+                    {logoPreview ? (
+                      <Image
+                        src={logoPreview}
+                        alt="Logo Preview"
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <i className="ri-building-line text-4xl text-gray-300"></i>
+                    )}
+                  </div>
+                  <div className="w-full max-w-xs text-center">
+                    <p className="text-sm font-medium text-gray-700 mb-2">
+                      Logo Perusahaan
+                    </p>
+                    <Input
+                      type="file"
+                      onChange={(e) =>
+                        uploadLogo(
+                          (e.target as HTMLInputElement).files?.[0] ||
+                            undefined,
+                        )
+                      }
+                    />
+                  </div>
+                </div>
                 <Input
                   label="Nama Perusahaan"
                   value={company.company_name}
@@ -741,15 +773,6 @@ export default function RegisterCompany() {
                   value={company.website}
                   onChange={(e) =>
                     setCompany({ ...company, website: e.target.value })
-                  }
-                />
-                <Input
-                  label="Logo Perusahaan"
-                  type="file"
-                  onChange={(e) =>
-                    uploadLogo(
-                      (e.target as HTMLInputElement).files?.[0] || undefined,
-                    )
                   }
                 />
               </div>

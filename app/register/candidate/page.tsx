@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Input,
   SearchableSelect,
@@ -112,6 +113,7 @@ export default function RegisterCandidate() {
     status_perkawinan: "",
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string>("");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [ak1Files, setAk1Files] = useState<{
     ktp?: File | null;
@@ -437,7 +439,7 @@ export default function RegisterCandidate() {
       startSession("candidate", uid, token);
       const compressImage = (file: File) =>
         new Promise<Blob>((resolve, reject) => {
-          const img = new Image();
+          const img = document.createElement("img");
           const url = URL.createObjectURL(file);
           img.onload = () => {
             const maxW = 800;
@@ -1033,6 +1035,38 @@ export default function RegisterCandidate() {
                 </div>
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="sm:col-span-2 flex flex-col items-center gap-4 mb-4">
+                  <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center group">
+                    {photoPreview ? (
+                      <Image
+                        src={photoPreview}
+                        alt="Preview"
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <i className="ri-user-line text-4xl text-gray-300"></i>
+                    )}
+                  </div>
+                  <div className="w-full max-w-xs text-center">
+                    <p className="text-sm font-medium text-gray-700 mb-2">
+                      Foto Profil
+                    </p>
+                    <Input
+                      type="file"
+                      onChange={(e) => {
+                        const f =
+                          (e.target as HTMLInputElement).files?.[0] || null;
+                        setPhotoFile(f);
+                        if (f) {
+                          setPhotoPreview(URL.createObjectURL(f));
+                        } else {
+                          setPhotoPreview("");
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
                 <Input
                   label="Nama Lengkap"
                   value={profile.full_name}
@@ -1147,22 +1181,17 @@ export default function RegisterCandidate() {
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Input
-                  label="Foto Profil"
-                  type="file"
-                  onChange={(e) =>
-                    setPhotoFile(
-                      (e.target as HTMLInputElement).files?.[0] || null,
-                    )
-                  }
-                />
-                <Input
-                  label="CV (PDF)"
-                  type="file"
-                  onChange={(e) =>
-                    setCvFile((e.target as HTMLInputElement).files?.[0] || null)
-                  }
-                />
+                <div className="sm:col-span-2">
+                  <Input
+                    label="CV (PDF)"
+                    type="file"
+                    onChange={(e) =>
+                      setCvFile(
+                        (e.target as HTMLInputElement).files?.[0] || null,
+                      )
+                    }
+                  />
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <button
