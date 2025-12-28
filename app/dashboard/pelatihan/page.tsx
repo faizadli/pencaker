@@ -20,8 +20,8 @@ import { z } from "zod";
 // Simple validation schema
 const institutionSchema = z.object({
   name: z.string().min(3, "Nama lembaga minimal 3 karakter"),
-  description: z.string().optional(),
-  address: z.string().optional(),
+  description: z.string().min(1, "Deskripsi wajib diisi"),
+  address: z.string().min(1, "Alamat wajib diisi"),
   email: z.string().email("Email tidak valid").optional().or(z.literal("")),
   phone: z.string().optional(),
   website: z.string().url("URL tidak valid").optional().or(z.literal("")),
@@ -309,7 +309,7 @@ export default function TrainingInstitutionsPage() {
         title={isEditing ? "Edit Lembaga" : "Tambah Lembaga"}
         size="lg"
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <Input
             label="Nama Lembaga"
             placeholder="Contoh: BLK Padang"
@@ -329,20 +329,24 @@ export default function TrainingInstitutionsPage() {
                 setFormData({ ...formData, email: e.target.value })
               }
               error={fieldErrors.email}
+              required
             />
             <Input
               label="No. Telepon"
+              type="tel"
               placeholder="0812..."
               value={formData.phone}
               onChange={(e) =>
                 setFormData({ ...formData, phone: e.target.value })
               }
               error={fieldErrors.phone}
+              required
             />
           </div>
 
           <Input
             label="Website"
+            type="url"
             placeholder="https://..."
             value={formData.website}
             onChange={(e) =>
@@ -357,6 +361,8 @@ export default function TrainingInstitutionsPage() {
             onChange={(e) =>
               setFormData({ ...formData, address: e.target.value })
             }
+            error={fieldErrors.address}
+            required
           />
 
           <Textarea
@@ -365,6 +371,8 @@ export default function TrainingInstitutionsPage() {
             onChange={(e) =>
               setFormData({ ...formData, description: e.target.value })
             }
+            error={fieldErrors.description}
+            required
           />
 
           <div className="flex justify-end gap-3 pt-4">

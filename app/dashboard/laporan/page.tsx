@@ -4,10 +4,11 @@ import { saveAs } from "file-saver";
 import { useState, useEffect } from "react";
 import Card from "../../../components/ui/Card";
 import { useToast } from "../../../components/ui/Toast";
-import { TABS, GenericRow } from "../../../components/laporan/types";
+import { TABS, GenericRow, BaseGroup } from "../../../components/laporan/types";
 import {
   getSheetTitle,
   formatDateIndo,
+  processDataToRows,
 } from "../../../components/laporan/helpers";
 import IPK31Table from "../../../components/laporan/IPK31Table";
 import GenericIPKTable from "../../../components/laporan/GenericIPKTable";
@@ -25,27 +26,6 @@ import {
   getJobCategoryGroups,
 } from "../../../services/site";
 
-interface EduGroup {
-  id: string;
-  code: string;
-  name: string;
-  items: { id: string; code: string; name: string }[];
-}
-
-interface PositionGroup {
-  id: string;
-  code: string;
-  name: string;
-  items: { id: string; code: string; name: string }[];
-}
-
-interface JobCategoryGroup {
-  id: string;
-  code: string;
-  name: string;
-  items: { id: string; code: string; name: string }[];
-}
-
 export default function LaporanPage() {
   const { showSuccess, showError } = useToast();
 
@@ -53,6 +33,7 @@ export default function LaporanPage() {
   const [startDate, setStartDate] = useState("2025-08-01");
   const [endDate, setEndDate] = useState("2025-08-31");
   const [educationData, setEducationData] = useState<GenericRow[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
 
   const headerDateString = `PADA TANGGAL : ${formatDateIndo(startDate)} s/d ${formatDateIndo(endDate)}`;
 
@@ -60,61 +41,9 @@ export default function LaporanPage() {
     if (activeTab === "ipk3.2" || activeTab === "ipk3.4") {
       getEducationGroups()
         .then((res: unknown) => {
-          const response = res as { data: EduGroup[] };
+          const response = res as { data: BaseGroup[] };
           const data = response.data;
-
-          // Sort groups by code
-          data.sort((a, b) =>
-            a.code.localeCompare(b.code, undefined, { numeric: true }),
-          );
-
-          const rows: GenericRow[] = [];
-          data.forEach((group) => {
-            // Sort items within group by code
-            group.items.sort((a, b) =>
-              a.code.localeCompare(b.code, undefined, { numeric: true }),
-            );
-
-            // Add Header Row (Group)
-            // Ensure code is single char for header detection
-            rows.push({
-              code: group.code,
-              label: group.name,
-              lastMonth: { l: 0, w: 0 },
-              registered: { l: 0, w: 0 },
-              placed: { l: 0, w: 0 },
-              removed: { l: 0, w: 0 },
-              thisMonth: { l: 0, w: 0 },
-              isHeader: true,
-            });
-
-            // Add Item Rows (Levels)
-            group.items.forEach((item) => {
-              rows.push({
-                code: item.code,
-                label: item.name,
-                lastMonth: { l: 0, w: 0 },
-                registered: { l: 0, w: 0 },
-                placed: { l: 0, w: 0 },
-                removed: { l: 0, w: 0 },
-                thisMonth: { l: 0, w: 0 },
-                isHeader: false,
-              });
-            });
-          });
-
-          // Add JUMLAH row
-          rows.push({
-            code: "JUMLAH",
-            label: "JUMLAH",
-            lastMonth: { l: 0, w: 0 },
-            registered: { l: 0, w: 0 },
-            placed: { l: 0, w: 0 },
-            removed: { l: 0, w: 0 },
-            thisMonth: { l: 0, w: 0 },
-          });
-
-          setEducationData(rows);
+          setEducationData(processDataToRows(data));
         })
         .catch((err) => {
           console.error("Failed to fetch education groups", err);
@@ -123,60 +52,9 @@ export default function LaporanPage() {
     } else if (activeTab === "ipk3.3" || activeTab === "ipk3.5") {
       getPositionGroups()
         .then((res: unknown) => {
-          const response = res as { data: PositionGroup[] };
+          const response = res as { data: BaseGroup[] };
           const data = response.data;
-
-          // Sort groups by code
-          data.sort((a, b) =>
-            a.code.localeCompare(b.code, undefined, { numeric: true }),
-          );
-
-          const rows: GenericRow[] = [];
-          data.forEach((group) => {
-            // Sort items within group by code
-            group.items.sort((a, b) =>
-              a.code.localeCompare(b.code, undefined, { numeric: true }),
-            );
-
-            // Add Header Row (Group)
-            rows.push({
-              code: group.code,
-              label: group.name,
-              lastMonth: { l: 0, w: 0 },
-              registered: { l: 0, w: 0 },
-              placed: { l: 0, w: 0 },
-              removed: { l: 0, w: 0 },
-              thisMonth: { l: 0, w: 0 },
-              isHeader: true,
-            });
-
-            // Add Item Rows (Titles)
-            group.items.forEach((item) => {
-              rows.push({
-                code: item.code,
-                label: item.name,
-                lastMonth: { l: 0, w: 0 },
-                registered: { l: 0, w: 0 },
-                placed: { l: 0, w: 0 },
-                removed: { l: 0, w: 0 },
-                thisMonth: { l: 0, w: 0 },
-                isHeader: false,
-              });
-            });
-          });
-
-          // Add JUMLAH row
-          rows.push({
-            code: "JUMLAH",
-            label: "JUMLAH",
-            lastMonth: { l: 0, w: 0 },
-            registered: { l: 0, w: 0 },
-            placed: { l: 0, w: 0 },
-            removed: { l: 0, w: 0 },
-            thisMonth: { l: 0, w: 0 },
-          });
-
-          setEducationData(rows);
+          setEducationData(processDataToRows(data));
         })
         .catch((err) => {
           console.error("Failed to fetch position groups", err);
@@ -185,60 +63,9 @@ export default function LaporanPage() {
     } else if (activeTab === "ipk3.6") {
       getJobCategoryGroups()
         .then((res: unknown) => {
-          const response = res as { data: JobCategoryGroup[] };
+          const response = res as { data: BaseGroup[] };
           const data = response.data;
-
-          // Sort groups by code
-          data.sort((a, b) =>
-            a.code.localeCompare(b.code, undefined, { numeric: true }),
-          );
-
-          const rows: GenericRow[] = [];
-          data.forEach((group) => {
-            // Sort items within group by code
-            group.items.sort((a, b) =>
-              a.code.localeCompare(b.code, undefined, { numeric: true }),
-            );
-
-            // Add Header Row (Group)
-            rows.push({
-              code: group.code,
-              label: group.name,
-              lastMonth: { l: 0, w: 0 },
-              registered: { l: 0, w: 0 },
-              placed: { l: 0, w: 0 },
-              removed: { l: 0, w: 0 },
-              thisMonth: { l: 0, w: 0 },
-              isHeader: true,
-            });
-
-            // Add Item Rows (Categories)
-            group.items.forEach((item) => {
-              rows.push({
-                code: item.code,
-                label: item.name,
-                lastMonth: { l: 0, w: 0 },
-                registered: { l: 0, w: 0 },
-                placed: { l: 0, w: 0 },
-                removed: { l: 0, w: 0 },
-                thisMonth: { l: 0, w: 0 },
-                isHeader: false,
-              });
-            });
-          });
-
-          // Add JUMLAH row
-          rows.push({
-            code: "JUMLAH",
-            label: "JUMLAH",
-            lastMonth: { l: 0, w: 0 },
-            registered: { l: 0, w: 0 },
-            placed: { l: 0, w: 0 },
-            removed: { l: 0, w: 0 },
-            thisMonth: { l: 0, w: 0 },
-          });
-
-          setEducationData(rows);
+          setEducationData(processDataToRows(data));
         })
         .catch((err) => {
           console.error("Failed to fetch job category groups", err);
@@ -248,6 +75,8 @@ export default function LaporanPage() {
   }, [activeTab, showError]);
 
   const handleExportExcel = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
     try {
       const workbook = new ExcelJS.Workbook();
       const sheetName = activeTab;
@@ -321,98 +150,268 @@ export default function LaporanPage() {
     } catch (error) {
       console.error(error);
       showError("Gagal mengunduh laporan");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportAllExcel = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      showSuccess("Sedang memproses semua laporan...");
+
+      const workbook = new ExcelJS.Workbook();
+
+      const defaultBorder: Partial<ExcelJS.Borders> = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+
+      const centerAlignment: Partial<ExcelJS.Alignment> = {
+        vertical: "middle",
+        horizontal: "center",
+        wrapText: true,
+      };
+      const leftAlignment: Partial<ExcelJS.Alignment> = {
+        vertical: "middle",
+        horizontal: "left",
+        wrapText: true,
+      };
+
+      // Fetch all required data in parallel
+      const [eduRes, posRes, jobRes] = await Promise.all([
+        getEducationGroups(),
+        getPositionGroups(),
+        getJobCategoryGroups(),
+      ]);
+
+      const eduData = (eduRes as { data: BaseGroup[] }).data;
+      const posData = (posRes as { data: BaseGroup[] }).data;
+      const jobData = (jobRes as { data: BaseGroup[] }).data;
+
+      const eduRows = processDataToRows(eduData);
+      const posRows = processDataToRows(posData);
+      const jobRows = processDataToRows(jobData);
+
+      for (const tab of TABS) {
+        const worksheet = workbook.addWorksheet(tab.id);
+
+        if (tab.id === "ipk3.1") {
+          exportIPK3_1(
+            worksheet,
+            defaultBorder,
+            centerAlignment,
+            leftAlignment,
+            headerDateString,
+          );
+        } else if (tab.id === "ipk3.2" || tab.id === "ipk3.4") {
+          exportGeneric12Col(
+            worksheet,
+            defaultBorder,
+            centerAlignment,
+            leftAlignment,
+            tab.id,
+            headerDateString,
+            eduRows,
+          );
+        } else if (tab.id === "ipk3.3" || tab.id === "ipk3.5") {
+          exportGeneric12Col(
+            worksheet,
+            defaultBorder,
+            centerAlignment,
+            leftAlignment,
+            tab.id,
+            headerDateString,
+            posRows,
+          );
+        } else if (tab.id === "ipk3.6") {
+          exportGeneric12Col(
+            worksheet,
+            defaultBorder,
+            centerAlignment,
+            leftAlignment,
+            tab.id,
+            headerDateString,
+            jobRows,
+          );
+        } else if (tab.id === "ipk3.7") {
+          exportIPK3_7(
+            worksheet,
+            defaultBorder,
+            centerAlignment,
+            leftAlignment,
+            headerDateString,
+          );
+        } else if (tab.id === "ipk3.8") {
+          exportIPK3_8(
+            worksheet,
+            defaultBorder,
+            centerAlignment,
+            leftAlignment,
+            headerDateString,
+          );
+        }
+      }
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      saveAs(blob, `Laporan_Lengkap_${startDate}_${endDate}.xlsx`);
+      showSuccess("Berhasil mengunduh semua laporan");
+    } catch (error) {
+      console.error(error);
+      showError("Gagal mengunduh laporan lengkap");
+    } finally {
+      setIsExporting(false);
     }
   };
 
   return (
-    <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-      <div className="px-4 sm:px-6">
-        <div className="mb-6 flex justify-between items-center">
+    <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-6 pb-8 lg:ml-64">
+      <div className="px-4 sm:px-6 space-y-6">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">
+            <h1 className="text-2xl font-bold text-gray-900">
               Laporan {activeTab.toUpperCase()}
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 mt-1 max-w-3xl">
               {getSheetTitle(activeTab)}
             </p>
           </div>
-          <div className="flex gap-4 items-end">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-600">
-                Dari Tanggal
-              </label>
-              <input
-                type="date"
-                className="border border-gray-300 rounded px-2 py-1 text-sm"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-600">
-                Sampai Tanggal
-              </label>
-              <input
-                type="date"
-                className="border border-gray-300 rounded px-2 py-1 text-sm"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-            <button
-              onClick={handleExportExcel}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm transition flex items-center gap-2 h-[34px]"
-            >
-              <i className="ri-file-excel-line"></i>
-              Export Excel
-            </button>
-          </div>
         </div>
 
-        <div className="mb-4 overflow-x-auto pb-2">
-          <div className="flex gap-2 min-w-max">
-            {TABS.map((tab) => (
+        {/* Controls & Filters */}
+        <Card className="p-5 bg-white shadow-sm border border-gray-200/60 rounded-xl">
+          <div className="flex flex-col lg:flex-row gap-6 justify-between items-end lg:items-center">
+            {/* Date Filters */}
+            <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+              <div className="flex-1 sm:flex-none">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                  Dari Tanggal
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i className="ri-calendar-line text-gray-400"></i>
+                  </div>
+                  <input
+                    type="date"
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm transition-shadow"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex-1 sm:flex-none">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                  Sampai Tanggal
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i className="ri-calendar-line text-gray-400"></i>
+                  </div>
+                  <input
+                    type="date"
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm transition-shadow"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 w-full lg:w-auto">
               <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  setEducationData([]);
-                }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? "bg-primary text-white"
-                    : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                onClick={handleExportExcel}
+                disabled={isExporting}
+                className={`flex-1 lg:flex-none justify-center px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 text-sm font-medium transition-all shadow-sm hover:shadow flex items-center gap-2 ${
+                  isExporting ? "opacity-70 cursor-not-allowed" : ""
                 }`}
               >
-                {tab.label}
+                {isExporting ? (
+                  <i className="ri-loader-4-line animate-spin"></i>
+                ) : (
+                  <i className="ri-file-excel-line"></i>
+                )}
+                Export Sheet
               </button>
-            ))}
+              <button
+                onClick={handleExportAllExcel}
+                disabled={isExporting}
+                className={`flex-1 lg:flex-none justify-center px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 text-sm font-medium transition-all shadow-sm hover:shadow flex items-center gap-2 ${
+                  isExporting ? "opacity-70 cursor-not-allowed" : ""
+                }`}
+              >
+                {isExporting ? (
+                  <i className="ri-loader-4-line animate-spin"></i>
+                ) : (
+                  <i className="ri-file-excel-2-line"></i>
+                )}
+                Export Semua
+              </button>
+            </div>
           </div>
+        </Card>
+
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200 overflow-x-auto">
+          <nav className="flex space-x-1 min-w-max pb-1" aria-label="Tabs">
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    setEducationData([]);
+                  }}
+                  className={`
+                    whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm transition-colors duration-200
+                    ${
+                      isActive
+                        ? "border-primary text-primary"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }
+                  `}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
         </div>
 
-        <Card className="overflow-x-auto">
-          <div className="min-w-[1200px] p-4 bg-white">
-            {activeTab === "ipk3.1" && (
-              <IPK31Table headerDateString={headerDateString} />
-            )}
+        {/* Table Content */}
+        <Card className="overflow-hidden shadow-sm border border-gray-200/60 rounded-xl bg-white">
+          <div className="overflow-x-auto">
+            <div className="min-w-[1200px] p-6">
+              {activeTab === "ipk3.1" && (
+                <IPK31Table headerDateString={headerDateString} />
+              )}
 
-            {["ipk3.2", "ipk3.3", "ipk3.4", "ipk3.5", "ipk3.6"].includes(
-              activeTab,
-            ) && (
-              <GenericIPKTable
-                activeTab={activeTab}
-                headerDateString={headerDateString}
-                data={educationData.length > 0 ? educationData : undefined}
-              />
-            )}
+              {["ipk3.2", "ipk3.3", "ipk3.4", "ipk3.5", "ipk3.6"].includes(
+                activeTab,
+              ) && (
+                <GenericIPKTable
+                  activeTab={activeTab}
+                  headerDateString={headerDateString}
+                  data={educationData.length > 0 ? educationData : undefined}
+                />
+              )}
 
-            {activeTab === "ipk3.7" && (
-              <IPK37Table headerDateString={headerDateString} />
-            )}
+              {activeTab === "ipk3.7" && (
+                <IPK37Table headerDateString={headerDateString} />
+              )}
 
-            {activeTab === "ipk3.8" && (
-              <IPK38Table headerDateString={headerDateString} />
-            )}
+              {activeTab === "ipk3.8" && (
+                <IPK38Table headerDateString={headerDateString} />
+              )}
+            </div>
           </div>
         </Card>
       </div>

@@ -1,3 +1,5 @@
+import { BaseGroup, GenericRow } from "./types";
+
 export const getSheetTitle = (tabId: string) => {
   switch (tabId) {
     case "ipk3.1":
@@ -50,4 +52,58 @@ export const formatDateIndo = (dateStr: string) => {
   })
     .format(date)
     .toUpperCase();
+};
+
+export const processDataToRows = (data: BaseGroup[]): GenericRow[] => {
+  // Sort groups by code
+  data.sort((a, b) =>
+    a.code.localeCompare(b.code, undefined, { numeric: true }),
+  );
+
+  const rows: GenericRow[] = [];
+  data.forEach((group) => {
+    // Sort items within group by code
+    group.items.sort((a, b) =>
+      a.code.localeCompare(b.code, undefined, { numeric: true }),
+    );
+
+    // Add Header Row (Group)
+    rows.push({
+      code: group.code,
+      label: group.name,
+      lastMonth: { l: 0, w: 0 },
+      registered: { l: 0, w: 0 },
+      placed: { l: 0, w: 0 },
+      removed: { l: 0, w: 0 },
+      thisMonth: { l: 0, w: 0 },
+      isHeader: true,
+    });
+
+    // Add Item Rows
+    group.items.forEach((item) => {
+      rows.push({
+        code: item.code,
+        label: item.name,
+        lastMonth: { l: 0, w: 0 },
+        registered: { l: 0, w: 0 },
+        placed: { l: 0, w: 0 },
+        removed: { l: 0, w: 0 },
+        thisMonth: { l: 0, w: 0 },
+        isHeader: false,
+      });
+    });
+  });
+
+  // Add JUMLAH row
+  rows.push({
+    code: "JUMLAH",
+    label: "JUMLAH",
+    lastMonth: { l: 0, w: 0 },
+    registered: { l: 0, w: 0 },
+    placed: { l: 0, w: 0 },
+    removed: { l: 0, w: 0 },
+    thisMonth: { l: 0, w: 0 },
+  });
+
+  return rows;
 };

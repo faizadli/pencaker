@@ -529,7 +529,7 @@ export default function InstitutionDetail({
         title={isEditing ? "Edit Pelatihan" : "Tambah Pelatihan"}
         size="lg"
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <Input
             label="Nama Pelatihan"
             placeholder="Contoh: Web Development"
@@ -597,6 +597,8 @@ export default function InstitutionDetail({
             onChange={(e) =>
               setFormData({ ...formData, description: e.target.value })
             }
+            error={fieldErrors.description}
+            required
           />
 
           <div className="flex justify-end gap-3 pt-4">

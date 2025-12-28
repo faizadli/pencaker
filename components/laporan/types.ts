@@ -46,6 +46,19 @@ export interface IPK3_8Row {
   akan: { l: number; p: number };
 }
 
+export interface BaseGroupItem {
+  id: string;
+  code: string;
+  name: string;
+}
+
+export interface BaseGroup {
+  id: string;
+  code: string;
+  name: string;
+  items: BaseGroupItem[];
+}
+
 export const TABS = [
   { id: "ipk3.1", label: "IPK 3.1" },
   { id: "ipk3.2", label: "IPK 3.2" },
