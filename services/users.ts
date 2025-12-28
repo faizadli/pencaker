@@ -8,6 +8,8 @@ function authHeader(): Record<string, string> {
 export type UserListItem = {
   id: string;
   email: string;
+  full_name?: string;
+  no_handphone?: string;
   role: "candidate" | "company" | "super_admin" | "disnaker";
   createdAt?: string;
   updatedAt?: string;

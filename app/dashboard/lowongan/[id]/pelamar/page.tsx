@@ -11,11 +11,8 @@ import {
   TH,
   TD,
 } from "../../../../../components/ui/Table";
-import {
-  Input,
-  SearchableSelect,
-  SegmentedToggle,
-} from "../../../../../components/ui/field";
+import { Input, SearchableSelect } from "../../../../../components/ui/field";
+import Pagination from "../../../../../components/ui/Pagination";
 import Modal from "../../../../../components/ui/Modal";
 import FullPageLoading from "../../../../../components/ui/FullPageLoading";
 import {
@@ -85,6 +82,9 @@ export default function PelamarLowonganPage() {
   const [filterEducationMajor, setFilterEducationMajor] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"self" | "admin">("self");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [educationGroups, setEducationGroups] = useState<
     { id: string; name: string; items: { id: string; name: string }[] }[]
@@ -100,6 +100,11 @@ export default function PelamarLowonganPage() {
       result = result.filter((r) => r.is_admin_created);
     } else {
       result = result.filter((r) => !r.is_admin_created);
+    }
+
+    if (searchQuery) {
+      const lower = searchQuery.toLowerCase();
+      result = result.filter((r) => r.name.toLowerCase().includes(lower));
     }
 
     if (filterStatus) {
@@ -178,7 +183,13 @@ export default function PelamarLowonganPage() {
     filterEducationLevel,
     filterEducationMajor,
     educationGroups,
+    searchQuery,
   ]);
+
+  const paginatedRows = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredRows.slice(start, start + pageSize);
+  }, [filteredRows, page, pageSize]);
 
   // Helper to get education major options
   const getMajorOptions = () => {
@@ -646,47 +657,53 @@ export default function PelamarLowonganPage() {
   return (
     <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
       <div className="px-4 sm:px-6">
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">
-              Pelamar Lowongan
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              {jobTitle ? jobTitle : jobId}
-            </p>
+        <div className="mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-primary">
+            Pelamar Lowongan
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {jobTitle ? jobTitle : jobId}
+          </p>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Cari nama pelamar..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full py-3"
+                icon="ri-search-line"
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 items-stretch">
+              <SearchableSelect
+                options={[
+                  { value: "self", label: "Melamar Sendiri" },
+                  { value: "admin", label: "Ditambahkan Admin" },
+                ]}
+                value={activeTab}
+                onChange={(v) => setActiveTab(v as "self" | "admin")}
+                className="w-full sm:w-52"
+                placeholder="Sumber Pelamar"
+              />
+              {permissions.includes("lowongan.applicant.create") && (
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center gap-2"
+                >
+                  <i className="ri-user-add-line"></i>
+                  Tambah
+                </button>
+              )}
+            </div>
           </div>
-          {permissions.includes("lowongan.applicant.create") && (
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:brightness-95 transition-colors flex items-center w-fit"
-            >
-              <i className="ri-user-add-line mr-2"></i>Tambah Pelamar
-            </button>
-          )}
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="flex-1 min-w-0">
             <Card className="overflow-hidden">
-              <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <SegmentedToggle
-                  options={[
-                    {
-                      label: "Melamar Sendiri",
-                      value: "self",
-                      icon: "ri-user-line",
-                    },
-                    {
-                      label: "Ditambahkan Admin",
-                      value: "admin",
-                      icon: "ri-admin-line",
-                    },
-                  ]}
-                  value={activeTab}
-                  onChange={(v) => setActiveTab(v as "self" | "admin")}
-                  className="w-full sm:w-fit"
-                />
-              </div>
               <Table>
                 <TableHead>
                   <tr>
@@ -699,7 +716,7 @@ export default function PelamarLowonganPage() {
                   </tr>
                 </TableHead>
                 <TableBody>
-                  {filteredRows.map((r) => (
+                  {paginatedRows.map((r) => (
                     <TableRow key={r.id}>
                       <TD className="text-primary">{r.name}</TD>
                       <TD className="text-gray-900">
@@ -750,6 +767,18 @@ export default function PelamarLowonganPage() {
                   )}
                 </TableBody>
               </Table>
+              <div className="border-t border-gray-100">
+                <Pagination
+                  page={page}
+                  pageSize={pageSize}
+                  total={filteredRows.length}
+                  onPageChange={(p) => setPage(p)}
+                  onPageSizeChange={(s) => {
+                    setPageSize(s);
+                    setPage(1);
+                  }}
+                />
+              </div>
             </Card>
           </div>
 

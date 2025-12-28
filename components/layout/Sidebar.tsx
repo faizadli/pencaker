@@ -72,7 +72,7 @@ export default function Sidebar({
       icon: "ri-book-open-line",
       path: "/dashboard/pelatihan",
     },
-    { name: "Pengaduan", icon: "ri-alert-line", path: "/dashboard/pengaduan" },
+    // { name: "Pengaduan", icon: "ri-alert-line", path: "/dashboard/pengaduan" },
     { name: "Laporan", icon: "ri-file-chart-line", path: "/dashboard/laporan" },
     { name: "Berita", icon: "ri-newspaper-line", path: "/dashboard/berita" },
     {

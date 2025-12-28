@@ -3,17 +3,39 @@ import { useEffect, useState } from "react";
 import { Input, SearchableSelect } from "../../../components/ui/field";
 import Modal from "../../../components/ui/Modal";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
-import { listUsers, updateUser, deleteUser, createUser, type UserListItem } from "../../../services/users";
+import {
+  listUsers,
+  updateUser,
+  deleteUser,
+  createUser,
+  type UserListItem,
+} from "../../../services/users";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { useRouter } from "next/navigation";
 import Pagination from "../../../components/ui/Pagination";
 import Card from "../../../components/ui/Card";
-import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../../components/ui/Table";
+import {
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TH,
+  TD,
+} from "../../../components/ui/Table";
 import EmptyState from "../../../components/ui/EmptyState";
 import { useToast } from "../../../components/ui/Toast";
 
-const ROLE_MAP_TO_API: Record<string, "super_admin" | "company" | "candidate"> = { Superadmin: "super_admin", Perusahaan: "company", Pencaker: "candidate" };
-const ROLE_MAP_FROM_API: Record<"super_admin" | "company" | "candidate" | "disnaker", string> = { super_admin: "Superadmin", company: "Perusahaan", candidate: "Pencaker", disnaker: "Superadmin" };
+const ROLE_MAP_TO_API: Record<string, "super_admin" | "company" | "candidate"> =
+  { Superadmin: "super_admin", Perusahaan: "company", Pencaker: "candidate" };
+const ROLE_MAP_FROM_API: Record<
+  "super_admin" | "company" | "candidate" | "disnaker",
+  string
+> = {
+  super_admin: "Superadmin",
+  company: "Perusahaan",
+  candidate: "Pencaker",
+  disnaker: "Superadmin",
+};
 
 declare global {
   interface Window {
@@ -35,7 +57,22 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editUser, setEditUser] = useState<string | null>(null);
-  const [form, setForm] = useState<{ nama: string; email: string; role: string; unit: string; telepon: string; status: "Aktif" | "Nonaktif"; password?: string }>({ nama: "", email: "", role: "Superadmin", unit: "", telepon: "", status: "Aktif" });
+  const [form, setForm] = useState<{
+    nama: string;
+    email: string;
+    role: string;
+    unit: string;
+    telepon: string;
+    status: "Aktif" | "Nonaktif";
+    password?: string;
+  }>({
+    nama: "",
+    email: "",
+    role: "Superadmin",
+    unit: "",
+    telepon: "",
+    status: "Aktif",
+  });
   const [submitted, setSubmitted] = useState(false);
 
   const roles = ["Superadmin", "Perusahaan", "Pencaker"];
@@ -55,13 +92,24 @@ export default function UsersPage() {
     async function load() {
       try {
         setLoading(true);
-        const role = typeof window !== "undefined" ? (localStorage.getItem("role") || "") : "";
+        const role =
+          typeof window !== "undefined"
+            ? localStorage.getItem("role") || ""
+            : "";
         const rolesResp = await listRoles();
-        const roleItems = (rolesResp.data || rolesResp) as { id: number; name: string }[];
-        const target = roleItems.find((x) => String(x.name).toLowerCase() === role.toLowerCase());
+        const roleItems = (rolesResp.data || rolesResp) as {
+          id: number;
+          name: string;
+        }[];
+        const target = roleItems.find(
+          (x) => String(x.name).toLowerCase() === role.toLowerCase(),
+        );
         if (target) {
           const perms = await getRolePermissions(target.id);
-          const rows = (perms.data || perms) as { code: string; label: string }[];
+          const rows = (perms.data || perms) as {
+            code: string;
+            label: string;
+          }[];
           const codes = rows.map((r) => r.code);
           setPermissionCodes(codes);
           if (!codes.includes("users.read")) {
@@ -71,7 +119,18 @@ export default function UsersPage() {
         }
         const resp = await listUsers({ page, limit: pageSize });
         const rows = resp.data as UserListItem[];
-        const mapped: User[] = rows.map((u, idx) => ({ id: idx + 1, nama: u.email, email: u.email, role: ROLE_MAP_FROM_API[u.role], unit: "-", telepon: "-", status: "Aktif", terakhirLogin: u.updatedAt ? new Date(u.updatedAt).toLocaleString("id-ID") : "-" }));
+        const mapped: User[] = rows.map((u, idx) => ({
+          id: idx + 1,
+          nama: u.full_name || u.email || "-",
+          email: u.email || "-",
+          role: ROLE_MAP_FROM_API[u.role] || u.role,
+          unit: "-",
+          telepon: u.no_handphone || "-",
+          status: "Aktif",
+          terakhirLogin: u.updatedAt
+            ? new Date(u.updatedAt).toLocaleString("id-ID")
+            : "-",
+        }));
         setUsers(mapped);
         window.__usersIds = rows.map((u) => u.id);
         const p = resp.pagination;
@@ -86,14 +145,25 @@ export default function UsersPage() {
   }, [router, page, pageSize]);
 
   const filteredUsers = users.filter((user) => {
-    const matchesSearch = user.nama.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      (user.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.telepon || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "all" || user.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
   });
 
   const handleAdd = () => {
-    setForm({ nama: "", email: "", role: "Superadmin", unit: "", telepon: "", status: "Aktif", password: "" });
+    setForm({
+      nama: "",
+      email: "",
+      role: "Superadmin",
+      unit: "",
+      telepon: "",
+      status: "Aktif",
+      password: "",
+    });
     setEditUser(null);
     setIsModalOpen(true);
     setSubmitted(false);
@@ -115,13 +185,32 @@ export default function UsersPage() {
     }
     try {
       if (editUser) {
-        await updateUser(editUser, { email: form.email, role: ROLE_MAP_TO_API[form.role], ...(form.password ? { password: form.password } : {}) });
+        await updateUser(editUser, {
+          email: form.email,
+          role: ROLE_MAP_TO_API[form.role],
+          ...(form.password ? { password: form.password } : {}),
+        });
       } else {
-        await createUser(form.email, form.password!, ROLE_MAP_TO_API[form.role]);
+        await createUser(
+          form.email,
+          form.password!,
+          ROLE_MAP_TO_API[form.role],
+        );
       }
       const resp = await listUsers({ page, limit: pageSize });
       const rows = resp.data as UserListItem[];
-      const mapped: User[] = rows.map((u, idx) => ({ id: idx + 1, nama: u.email, email: u.email, role: ROLE_MAP_FROM_API[u.role], unit: "-", telepon: "-", status: "Aktif", terakhirLogin: u.updatedAt ? new Date(u.updatedAt).toLocaleString("id-ID") : "-" }));
+      const mapped: User[] = rows.map((u, idx) => ({
+        id: idx + 1,
+        nama: u.email,
+        email: u.email,
+        role: ROLE_MAP_FROM_API[u.role],
+        unit: "-",
+        telepon: "-",
+        status: "Aktif",
+        terakhirLogin: u.updatedAt
+          ? new Date(u.updatedAt).toLocaleString("id-ID")
+          : "-",
+      }));
       setUsers(mapped);
       window.__usersIds = rows.map((u) => u.id);
       setIsModalOpen(false);
@@ -136,16 +225,27 @@ export default function UsersPage() {
   const handleDelete = async (id: number) => {
     if (!confirm("Yakin ingin menghapus pengguna ini?")) return;
     try {
-    const idx = users.findIndex((u) => u.id === id);
-    const idStr = window.__usersIds?.[idx];
-    if (!idStr) throw new Error("id not found");
-    await deleteUser(idStr);
-    const resp = await listUsers({ page, limit: pageSize });
-    const rows = resp.data as UserListItem[];
-    const mapped: User[] = rows.map((u, idx2) => ({ id: idx2 + 1, nama: u.email, email: u.email, role: ROLE_MAP_FROM_API[u.role], unit: "-", telepon: "-", status: "Aktif", terakhirLogin: u.updatedAt ? new Date(u.updatedAt).toLocaleString("id-ID") : "-" }));
-    setUsers(mapped);
-    window.__usersIds = rows.map((u) => u.id);
-    showSuccess("Pengguna dihapus");
+      const idx = users.findIndex((u) => u.id === id);
+      const idStr = window.__usersIds?.[idx];
+      if (!idStr) throw new Error("id not found");
+      await deleteUser(idStr);
+      const resp = await listUsers({ page, limit: pageSize });
+      const rows = resp.data as UserListItem[];
+      const mapped: User[] = rows.map((u, idx2) => ({
+        id: idx2 + 1,
+        nama: u.email,
+        email: u.email,
+        role: ROLE_MAP_FROM_API[u.role],
+        unit: "-",
+        telepon: "-",
+        status: "Aktif",
+        terakhirLogin: u.updatedAt
+          ? new Date(u.updatedAt).toLocaleString("id-ID")
+          : "-",
+      }));
+      setUsers(mapped);
+      window.__usersIds = rows.map((u) => u.id);
+      showSuccess("Pengguna dihapus");
     } catch {
       showError("Gagal menghapus user");
     }
@@ -168,7 +268,10 @@ export default function UsersPage() {
     }
   };
 
-  const getStatusColor = (status: string) => (status === "Aktif" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800");
+  const getStatusColor = (status: string) =>
+    status === "Aktif"
+      ? "bg-green-100 text-green-800"
+      : "bg-gray-100 text-gray-800";
 
   if (loading) {
     return (
@@ -184,22 +287,50 @@ export default function UsersPage() {
     <>
       <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
         <div className="px-4 sm:px-6">
-
           <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">Manajemen Pengguna & Hak Akses</h1>
-            <p className="text-sm text-gray-500 mt-1">Kelola admin, atur role, dan kontrol akses sistem</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-primary">
+              Manajemen Pengguna & Hak Akses
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Kelola admin, atur role, dan kontrol akses sistem
+            </p>
           </div>
 
           <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <Input icon="ri-search-line" type="text" placeholder="Cari nama atau email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full py-3" />
+                <Input
+                  icon="ri-search-line"
+                  type="text"
+                  placeholder="Cari nama atau email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full py-3"
+                />
               </div>
               <div className="flex flex-col sm:flex-row gap-2 items-stretch">
-                <SearchableSelect value={roleFilter} onChange={(v) => setRoleFilter(v)} options={[{ value: "all", label: "Semua Role" }, ...roles.map((r) => ({ value: r, label: r }))]} />
-                <SearchableSelect value={statusFilter} onChange={(v) => setStatusFilter(v)} options={[{ value: "all", label: "Semua Status" }, { value: "Aktif", label: "Aktif" }, { value: "Nonaktif", label: "Nonaktif" }]} />
+                <SearchableSelect
+                  value={roleFilter}
+                  onChange={(v) => setRoleFilter(v)}
+                  options={[
+                    { value: "all", label: "Semua Role" },
+                    ...roles.map((r) => ({ value: r, label: r })),
+                  ]}
+                />
+                <SearchableSelect
+                  value={statusFilter}
+                  onChange={(v) => setStatusFilter(v)}
+                  options={[
+                    { value: "all", label: "Semua Status" },
+                    { value: "Aktif", label: "Aktif" },
+                    { value: "Nonaktif", label: "Nonaktif" },
+                  ]}
+                />
                 {permissionCodes.includes("users.create") && (
-                  <button onClick={handleAdd} className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center gap-2">
+                  <button
+                    onClick={handleAdd}
+                    className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center gap-2"
+                  >
                     <i className="ri-add-line"></i>
                     Tambah
                   </button>
@@ -212,7 +343,8 @@ export default function UsersPage() {
             <Table className="hidden sm:block">
               <TableHead>
                 <tr>
-                  <TH className="font-medium">Pengguna</TH>
+                  <TH className="font-medium">Email</TH>
+                  <TH className="font-medium">Telepon</TH>
                   <TH className="font-medium">Role</TH>
                   <TH className="font-medium">Status</TH>
                   <TH className="font-medium">Login Terakhir</TH>
@@ -223,28 +355,50 @@ export default function UsersPage() {
                 {filteredUsers.map((user) => (
                   <TableRow key={user.id} className="">
                     <TD>
-                      <div>
-                        <p className="font-medium text-gray-900">{user.nama}</p>
-                        <p className="text-xs text-gray-400">{user.email}</p>
+                      <div className="flex items-center gap-2 text-sm text-gray-900 font-medium">
+                        <i className="ri-mail-line text-gray-400"></i>
+                        <span>{user.email}</span>
                       </div>
                     </TD>
                     <TD>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>{user.role}</span>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <i className="ri-phone-line text-gray-400"></i>
+                        <span>{user.telepon}</span>
+                      </div>
                     </TD>
                     <TD>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.status)}`}>{user.status}</span>
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}
+                      >
+                        {user.role}
+                      </span>
                     </TD>
-                    <TD className="text-gray-500 text-sm">{user.terakhirLogin}</TD>
+                    <TD>
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.status)}`}
+                      >
+                        {user.status}
+                      </span>
+                    </TD>
+                    <TD className="text-gray-500 text-sm">
+                      {user.terakhirLogin}
+                    </TD>
                     <TD>
                       <div className="flex gap-2">
                         {permissionCodes.includes("users.update") && (
-                          <button onClick={() => handleEdit(user)} className="px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition flex items-center gap-1">
+                          <button
+                            onClick={() => handleEdit(user)}
+                            className="px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition flex items-center gap-1"
+                          >
                             <i className="ri-edit-line"></i>
                             Edit
                           </button>
                         )}
                         {permissionCodes.includes("users.delete") && (
-                          <button onClick={() => handleDelete(user.id)} className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition flex items-center gap-1">
+                          <button
+                            onClick={() => handleDelete(user.id)}
+                            className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition flex items-center gap-1"
+                          >
                             <i className="ri-delete-bin-line"></i>
                             Hapus
                           </button>
@@ -258,27 +412,52 @@ export default function UsersPage() {
             <div className="sm:hidden">
               <div className="p-3 space-y-3">
                 {filteredUsers.map((user) => (
-                  <div key={`m-${user.id}`} className="border border-gray-200 rounded-lg p-3">
+                  <div
+                    key={`m-${user.id}`}
+                    className="border border-gray-200 rounded-lg p-3"
+                  >
                     <div className="flex items-start justify-between">
-                      <div className="min-w-0">
-                        <p className="font-semibold text-primary truncate">{user.nama}</p>
-                        
-                        <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                      <div className="min-w-0 space-y-1">
+                        <p className="font-semibold text-primary truncate">
+                          {user.nama}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate flex items-center gap-1">
+                          <i className="ri-mail-line"></i> {user.email}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate flex items-center gap-1">
+                          <i className="ri-phone-line"></i> {user.telepon}
+                        </p>
                       </div>
-                      <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getRoleColor(user.role)}`}>{user.role}</span>
+                      <span
+                        className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getRoleColor(user.role)}`}
+                      >
+                        {user.role}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between mt-2">
-                      <span className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(user.status)}`}>{user.status}</span>
-                      <span className="text-[11px] text-gray-500">{user.terakhirLogin}</span>
+                      <span
+                        className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(user.status)}`}
+                      >
+                        {user.status}
+                      </span>
+                      <span className="text-[11px] text-gray-500">
+                        {user.terakhirLogin}
+                      </span>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       {permissionCodes.includes("users.update") && (
-                        <button onClick={() => handleEdit(user)} className="px-3 py-2 text-xs bg-secondary text-white rounded hover:brightness-95 transition">
+                        <button
+                          onClick={() => handleEdit(user)}
+                          className="px-3 py-2 text-xs bg-secondary text-white rounded hover:brightness-95 transition"
+                        >
                           Edit
                         </button>
                       )}
                       {permissionCodes.includes("users.delete") && (
-                        <button onClick={() => handleDelete(user.id)} className="px-3 py-2 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition">
+                        <button
+                          onClick={() => handleDelete(user.id)}
+                          className="px-3 py-2 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition"
+                        >
                           Hapus
                         </button>
                       )}
@@ -288,12 +467,31 @@ export default function UsersPage() {
               </div>
             </div>
             <div className="mt-4">
-              <Pagination page={page} pageSize={pageSize} total={total || filteredUsers.length} onPageChange={(p) => setPage(p)} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
+              <Pagination
+                page={page}
+                pageSize={pageSize}
+                total={total || filteredUsers.length}
+                onPageChange={(p) => setPage(p)}
+                onPageSizeChange={(s) => {
+                  setPageSize(s);
+                  setPage(1);
+                }}
+              />
             </div>
           </Card>
 
           {filteredUsers.length === 0 && (
-            <EmptyState icon="ri-user-search-line" title="Tidak ada pengguna ditemukan" description="Coba ubah kata kunci pencarian atau filter" onReset={() => { setSearchTerm(""); setRoleFilter("all"); setStatusFilter("all"); }} resetLabel="Reset Pencarian" />
+            <EmptyState
+              icon="ri-user-search-line"
+              title="Tidak ada pengguna ditemukan"
+              description="Coba ubah kata kunci pencarian atau filter"
+              onReset={() => {
+                setSearchTerm("");
+                setRoleFilter("all");
+                setStatusFilter("all");
+              }}
+              resetLabel="Reset Pencarian"
+            />
           )}
 
           <Modal
@@ -301,17 +499,52 @@ export default function UsersPage() {
             title={editUser ? "Edit Pengguna" : "Tambah Pengguna Baru"}
             onClose={() => setIsModalOpen(false)}
             size="md"
-            actions={(
+            actions={
               <>
-                <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary">Batal</button>
-                <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]">Simpan</button>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
+                >
+                  Simpan
+                </button>
               </>
-            )}
+            }
           >
             <div className="grid grid-cols-1 gap-4">
-              <Input type="email" label="Email" placeholder="Masukkan email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} submitted={submitted} />
-              <SearchableSelect label="Role" value={form.role} onChange={(v) => setForm({ ...form, role: v })} options={roles.map((r) => ({ value: r, label: r }))} submitted={submitted} />
-              <Input type="password" label="Password" placeholder={editUser ? "Opsional, isi jika ingin ubah" : "Masukkan password"} value={form.password || ""} onChange={(e) => setForm({ ...form, password: e.target.value })} required={!editUser} submitted={submitted} />
+              <Input
+                type="email"
+                label="Email"
+                placeholder="Masukkan email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                submitted={submitted}
+              />
+              <SearchableSelect
+                label="Role"
+                value={form.role}
+                onChange={(v) => setForm({ ...form, role: v })}
+                options={roles.map((r) => ({ value: r, label: r }))}
+                submitted={submitted}
+              />
+              <Input
+                type="password"
+                label="Password"
+                placeholder={
+                  editUser
+                    ? "Opsional, isi jika ingin ubah"
+                    : "Masukkan password"
+                }
+                value={form.password || ""}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required={!editUser}
+                submitted={submitted}
+              />
             </div>
           </Modal>
         </div>
