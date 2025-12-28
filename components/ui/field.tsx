@@ -1,5 +1,6 @@
 "use client";
 import { forwardRef, useMemo, useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -320,7 +321,8 @@ export function SearchableSelect({
   }, [options, query]);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [menuStyle, setMenuStyle] = useState<{
-    top: number;
+    top?: number;
+    bottom?: number;
     left: number;
     width: number;
     maxHeight: number;
@@ -337,20 +339,40 @@ export function SearchableSelect({
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       const margin = 8;
-      const maxH = Math.min(360, window.innerHeight - 2 * margin);
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const topBelow = Math.min(
-        rect.bottom + margin,
-        window.innerHeight - margin - maxH,
-      );
-      const topAbove = Math.max(rect.top - margin - maxH, margin);
-      const top = spaceBelow >= 240 ? topBelow : topAbove;
-      setMenuStyle({
-        top,
-        left: rect.left,
-        width: rect.width,
-        maxHeight: maxH,
-      });
+      const viewportHeight = window.innerHeight;
+
+      // Calculate available space
+      const spaceBelow = viewportHeight - rect.bottom - margin;
+      const spaceAbove = rect.top - margin;
+
+      // Prefer showing below if there's enough space (e.g. > 200px) or if it has more space than above
+      // But if below is very tight (<150) and above has more, show above.
+      const showBelow = spaceBelow >= 200 || spaceBelow >= spaceAbove;
+
+      if (showBelow) {
+        // Position below
+        const top = rect.bottom + margin;
+        // Max height is remaining space minus margin
+        const maxHeight = Math.min(300, spaceBelow);
+        setMenuStyle({
+          top,
+          left: rect.left,
+          width: rect.width,
+          maxHeight,
+        });
+      } else {
+        // Position above
+        // We set bottom to viewportHeight - rect.top + margin
+        // This anchors the bottom of the menu to the top of the trigger
+        const bottom = viewportHeight - rect.top + margin;
+        const maxHeight = Math.min(300, spaceAbove);
+        setMenuStyle({
+          bottom,
+          left: rect.left,
+          width: rect.width,
+          maxHeight,
+        });
+      }
     };
 
     const handleOutside = (e: MouseEvent) => {
@@ -434,65 +456,69 @@ export function SearchableSelect({
           <p className="mt-1 text-xs text-gray-500">{hint}</p>
         )}
       </div>
-      {open && menuStyle && (
-        <div
-          ref={menuRef}
-          style={{
-            position: "fixed",
-            top: menuStyle.top,
-            left: menuStyle.left,
-            width: menuStyle.width,
-            maxHeight: menuStyle.maxHeight,
-            zIndex: 1000,
-          }}
-          className="bg-white border border-gray-200 rounded-lg shadow-lg"
-        >
-          <div className="p-2 border-b border-gray-200">
-            <input
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                onSearch?.(e.target.value);
-              }}
-              placeholder="Cari opsi..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-500 bg-white text-gray-900"
-            />
-            {isLoading && (
-              <div className="text-xs text-gray-500 text-center py-1">
-                Memuat...
-              </div>
-            )}
-          </div>
-          <ul className="max-h-[300px] overflow-auto">
-            {filtered.length === 0 && (
-              <li className="px-3 py-2 text-sm text-gray-500">
-                Tidak ada hasil
-              </li>
-            )}
-            {filtered.map((o, idx) => (
-              <li key={`${o.value}::${o.label}::${idx}`}>
-                {o.isGroup ? (
-                  <div className="w-full text-left px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 uppercase tracking-wider select-none">
-                    {o.label}
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onChange(o.value);
-                      setOpen(false);
-                      setQuery("");
-                    }}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${o.indent ? "pl-8" : ""} ${o.value === value ? "bg-secondary/20 text-primary font-medium" : "text-gray-900"}`}
-                  >
-                    {o.label}
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {open &&
+        menuStyle &&
+        createPortal(
+          <div
+            ref={menuRef}
+            style={{
+              position: "fixed",
+              top: menuStyle.top,
+              bottom: menuStyle.bottom,
+              left: menuStyle.left,
+              width: menuStyle.width,
+              maxHeight: menuStyle.maxHeight,
+              zIndex: 9999,
+            }}
+            className="bg-white border border-gray-200 rounded-lg shadow-lg flex flex-col overflow-hidden"
+          >
+            <div className="p-2 border-b border-gray-200 shrink-0">
+              <input
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  onSearch?.(e.target.value);
+                }}
+                placeholder="Cari opsi..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-500 bg-white text-gray-900"
+              />
+              {isLoading && (
+                <div className="text-xs text-gray-500 text-center py-1">
+                  Memuat...
+                </div>
+              )}
+            </div>
+            <ul className="flex-1 overflow-y-auto">
+              {filtered.length === 0 && (
+                <li className="px-3 py-2 text-sm text-gray-500">
+                  Tidak ada hasil
+                </li>
+              )}
+              {filtered.map((o, idx) => (
+                <li key={`${o.value}::${o.label}::${idx}`}>
+                  {o.isGroup ? (
+                    <div className="w-full text-left px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 uppercase tracking-wider select-none">
+                      {o.label}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onChange(o.value);
+                        setOpen(false);
+                        setQuery("");
+                      }}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${o.indent ? "pl-8" : ""} ${o.value === value ? "bg-secondary/20 text-primary font-medium" : "text-gray-900"}`}
+                    >
+                      {o.label}
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

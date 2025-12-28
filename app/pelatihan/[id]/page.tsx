@@ -98,18 +98,6 @@ export default function DetailPelatihanPage() {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                <p className="text-xs text-gray-500 mb-1">Tanggal Mulai</p>
-                <p className="font-semibold text-gray-900">
-                  {toDate(training.start_date)}
-                </p>
-              </div>
-              <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                <p className="text-xs text-gray-500 mb-1">Tanggal Selesai</p>
-                <p className="font-semibold text-gray-900">
-                  {toDate(training.end_date)}
-                </p>
-              </div>
-              <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                 <p className="text-xs text-gray-500 mb-1">Kuota Peserta</p>
                 <p className="font-semibold text-gray-900">
                   {training.quota} Orang

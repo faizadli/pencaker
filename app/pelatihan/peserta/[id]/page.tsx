@@ -253,18 +253,7 @@ export default function DetailPesertaPage() {
                   </div>
 
                   <div className="space-y-3 pt-4 border-t border-gray-100">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500">Tanggal Mulai</span>
-                      <span className="font-medium text-gray-900">
-                        {toDate(participant.start_date)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500">Tanggal Selesai</span>
-                      <span className="font-medium text-gray-900">
-                        {toDate(participant.end_date)}
-                      </span>
-                    </div>
+                    {/* Dates removed */}
                   </div>
                 </div>
               </div>

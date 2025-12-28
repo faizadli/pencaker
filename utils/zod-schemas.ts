@@ -285,25 +285,18 @@ export const jobSchema = z
     path: ["max_salary"],
   });
 
-export const trainingSchema = z
-  .object({
-    title: z.string().min(1, "Judul Pelatihan wajib diisi"),
-    description: z.string().min(1, "Deskripsi wajib diisi"),
-    instructor: z.string().min(1, "Instruktur wajib diisi"),
-    location: z.string().min(1, "Lokasi wajib diisi"),
-    start_date: z.string().min(1, "Tanggal Mulai wajib diisi"),
-    end_date: z.string().min(1, "Tanggal Selesai wajib diisi"),
-    quota: z
-      .number({ message: "Kuota wajib diisi angka" })
-      .min(1, "Kuota minimal 1"),
-    status: z.enum(["open", "closed", "ongoing", "completed"], {
-      message: "Status wajib dipilih",
-    }),
-  })
-  .refine((data) => new Date(data.end_date) >= new Date(data.start_date), {
-    message: "Tanggal Selesai harus setelah atau sama dengan Tanggal Mulai",
-    path: ["end_date"],
-  });
+export const trainingSchema = z.object({
+  title: z.string().min(1, "Judul Pelatihan wajib diisi"),
+  description: z.string().min(1, "Deskripsi wajib diisi"),
+  instructor: z.string().min(1, "Instruktur wajib diisi"),
+  location: z.string().min(1, "Lokasi wajib diisi"),
+  quota: z
+    .number({ message: "Kuota wajib diisi angka" })
+    .min(1, "Kuota minimal 1"),
+  status: z.enum(["open", "closed", "ongoing", "completed"], {
+    message: "Status wajib dipilih",
+  }),
+});
 
 export const newsSchema = z.object({
   judul: z.string().min(1, "Judul berita wajib diisi"),

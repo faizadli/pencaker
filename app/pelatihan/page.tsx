@@ -261,10 +261,6 @@ export default function PelatihanPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-sm mb-4">
                     <div className="flex items-center gap-2 text-gray-600">
-                      <i className="ri-calendar-line"></i>
-                      <span>{toDate(pel.start_date)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
                       <i className="ri-time-line"></i>
                       <span>{pel.status}</span>
                     </div>

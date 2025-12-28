@@ -12,8 +12,6 @@ export interface Training {
   description: string;
   instructor: string;
   location: string;
-  start_date: string;
-  end_date: string;
   quota: number;
   status: "open" | "closed" | "ongoing" | "completed";
   image_url?: string;
@@ -26,7 +24,15 @@ export interface TrainingParticipant {
   id: string;
   training_id: string;
   user_id: string;
-  status: "registered" | "attended" | "passed" | "failed";
+  status:
+    | "registered"
+    | "attended"
+    | "passed"
+    | "failed"
+    | "pending_selection"
+    | "approved"
+    | "rejected"
+    | "blacklisted";
   email: string;
   no_handphone: string;
   full_name?: string;
@@ -47,8 +53,6 @@ export interface PublicParticipant {
   // Detail fields
   training_title?: string;
   instructor?: string;
-  start_date?: string;
-  end_date?: string;
   birth_place?: string;
   birth_date?: string;
   address?: string;
@@ -63,10 +67,9 @@ export interface CreateTrainingRequest {
   description?: string;
   instructor?: string;
   location?: string;
-  start_date?: string;
-  end_date?: string;
   quota?: number;
   image_url?: string;
+  institution_id?: string;
 }
 
 export interface UpdateTrainingRequest {
@@ -75,8 +78,6 @@ export interface UpdateTrainingRequest {
   description?: string;
   instructor?: string;
   location?: string;
-  start_date?: string;
-  end_date?: string;
   quota?: number;
   status?: "open" | "closed" | "ongoing" | "completed";
   image_url?: string;
@@ -122,12 +123,14 @@ export async function getTrainings(params?: {
   limit?: number;
   search?: string;
   status?: string;
+  institution_id?: string;
 }) {
   const q = new URLSearchParams();
   if (params?.page) q.set("page", String(params.page));
   if (params?.limit) q.set("limit", String(params.limit));
   if (params?.search) q.set("search", params.search);
   if (params?.status && params.status !== "all") q.set("status", params.status);
+  if (params?.institution_id) q.set("institution_id", params.institution_id);
 
   const resp = await fetch(`${BASE}/api/trainings?${q.toString()}`, {
     headers: { ...authHeader() },
@@ -225,5 +228,24 @@ export async function updateParticipantStatus(
     },
   );
   if (!resp.ok) throw new Error("Gagal mengubah status peserta");
+  return resp.json();
+}
+
+export async function blacklistParticipant(
+  participantId: string,
+  reason: string,
+) {
+  const resp = await fetch(
+    `${BASE}/api/trainings/participants/${participantId}/blacklist`,
+    {
+      method: "POST",
+      headers: { ...authHeader(), "Content-Type": "application/json" },
+      body: JSON.stringify({ reason }),
+    },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.message || "Gagal memblacklist peserta");
+  }
   return resp.json();
 }
