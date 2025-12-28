@@ -6,9 +6,15 @@ import Card from "../../components/ui/Card";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { listRoles, getRolePermissions } from "../../services/rbac";
-import { listCandidates } from "../../services/profile";
+import { listCandidates, getCompanyProfile } from "../../services/profile";
 import { listJobs, listApplications } from "../../services/jobs";
 import { listCompanies } from "../../services/company";
+
+const ensureArray = (v: unknown): unknown[] => {
+  const d = (v as { data?: unknown }).data;
+  if (Array.isArray(d)) return d as unknown[];
+  return Array.isArray(v) ? (v as unknown[]) : [];
+};
 
 function DashboardPageComponent() {
   const initialRole =
@@ -88,16 +94,77 @@ function DashboardPageComponent() {
       placed: 0,
     },
   });
+  const [companyStats, setCompanyStats] = useState({
+    jobCount: 0,
+    applicantCount: 0,
+    pendingCount: 0,
+    processCount: 0,
+    isVerified: true,
+  });
   const [loading, setLoading] = useState(true);
-  const ensureArray = (v: unknown): unknown[] => {
-    const d = (v as { data?: unknown }).data;
-    if (Array.isArray(d)) return d as unknown[];
-    return Array.isArray(v) ? (v as unknown[]) : [];
-  };
 
   useEffect(() => {
     const loadStats = async () => {
       setLoading(true);
+
+      if (isCompany) {
+        try {
+          const uid =
+            typeof window !== "undefined"
+              ? localStorage.getItem("id") ||
+                localStorage.getItem("user_id") ||
+                ""
+              : "";
+          if (uid) {
+            const profile = await getCompanyProfile(uid).catch(() => null);
+            if (profile) {
+              const profileData = (profile.data || profile) as {
+                id?: string;
+                status?: string;
+              };
+              // Check verification status from profile or default to false if pending
+              // Assuming status is available or we check disnaker_id presence or specific status field
+              // Since getCompanyProfile returns profile, we might need to check the company status.
+              // However, listCompanies returns status. Let's assume for now we need to rely on what we have.
+              // If profile has status, use it. If not, assume pending if not approved.
+              // For now, let's assume 'status' field exists on profile data joined from company table.
+              const isVerified =
+                String(profileData.status || "").toUpperCase() === "APPROVED";
+
+              const compId = profileData.id;
+              if (compId) {
+                const [jobs, apps] = await Promise.all([
+                  listJobs({ company_id: compId, limit: 1000 }).catch(() => []),
+                  listApplications({ company_id: compId, limit: 1000 }).catch(
+                    () => [],
+                  ),
+                ]);
+
+                const jobsList = ensureArray(jobs);
+                const appsList = ensureArray(apps) as Array<{
+                  status?: string;
+                }>;
+
+                setCompanyStats({
+                  jobCount: jobsList.length,
+                  applicantCount: appsList.length,
+                  pendingCount: appsList.filter(
+                    (a) => String(a.status || "").toLowerCase() === "pending",
+                  ).length,
+                  processCount: appsList.filter((a) => {
+                    const s = String(a.status || "").toLowerCase();
+                    return s === "test" || s === "interview";
+                  }).length,
+                  isVerified,
+                });
+              }
+            }
+          }
+        } catch {}
+        setLoading(false);
+        return;
+      }
+
       const next = {
         jobSeekers: 0,
         activeJobs: 0,
@@ -227,13 +294,13 @@ function DashboardPageComponent() {
       const t = setTimeout(() => setLoading(false), 0);
       return () => clearTimeout(t);
     }
-     
   }, [
     canReadPencaker,
     canReadLowongan,
     canReadPerusahaan,
     canSeeOverview,
     isDashboardAdmin,
+    isCompany,
   ]);
 
   if (loading) {
@@ -317,56 +384,54 @@ function DashboardPageComponent() {
               <p className="text-sm text-gray-500 mt-1">
                 Kelola lowongan, pantau pelamar, dan verifikasi
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-                <StatCard
-                  title="Lowongan Aktif"
-                  value={8}
-                  change="+2 minggu ini"
-                  color={secondaryColor}
-                  icon="ri-briefcase-line"
-                />
-                <StatCard
-                  title="Total Pelamar"
-                  value={134}
-                  change="+27"
-                  color={primaryColor}
-                  icon="ri-user-line"
-                />
-                <StatCard
-                  title="Menunggu Verifikasi"
-                  value={3}
-                  change="Perlu tindakan"
-                  color={foregroundColor}
-                  icon="ri-time-line"
-                />
-              </div>
-              <Card
-                className="mt-8"
-                header={
-                  <h2 className="text-lg font-semibold text-primary">
-                    Aktivitas Terbaru
-                  </h2>
-                }
-              >
-                <ul className="space-y-3 text-sm text-primary">
-                  <li className="flex justify-between">
-                    <span>
-                      Lamaran baru untuk &quot;Frontend Developer&quot;
-                    </span>
-                    <a href="/dashboard/lowongan" className="text-primary">
-                      Kelola
-                    </a>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>
-                      Lowongan &quot;Operator&quot; menunggu verifikasi
-                    </span>
-                    <a href="/dashboard/lowongan" className="text-primary">
-                      Tinjau
-                    </a>
-                  </li>
-                </ul>
-              </Card>
+
+              {!companyStats.isVerified && (
+                <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex items-start gap-3">
+                  <i className="ri-time-line text-yellow-600 text-xl mt-0.5"></i>
+                  <div>
+                    <h3 className="text-sm font-semibold text-yellow-800">
+                      Verifikasi Akun
+                    </h3>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      Informasi akun anda sedang dalam verifikasi admin disnaker
+                      mohon tunggu dalam waktu 24 jam.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {companyStats.isVerified && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                  <StatCard
+                    title="Lowongan Dibuat"
+                    value={companyStats.jobCount}
+                    change="Total lowongan"
+                    color={secondaryColor}
+                    icon="ri-briefcase-line"
+                  />
+                  <StatCard
+                    title="Total Pelamar"
+                    value={companyStats.applicantCount}
+                    change="Semua lowongan"
+                    color={primaryColor}
+                    icon="ri-group-line"
+                  />
+                  <StatCard
+                    title="Pelamar Pending"
+                    value={companyStats.pendingCount}
+                    change="Perlu tindakan"
+                    color={foregroundColor}
+                    icon="ri-time-line"
+                  />
+                  <StatCard
+                    title="Pelamar Proses"
+                    value={companyStats.processCount}
+                    change="Interview / Tes"
+                    color={primaryDark}
+                    icon="ri-user-settings-line"
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -471,7 +536,7 @@ function DashboardPageComponent() {
             </div>
           )}
 
-          {canSeeOverview && !isDashboardAdmin && (
+          {canSeeOverview && !isDashboardAdmin && !isCompany && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               {canReadPencaker && (
                 <StatCard

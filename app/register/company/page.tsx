@@ -71,6 +71,7 @@ export default function RegisterCompany() {
   const [otpChannel, setOtpChannel] = useState<"sms" | "email">("sms");
   const [cooldown, setCooldown] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
+  const [verificationToken, setVerificationToken] = useState("");
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -185,6 +186,11 @@ export default function RegisterCompany() {
         setLoading(false);
         return;
       }
+      if (!logoFile) {
+        setError("Logo perusahaan wajib diunggah.");
+        setLoading(false);
+        return;
+      }
       setStep(4);
     } catch {
       setError("Gagal menyimpan profil perusahaan.");
@@ -222,7 +228,8 @@ export default function RegisterCompany() {
           no_handphone: String(account.no_handphone || "").trim() || undefined,
         },
         account.password,
-        otpVerified ? otp : undefined,
+        undefined,
+        verificationToken,
       );
       uid = String(reg?.id || "");
       const lg = await login(
@@ -558,10 +565,11 @@ export default function RegisterCompany() {
                       onClick={async () => {
                         setError("");
                         try {
-                          await verifyOtp(
+                          const res = await verifyOtp(
                             String(account.no_handphone).trim(),
                             otp,
                           );
+                          setVerificationToken(res.verification_token);
                           setOtpVerified(true);
                         } catch (e: unknown) {
                           const msg =
@@ -736,7 +744,7 @@ export default function RegisterCompany() {
                   }
                 />
                 <Input
-                  label="Logo Perusahaan (Opsional)"
+                  label="Logo Perusahaan"
                   type="file"
                   onChange={(e) =>
                     uploadLogo(
