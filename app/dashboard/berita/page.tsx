@@ -18,6 +18,8 @@ import {
 import { useToast } from "../../../components/ui/Toast";
 import { stripHtml, formatDate } from "../../../utils/format";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
+import { newsSchema } from "../../../utils/zod-schemas";
+import { ZodIssue } from "zod";
 
 type SiteContentItem<T> = {
   id: string;
@@ -148,7 +150,7 @@ export default function BeritaPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
-  const [fieldErrors] = useState<Record<string, string>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     (async () => {
@@ -246,12 +248,19 @@ export default function BeritaPage() {
     const upsertId = id === "__new__" ? undefined : id;
     if (editBerita) {
       setContentSubmitted(true);
-      const htmlEmpty =
-        String(editBerita.isi || "")
-          .replace(/<[^>]*>/g, "")
-          .trim() === "";
-      if (!String(editBerita.judul || "").trim() || htmlEmpty) {
-        showError("Lengkapi judul dan isi berita");
+      setFieldErrors({});
+
+      const result = newsSchema.safeParse(editBerita);
+
+      if (!result.success) {
+        const errors: Record<string, string> = {};
+        result.error.issues.forEach((err: ZodIssue) => {
+          if (err.path[0]) {
+            errors[err.path[0].toString()] = err.message;
+          }
+        });
+        setFieldErrors(errors);
+        showError("Mohon periksa input anda");
         return;
       }
 

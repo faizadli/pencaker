@@ -446,3 +446,16 @@ export const bannerSchema = z.object({
   ctaText: z.string().min(1, "Teks Tombol wajib diisi"),
   ctaLink: z.string().min(1, "Link Tombol wajib diisi"),
 });
+
+export const groupSchema = z.object({
+  code: z.string().optional().or(z.literal("")),
+  name: z.string().min(1, "Nama grup wajib diisi"),
+});
+
+export const groupItemSchema = z.object({
+  groupIdx: z
+    .union([z.string(), z.number()])
+    .refine((val) => val !== "" && val !== null, "Grup wajib dipilih"),
+  code: z.string().optional().or(z.literal("")),
+  name: z.string().min(1, "Nama item wajib diisi"),
+});

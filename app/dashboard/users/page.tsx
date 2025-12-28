@@ -24,6 +24,8 @@ import {
 } from "../../../components/ui/Table";
 import EmptyState from "../../../components/ui/EmptyState";
 import { useToast } from "../../../components/ui/Toast";
+import { createUserSchema, updateUserSchema } from "../../../utils/zod-schemas";
+import { ZodIssue } from "zod";
 
 const ROLE_MAP_TO_API: Record<string, "super_admin" | "company" | "candidate"> =
   { Superadmin: "super_admin", Perusahaan: "company", Pencaker: "candidate" };
@@ -74,9 +76,8 @@ export default function UsersPage() {
     status: "Aktif",
   });
   const [submitted, setSubmitted] = useState(false);
-  // const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   // const [isSaving, setIsSaving] = useState(false);
-  const fieldErrors: Record<string, string> = {};
 
   const roles = ["Superadmin", "Perusahaan", "Pencaker"];
 
@@ -183,9 +184,39 @@ export default function UsersPage() {
 
   const handleSave = async () => {
     setSubmitted(true);
-    if (!form.email || (!editUser && !form.password)) {
+    setFieldErrors({});
+
+    const dataToValidate = {
+      email: form.email,
+      role: form.role,
+      password: form.password || "",
+    };
+
+    let result;
+    if (editUser) {
+      // For update, password is optional/handled differently in schema
+      // But updateUserSchema has password optional.
+      // We pass empty string if undefined for validation if schema expects string
+      result = updateUserSchema.safeParse({
+        ...dataToValidate,
+        password: form.password || "", // Schema handles empty/optional
+      });
+    } else {
+      result = createUserSchema.safeParse(dataToValidate);
+    }
+
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((err: ZodIssue) => {
+        if (err.path[0]) {
+          errors[err.path[0].toString()] = err.message;
+        }
+      });
+      setFieldErrors(errors);
+      showError("Mohon periksa input anda");
       return;
     }
+
     try {
       if (editUser) {
         await updateUser(editUser, {

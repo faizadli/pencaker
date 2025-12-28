@@ -24,7 +24,12 @@ import {
   presignDownload,
   deleteAk1Template,
 } from "../../../services/ak1";
-import { instansiSchema, bannerSchema } from "../../../utils/zod-schemas";
+import {
+  instansiSchema,
+  bannerSchema,
+  groupSchema,
+  groupItemSchema,
+} from "../../../utils/zod-schemas";
 import { ZodIssue } from "zod";
 import {
   getSiteSettings,
@@ -233,6 +238,7 @@ export default function PengaturanPage() {
   const { showSuccess, showError } = useToast();
   const [settingsSubmitted, setSettingsSubmitted] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [modalErrors, setModalErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     (async () => {
@@ -606,6 +612,19 @@ export default function PengaturanPage() {
   };
 
   const handleSaveGroup = async () => {
+    setModalErrors({});
+    const result = groupSchema.safeParse(newGroupData);
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((err: ZodIssue) => {
+        if (err.path[0]) {
+          errors[err.path[0].toString()] = err.message;
+        }
+      });
+      setModalErrors(errors);
+      return;
+    }
+
     try {
       const nextGroups = [...kategoriGroups];
       if (editingGroup) {
@@ -669,6 +688,28 @@ export default function PengaturanPage() {
   };
 
   const handleSaveCategory = async () => {
+    setModalErrors({});
+    // For validation, we use newCategoryData directly.
+    // Note: groupIdx might be empty string if not selected.
+    const validationData = {
+      ...newCategoryData,
+      groupIdx: editingCategory
+        ? editingCategory.groupIdx
+        : newCategoryData.groupIdx,
+    };
+
+    const result = groupItemSchema.safeParse(validationData);
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((err: ZodIssue) => {
+        if (err.path[0]) {
+          errors[err.path[0].toString()] = err.message;
+        }
+      });
+      setModalErrors(errors);
+      return;
+    }
+
     try {
       const gIdx = editingCategory
         ? editingCategory.groupIdx
@@ -744,6 +785,19 @@ export default function PengaturanPage() {
   };
 
   const handleSaveEduGroup = async () => {
+    setModalErrors({});
+    const result = groupSchema.safeParse(newEduGroupData);
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((err: ZodIssue) => {
+        if (err.path[0]) {
+          errors[err.path[0].toString()] = err.message;
+        }
+      });
+      setModalErrors(errors);
+      return;
+    }
+
     try {
       const nextGroups = [...educationGroups];
       if (editingEduGroup) {
@@ -807,6 +861,26 @@ export default function PengaturanPage() {
   };
 
   const handleSaveEduLevel = async () => {
+    setModalErrors({});
+    const validationData = {
+      ...newEduLevelData,
+      groupIdx: editingEduLevel
+        ? editingEduLevel.groupIdx
+        : newEduLevelData.groupIdx,
+    };
+
+    const result = groupItemSchema.safeParse(validationData);
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((err: ZodIssue) => {
+        if (err.path[0]) {
+          errors[err.path[0].toString()] = err.message;
+        }
+      });
+      setModalErrors(errors);
+      return;
+    }
+
     try {
       const gIdx = editingEduLevel
         ? editingEduLevel.groupIdx
@@ -969,6 +1043,19 @@ export default function PengaturanPage() {
   };
 
   const handleSavePosGroup = async () => {
+    setModalErrors({});
+    const result = groupSchema.safeParse(newPosGroupData);
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((err: ZodIssue) => {
+        if (err.path[0]) {
+          errors[err.path[0].toString()] = err.message;
+        }
+      });
+      setModalErrors(errors);
+      return;
+    }
+
     try {
       const nextGroups = [...positionGroups];
       if (editingPosGroup) {
@@ -1075,12 +1162,27 @@ export default function PengaturanPage() {
   };
 
   const handleSavePosTitle = async () => {
-    try {
-      if (!newPosTitleData.name) {
-        showError("Nama jabatan wajib diisi");
-        return;
-      }
+    setModalErrors({});
+    const validationData = {
+      ...newPosTitleData,
+      groupIdx: editingPosTitle
+        ? editingPosTitle.groupIdx
+        : newPosTitleData.groupIdx,
+    };
 
+    const result = groupItemSchema.safeParse(validationData);
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((err: ZodIssue) => {
+        if (err.path[0]) {
+          errors[err.path[0].toString()] = err.message;
+        }
+      });
+      setModalErrors(errors);
+      return;
+    }
+
+    try {
       const gIdx = editingPosTitle
         ? editingPosTitle.groupIdx
         : parseInt(newPosTitleData.groupIdx);
@@ -1258,6 +1360,7 @@ export default function PengaturanPage() {
                               className="w-full"
                               required
                               submitted={settingsSubmitted}
+                              error={fieldErrors[`instansi.${key}`]}
                             />
                           ) : (
                             <Input
@@ -1267,6 +1370,7 @@ export default function PengaturanPage() {
                               className="w-full"
                               required
                               submitted={settingsSubmitted}
+                              error={fieldErrors[`instansi.${key}`]}
                             />
                           )}
                           <div className="flex gap-2">
@@ -1615,6 +1719,7 @@ export default function PengaturanPage() {
                     onClick={() => {
                       setEditingGroup(null);
                       setNewGroupData({ code: "", name: "", items: [] });
+                      setModalErrors({});
                       setIsGroupModalOpen(true);
                     }}
                     className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition text-sm flex items-center gap-2"
@@ -1625,6 +1730,7 @@ export default function PengaturanPage() {
                     onClick={() => {
                       setEditingCategory(null);
                       setNewCategoryData({ groupIdx: "", code: "", name: "" });
+                      setModalErrors({});
                       setIsCategoryModalOpen(true);
                     }}
                     className="px-4 py-2 bg-secondary text-white rounded-lg hover:opacity-90 transition text-sm flex items-center gap-2"
@@ -1681,6 +1787,7 @@ export default function PengaturanPage() {
                                       name: it.name,
                                     })),
                                   });
+                                  setModalErrors({});
                                   setIsGroupModalOpen(true);
                                 }}
                                 className="text-blue-600 hover:text-blue-800"
@@ -1737,6 +1844,7 @@ export default function PengaturanPage() {
                         })
                       }
                       placeholder="Contoh: K01"
+                      error={modalErrors.code}
                     />
                     <Input
                       label="Nama Grup"
@@ -1748,6 +1856,7 @@ export default function PengaturanPage() {
                         })
                       }
                       placeholder="Contoh: Pertanian"
+                      error={modalErrors.name}
                     />
 
                     <div className="pt-2 border-t mt-4">
@@ -2043,6 +2152,7 @@ export default function PengaturanPage() {
                         })
                       }
                       placeholder="Contoh: E01"
+                      error={modalErrors.code}
                     />
                     <Input
                       label="Nama Grup"
@@ -2054,6 +2164,7 @@ export default function PengaturanPage() {
                         })
                       }
                       placeholder="Contoh: Pendidikan Formal"
+                      error={modalErrors.name}
                     />
 
                     <div className="pt-2 border-t mt-4">
@@ -2178,6 +2289,7 @@ export default function PengaturanPage() {
                           value: String(i),
                           label: g.name || g.code || `Grup ${i + 1}`,
                         }))}
+                        error={modalErrors.groupIdx}
                       />
                     )}
                     {editingEduLevel && (
@@ -2201,6 +2313,7 @@ export default function PengaturanPage() {
                         })
                       }
                       placeholder="Contoh: D3"
+                      error={modalErrors.code}
                     />
                     <Input
                       label="Nama Tingkat"
@@ -2212,6 +2325,7 @@ export default function PengaturanPage() {
                         })
                       }
                       placeholder="Contoh: Diploma 3"
+                      error={modalErrors.name}
                     />
                   </div>
                 </Modal>
@@ -2507,6 +2621,7 @@ export default function PengaturanPage() {
                         })
                       }
                       placeholder="Contoh: J01"
+                      error={modalErrors.code}
                     />
                     <Input
                       label="Nama Jabatan"
@@ -2518,6 +2633,7 @@ export default function PengaturanPage() {
                         })
                       }
                       placeholder="Contoh: Dokter"
+                      error={modalErrors.name}
                     />
                   </div>
                 </Modal>

@@ -1,4 +1,6 @@
 "use client";
+import * as ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -52,6 +54,10 @@ export default function PelamarLowonganPage() {
       statusPerkawinan?: string;
       pendidikan?: string;
       jurusan?: string;
+      nik?: string;
+      address?: string;
+      place_of_birth?: string;
+      birthdate?: string;
     }>
   >([]);
   const [saving, setSaving] = useState<string>("");
@@ -314,14 +320,21 @@ export default function PelamarLowonganPage() {
           let kelurahan: string | undefined = undefined;
           let statusPerkawinan: string | undefined = undefined;
           let pendidikan: string | undefined = undefined;
-          const jurusan: string | undefined = undefined;
+          let jurusan: string | undefined = undefined;
+          let nik: string | undefined = undefined;
+          let address: string | undefined = undefined;
+          let place_of_birth: string | undefined = undefined;
+          let birthdate: string | undefined = undefined;
 
           const cname = objA["candidate_name"];
           const cbirth = objA["candidate_birthdate"];
           const ckec = objA["candidate_kecamatan"];
           const ckel = objA["candidate_kelurahan"];
           if (typeof cname === "string" && cname) name = cname;
-          if (typeof cbirth === "string" && cbirth) age = calcAge(cbirth);
+          if (typeof cbirth === "string" && cbirth) {
+            age = calcAge(cbirth);
+            birthdate = cbirth;
+          }
           if (typeof ckec === "string" && ckec) kecamatan = ckec;
           if (typeof ckel === "string" && ckel) kelurahan = ckel;
 
@@ -338,13 +351,16 @@ export default function PelamarLowonganPage() {
                 : name === a.candidate_id
                   ? a.candidate_id
                   : name;
-            age =
-              age ??
-              calcAge(
-                typeof obj["birthdate"] === "string"
-                  ? (obj["birthdate"] as string)
-                  : undefined,
-              );
+
+            const bdate =
+              typeof obj["birthdate"] === "string"
+                ? (obj["birthdate"] as string)
+                : undefined;
+            if (bdate) {
+              age = age ?? calcAge(bdate);
+              birthdate = birthdate ?? bdate;
+            }
+
             kecamatan =
               kecamatan ??
               (typeof obj["kecamatan"] === "string"
@@ -363,7 +379,16 @@ export default function PelamarLowonganPage() {
               typeof obj["last_education"] === "string"
                 ? obj["last_education"]
                 : undefined;
-            // jurusan = ... (if available in profile)
+            jurusan =
+              typeof obj["major"] === "string" ? obj["major"] : undefined;
+
+            nik = typeof obj["nik"] === "string" ? obj["nik"] : undefined;
+            address =
+              typeof obj["address"] === "string" ? obj["address"] : undefined;
+            place_of_birth =
+              typeof obj["place_of_birth"] === "string"
+                ? obj["place_of_birth"]
+                : undefined;
           } catch {}
 
           const createdAt =
@@ -387,6 +412,10 @@ export default function PelamarLowonganPage() {
             statusPerkawinan,
             pendidikan,
             jurusan,
+            nik,
+            address,
+            place_of_birth,
+            birthdate,
           };
         }),
       );
@@ -560,12 +589,20 @@ export default function PelamarLowonganPage() {
           let age: number | undefined = undefined;
           let kecamatan: string | undefined = undefined;
           let kelurahan: string | undefined = undefined;
+          let nik: string | undefined = undefined;
+          let address: string | undefined = undefined;
+          let place_of_birth: string | undefined = undefined;
+          let birthdate: string | undefined = undefined;
+
           const cname = objA["candidate_name"];
           const cbirth = objA["candidate_birthdate"];
           const ckec = objA["candidate_kecamatan"];
           const ckel = objA["candidate_kelurahan"];
           if (typeof cname === "string" && cname) nm = cname;
-          if (typeof cbirth === "string" && cbirth) age = calcAge(cbirth);
+          if (typeof cbirth === "string" && cbirth) {
+            age = calcAge(cbirth);
+            birthdate = cbirth;
+          }
           if (typeof ckec === "string" && ckec) kecamatan = ckec;
           if (typeof ckel === "string" && ckel) kelurahan = ckel;
           if (nm === a.candidate_id) {
@@ -575,13 +612,16 @@ export default function PelamarLowonganPage() {
               const obj = isObj(base) ? base : {};
               const n = obj["full_name"];
               nm = typeof n === "string" ? n : a.candidate_id;
-              age =
-                age ??
-                calcAge(
-                  typeof obj["birthdate"] === "string"
-                    ? (obj["birthdate"] as string)
-                    : undefined,
-                );
+
+              const bdate =
+                typeof obj["birthdate"] === "string"
+                  ? (obj["birthdate"] as string)
+                  : undefined;
+              if (bdate) {
+                age = age ?? calcAge(bdate);
+                birthdate = birthdate ?? bdate;
+              }
+
               kecamatan =
                 kecamatan ??
                 (typeof obj["kecamatan"] === "string"
@@ -592,6 +632,14 @@ export default function PelamarLowonganPage() {
                 (typeof obj["kelurahan"] === "string"
                   ? (obj["kelurahan"] as string)
                   : undefined);
+
+              nik = typeof obj["nik"] === "string" ? obj["nik"] : undefined;
+              address =
+                typeof obj["address"] === "string" ? obj["address"] : undefined;
+              place_of_birth =
+                typeof obj["place_of_birth"] === "string"
+                  ? obj["place_of_birth"]
+                  : undefined;
             } catch {}
           }
           return {
@@ -605,6 +653,10 @@ export default function PelamarLowonganPage() {
             schedule_start: a.schedule_start || null,
             schedule_end: a.schedule_end || null,
             note: a.note || null,
+            nik,
+            address,
+            place_of_birth,
+            birthdate,
           };
         }),
       );
@@ -616,6 +668,76 @@ export default function PelamarLowonganPage() {
       showError(msg);
     } finally {
       setSaving("");
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const acceptedRows = rows.filter((r) => r.status === "accepted");
+      if (acceptedRows.length === 0) {
+        showError("Tidak ada pelamar dengan status diterima.");
+        return;
+      }
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Data Pelamar");
+
+      // Setup columns/headers
+      worksheet.columns = [
+        { header: "nik", key: "nik", width: 20 },
+        { header: "name", key: "name", width: 30 },
+        { header: "address", key: "address", width: 50 },
+        { header: "place_of_birth", key: "place_of_birth", width: 20 },
+        { header: "birthdate", key: "birthdate", width: 15 },
+        { header: "district", key: "district", width: 20 },
+        { header: "village", key: "village", width: 20 },
+      ];
+
+      // Set all columns to text format
+      worksheet.columns.forEach((col) => {
+        col.numFmt = "@";
+      });
+
+      // Bold header
+      worksheet.getRow(1).font = { bold: true };
+
+      const formatDateForExcel = (dateString?: string) => {
+        if (!dateString) return "";
+        const d = new Date(dateString);
+        if (Number.isNaN(d.getTime())) return "";
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
+      };
+
+      acceptedRows.forEach((row, index) => {
+        const rowIndex = index + 2;
+        const r = worksheet.getRow(rowIndex);
+
+        r.getCell(1).value = row.nik || "";
+        r.getCell(2).value = row.name || "";
+        r.getCell(3).value = row.address || "";
+        r.getCell(4).value = row.place_of_birth || "";
+        r.getCell(5).value = formatDateForExcel(row.birthdate);
+        r.getCell(6).value = row.kecamatan || "";
+        r.getCell(7).value = row.kelurahan || "";
+
+        for (let i = 1; i <= 7; i++) {
+          r.getCell(i).numFmt = "@";
+        }
+        r.commit();
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      saveAs(blob, `Export_Pelamar_Diterima_${jobId}.xlsx`);
+      showSuccess("Berhasil mengunduh data pelamar diterima");
+    } catch (e) {
+      console.error(e);
+      showError("Gagal mengexport excel");
     }
   };
 
@@ -641,43 +763,52 @@ export default function PelamarLowonganPage() {
           </p>
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <Input
-                placeholder="Cari nama pelamar..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full py-3"
-                icon="ri-search-line"
-              />
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 items-stretch">
-              <SearchableSelect
-                options={[
-                  { value: "self", label: "Melamar Sendiri" },
-                  { value: "admin", label: "Ditambahkan Admin" },
-                ]}
-                value={activeTab}
-                onChange={(v) => setActiveTab(v as "self" | "admin")}
-                className="w-full sm:w-52"
-                placeholder="Sumber Pelamar"
-              />
-              {permissions.includes("lowongan.applicant.create") && (
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center gap-2"
-                >
-                  <i className="ri-user-add-line"></i>
-                  Tambah
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="flex-1 min-w-0">
+            <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Cari nama pelamar..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full py-3"
+                    icon="ri-search-line"
+                  />
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 items-stretch">
+                  <SearchableSelect
+                    options={[
+                      { value: "self", label: "Melamar Sendiri" },
+                      { value: "admin", label: "Ditambahkan Admin" },
+                    ]}
+                    value={activeTab}
+                    onChange={(v) => setActiveTab(v as "self" | "admin")}
+                    className="w-full sm:w-52"
+                    placeholder="Sumber Pelamar"
+                  />
+                  {permissions.includes("lowongan.applicant.create") && (
+                    <>
+                      <button
+                        onClick={handleExportExcel}
+                        className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm transition flex items-center justify-center gap-2"
+                      >
+                        <i className="ri-file-excel-2-line"></i>
+                        Export Diterima
+                      </button>
+                      <button
+                        onClick={() => setShowAddModal(true)}
+                        className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center gap-2"
+                      >
+                        <i className="ri-user-add-line"></i>
+                        Tambah
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <Card className="overflow-hidden">
               <Table>
                 <TableHead>

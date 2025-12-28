@@ -202,33 +202,6 @@ export default function ProfilePage() {
     confirmPassword: "",
   });
 
-  const [activityLog] = useState([
-    {
-      id: 1,
-      aksi: "Login",
-      waktu: "15 Nov 2025, 10:30",
-      detail: "Login dari browser Chrome",
-    },
-    {
-      id: 2,
-      aksi: "Edit Lowongan",
-      waktu: "15 Nov 2025, 09:15",
-      detail: "Update lowongan Frontend Developer",
-    },
-    {
-      id: 3,
-      aksi: "Tambah Pencaker",
-      waktu: "14 Nov 2025, 16:20",
-      detail: "Daftarkan pencari kerja baru",
-    },
-    {
-      id: 4,
-      aksi: "Export Laporan",
-      waktu: "14 Nov 2025, 14:05",
-      detail: "Ekspor data penempatan (Excel)",
-    },
-  ]);
-
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
     setFieldErrors({});
@@ -1233,37 +1206,6 @@ export default function ProfilePage() {
                   Simpan Kata Sandi
                 </button>
               </form>
-            </Card>
-
-            <Card
-              className="overflow-hidden"
-              header={
-                <div className="flex items-center gap-2">
-                  <i className="ri-time-line"></i>
-                  <span className="text-lg font-semibold text-primary">
-                    Aktivitas Terakhir
-                  </span>
-                </div>
-              }
-            >
-              <div className="space-y-3">
-                {activityLog.map((act) => (
-                  <div
-                    key={act.id}
-                    className="flex items-start justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-primary">{act.aksi}</p>
-                      <p className="text-sm text-gray-500 line-clamp-1">
-                        {act.detail}
-                      </p>
-                    </div>
-                    <span className="text-xs text-gray-500 whitespace-nowrap">
-                      {act.waktu}
-                    </span>
-                  </div>
-                ))}
-              </div>
             </Card>
           </div>
         </div>
