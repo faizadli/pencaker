@@ -111,7 +111,12 @@ export default function LowonganPage() {
     created_at?: string;
   };
 
-  type UITipe = "Full-time" | "Part-time" | "Remote" | "Shift" | "Kontrak";
+  type UITipe =
+    | "Full-time"
+    | "Part-time"
+    | "Internship"
+    | "Freelance"
+    | "Contract";
   type UIStatus = "Aktif" | "Menunggu Verifikasi" | "Kadaluarsa";
   type UIStatusExtended = UIStatus | "Ditolak";
 
@@ -121,9 +126,9 @@ export default function LowonganPage() {
   > = {
     "Full-time": "full-time",
     "Part-time": "part-time",
-    Remote: "internship",
-    Shift: "freelance",
-    Kontrak: "contract",
+    Internship: "internship",
+    Freelance: "freelance",
+    Contract: "contract",
   } as const;
 
   const apiToUITipe = useMemo(
@@ -131,9 +136,9 @@ export default function LowonganPage() {
       ({
         "full-time": "Full-time",
         "part-time": "Part-time",
-        internship: "Remote",
-        contract: "Kontrak",
-        freelance: "Shift",
+        internship: "Internship",
+        contract: "Contract",
+        freelance: "Freelance",
       }) as Record<Job["job_type"], UITipe>,
     [],
   );
@@ -643,11 +648,11 @@ export default function LowonganPage() {
         return "bg-blue-100 text-blue-800";
       case "Part-time":
         return "bg-purple-100 text-purple-800";
-      case "Remote":
+      case "Internship":
         return "bg-green-100 text-green-800";
-      case "Shift":
+      case "Freelance":
         return "bg-orange-100 text-orange-800";
-      case "Kontrak":
+      case "Contract":
         return "bg-indigo-100 text-indigo-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -836,9 +841,9 @@ export default function LowonganPage() {
                 options={[
                   { value: "Full-time", label: "Full-time" },
                   { value: "Part-time", label: "Part-time" },
-                  { value: "Shift", label: "Shift" },
-                  { value: "Remote", label: "Remote" },
-                  { value: "Kontrak", label: "Kontrak" },
+                  { value: "Internship", label: "Internship" },
+                  { value: "Contract", label: "Contract" },
+                  { value: "Freelance", label: "Freelance" },
                 ]}
                 submitted={submittedJob}
                 error={fieldErrors["tipe"]}

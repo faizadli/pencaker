@@ -259,9 +259,12 @@ export const disnakerProfileUpdateSchema = z.object({
 export const jobSchema = z
   .object({
     position_id: z.string().min(1, "Posisi wajib dipilih"),
-    tipe: z.enum(["Full-time", "Part-time", "Shift", "Remote", "Kontrak"], {
-      message: "Tipe Pekerjaan wajib dipilih",
-    }),
+    tipe: z.enum(
+      ["Full-time", "Part-time", "Internship", "Freelance", "Contract"],
+      {
+        message: "Tipe Pekerjaan wajib dipilih",
+      },
+    ),
     work_setup: z.enum(["WFO", "WFH", "Hybrid"], {
       message: "Skema Kerja wajib dipilih",
     }),
