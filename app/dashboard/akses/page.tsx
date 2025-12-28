@@ -106,6 +106,15 @@ export default function AksesPage() {
     setLoadingAssign(true);
     try {
       await assignRolePermissions(rid, selectedPerms);
+
+      // Invalidate cache for this role
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem(`cache:getRolePermissions:${rid}`);
+      }
+
+      // Re-fetch with ignoreCache to ensure fresh data
+      await getRolePermissions(rid, true);
+
       showSuccess("Akses role berhasil diperbarui");
     } catch {
       showError("Gagal menyimpan akses role");

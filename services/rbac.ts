@@ -21,12 +21,17 @@ export async function listRoles() {
   if (!resp.ok) throw new Error("Gagal mengambil roles");
   const data = await resp.json();
   if (typeof window !== "undefined") {
-    try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch {}
+    try {
+      sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data }));
+    } catch {}
   }
   return data;
 }
 
-export async function createRole(payload: { name: string; description?: string }) {
+export async function createRole(payload: {
+  name: string;
+  description?: string;
+}) {
   const resp = await fetch(`${BASE}/api/rbac/roles`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeader() },
@@ -52,12 +57,17 @@ export async function listPermissions() {
   if (!resp.ok) throw new Error("Gagal mengambil permissions");
   const data = await resp.json();
   if (typeof window !== "undefined") {
-    try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch {}
+    try {
+      sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data }));
+    } catch {}
   }
   return data;
 }
 
-export async function assignRolePermissions(role_id: number, permissions: string[]) {
+export async function assignRolePermissions(
+  role_id: number,
+  permissions: string[],
+) {
   const resp = await fetch(`${BASE}/api/rbac/roles/${role_id}/permissions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeader() },
@@ -67,10 +77,10 @@ export async function assignRolePermissions(role_id: number, permissions: string
   return resp.json();
 }
 
-export async function getRolePermissions(role_id: number) {
+export async function getRolePermissions(role_id: number, ignoreCache = false) {
   const url = `${BASE}/api/rbac/roles/${role_id}/permissions`;
   const key = `cache:getRolePermissions:${role_id}`;
-  if (typeof window !== "undefined") {
+  if (!ignoreCache && typeof window !== "undefined") {
     try {
       const raw = sessionStorage.getItem(key);
       if (raw) {
@@ -83,7 +93,9 @@ export async function getRolePermissions(role_id: number) {
   if (!resp.ok) throw new Error("Gagal mengambil akses role");
   const data = await resp.json();
   if (typeof window !== "undefined") {
-    try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch {}
+    try {
+      sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data }));
+    } catch {}
   }
   return data;
 }
