@@ -25,8 +25,6 @@ import {
 import {
   listJobs,
   createJob,
-  approveJob,
-  rejectJob,
   updateJob,
   listApplications,
 } from "../../../services/jobs";
@@ -35,7 +33,6 @@ import { useToast } from "../../../components/ui/Toast";
 import {
   getCompanyProfile,
   getCompanyProfileById,
-  getDisnakerProfile,
 } from "../../../services/profile";
 import {
   getPositionGroups,
@@ -65,7 +62,6 @@ export default function LowonganPage() {
   const [permsLoaded, setPermsLoaded] = useState(false);
   const [companyId, setCompanyId] = useState<string>("");
   const [companyName, setCompanyName] = useState<string>("");
-  const [disnakerId, setDisnakerId] = useState<string>("");
 
   // Options state
   const [positionOptions, setPositionOptions] = useState<
@@ -203,8 +199,6 @@ export default function LowonganPage() {
   };
 
   const [lowonganList, setLowonganList] = useState<Job[]>([]);
-  const [reviewJob, setReviewJob] = useState<ViewJob | null>(null);
-  const [showReviewModal, setShowReviewModal] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(true);
@@ -344,9 +338,6 @@ export default function LowonganPage() {
           const data = cp.data || cp;
           setCompanyId(String(data?.id || ""));
           setCompanyName(String(data?.company_name || ""));
-        } else if ((role === "super_admin" || role === "disnaker") && userId) {
-          const dz = await getDisnakerProfile(userId);
-          setDisnakerId(String((dz.data || dz).id));
         }
       } catch {
         // ignore boot errors
@@ -603,65 +594,6 @@ export default function LowonganPage() {
     }
   };
 
-  const handleApprove = async (id: string) => {
-    if (!disnakerId) {
-      showError("Profil disnaker tidak ditemukan");
-      return;
-    }
-    try {
-      await approveJob(id, disnakerId);
-      let rows: Job[] = [];
-      if (role === "company" && companyId) {
-        const statusParam =
-          statusFilter !== "all"
-            ? uiToApiStatus[statusFilter as UIStatusExtended]
-            : undefined;
-        const query: {
-          company_id: string;
-          status?: "pending" | "approved" | "rejected" | "closed";
-        } = { company_id: companyId };
-        if (statusParam) query.status = statusParam;
-        const resp = await listJobs(query);
-        rows = (resp.data || resp) as Job[];
-      } else {
-        const resp = await listJobs();
-        rows = (resp.data || resp) as Job[];
-      }
-      setLowonganList(rows);
-      showSuccess("Lowongan disetujui");
-    } catch {
-      showError("Gagal menyetujui lowongan");
-    }
-  };
-
-  const handleReject = async (id: string) => {
-    if (!confirm("Yakin ingin menolak lowongan?")) return;
-    try {
-      await rejectJob(id, disnakerId);
-      let rows: Job[] = [];
-      if (role === "company" && companyId) {
-        const statusParam =
-          statusFilter !== "all"
-            ? uiToApiStatus[statusFilter as UIStatusExtended]
-            : undefined;
-        const query: {
-          company_id: string;
-          status?: "pending" | "approved" | "rejected" | "closed";
-        } = { company_id: companyId };
-        if (statusParam) query.status = statusParam;
-        const resp = await listJobs(query);
-        rows = (resp.data || resp) as Job[];
-      } else {
-        const resp = await listJobs();
-        rows = (resp.data || resp) as Job[];
-      }
-      setLowonganList(rows);
-      showSuccess("Lowongan ditolak");
-    } catch {
-      showError("Gagal menolak lowongan");
-    }
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Aktif":
@@ -696,7 +628,6 @@ export default function LowonganPage() {
 
   const canCreate = permissions.includes("lowongan.create");
   const canEdit = permissions.includes("lowongan.update");
-  const canVerify = permissions.includes("lowongan.verify");
 
   if (!permsLoaded || loading) {
     return (
@@ -976,142 +907,6 @@ export default function LowonganPage() {
             </div>
           </Modal>
 
-          <Modal
-            open={showReviewModal}
-            title="Review Lowongan"
-            onClose={() => {
-              setShowReviewModal(false);
-              setReviewJob(null);
-            }}
-            size="lg"
-            actions={
-              <>
-                <button
-                  onClick={() => {
-                    setShowReviewModal(false);
-                    setReviewJob(null);
-                  }}
-                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
-                >
-                  Tutup
-                </button>
-                {reviewJob &&
-                  reviewJob.status === "Menunggu Verifikasi" &&
-                  canVerify && (
-                    <>
-                      <button
-                        onClick={() => {
-                          if (reviewJob) {
-                            handleApprove(reviewJob.id);
-                            setShowReviewModal(false);
-                            setReviewJob(null);
-                          }
-                        }}
-                        className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
-                      >
-                        Setujui
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (reviewJob) {
-                            handleReject(reviewJob.id);
-                            setShowReviewModal(false);
-                            setReviewJob(null);
-                          }
-                        }}
-                        className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
-                      >
-                        Tolak
-                      </button>
-                    </>
-                  )}
-              </>
-            }
-          >
-            {reviewJob && (
-              <div className="grid grid-cols-1 gap-3">
-                <div className="bg-white rounded-lg p-4 border">
-                  <div className="text-sm text-gray-500">Posisi</div>
-                  <div className="font-semibold text-primary">
-                    {reviewJob.posisi}
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg p-4 border">
-                  <div className="text-sm text-gray-500">Perusahaan</div>
-                  <div className="font-semibold text-primary">
-                    {reviewJob.perusahaan}
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg p-4 border grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm text-gray-500">Lokasi</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewJob.lokasi || "-"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Tipe</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewJob.tipe || "-"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Penempatan</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewJob.placement
-                        ? placementOptions.find(
-                            (p) => p.value === reviewJob.placement,
-                          )?.label || reviewJob.placement
-                        : "-"}
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg p-4 border grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm text-gray-500">Tayang</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewJob.tanggalTayang || "-"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Batas Akhir</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewJob.batasAkhir || "-"}
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg p-4 border">
-                  <div className="text-sm text-gray-500 mb-1">Deskripsi</div>
-                  <div
-                    className="content-rich"
-                    dangerouslySetInnerHTML={{ __html: reviewJob.deskripsi }}
-                  />
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <div className="text-sm text-gray-500">Pengalaman</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewJob.experience_required || "-"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Pendidikan</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewJob.education_required || "-"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Keahlian</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewJob.skills_required || "-"}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </Modal>
-
           {viewMode === "grid" ? (
             <CardGrid>
               {paginatedLowongan.map((job, idx) => (
@@ -1187,20 +982,21 @@ export default function LowonganPage() {
 
                   <div className="p-4 border-t border-gray-200">
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setReviewJob(job);
-                          setShowReviewModal(true);
-                        }}
-                        className="flex-1 px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center justify-center gap-2"
+                      <Link
+                        href={`/dashboard/lowongan/${job.id}`}
+                        className={`flex-1 px-3 py-2 text-sm text-white rounded-lg hover:brightness-95 transition flex items-center justify-center gap-2 ${
+                          job.status === "Menunggu Verifikasi"
+                            ? "bg-yellow-500"
+                            : "bg-secondary"
+                        }`}
                       >
                         <i className="ri-eye-line"></i>
                         <span>
-                          {job.status === "Menunggu Verifikasi" && canVerify
+                          {job.status === "Menunggu Verifikasi"
                             ? "Review & Konfirmasi"
                             : "Detail"}
                         </span>
-                      </button>
+                      </Link>
                       {job.status !== "Menunggu Verifikasi" && (
                         <Link
                           href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`}
@@ -1311,17 +1107,18 @@ export default function LowonganPage() {
                       </TD>
                       <TD>
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              setReviewJob(job);
-                              setShowReviewModal(true);
-                            }}
-                            className="flex-1 px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition"
+                          <Link
+                            href={`/dashboard/lowongan/${job.id}`}
+                            className={`flex-1 px-3 py-1 text-xs text-white rounded hover:brightness-95 transition flex items-center justify-center ${
+                              job.status === "Menunggu Verifikasi"
+                                ? "bg-yellow-500"
+                                : "bg-secondary"
+                            }`}
                           >
-                            {job.status === "Menunggu Verifikasi" && canVerify
+                            {job.status === "Menunggu Verifikasi"
                               ? "Review & Konfirmasi"
                               : "Detail"}
-                          </button>
+                          </Link>
                           {job.status !== "Menunggu Verifikasi" && (
                             <Link
                               href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`}
@@ -1370,17 +1167,18 @@ export default function LowonganPage() {
                       </div>
                     </div>
                     <div className="mt-3 flex gap-2">
-                      <button
-                        onClick={() => {
-                          setReviewJob(job);
-                          setShowReviewModal(true);
-                        }}
-                        className="flex-1 px-3 py-2 text-xs bg-secondary text-white rounded hover:brightness-95 transition"
+                      <Link
+                        href={`/dashboard/lowongan/${job.id}`}
+                        className={`flex-1 px-3 py-2 text-xs text-white rounded hover:brightness-95 transition flex items-center justify-center ${
+                          job.status === "Menunggu Verifikasi"
+                            ? "bg-yellow-500"
+                            : "bg-secondary"
+                        }`}
                       >
-                        {job.status === "Menunggu Verifikasi" && canVerify
-                          ? "Review"
+                        {job.status === "Menunggu Verifikasi"
+                          ? "Review & Konfirmasi"
                           : "Detail"}
-                      </button>
+                      </Link>
                       {job.status !== "Menunggu Verifikasi" && (
                         <Link
                           href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`}

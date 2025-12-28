@@ -114,6 +114,14 @@ export async function getJobById(id: string) {
   return resp.json();
 }
 
+export async function getDashboardJobById(id: string) {
+  const resp = await fetch(`${BASE}/api/jobs/${encodeURIComponent(id)}`, {
+    headers: { ...authHeader() },
+  });
+  if (!resp.ok) throw new Error("Gagal mengambil detail job");
+  return resp.json();
+}
+
 export async function updateJob(
   id: string,
   payload: Partial<JobPayload> & {

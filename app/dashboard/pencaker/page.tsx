@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
 import Image from "next/image";
+import Link from "next/link";
 import { Input, SearchableSelect } from "../../../components/ui/field";
 import Pagination from "../../../components/ui/Pagination";
 import Modal from "../../../components/ui/Modal";
@@ -13,7 +14,6 @@ import {
 } from "../../../services/profile";
 import { getEducationGroups } from "../../../services/site";
 import { useRouter } from "next/navigation";
-import Card from "../../../components/ui/Card";
 import {
   Table,
   TableHead,
@@ -99,8 +99,7 @@ export default function PencakerPage() {
   const [editingCandidateId, setEditingCandidateId] = useState<string | null>(
     null,
   );
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [reviewCandidate, setReviewCandidate] = useState<Pencaker | null>(null);
+
   const [formCandidate, setFormCandidate] = useState<{
     user_id?: string;
     full_name: string;
@@ -637,16 +636,13 @@ export default function PencakerPage() {
                               </TD>
                               <TD className="text-right">
                                 <div className="flex justify-end gap-2">
-                                  <button
-                                    onClick={() => {
-                                      setReviewCandidate(p);
-                                      setShowReviewModal(true);
-                                    }}
-                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                  <Link
+                                    href={`/dashboard/pencaker/${p.id}`}
+                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition flex items-center justify-center"
                                     title="Detail"
                                   >
                                     <i className="ri-eye-line"></i>
-                                  </button>
+                                  </Link>
                                   {permissions.includes("pencaker.update") && (
                                     <button
                                       onClick={() => {
@@ -837,150 +833,6 @@ export default function PencakerPage() {
               resetLabel="Reset Pencarian"
             />
           )}
-
-          <Modal
-            open={showReviewModal}
-            title="Detail Pencaker"
-            onClose={() => {
-              setShowReviewModal(false);
-              setReviewCandidate(null);
-            }}
-            size="lg"
-            actions={
-              <>
-                <button
-                  onClick={() => {
-                    setShowReviewModal(false);
-                    setReviewCandidate(null);
-                  }}
-                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
-                >
-                  Tutup
-                </button>
-              </>
-            }
-          >
-            {reviewCandidate && (
-              <div className="grid grid-cols-1 gap-3">
-                <div className="bg-white rounded-lg p-4 border grid grid-cols-1 gap-4 items-center">
-                  <div className="md:col-span-1 flex items-center justify-center">
-                    <Image
-                      src={reviewCandidate.foto || "https://picsum.photos/200"}
-                      alt={reviewCandidate.nama}
-                      width={96}
-                      height={96}
-                      className="w-24 h-24 rounded-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Nama</div>
-                    <div className="font-semibold text-primary">
-                      {reviewCandidate.nama}
-                    </div>
-                    <div className="mt-2 text-sm text-gray-500">NIK</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewCandidate.nik}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border grid grid-cols-1 gap-4">
-                  <div>
-                    <div className="text-sm text-gray-500">
-                      Tempat, Tanggal Lahir
-                    </div>
-                    <div className="font-medium text-gray-900">
-                      {reviewCandidate.ttl}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Jenis Kelamin</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewCandidate.jenisKelamin}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border grid grid-cols-1 gap-4">
-                  <div>
-                    <div className="text-sm text-gray-500">Pendidikan</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewCandidate.pendidikan}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Telepon</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewCandidate.telepon}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border grid grid-cols-1 gap-4">
-                  <div>
-                    <div className="text-sm text-gray-500">Email</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewCandidate.email}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Alamat</div>
-                    <div className="font-medium text-gray-900 whitespace-pre-wrap">
-                      {reviewCandidate.alamat}
-                    </div>
-                  </div>
-                </div>
-
-                <Card
-                  header={
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-primary">
-                        Riwayat Pelatihan
-                      </h4>
-                      <span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
-                        {reviewCandidate.pelatihan.length} pelatihan
-                      </span>
-                    </div>
-                  }
-                >
-                  {reviewCandidate.pelatihan.length > 0 ? (
-                    <Table>
-                      <TableHead>
-                        <tr>
-                          <TH>No</TH>
-                          <TH>Nama Pelatihan</TH>
-                          <TH>Tanggal</TH>
-                          <TH>Status</TH>
-                        </tr>
-                      </TableHead>
-                      <TableBody>
-                        {reviewCandidate.pelatihan.map((pt, idx) => (
-                          <TableRow key={`${pt.id}-${idx}`}>
-                            <TD className="text-gray-900">{idx + 1}</TD>
-                            <TD className="font-medium text-gray-900">
-                              {pt.nama}
-                            </TD>
-                            <TD className="text-gray-600">{pt.tanggal}</TD>
-                            <TD>
-                              <span
-                                className={`inline-block px-2 py-1 text-xs rounded-full ${pt.status === "Selesai" ? "bg-blue-100 text-blue-800" : pt.status === "Berlangsung" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
-                              >
-                                {pt.status}
-                              </span>
-                            </TD>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <p className="text-sm text-gray-400 italic">
-                      Belum ada pelatihan.
-                    </p>
-                  )}
-                </Card>
-              </div>
-            )}
-          </Modal>
 
           <Modal
             open={showFormModal}

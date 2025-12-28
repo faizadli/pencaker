@@ -623,7 +623,7 @@ export default function RegisterCompany() {
                 <div className="text-xs text-gray-400">
                   Sudah punya akun?{" "}
                   <a
-                    href="/login"
+                    href="/login/company"
                     className="text-primary hover:underline font-medium"
                   >
                     Masuk di sini

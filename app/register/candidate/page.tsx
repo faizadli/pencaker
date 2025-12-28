@@ -993,7 +993,7 @@ export default function RegisterCandidate() {
                 <div className="text-xs text-gray-400">
                   Sudah punya akun?{" "}
                   <a
-                    href="/login"
+                    href="/login/candidate"
                     className="text-primary hover:underline font-medium"
                   >
                     Masuk di sini

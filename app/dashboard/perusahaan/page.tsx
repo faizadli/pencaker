@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Input,
   SearchableSelect,
@@ -22,11 +23,8 @@ import {
 import { useRouter } from "next/navigation";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
-import { getDisnakerProfile } from "../../../services/profile";
 import {
   listCompanies,
-  approveCompany,
-  rejectCompany,
   createCompanyProfile,
   updateCompanyProfile,
 } from "../../../services/company";
@@ -35,7 +33,7 @@ import { useToast } from "../../../components/ui/Toast";
 
 export default function PerusahaanPage() {
   const router = useRouter();
-  const { showSuccess, showError } = useToast();
+  const { showError } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
@@ -49,7 +47,6 @@ export default function PerusahaanPage() {
   );
   const [permissions, setPermissions] = useState<string[]>([]);
   const [permsLoaded, setPermsLoaded] = useState(false);
-  const [disnakerId, setDisnakerId] = useState<string>("");
   type CompanyStatus = "APPROVED" | "PENDING" | "REJECTED";
   type Company = {
     id: string;
@@ -73,11 +70,8 @@ export default function PerusahaanPage() {
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const canVerify = permissions.includes("perusahaan.verify");
   const canCreate = permissions.includes("perusahaan.create");
   const canUpdate = permissions.includes("perusahaan.update");
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [reviewCompany, setReviewCompany] = useState<Company | null>(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
   const [editingCompanyUserId, setEditingCompanyUserId] = useState<
@@ -177,10 +171,6 @@ export default function PerusahaanPage() {
           }[];
           setPermissions(rows.map((r) => r.code));
         }
-        if ((role === "super_admin" || role === "disnaker") && userId) {
-          const dz = await getDisnakerProfile(userId);
-          setDisnakerId(String((dz.data || dz).id));
-        }
       } catch {}
       setPermsLoaded(true);
     }
@@ -268,43 +258,6 @@ export default function PerusahaanPage() {
     const matchesStatus = statusFilter === "all" || uiStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
-
-  const handleVerify = async (id: string) => {
-    if (!disnakerId) {
-      showError("Profil disnaker tidak ditemukan");
-      return;
-    }
-    try {
-      await approveCompany(id, disnakerId);
-      const statusParam =
-        statusFilter !== "all" ? uiToApiStatus[statusFilter] : undefined;
-      const resp = await listCompanies({
-        status: statusParam,
-        search: searchTerm || undefined,
-      });
-      setPerusahaanList((resp.data || resp) as Company[]);
-      showSuccess("Perusahaan diverifikasi");
-    } catch {
-      showError("Gagal verifikasi perusahaan");
-    }
-  };
-
-  const handleReject = async (id: string) => {
-    if (!confirm("Yakin ingin menolak verifikasi perusahaan ini?")) return;
-    try {
-      await rejectCompany(id, disnakerId);
-      const statusParam =
-        statusFilter !== "all" ? uiToApiStatus[statusFilter] : undefined;
-      const resp = await listCompanies({
-        status: statusParam,
-        search: searchTerm || undefined,
-      });
-      setPerusahaanList((resp.data || resp) as Company[]);
-      showSuccess("Verifikasi perusahaan ditolak");
-    } catch {
-      showError("Gagal menolak verifikasi perusahaan");
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -514,16 +467,19 @@ export default function PerusahaanPage() {
 
                   <div className="p-4 border-t border-gray-200">
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setReviewCompany(p);
-                          setShowReviewModal(true);
-                        }}
-                        className="flex-1 px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition"
+                      <Link
+                        href={`/dashboard/perusahaan/${p.id}`}
+                        className={`flex-1 px-3 py-2 text-sm text-white rounded-lg hover:brightness-95 transition flex items-center justify-center ${
+                          getApiStatus(p) === "PENDING"
+                            ? "bg-yellow-500"
+                            : "bg-secondary"
+                        }`}
                       >
                         <i className="ri-eye-line mr-1"></i>
-                        Detail
-                      </button>
+                        {getApiStatus(p) === "PENDING"
+                          ? "Review & Konfirmasi"
+                          : "Detail"}
+                      </Link>
                       {canUpdate && (
                         <button
                           onClick={() => {
@@ -610,15 +566,18 @@ export default function PerusahaanPage() {
                       </TD>
                       <TD>
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              setReviewCompany(p);
-                              setShowReviewModal(true);
-                            }}
-                            className="px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition"
+                          <Link
+                            href={`/dashboard/perusahaan/${p.id}`}
+                            className={`px-3 py-1 text-xs text-white rounded hover:brightness-95 transition flex items-center justify-center ${
+                              getApiStatus(p) === "PENDING"
+                                ? "bg-yellow-500"
+                                : "bg-secondary"
+                            }`}
                           >
-                            Detail
-                          </button>
+                            {getApiStatus(p) === "PENDING"
+                              ? "Review & Konfirmasi"
+                              : "Detail"}
+                          </Link>
                           {canUpdate && (
                             <button
                               onClick={() => {
@@ -683,15 +642,18 @@ export default function PerusahaanPage() {
                       <span className="truncate">{p.address}</span>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => {
-                          setReviewCompany(p);
-                          setShowReviewModal(true);
-                        }}
-                        className="px-3 py-2 text-xs bg-secondary text-white rounded hover:brightness-95 transition"
+                      <Link
+                        href={`/dashboard/perusahaan/${p.id}`}
+                        className={`px-3 py-2 text-xs text-white rounded hover:brightness-95 transition flex items-center justify-center ${
+                          getApiStatus(p) === "PENDING"
+                            ? "bg-yellow-500"
+                            : "bg-secondary"
+                        }`}
                       >
-                        Detail
-                      </button>
+                        {getApiStatus(p) === "PENDING"
+                          ? "Review & Konfirmasi"
+                          : "Detail"}
+                      </Link>
                       {canUpdate && (
                         <button
                           onClick={() => {
@@ -733,136 +695,6 @@ export default function PerusahaanPage() {
               }}
             />
           </div>
-
-          <Modal
-            open={showReviewModal}
-            title="Review Perusahaan"
-            onClose={() => {
-              setShowReviewModal(false);
-              setReviewCompany(null);
-            }}
-            size="lg"
-            actions={
-              <>
-                <button
-                  onClick={() => {
-                    setShowReviewModal(false);
-                    setReviewCompany(null);
-                  }}
-                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
-                >
-                  Tutup
-                </button>
-                {reviewCompany &&
-                  apiToUIStatus[getApiStatus(reviewCompany)] ===
-                    "Menunggu Verifikasi" &&
-                  canVerify && (
-                    <>
-                      <button
-                        onClick={() => {
-                          if (reviewCompany) {
-                            handleVerify(String(reviewCompany.id));
-                            setShowReviewModal(false);
-                            setReviewCompany(null);
-                          }
-                        }}
-                        className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
-                      >
-                        Setujui
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (reviewCompany) {
-                            handleReject(String(reviewCompany.id));
-                            setShowReviewModal(false);
-                            setReviewCompany(null);
-                          }
-                        }}
-                        className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
-                      >
-                        Tolak
-                      </button>
-                    </>
-                  )}
-              </>
-            }
-          >
-            {reviewCompany && (
-              <div className="grid grid-cols-1 gap-3">
-                <div className="bg-white rounded-lg p-4 border grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                  <div className="md:col-span-1 flex items-center justify-center">
-                    <Image
-                      src={
-                        reviewCompany.company_logo ||
-                        "https://picsum.photos/200"
-                      }
-                      alt={reviewCompany.company_name}
-                      width={96}
-                      height={96}
-                      className="w-24 h-24 rounded-lg object-cover"
-                    />
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Nama Perusahaan</div>
-                    <div className="font-semibold text-primary">
-                      {reviewCompany.company_name}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Status</div>
-                    <div className="font-medium text-gray-900">
-                      {apiToUIStatus[getApiStatus(reviewCompany)]}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <div className="text-sm text-gray-500">Kecamatan</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewCompany.kecamatan || "-"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Kelurahan</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewCompany.kelurahan || "-"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Telepon</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewCompany.no_handphone || "-"}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm text-gray-500">Alamat</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewCompany.address || "-"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Website</div>
-                    <div className="font-medium text-gray-900">
-                      {reviewCompany.website || "-"}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border">
-                  <div className="text-sm text-gray-500 mb-1">
-                    Tentang Perusahaan
-                  </div>
-                  <div className="font-medium text-gray-900 whitespace-pre-wrap">
-                    {reviewCompany.about_company || "-"}
-                  </div>
-                </div>
-              </div>
-            )}
-          </Modal>
 
           <Modal
             open={showFormModal}

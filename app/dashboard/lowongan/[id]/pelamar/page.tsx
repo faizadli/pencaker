@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
+import Link from "next/link";
 import Card from "../../../../../components/ui/Card";
 import {
   Table,
@@ -55,7 +55,6 @@ export default function PelamarLowonganPage() {
     }>
   >([]);
   const [saving, setSaving] = useState<string>("");
-  const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selected, setSelected] = useState<{
     id: string;
@@ -64,10 +63,6 @@ export default function PelamarLowonganPage() {
     status?: AppStatus;
     note?: string | null;
   } | null>(null);
-  const [detailProfile, setDetailProfile] = useState<Record<
-    string,
-    unknown
-  > | null>(null);
   const [editStatus, setEditStatus] = useState<AppStatus | undefined>(
     undefined,
   );
@@ -515,26 +510,6 @@ export default function PelamarLowonganPage() {
     [],
   );
 
-  const openDetail = async (row: {
-    id: string;
-    candidate_id: string;
-    name: string;
-    status?: AppStatus;
-    note?: string | null;
-  }) => {
-    try {
-      setSelected(row);
-      setDetailProfile(null);
-      setShowDetailModal(true);
-      try {
-        const cp = await getCandidateProfileById(row.candidate_id);
-        const base = hasData(cp) ? cp.data : cp;
-        const obj = isObj(base) ? (base as Record<string, unknown>) : {};
-        setDetailProfile(obj);
-      } catch {}
-    } catch {}
-  };
-
   const openEdit = (row: {
     id: string;
     candidate_id: string;
@@ -733,12 +708,12 @@ export default function PelamarLowonganPage() {
                       </TD>
                       <TD>
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => openDetail(r)}
-                            className="px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition"
+                          <Link
+                            href={`/dashboard/lowongan/${jobId}/pelamar/${r.candidate_id}`}
+                            className="px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition flex items-center justify-center"
                           >
                             Detail
-                          </button>
+                          </Link>
                           <button
                             onClick={() => openEdit(r)}
                             className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition"
@@ -962,226 +937,6 @@ export default function PelamarLowonganPage() {
               onChange={(e) => setAddNote(e.target.value)}
             />
           </div>
-        </Modal>
-
-        <Modal
-          open={showDetailModal}
-          title="Detail Pelamar"
-          onClose={() => {
-            setShowDetailModal(false);
-            setSelected(null);
-            setDetailProfile(null);
-          }}
-          size="lg"
-          actions={
-            <>
-              <button
-                onClick={() => {
-                  setShowDetailModal(false);
-                  setSelected(null);
-                  setDetailProfile(null);
-                }}
-                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
-              >
-                Tutup
-              </button>
-            </>
-          }
-        >
-          {selected && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {detailProfile && (
-                <div className="md:col-span-2 bg-white rounded-lg p-4 border">
-                  <div className="flex items-center gap-4 mb-4">
-                    {typeof detailProfile.photo_profile === "string" &&
-                    detailProfile.photo_profile ? (
-                      <Image
-                        src={String(detailProfile.photo_profile)}
-                        alt="Foto Profil"
-                        width={64}
-                        height={64}
-                        unoptimized
-                        className="w-16 h-16 rounded-full object-cover border"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
-                        No Photo
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <div className="text-base font-semibold text-primary">
-                        {String(
-                          (detailProfile
-                            ? (detailProfile as Record<string, unknown>)[
-                                "full_name"
-                              ]
-                            : undefined) ||
-                            selected.name ||
-                            "-",
-                        )}
-                      </div>
-                      <div className="flex gap-2 mt-1">
-                        <span className="inline-block px-2 py-0.5 text-xs rounded bg-gray-100 text-primary">
-                          {String(detailProfile.gender || "-")}
-                        </span>
-                        <span className="inline-block px-2 py-0.5 text-xs rounded bg-gray-100 text-primary">
-                          {detailProfile.birthdate
-                            ? `${calcAge(String(detailProfile.birthdate)) || "-"} th`
-                            : "-"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white rounded-lg p-4 border">
-                      <div className="text-xs text-gray-500 mb-2">
-                        Data Pribadi
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <div className="text-xs text-gray-500">NIK</div>
-                          <div className="text-sm text-gray-900">
-                            {String(detailProfile.nik || "-")}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-gray-500">
-                            Tempat Lahir
-                          </div>
-                          <div className="text-sm text-gray-900">
-                            {String(detailProfile.place_of_birth || "-")}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-gray-500">
-                            Tanggal Lahir
-                          </div>
-                          <div className="text-sm text-gray-900">
-                            {detailProfile.birthdate
-                              ? new Date(
-                                  String(detailProfile.birthdate),
-                                ).toLocaleDateString("id-ID", {
-                                  day: "numeric",
-                                  month: "long",
-                                  year: "numeric",
-                                })
-                              : "-"}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-gray-500">
-                            No. Handphone
-                          </div>
-                          <div className="text-sm text-gray-900">
-                            {String(detailProfile.no_handphone || "-")}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-white rounded-lg p-4 border">
-                      <div className="text-xs text-gray-500 mb-2">Alamat</div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <div className="text-xs text-gray-500">Kecamatan</div>
-                          <div className="text-sm text-gray-900">
-                            {String(detailProfile.kecamatan || "-")}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-gray-500">Kelurahan</div>
-                          <div className="text-sm text-gray-900">
-                            {String(detailProfile.kelurahan || "-")}
-                          </div>
-                        </div>
-                        <div className="md:col-span-2">
-                          <div className="text-xs text-gray-500">Alamat</div>
-                          <div className="text-sm text-gray-900">
-                            {String(detailProfile.address || "-")}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-gray-500">Kode Pos</div>
-                          <div className="text-sm text-gray-900">
-                            {String(detailProfile.postal_code || "-")}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-white rounded-lg p-4 border">
-                      <div className="text-xs text-gray-500 mb-2">
-                        Pendidikan
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <div className="text-xs text-gray-500">
-                            Pendidikan Terakhir
-                          </div>
-                          <div className="text-sm text-gray-900">
-                            {String(detailProfile.last_education || "-")}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-gray-500">
-                            Tahun Lulus
-                          </div>
-                          <div className="text-sm text-gray-900">
-                            {String(detailProfile.graduation_year || "-")}
-                          </div>
-                        </div>
-                        <div className="md:col-span-2">
-                          <div className="text-xs text-gray-500">
-                            Status Perkawinan
-                          </div>
-                          <div className="text-sm text-gray-900">
-                            {String(detailProfile.status_perkawinan || "-")}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-white rounded-lg p-4 border">
-                      <div className="text-xs text-gray-500 mb-2">Dokumen</div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <div className="text-xs text-gray-500">
-                            Foto Profil
-                          </div>
-                          {typeof detailProfile.photo_profile === "string" &&
-                          detailProfile.photo_profile ? (
-                            <a
-                              href={String(detailProfile.photo_profile)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary text-sm"
-                            >
-                              Lihat
-                            </a>
-                          ) : (
-                            <div className="text-sm text-gray-900">-</div>
-                          )}
-                        </div>
-                        <div>
-                          <div className="text-xs text-gray-500">File CV</div>
-                          {typeof detailProfile.cv_file === "string" &&
-                          detailProfile.cv_file ? (
-                            <a
-                              href={String(detailProfile.cv_file)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary text-sm"
-                            >
-                              Unduh
-                            </a>
-                          ) : (
-                            <div className="text-sm text-gray-900">-</div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </Modal>
 
         <Modal
