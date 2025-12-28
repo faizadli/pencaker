@@ -175,6 +175,7 @@ export const companyProfileSchema = z.object({
   nib: z
     .string()
     .min(1, "NIB wajib diisi")
+    .length(13, "NIB harus 13 digit")
     .regex(/^\d+$/, "NIB hanya boleh angka"),
   kecamatan: z.string().min(1, "Kecamatan wajib dipilih"),
   kelurahan: z.string().min(1, "Kelurahan wajib dipilih"),
@@ -208,6 +209,7 @@ export const companyProfileUpdateSchema = z.object({
   nib: z
     .string()
     .min(1, "NIB wajib diisi")
+    .length(13, "NIB harus 13 digit")
     .regex(/^\d+$/, "NIB hanya boleh angka"),
   kecamatan: z.string().min(1, "Kecamatan wajib dipilih"),
   kelurahan: z.string().min(1, "Kelurahan wajib dipilih"),

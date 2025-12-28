@@ -247,16 +247,6 @@ export default function Sidebar({
         </div>
 
         <div className="flex items-center gap-3 sm:gap-6 ml-auto">
-          <button
-            className="relative text-gray-500 hover:text-primary"
-            aria-label="Notifikasi"
-          >
-            <i className="ri-notification-2-line text-xl"></i>
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-              3
-            </span>
-          </button>
-
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -313,14 +303,7 @@ export default function Sidebar({
                     <i className="ri-user-settings-line"></i> Profil Saya
                   </Link>
                 </li>
-                <li>
-                  <Link
-                    href="/dashboard/pengaturan"
-                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-gray-500 text-sm"
-                  >
-                    <i className="ri-settings-2-line"></i> Pengaturan
-                  </Link>
-                </li>
+
                 <hr className="my-1 border-gray-200" />
                 <li>
                   <button
