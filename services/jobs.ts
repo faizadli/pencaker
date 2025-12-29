@@ -290,6 +290,7 @@ export async function updateApplication(
     placement_regency?: string | null;
     placement_country?: string | null;
     start_work_date?: string | null;
+    fixed_salary?: number | null;
   },
 ) {
   const resp = await fetch(

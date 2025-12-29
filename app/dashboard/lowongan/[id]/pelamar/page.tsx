@@ -3,7 +3,6 @@ import * as ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import Card from "../../../../../components/ui/Card";
 import {
   Table,
@@ -17,6 +16,7 @@ import { Input, SearchableSelect } from "../../../../../components/ui/field";
 import Pagination from "../../../../../components/ui/Pagination";
 import Modal from "../../../../../components/ui/Modal";
 import FullPageLoading from "../../../../../components/ui/FullPageLoading";
+import ActionMenu from "../../../../../components/ui/ActionMenu";
 import {
   listApplications,
   updateApplication,
@@ -62,6 +62,10 @@ export default function PelamarLowonganPage() {
       cv_file?: string;
       resume_text?: string;
       start_work_date?: string | null;
+      fixed_salary?: number | null;
+      placement_type?: "AKL" | "AKAD" | "AKAN" | null;
+      placement_regency?: string | null;
+      placement_country?: string | null;
     }>
   >([]);
   const [saving, setSaving] = useState<string>("");
@@ -255,6 +259,10 @@ export default function PelamarLowonganPage() {
   // Start Work State
   const [startWorkDate, setStartWorkDate] = useState<string>("");
   const [showStartWorkModal, setShowStartWorkModal] = useState(false);
+
+  // Salary State
+  const [fixedSalary, setFixedSalary] = useState<number>(0);
+  const [showSalaryModal, setShowSalaryModal] = useState(false);
   const fetchRegencies = useCallback(async () => {
     if (regencies.length > 0) return;
     setRegencyLoading(true);
@@ -282,11 +290,18 @@ export default function PelamarLowonganPage() {
     name: string;
     status?: AppStatus;
     note?: string | null;
+    placement_type?: "AKL" | "AKAD" | "AKAN" | null;
+    placement_regency?: string | null;
+    placement_country?: string | null;
   }) => {
     setSelected(row);
-    setPlacementType("AKL");
-    setPlacementRegency("");
-    setPlacementCountry("");
+    let pType = row.placement_type || "AKL";
+    if (pType && typeof pType === "string") {
+      pType = pType.toUpperCase() as "AKL" | "AKAD" | "AKAN";
+    }
+    setPlacementType(pType as "AKL" | "AKAD" | "AKAN");
+    setPlacementRegency(row.placement_regency || "");
+    setPlacementCountry(row.placement_country || "");
     setShowPlacementModal(true);
     fetchRegencies();
   };
@@ -408,6 +423,12 @@ export default function PelamarLowonganPage() {
           if (typeof rawSwd === "string") {
             start_work_date = rawSwd.split("T")[0];
           }
+          const fixed_salary =
+            typeof objA["fixed_salary"] === "number"
+              ? objA["fixed_salary"]
+              : typeof objA["fixed_salary"] === "string"
+                ? Number(objA["fixed_salary"])
+                : null;
 
           if (typeof objA["cv_file"] === "string")
             cv_file = objA["cv_file"] as string;
@@ -507,6 +528,14 @@ export default function PelamarLowonganPage() {
             cv_file,
             resume_text,
             start_work_date,
+            fixed_salary,
+            placement_type:
+              (objA["placement_type"] as "AKL" | "AKAD" | "AKAN" | null) ||
+              null,
+            placement_regency:
+              (objA["placement_regency"] as string | null) || null,
+            placement_country:
+              (objA["placement_country"] as string | null) || null,
           };
         }),
       );
@@ -797,6 +826,29 @@ export default function PelamarLowonganPage() {
     }
   };
 
+  const openSalary = (r: (typeof rows)[0]) => {
+    setSelected(r);
+    setFixedSalary(r.fixed_salary || 0);
+    setShowSalaryModal(true);
+  };
+
+  const saveSalary = async () => {
+    if (!selected) return;
+    setSaving(selected.id);
+    try {
+      await updateApplication(selected.id, {
+        fixed_salary: fixedSalary || null,
+      });
+      showSuccess("Gaji berhasil disimpan");
+      await fetchData();
+      setShowSalaryModal(false);
+    } catch (e) {
+      showError(e instanceof Error ? e.message : "Gagal menyimpan gaji");
+    } finally {
+      setSaving("");
+    }
+  };
+
   const handleExportExcel = async () => {
     try {
       const acceptedRows = rows.filter((r) => r.status === "accepted");
@@ -946,7 +998,7 @@ export default function PelamarLowonganPage() {
               </div>
             </div>
 
-            <Card className="overflow-hidden">
+            <Card>
               <Table>
                 <TableHead>
                   <tr>
@@ -975,36 +1027,39 @@ export default function PelamarLowonganPage() {
                         </span>
                       </TD>
                       <TD>
-                        <div className="flex gap-2">
-                          <Link
-                            href={`/dashboard/lowongan/${jobId}/pelamar/${r.candidate_id}`}
-                            className="px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition flex items-center justify-center"
-                          >
-                            Detail
-                          </Link>
-                          {r.status === "accepted" && (
-                            <>
-                              <button
-                                onClick={() => openPlacement(r)}
-                                className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition"
-                              >
-                                Penempatan
-                              </button>
-                              <button
-                                onClick={() => openStartWork(r)}
-                                className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                              >
-                                Mulai Kerja
-                              </button>
-                            </>
-                          )}
-                          <button
-                            onClick={() => openEdit(r)}
-                            className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition"
-                          >
-                            Edit
-                          </button>
-                        </div>
+                        <ActionMenu
+                          items={[
+                            {
+                              label: "Detail",
+                              href: `/dashboard/lowongan/${jobId}/pelamar/${r.candidate_id}`,
+                              icon: "ri-file-list-line",
+                            },
+                            ...(r.status === "accepted"
+                              ? [
+                                  {
+                                    label: "Penempatan",
+                                    onClick: () => openPlacement(r),
+                                    icon: "ri-map-pin-line",
+                                  },
+                                  {
+                                    label: "Mulai Kerja",
+                                    onClick: () => openStartWork(r),
+                                    icon: "ri-briefcase-line",
+                                  },
+                                  {
+                                    label: "Atur Gaji",
+                                    onClick: () => openSalary(r),
+                                    icon: "ri-money-dollar-circle-line",
+                                  },
+                                ]
+                              : []),
+                            {
+                              label: "Edit",
+                              onClick: () => openEdit(r),
+                              icon: "ri-edit-line",
+                            },
+                          ]}
+                        />
                       </TD>
                     </TableRow>
                   ))}
@@ -1413,6 +1468,64 @@ export default function PelamarLowonganPage() {
                 className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                 value={startWorkDate}
                 onChange={(e) => setStartWorkDate(e.target.value)}
+              />
+            </div>
+          </div>
+        </Modal>
+
+        <Modal
+          open={showSalaryModal}
+          title="Atur Gaji"
+          onClose={() => setShowSalaryModal(false)}
+          size="md"
+          actions={
+            <>
+              <button
+                onClick={() => setShowSalaryModal(false)}
+                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-200 rounded transition"
+                disabled={!!saving}
+              >
+                Batal
+              </button>
+              <button
+                onClick={saveSalary}
+                className="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2"
+                disabled={!!saving}
+              >
+                {saving === (selected?.id || "") ? (
+                  <>
+                    <i className="ri-loader-4-line animate-spin"></i>
+                    Menyimpan...
+                  </>
+                ) : (
+                  <>
+                    <i className="ri-save-line"></i>
+                    Simpan
+                  </>
+                )}
+              </button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nama Kandidat
+              </label>
+              <div className="p-2 bg-gray-50 rounded text-gray-700">
+                {selected?.name}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Gaji Disepakati (Fixed)
+              </label>
+              <input
+                type="number"
+                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                value={fixedSalary}
+                onChange={(e) => setFixedSalary(Number(e.target.value))}
+                placeholder="0"
               />
             </div>
           </div>
