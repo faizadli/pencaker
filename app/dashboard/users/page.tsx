@@ -10,7 +10,11 @@ import {
   createUser,
   type UserListItem,
 } from "../../../services/users";
-import { listRoles, getRolePermissions } from "../../../services/rbac";
+import {
+  listRoles,
+  getRolePermissions,
+  assignUserRole,
+} from "../../../services/rbac";
 import { useRouter } from "next/navigation";
 import Pagination from "../../../components/ui/Pagination";
 import Card from "../../../components/ui/Card";
@@ -32,20 +36,11 @@ const ROLE_MAP_TO_API: Record<
   string,
   "super_admin" | "company" | "candidate" | "disnaker"
 > = {
-  Superadmin: "super_admin",
-  Perusahaan: "company",
-  Pencaker: "candidate",
-  Disnaker: "disnaker",
-  "Admin Verifikasi": "disnaker",
-};
-const ROLE_MAP_FROM_API: Record<
-  "super_admin" | "company" | "candidate" | "disnaker",
-  string
-> = {
-  super_admin: "Superadmin",
-  company: "Perusahaan",
-  candidate: "Pencaker",
-  disnaker: "Admin Verifikasi",
+  super_admin: "super_admin",
+  company: "company",
+  candidate: "candidate",
+  disnaker: "disnaker",
+  "admin verifikasi": "disnaker",
 };
 
 declare global {
@@ -89,6 +84,9 @@ export default function UsersPage() {
   // const [isSaving, setIsSaving] = useState(false);
 
   const [roleOptions, setRoleOptions] = useState<string[]>([]);
+  const [roleLabelIdMap, setRoleLabelIdMap] = useState<Record<string, number>>(
+    {},
+  );
 
   type User = {
     id: number;
@@ -114,25 +112,16 @@ export default function UsersPage() {
           id: number;
           name: string;
         }[];
-        const toLabel = (n: string) =>
-          n === "super_admin"
-            ? "Superadmin"
-            : n === "company"
-              ? "Perusahaan"
-              : n === "candidate"
-                ? "Pencaker"
-                : n === "disnaker"
-                  ? "Admin Verifikasi"
-                  : n === "admin verifikasi"
-                    ? "Admin Verifikasi"
-                    : n;
         const roleLabels = roleItems
-          .map((r) => toLabel(String(r.name || "")))
-          .filter((l) => typeof l === "string")
-          .filter((l, i, arr) => arr.indexOf(l) === i)
-          .filter((l) =>
-            Boolean(ROLE_MAP_TO_API[l as keyof typeof ROLE_MAP_TO_API]),
-          );
+          .map((r) => String(r.name || ""))
+          .filter((l) => typeof l === "string" && l.length > 0)
+          .filter((l, i, arr) => arr.indexOf(l) === i);
+        const labelIdMap: Record<string, number> = {};
+        roleItems.forEach((r) => {
+          const label = String(r.name || "");
+          labelIdMap[label] = r.id;
+        });
+        setRoleLabelIdMap(labelIdMap);
         if (roleLabels.length > 0) setRoleOptions(roleLabels);
         const target = roleItems.find(
           (x) => String(x.name).toLowerCase() === role.toLowerCase(),
@@ -159,7 +148,7 @@ export default function UsersPage() {
           id: idx + 1,
           nama: u.full_name || u.email || "-",
           email: u.email || "-",
-          role: ROLE_MAP_FROM_API[u.role] || u.role,
+          role: u.role,
           unit: "-",
           telepon: u.no_handphone || "-",
           status: "Aktif",
@@ -251,11 +240,25 @@ export default function UsersPage() {
 
     try {
       if (editUser) {
-        await updateUser(editUser, {
+        const baseCode = ROLE_MAP_TO_API[form.role];
+        const payload: {
+          email?: string;
+          role?: "candidate" | "company" | "super_admin" | "disnaker";
+          password?: string;
+        } = {
           email: form.email,
-          role: ROLE_MAP_TO_API[form.role],
           ...(form.password ? { password: form.password } : {}),
-        });
+        };
+        if (baseCode) {
+          payload.role = baseCode;
+        }
+        if (Object.keys(payload).length > 0) {
+          await updateUser(editUser, payload);
+        }
+        const selectedRoleId = roleLabelIdMap[form.role];
+        if (selectedRoleId) {
+          await assignUserRole(editUser, selectedRoleId);
+        }
       } else {
         if (form.email) {
           try {
@@ -272,11 +275,27 @@ export default function UsersPage() {
             return;
           }
         }
-        await createUser(
-          form.email,
-          form.password!,
-          ROLE_MAP_TO_API[form.role],
-        );
+        const baseCode = ROLE_MAP_TO_API[form.role] ?? ("disnaker" as const);
+        const created = await createUser(form.email, form.password!, baseCode);
+        try {
+          let newUserId = "";
+          if (created && typeof created === "object") {
+            const obj = created as Record<string, unknown>;
+            const cid = obj["id"];
+            if (typeof cid === "string") newUserId = cid;
+            else {
+              const data = obj["data"];
+              if (data && typeof data === "object") {
+                const did = (data as Record<string, unknown>)["id"];
+                if (typeof did === "string") newUserId = did;
+              }
+            }
+          }
+          const selectedRoleId = roleLabelIdMap[form.role];
+          if (newUserId && selectedRoleId) {
+            await assignUserRole(String(newUserId), selectedRoleId);
+          }
+        } catch {}
       }
       const resp = await listUsers(
         { page, limit: pageSize },
@@ -287,7 +306,7 @@ export default function UsersPage() {
         id: idx + 1,
         nama: u.email,
         email: u.email,
-        role: ROLE_MAP_FROM_API[u.role],
+        role: u.role,
         unit: "-",
         telepon: "-",
         status: "Aktif",
@@ -323,7 +342,7 @@ export default function UsersPage() {
         id: idx2 + 1,
         nama: u.email,
         email: u.email,
-        role: ROLE_MAP_FROM_API[u.role],
+        role: u.role,
         unit: "-",
         telepon: "-",
         status: "Aktif",
@@ -623,10 +642,7 @@ export default function UsersPage() {
                 label="Role"
                 value={form.role}
                 onChange={(v) => setForm({ ...form, role: v })}
-                options={(roleOptions.length > 0
-                  ? roleOptions
-                  : ["Superadmin", "Perusahaan", "Pencaker", "Admin Verifikasi"]
-                ).map((r) => ({ value: r, label: r }))}
+                options={roleOptions.map((r) => ({ value: r, label: r }))}
                 submitted={submitted}
                 error={fieldErrors.role}
               />
