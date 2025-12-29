@@ -88,6 +88,7 @@ export default function Ak1Page() {
   const [profile, setProfile] = useState<CandidateProfileLite | null>(null);
   const [doc, setDoc] = useState<Ak1Document | null>(null);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [permissions, setPermissions] = useState<string[]>([]);
   const [permsLoaded, setPermsLoaded] = useState(false);
@@ -1448,8 +1449,10 @@ export default function Ak1Page() {
                               {permissions.includes("ak1.generate") &&
                                 !r.file && (
                                   <button
-                                    className="px-3 py-1 text-xs rounded bg-secondary text-white hover:brightness-95"
+                                    className="px-3 py-1 text-xs rounded bg-secondary text-white hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={generating}
                                     onClick={async () => {
+                                      setGenerating(true);
                                       try {
                                         setGenMeta({
                                           ak1_document_id: r.ak1_document_id,
@@ -1668,11 +1671,14 @@ export default function Ak1Page() {
                                             }
                                           } catch {}
                                         } catch {}
-                                      } catch {}
+                                      } catch {
+                                      } finally {
+                                        setGenerating(false);
+                                      }
                                       setShowGenerateModal(true);
                                     }}
                                   >
-                                    Generate
+                                    {generating ? "Loading..." : "Generate"}
                                   </button>
                                 )}
                             </div>
@@ -1793,8 +1799,10 @@ export default function Ak1Page() {
                                 {permissions.includes("ak1.generate") &&
                                   !r.file && (
                                     <button
-                                      className="px-3 py-1 text-xs rounded bg-secondary text-white hover:brightness-95"
+                                      className="px-3 py-1 text-xs rounded bg-secondary text-white hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                      disabled={generating}
                                       onClick={async () => {
+                                        setGenerating(true);
                                         try {
                                           setGenMeta({
                                             ak1_document_id: r.ak1_document_id,
@@ -2091,11 +2099,14 @@ export default function Ak1Page() {
                                               }
                                             } catch {}
                                           } catch {}
-                                        } catch {}
+                                        } catch {
+                                        } finally {
+                                          setGenerating(false);
+                                        }
                                         setShowGenerateModal(true);
                                       }}
                                     >
-                                      Generate
+                                      {generating ? "Loading..." : "Generate"}
                                     </button>
                                   )}
                               </div>
@@ -2192,8 +2203,10 @@ export default function Ak1Page() {
                             {permissions.includes("ak1.generate") &&
                               !r.file && (
                                 <button
-                                  className="flex-1 px-3 py-2 text-xs bg-secondary text-white rounded hover:brightness-95 transition"
+                                  className="flex-1 px-3 py-2 text-xs bg-secondary text-white rounded hover:brightness-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                  disabled={generating}
                                   onClick={async () => {
+                                    setGenerating(true);
                                     try {
                                       setGenMeta({
                                         ak1_document_id: r.ak1_document_id,
@@ -2376,11 +2389,14 @@ export default function Ak1Page() {
                                         );
                                         setGenDocDetail(d.data || null);
                                       } catch {}
-                                    } catch {}
+                                    } catch {
+                                    } finally {
+                                      setGenerating(false);
+                                    }
                                     setShowGenerateModal(true);
                                   }}
                                 >
-                                  Generate
+                                  {generating ? "Loading..." : "Generate"}
                                 </button>
                               )}
                           </div>
@@ -2439,7 +2455,9 @@ export default function Ak1Page() {
                   Tutup
                 </button>
                 <button
+                  disabled={generating}
                   onClick={async () => {
+                    setGenerating(true);
                     try {
                       if (!genMeta.ak1_document_id) {
                         showError("Data AK1 tidak ditemukan.");
@@ -3240,11 +3258,13 @@ export default function Ak1Page() {
                       );
                     } catch {
                       showError("Gagal generate PDF AK1");
+                    } finally {
+                      setGenerating(false);
                     }
                   }}
-                  className="ml-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
+                  className="ml-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Simpan & Verifikasi
+                  {generating ? "Loading..." : "Simpan & Verifikasi"}
                 </button>
               </>
             }
