@@ -292,13 +292,15 @@ export const jobSchema = z
     }),
     min_salary: z.number().min(0, "Gaji Minimum tidak boleh negatif"),
     max_salary: z.number().min(0, "Gaji Maksimum tidak boleh negatif"),
-    batasAkhir: z.string().min(1, "Batas Akhir wajib diisi"),
     sektor: z.string().min(1, "Kategori wajib dipilih"),
     experience_required: z.string().min(1, "Pengalaman wajib diisi"),
     education_required: z.string().min(1, "Pendidikan wajib dipilih"),
-    placement: z.string().min(1, "Penempatan wajib dipilih"),
     deskripsi: z.string().min(1, "Deskripsi wajib diisi"),
     skills_required: z.string().min(1, "Keahlian wajib diisi"),
+    gender: z.enum(["L", "P", "L/P"], {
+      message: "Jenis Kelamin wajib dipilih",
+    }),
+    quota: z.number().min(1, "Kuota minimal 1"),
   })
   .refine((data) => data.max_salary >= data.min_salary, {
     message: "Gaji Maksimum harus lebih besar atau sama dengan Gaji Minimum",

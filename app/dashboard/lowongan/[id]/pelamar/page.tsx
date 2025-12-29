@@ -22,6 +22,7 @@ import {
   updateApplication,
   getJobById,
   createApplicationByAdmin,
+  listRegencies,
 } from "../../../../../services/jobs";
 import {
   getCandidateProfileById,
@@ -60,6 +61,7 @@ export default function PelamarLowonganPage() {
       birthdate?: string;
       cv_file?: string;
       resume_text?: string;
+      start_work_date?: string | null;
     }>
   >([]);
   const [saving, setSaving] = useState<string>("");
@@ -95,6 +97,42 @@ export default function PelamarLowonganPage() {
 
   // Permissions
   const [permissions, setPermissions] = useState<string[]>([]);
+
+  const isObj = useCallback(
+    (v: unknown): v is Record<string, unknown> =>
+      typeof v === "object" && v !== null,
+    [],
+  );
+  const hasData = useCallback(
+    (v: unknown): v is { data?: unknown } =>
+      isObj(v) && Object.prototype.hasOwnProperty.call(v, "data"),
+    [isObj],
+  );
+  const toStatus = useCallback((s?: string): AppStatus | undefined => {
+    switch (s) {
+      case "pending":
+      case "process":
+      case "accepted":
+      case "rejected":
+        return s;
+      case "approve":
+        return "accepted";
+      default:
+        return undefined;
+    }
+  }, []);
+
+  const calcAge = useCallback((birthdate?: string): number | undefined => {
+    const s = typeof birthdate === "string" ? birthdate : undefined;
+    if (!s) return undefined;
+    const d = new Date(s);
+    if (Number.isNaN(d.getTime())) return undefined;
+    const now = new Date();
+    let age = now.getFullYear() - d.getFullYear();
+    const m = now.getMonth() - d.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+    return age >= 0 ? age : undefined;
+  }, []);
 
   const filteredRows = useMemo(() => {
     let result = rows;
@@ -202,6 +240,77 @@ export default function PelamarLowonganPage() {
     return group.items.map((i) => ({ value: i.name, label: i.name }));
   };
 
+  // Placement State
+  const [showPlacementModal, setShowPlacementModal] = useState(false);
+  const [placementType, setPlacementType] = useState<"AKL" | "AKAD" | "AKAN">(
+    "AKL",
+  );
+  const [placementRegency, setPlacementRegency] = useState<string>("");
+  const [placementCountry, setPlacementCountry] = useState<string>("");
+  const [regencies, setRegencies] = useState<{ id: string; name: string }[]>(
+    [],
+  );
+  const [regencyLoading, setRegencyLoading] = useState(false);
+
+  // Start Work State
+  const [startWorkDate, setStartWorkDate] = useState<string>("");
+  const [showStartWorkModal, setShowStartWorkModal] = useState(false);
+  const fetchRegencies = useCallback(async () => {
+    if (regencies.length > 0) return;
+    setRegencyLoading(true);
+    try {
+      const resp = await listRegencies();
+      const data = hasData(resp) ? resp.data : resp;
+      if (Array.isArray(data)) {
+        setRegencies(
+          (data as { id: string; name: string }[]).map((d) => ({
+            id: String(d.id),
+            name: String(d.name),
+          })),
+        );
+      }
+    } catch {
+      // ignore
+    } finally {
+      setRegencyLoading(false);
+    }
+  }, [regencies.length, hasData]);
+
+  const openPlacement = (row: {
+    id: string;
+    candidate_id: string;
+    name: string;
+    status?: AppStatus;
+    note?: string | null;
+  }) => {
+    setSelected(row);
+    setPlacementType("AKL");
+    setPlacementRegency("");
+    setPlacementCountry("");
+    setShowPlacementModal(true);
+    fetchRegencies();
+  };
+
+  const savePlacement = async () => {
+    if (!selected) return;
+    try {
+      setSaving("placement-" + selected.id);
+      await updateApplication(selected.id, {
+        placement_type: placementType,
+        placement_regency: placementType === "AKAD" ? placementRegency : null,
+        placement_country: placementType === "AKAN" ? placementCountry : null,
+      });
+      showSuccess("Penempatan berhasil disimpan");
+      setShowPlacementModal(false);
+      await fetchData();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Gagal menyimpan penempatan";
+      showError(msg);
+    } finally {
+      setSaving("");
+    }
+  };
+
   // Add Manual Applicant States
   const [showAddModal, setShowAddModal] = useState(false);
   const [candidateSearch, setCandidateSearch] = useState("");
@@ -247,42 +356,6 @@ export default function PelamarLowonganPage() {
     bootPerms();
   }, []);
 
-  const isObj = useCallback(
-    (v: unknown): v is Record<string, unknown> =>
-      typeof v === "object" && v !== null,
-    [],
-  );
-  const hasData = useCallback(
-    (v: unknown): v is { data?: unknown } =>
-      isObj(v) && Object.prototype.hasOwnProperty.call(v, "data"),
-    [isObj],
-  );
-  const toStatus = useCallback((s?: string): AppStatus | undefined => {
-    switch (s) {
-      case "pending":
-      case "process":
-      case "accepted":
-      case "rejected":
-        return s;
-      case "approve":
-        return "accepted";
-      default:
-        return undefined;
-    }
-  }, []);
-
-  const calcAge = useCallback((birthdate?: string): number | undefined => {
-    const s = typeof birthdate === "string" ? birthdate : undefined;
-    if (!s) return undefined;
-    const d = new Date(s);
-    if (Number.isNaN(d.getTime())) return undefined;
-    const now = new Date();
-    let age = now.getFullYear() - d.getFullYear();
-    const m = now.getMonth() - d.getMonth();
-    if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
-    return age >= 0 ? age : undefined;
-  }, []);
-
   const fetchData = useCallback(async () => {
     try {
       if (!jobId) {
@@ -303,6 +376,7 @@ export default function PelamarLowonganPage() {
             note?: string | null;
             is_admin_created?: number | boolean;
             created_at?: string;
+            start_work_date?: string | null;
           }>)
         : [];
       const normalized = await Promise.all(
@@ -329,6 +403,12 @@ export default function PelamarLowonganPage() {
           let birthdate: string | undefined = undefined;
           let cv_file: string | undefined = undefined;
           let resume_text: string | undefined = undefined;
+          let start_work_date: string | null = null;
+          const rawSwd = objA["start_work_date"];
+          if (typeof rawSwd === "string") {
+            start_work_date = rawSwd.split("T")[0];
+          }
+
           if (typeof objA["cv_file"] === "string")
             cv_file = objA["cv_file"] as string;
           if (typeof objA["resume_text"] === "string")
@@ -426,6 +506,7 @@ export default function PelamarLowonganPage() {
             birthdate,
             cv_file,
             resume_text,
+            start_work_date,
           };
         }),
       );
@@ -691,6 +772,31 @@ export default function PelamarLowonganPage() {
     }
   };
 
+  const openStartWork = (r: (typeof rows)[0]) => {
+    setSelected(r);
+    setStartWorkDate(r.start_work_date || "");
+    setShowStartWorkModal(true);
+  };
+
+  const saveStartWork = async () => {
+    if (!selected) return;
+    setSaving(selected.id);
+    try {
+      await updateApplication(selected.id, {
+        start_work_date: startWorkDate || null,
+      });
+      showSuccess("Tanggal mulai kerja berhasil disimpan");
+      await fetchData();
+      setShowStartWorkModal(false);
+    } catch (e) {
+      showError(
+        e instanceof Error ? e.message : "Gagal menyimpan tanggal mulai kerja",
+      );
+    } finally {
+      setSaving("");
+    }
+  };
+
   const handleExportExcel = async () => {
     try {
       const acceptedRows = rows.filter((r) => r.status === "accepted");
@@ -876,6 +982,22 @@ export default function PelamarLowonganPage() {
                           >
                             Detail
                           </Link>
+                          {r.status === "accepted" && (
+                            <>
+                              <button
+                                onClick={() => openPlacement(r)}
+                                className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition"
+                              >
+                                Penempatan
+                              </button>
+                              <button
+                                onClick={() => openStartWork(r)}
+                                className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                              >
+                                Mulai Kerja
+                              </button>
+                            </>
+                          )}
                           <button
                             onClick={() => openEdit(r)}
                             className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition"
@@ -1156,6 +1278,144 @@ export default function PelamarLowonganPage() {
               </div>
             </div>
           )}
+        </Modal>
+
+        {/* Placement Modal */}
+        <Modal
+          open={showPlacementModal}
+          title="Atur Penempatan"
+          onClose={() => {
+            setShowPlacementModal(false);
+            setSelected(null);
+          }}
+          size="md"
+          actions={
+            <>
+              <button
+                onClick={() => {
+                  setShowPlacementModal(false);
+                  setSelected(null);
+                }}
+                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
+              >
+                Batal
+              </button>
+              <button
+                onClick={savePlacement}
+                disabled={Boolean(saving)}
+                className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
+              >
+                {saving ? "Menyimpan..." : "Simpan"}
+              </button>
+            </>
+          }
+        >
+          {selected && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Jenis Penempatan
+                </label>
+                <SearchableSelect
+                  options={[
+                    { value: "AKL", label: "Dalam Kabupaten (AKL)" },
+                    { value: "AKAD", label: "Luar Kabupaten (AKAD)" },
+                    { value: "AKAN", label: "Luar Negeri (AKAN)" },
+                  ]}
+                  value={placementType}
+                  onChange={(v) =>
+                    setPlacementType(v as "AKL" | "AKAD" | "AKAN")
+                  }
+                  className="w-full"
+                />
+              </div>
+
+              {placementType === "AKAD" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Pilih Kabupaten
+                  </label>
+                  <SearchableSelect
+                    options={regencies.map((r) => ({
+                      value: r.name,
+                      label: r.name,
+                    }))}
+                    value={placementRegency}
+                    onChange={setPlacementRegency}
+                    placeholder="Pilih Kabupaten..."
+                    isLoading={regencyLoading}
+                    className="w-full"
+                  />
+                </div>
+              )}
+
+              {placementType === "AKAN" && (
+                <Input
+                  label="Negara Tujuan"
+                  placeholder="Masukkan nama negara..."
+                  value={placementCountry}
+                  onChange={(e) => setPlacementCountry(e.target.value)}
+                />
+              )}
+            </div>
+          )}
+        </Modal>
+
+        <Modal
+          open={showStartWorkModal}
+          title="Atur Tanggal Mulai Kerja"
+          onClose={() => setShowStartWorkModal(false)}
+          size="md"
+          actions={
+            <>
+              <button
+                onClick={() => setShowStartWorkModal(false)}
+                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-200 rounded transition"
+                disabled={!!saving}
+              >
+                Batal
+              </button>
+              <button
+                onClick={saveStartWork}
+                className="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2"
+                disabled={!!saving}
+              >
+                {saving === (selected?.id || "") ? (
+                  <>
+                    <i className="ri-loader-4-line animate-spin"></i>
+                    Menyimpan...
+                  </>
+                ) : (
+                  <>
+                    <i className="ri-save-line"></i>
+                    Simpan
+                  </>
+                )}
+              </button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nama Kandidat
+              </label>
+              <div className="p-2 bg-gray-50 rounded text-gray-700">
+                {selected?.name}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tanggal Mulai Kerja
+              </label>
+              <input
+                type="date"
+                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                value={startWorkDate}
+                onChange={(e) => setStartWorkDate(e.target.value)}
+              />
+            </div>
+          </div>
         </Modal>
       </div>
     </main>

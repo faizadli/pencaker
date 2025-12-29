@@ -80,12 +80,6 @@ export default function LowonganPage() {
     SearchableSelectOption[]
   >([]);
 
-  const placementOptions: SearchableSelectOption[] = [
-    { label: "Dalam Kabupaten", value: "AKAD" },
-    { label: "Luar Kabupaten", value: "AKL" },
-    { label: "Luar Negeri", value: "AKAN" },
-  ];
-
   type Job = {
     id: string;
     company_id: string;
@@ -102,14 +96,14 @@ export default function LowonganPage() {
       | "freelance";
     job_description: string;
     category: string;
-    placement?: string;
+    gender: "L" | "P" | "L/P";
+    quota: number;
     min_salary: number;
     max_salary: number;
     experience_required: string;
     education_required: string;
     skills_required: string;
     work_setup: string;
-    application_deadline: string;
     status: "pending" | "approved" | "rejected" | "closed";
     createdAt?: string;
     created_at?: string;
@@ -177,7 +171,8 @@ export default function LowonganPage() {
     position_id?: string;
     sektor: string;
     tipe: UITipe;
-    batasAkhir: string;
+    gender: "L" | "P" | "L/P";
+    quota: number;
     deskripsi: string;
     experience_required: string;
     education_required: string;
@@ -185,7 +180,6 @@ export default function LowonganPage() {
     min_salary: number;
     max_salary: number;
     work_setup: string;
-    placement?: string;
     company_id?: string;
   };
 
@@ -198,7 +192,8 @@ export default function LowonganPage() {
     lokasi: string;
     tipe: UITipe;
     tanggalTayang: string;
-    batasAkhir: string;
+    gender: string;
+    quota: number;
     status: UIStatusExtended;
     pelamar: number;
     diterima: number;
@@ -207,7 +202,6 @@ export default function LowonganPage() {
     experience_required: string;
     education_required: string;
     skills_required: string;
-    placement?: string;
   };
 
   const [lowonganList, setLowonganList] = useState<Job[]>([]);
@@ -219,7 +213,8 @@ export default function LowonganPage() {
     position_id: "",
     sektor: "",
     tipe: "Full-time",
-    batasAkhir: "",
+    gender: "L/P",
+    quota: 1,
     deskripsi: "",
     experience_required: "",
     education_required: "",
@@ -227,7 +222,6 @@ export default function LowonganPage() {
     min_salary: 0,
     max_salary: 0,
     work_setup: "WFO",
-    placement: "",
   };
   const [newJob, setNewJob] = useState<NewJob>(EMPTY_NEW_JOB);
   const [submittedJob, setSubmittedJob] = useState(false);
@@ -484,7 +478,8 @@ export default function LowonganPage() {
       lokasi: j.work_setup,
       tipe: apiToUITipe[j.job_type],
       tanggalTayang: formatDate(j.createdAt || j.created_at),
-      batasAkhir: formatDate(j.application_deadline),
+      gender: j.gender,
+      quota: j.quota,
       status: apiToUIStatus[j.status],
       pelamar: 0,
       diterima: 0,
@@ -493,7 +488,6 @@ export default function LowonganPage() {
       experience_required: j.experience_required,
       education_required: j.education_required,
       skills_required: j.skills_required,
-      placement: j.placement,
     }));
     return toView.filter((lowongan: ViewJob) => {
       const matchesSearch =
@@ -595,11 +589,11 @@ export default function LowonganPage() {
       work_setup: newJob.work_setup as "WFO" | "WFH" | "Hybrid",
       min_salary: Number.isFinite(newJob.min_salary) ? newJob.min_salary : 0,
       max_salary: Number.isFinite(newJob.max_salary) ? newJob.max_salary : 0,
-      batasAkhir: newJob.batasAkhir,
+      gender: newJob.gender,
+      quota: Number(newJob.quota),
       sektor: newJob.sektor || "",
       experience_required: newJob.experience_required || "",
       education_required: newJob.education_required || "",
-      placement: newJob.placement || "",
       deskripsi: newJob.deskripsi || "",
       skills_required: newJob.skills_required || "",
       company_id: effectiveCompanyId,
@@ -631,8 +625,8 @@ export default function LowonganPage() {
         education_required: newJob.education_required || "",
         skills_required: newJob.skills_required || "",
         work_setup: newJob.work_setup || "WFO",
-        placement: newJob.placement,
-        application_deadline: newJob.batasAkhir,
+        gender: newJob.gender,
+        quota: Number(newJob.quota),
       } as const;
       if (editingId) {
         await updateJob(editingId, {
@@ -647,8 +641,8 @@ export default function LowonganPage() {
           education_required: payload.education_required,
           skills_required: payload.skills_required,
           work_setup: payload.work_setup,
-          placement: payload.placement,
-          application_deadline: payload.application_deadline,
+          gender: payload.gender,
+          quota: payload.quota,
         });
       } else {
         await createJob(payload);
@@ -937,15 +931,29 @@ export default function LowonganPage() {
                 submitted={submittedJob}
                 error={fieldErrors["max_salary"]}
               />
+              <SearchableSelect
+                label="Jenis Kelamin"
+                value={newJob.gender}
+                onChange={(v) =>
+                  setNewJob({ ...newJob, gender: v as "L" | "P" | "L/P" })
+                }
+                options={[
+                  { value: "L", label: "Laki-laki" },
+                  { value: "P", label: "Perempuan" },
+                  { value: "L/P", label: "Laki-laki / Perempuan" },
+                ]}
+                submitted={submittedJob}
+                error={fieldErrors["gender"]}
+              />
               <Input
-                label="Batas Akhir"
-                type="date"
-                value={newJob.batasAkhir}
+                label="Kuota Pelamar"
+                type="number"
+                value={newJob.quota}
                 onChange={(e) =>
-                  setNewJob({ ...newJob, batasAkhir: e.target.value })
+                  setNewJob({ ...newJob, quota: Number(e.target.value) })
                 }
                 submitted={submittedJob}
-                error={fieldErrors["batasAkhir"]}
+                error={fieldErrors["quota"]}
               />
               <SearchableSelect
                 label="Kategori"
@@ -976,14 +984,6 @@ export default function LowonganPage() {
                 submitted={submittedJob}
                 error={fieldErrors["education_required"]}
               />
-              <SearchableSelect
-                label="Penempatan"
-                value={newJob.placement || ""}
-                onChange={(v) => setNewJob({ ...newJob, placement: v })}
-                options={placementOptions}
-                submitted={submittedJob}
-                error={fieldErrors["placement"]}
-              />
               <div className="md:col-span-2">
                 <TextEditor
                   label="Deskripsi"
@@ -1013,7 +1013,7 @@ export default function LowonganPage() {
             <CardGrid>
               {paginatedLowongan.map((job, idx) => (
                 <div
-                  key={`${job.id || `${job.companyId}-${job.posisi}-${job.batasAkhir}`}-${job.status}-${idx}`}
+                  key={`${job.id || `${job.companyId}-${job.posisi}-${job.quota}`}-${job.status}-${idx}`}
                   className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
                 >
                   <div className="block p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
@@ -1052,9 +1052,9 @@ export default function LowonganPage() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-700">Batas Akhir</span>
+                      <span className="text-gray-700">Kuota</span>
                       <span className="font-medium text-gray-900">
-                        {job.batasAkhir}
+                        {job.quota} Orang ({job.gender})
                       </span>
                     </div>
                   </div>
@@ -1116,17 +1116,13 @@ export default function LowonganPage() {
                             const raw = lowonganList.find(
                               (j) => String(j.id) === String(job.id),
                             );
-                            const isoDeadline = raw?.application_deadline
-                              ? new Date(raw.application_deadline)
-                                  .toISOString()
-                                  .slice(0, 10)
-                              : "";
                             setNewJob({
                               posisi: raw?.job_title || job.posisi,
                               position_id: raw?.position_id || "",
                               sektor: raw?.category || job.sektor,
                               tipe: job.tipe as UITipe,
-                              batasAkhir: isoDeadline,
+                              gender: raw?.gender || "L/P",
+                              quota: raw?.quota || 1,
                               deskripsi: raw?.job_description || job.deskripsi,
                               experience_required:
                                 raw?.experience_required ||
@@ -1145,7 +1141,6 @@ export default function LowonganPage() {
                                   ? raw!.max_salary
                                   : 0,
                               work_setup: raw?.work_setup || job.lokasi,
-                              placement: raw?.placement || "",
                             });
                             setShowForm(true);
                           }}
@@ -1177,7 +1172,7 @@ export default function LowonganPage() {
                 <TableBody>
                   {paginatedLowongan.map((job, idx) => (
                     <TableRow
-                      key={`${job.id || `${job.companyId}-${job.posisi}-${job.batasAkhir}`}-${job.status}-${idx}`}
+                      key={`${job.id || `${job.companyId}-${job.posisi}-${job.quota}`}-${job.status}-${idx}`}
                     >
                       <TD>
                         <div>
@@ -1238,7 +1233,7 @@ export default function LowonganPage() {
               <div className="sm:hidden p-3 space-y-3">
                 {paginatedLowongan.map((job, idx) => (
                   <div
-                    key={`m-${job.id || `${job.companyId}-${job.posisi}-${job.batasAkhir}`}-${job.status}-${idx}`}
+                    key={`m-${job.id || `${job.companyId}-${job.posisi}-${job.quota}`}-${job.status}-${idx}`}
                     className="border border-gray-200 rounded-lg p-3"
                   >
                     <div className="block">
@@ -1296,16 +1291,13 @@ export default function LowonganPage() {
                             const raw = lowonganList.find(
                               (j) => String(j.id) === String(job.id),
                             );
-                            const isoDeadline = raw?.application_deadline
-                              ? new Date(raw.application_deadline)
-                                  .toISOString()
-                                  .slice(0, 10)
-                              : "";
                             setNewJob({
                               posisi: raw?.job_title || job.posisi,
+                              position_id: raw?.position_id || "",
                               sektor: raw?.category || job.sektor,
                               tipe: job.tipe as UITipe,
-                              batasAkhir: isoDeadline,
+                              gender: raw?.gender || "L/P",
+                              quota: raw?.quota || 1,
                               deskripsi: raw?.job_description || job.deskripsi,
                               experience_required:
                                 raw?.experience_required ||

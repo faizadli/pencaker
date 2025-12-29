@@ -12,14 +12,14 @@ export type JobPayload = {
   job_type: "full-time" | "part-time" | "internship" | "contract" | "freelance";
   job_description: string;
   category: string;
-  placement?: string;
   min_salary: number;
   max_salary: number;
   experience_required: string;
   education_required: string;
   skills_required: string;
   work_setup: string;
-  application_deadline: string;
+  gender: "L" | "P" | "L/P";
+  quota: number;
 };
 
 export async function listJobs(params?: {
@@ -286,6 +286,10 @@ export async function updateApplication(
   payload: {
     status?: "pending" | "process" | "accepted" | "rejected";
     note?: string | null;
+    placement_type?: "AKL" | "AKAD" | "AKAN" | null;
+    placement_regency?: string | null;
+    placement_country?: string | null;
+    start_work_date?: string | null;
   },
 ) {
   const resp = await fetch(
@@ -307,5 +311,13 @@ export async function updateApplication(
     } catch {}
     throw new Error(msg || "Gagal mengubah aplikasi");
   }
+  return resp.json();
+}
+
+export async function listRegencies() {
+  const resp = await fetch(`${BASE}/api/regions/regencies`, {
+    headers: { ...authHeader() },
+  });
+  if (!resp.ok) throw new Error("Gagal mengambil regencies");
   return resp.json();
 }
