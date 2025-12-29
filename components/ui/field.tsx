@@ -750,6 +750,68 @@ export function TextEditor({
           <button
             type="button"
             disabled={!editor || disabled}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor?.chain().focus().undo().run();
+            }}
+            className={btn(false)}
+            title="Undo"
+          >
+            <i className="ri-arrow-go-back-line"></i>
+          </button>
+          <button
+            type="button"
+            disabled={!editor || disabled}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor?.chain().focus().redo().run();
+            }}
+            className={btn(false)}
+            title="Redo"
+          >
+            <i className="ri-arrow-go-forward-line"></i>
+          </button>
+          <div className="w-px bg-gray-200"></div>
+          <button
+            type="button"
+            disabled={!editor || disabled}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor?.chain().focus().toggleHeading({ level: 1 }).run();
+            }}
+            className={btn(editor?.isActive("heading", { level: 1 }) || false)}
+            title="Heading 1"
+          >
+            <i className="ri-h-1"></i>
+          </button>
+          <button
+            type="button"
+            disabled={!editor || disabled}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor?.chain().focus().toggleHeading({ level: 2 }).run();
+            }}
+            className={btn(editor?.isActive("heading", { level: 2 }) || false)}
+            title="Heading 2"
+          >
+            <i className="ri-h-2"></i>
+          </button>
+          <button
+            type="button"
+            disabled={!editor || disabled}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor?.chain().focus().toggleHeading({ level: 3 }).run();
+            }}
+            className={btn(editor?.isActive("heading", { level: 3 }) || false)}
+            title="Heading 3"
+          >
+            <i className="ri-h-3"></i>
+          </button>
+          <div className="w-px bg-gray-200"></div>
+          <button
+            type="button"
+            disabled={!editor || disabled}
             onMouseDown={handleBold}
             className={btn(editor?.isActive("bold") || false)}
             title="Bold"
@@ -773,6 +835,18 @@ export function TextEditor({
             title="Underline"
           >
             <i className="ri-underline"></i>
+          </button>
+          <button
+            type="button"
+            disabled={!editor || disabled}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor?.chain().focus().toggleStrike().run();
+            }}
+            className={btn(editor?.isActive("strike") || false)}
+            title="Strikethrough"
+          >
+            <i className="ri-strikethrough"></i>
           </button>
           <div className="w-px bg-gray-200"></div>
           <button
@@ -809,11 +883,36 @@ export function TextEditor({
           >
             <i className="ri-text"></i>
           </button>
+          <button
+            type="button"
+            disabled={!editor || disabled}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor?.chain().focus().toggleBlockquote().run();
+            }}
+            className={btn(editor?.isActive("blockquote") || false)}
+            title="Blockquote"
+          >
+            <i className="ri-double-quotes-l"></i>
+          </button>
+          <div className="w-px bg-gray-200"></div>
+          <button
+            type="button"
+            disabled={!editor || disabled}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              editor?.chain().focus().setHorizontalRule().run();
+            }}
+            className={btn(false)}
+            title="Horizontal Rule"
+          >
+            <i className="ri-separator"></i>
+          </button>
         </div>
         <div className={`${disabled ? "opacity-60" : ""}`}>
           <EditorContent
             editor={editor}
-            className="min-h-40 p-3 text-sm text-gray-900 [&_.ProseMirror]:outline-none [&_.ProseMirror]:border-none [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:ml-6 [&_.ProseMirror_ol]:ml-6"
+            className="min-h-40 p-3 text-sm text-gray-900 [&_.ProseMirror]:outline-none [&_.ProseMirror]:border-none [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:ml-6 [&_.ProseMirror_ol]:ml-6 [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h1]:mb-4 [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:mb-3 [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-bold [&_.ProseMirror_h3]:mb-2 [&_.ProseMirror_blockquote]:border-l-4 [&_.ProseMirror_blockquote]:border-gray-300 [&_.ProseMirror_blockquote]:pl-4 [&_.ProseMirror_blockquote]:italic [&_.ProseMirror_blockquote]:my-4 [&_.ProseMirror_hr]:border-t [&_.ProseMirror_hr]:border-gray-300 [&_.ProseMirror_hr]:my-4 [&_.ProseMirror_p]:mb-2 last:[&_.ProseMirror_p]:mb-0"
           />
         </div>
       </div>
