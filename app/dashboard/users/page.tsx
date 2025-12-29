@@ -26,9 +26,18 @@ import EmptyState from "../../../components/ui/EmptyState";
 import { useToast } from "../../../components/ui/Toast";
 import { createUserSchema, updateUserSchema } from "../../../utils/zod-schemas";
 import { ZodIssue } from "zod";
+import { checkUser } from "../../../services/auth";
 
-const ROLE_MAP_TO_API: Record<string, "super_admin" | "company" | "candidate"> =
-  { Superadmin: "super_admin", Perusahaan: "company", Pencaker: "candidate" };
+const ROLE_MAP_TO_API: Record<
+  string,
+  "super_admin" | "company" | "candidate" | "disnaker"
+> = {
+  Superadmin: "super_admin",
+  Perusahaan: "company",
+  Pencaker: "candidate",
+  Disnaker: "disnaker",
+  "Admin Verifikasi": "disnaker",
+};
 const ROLE_MAP_FROM_API: Record<
   "super_admin" | "company" | "candidate" | "disnaker",
   string
@@ -36,7 +45,7 @@ const ROLE_MAP_FROM_API: Record<
   super_admin: "Superadmin",
   company: "Perusahaan",
   candidate: "Pencaker",
-  disnaker: "Superadmin",
+  disnaker: "Admin Verifikasi",
 };
 
 declare global {
@@ -79,7 +88,7 @@ export default function UsersPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   // const [isSaving, setIsSaving] = useState(false);
 
-  const roles = ["Superadmin", "Perusahaan", "Pencaker"];
+  const [roleOptions, setRoleOptions] = useState<string[]>([]);
 
   type User = {
     id: number;
@@ -100,16 +109,36 @@ export default function UsersPage() {
           typeof window !== "undefined"
             ? localStorage.getItem("role") || ""
             : "";
-        const rolesResp = await listRoles();
+        const rolesResp = await listRoles({ noCache: true });
         const roleItems = (rolesResp.data || rolesResp) as {
           id: number;
           name: string;
         }[];
+        const toLabel = (n: string) =>
+          n === "super_admin"
+            ? "Superadmin"
+            : n === "company"
+              ? "Perusahaan"
+              : n === "candidate"
+                ? "Pencaker"
+                : n === "disnaker"
+                  ? "Admin Verifikasi"
+                  : n === "admin verifikasi"
+                    ? "Admin Verifikasi"
+                    : n;
+        const roleLabels = roleItems
+          .map((r) => toLabel(String(r.name || "")))
+          .filter((l) => typeof l === "string")
+          .filter((l, i, arr) => arr.indexOf(l) === i)
+          .filter((l) =>
+            Boolean(ROLE_MAP_TO_API[l as keyof typeof ROLE_MAP_TO_API]),
+          );
+        if (roleLabels.length > 0) setRoleOptions(roleLabels);
         const target = roleItems.find(
           (x) => String(x.name).toLowerCase() === role.toLowerCase(),
         );
         if (target) {
-          const perms = await getRolePermissions(target.id);
+          const perms = await getRolePermissions(target.id, true);
           const rows = (perms.data || perms) as {
             code: string;
             label: string;
@@ -121,7 +150,10 @@ export default function UsersPage() {
             return;
           }
         }
-        const resp = await listUsers({ page, limit: pageSize });
+        const resp = await listUsers(
+          { page, limit: pageSize },
+          { noCache: true },
+        );
         const rows = resp.data as UserListItem[];
         const mapped: User[] = rows.map((u, idx) => ({
           id: idx + 1,
@@ -225,13 +257,31 @@ export default function UsersPage() {
           ...(form.password ? { password: form.password } : {}),
         });
       } else {
+        if (form.email) {
+          try {
+            await checkUser({ email: form.email });
+          } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : "Gagal mengecek user";
+            setFieldErrors((prev) => ({
+              ...prev,
+              email: msg.includes("email already exist")
+                ? "Email sudah terdaftar"
+                : msg,
+            }));
+            showError(msg);
+            return;
+          }
+        }
         await createUser(
           form.email,
           form.password!,
           ROLE_MAP_TO_API[form.role],
         );
       }
-      const resp = await listUsers({ page, limit: pageSize });
+      const resp = await listUsers(
+        { page, limit: pageSize },
+        { noCache: true },
+      );
       const rows = resp.data as UserListItem[];
       const mapped: User[] = rows.map((u, idx) => ({
         id: idx + 1,
@@ -251,8 +301,9 @@ export default function UsersPage() {
       setEditUser(null);
       setSubmitted(false);
       showSuccess(editUser ? "Pengguna diperbarui" : "Pengguna ditambahkan");
-    } catch {
-      showError("Gagal menyimpan user");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Gagal menyimpan user";
+      showError(msg);
     }
   };
 
@@ -263,7 +314,10 @@ export default function UsersPage() {
       const idStr = window.__usersIds?.[idx];
       if (!idStr) throw new Error("id not found");
       await deleteUser(idStr);
-      const resp = await listUsers({ page, limit: pageSize });
+      const resp = await listUsers(
+        { page, limit: pageSize },
+        { noCache: true },
+      );
       const rows = resp.data as UserListItem[];
       const mapped: User[] = rows.map((u, idx2) => ({
         id: idx2 + 1,
@@ -348,7 +402,12 @@ export default function UsersPage() {
                   onChange={(v) => setRoleFilter(v)}
                   options={[
                     { value: "all", label: "Semua Role" },
-                    ...roles.map((r) => ({ value: r, label: r })),
+                    ...(roleOptions.length > 0
+                      ? roleOptions.map((r) => ({ value: r, label: r }))
+                      : ["Superadmin", "Perusahaan", "Pencaker"].map((r) => ({
+                          value: r,
+                          label: r,
+                        }))),
                   ]}
                 />
                 <SearchableSelect
@@ -564,7 +623,10 @@ export default function UsersPage() {
                 label="Role"
                 value={form.role}
                 onChange={(v) => setForm({ ...form, role: v })}
-                options={roles.map((r) => ({ value: r, label: r }))}
+                options={(roleOptions.length > 0
+                  ? roleOptions
+                  : ["Superadmin", "Perusahaan", "Pencaker", "Admin Verifikasi"]
+                ).map((r) => ({ value: r, label: r }))}
                 submitted={submitted}
                 error={fieldErrors.role}
               />

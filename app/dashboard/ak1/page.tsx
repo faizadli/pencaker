@@ -1107,7 +1107,8 @@ export default function Ak1Page() {
                           >
                             {uiStatus}
                           </div>
-                          {statusRaw === "PENDING" && (
+                          {(statusRaw === "PENDING" ||
+                            statusRaw === "PROCESS") && (
                             <p className="text-sm text-gray-600 mt-2">
                               Dokumen Anda sedang dalam proses verifikasi oleh
                               petugas.
@@ -2458,25 +2459,78 @@ export default function Ak1Page() {
                         const bold = await pdfDoc.embedFont(
                           StandardFonts.HelveticaBold,
                         );
-                        const toPng = (url: string, w: number, h: number) =>
-                          new Promise<string>((resolve, reject) => {
-                            const img = new Image();
-                            img.crossOrigin = "anonymous";
-                            img.onload = () => {
-                              const canvas = document.createElement("canvas");
-                              canvas.width = w;
-                              canvas.height = h;
-                              const ctx = canvas.getContext("2d");
-                              if (!ctx) {
-                                reject(new Error("canvas"));
-                                return;
-                              }
-                              ctx.drawImage(img, 0, 0, w, h);
-                              resolve(canvas.toDataURL("image/png"));
-                            };
-                            img.onerror = () => reject(new Error("image"));
-                            img.src = url;
-                          });
+                        const toPng = async (
+                          url: string,
+                          w: number,
+                          h: number,
+                        ) => {
+                          try {
+                            // Handle relative URLs vs Absolute URLs
+                            let fetchUrl = url;
+                            if (url.startsWith("http")) {
+                              const u = new URL(url);
+                              u.searchParams.append("t", Date.now().toString());
+                              fetchUrl = u.toString();
+                            }
+
+                            const res = await fetch(fetchUrl, {
+                              mode: "cors",
+                              cache: "no-store",
+                            });
+                            if (!res.ok)
+                              throw new Error(
+                                `Failed to fetch image: ${res.status} ${res.statusText}`,
+                              );
+                            const blob = await res.blob();
+                            const objectUrl = URL.createObjectURL(blob);
+
+                            return new Promise<string>((resolve, reject) => {
+                              const img = new Image();
+                              img.crossOrigin = "anonymous";
+                              img.onload = () => {
+                                const canvas = document.createElement("canvas");
+                                canvas.width = w;
+                                canvas.height = h;
+                                const ctx = canvas.getContext("2d");
+                                if (!ctx) {
+                                  URL.revokeObjectURL(objectUrl);
+                                  reject(new Error("canvas"));
+                                  return;
+                                }
+                                ctx.drawImage(img, 0, 0, w, h);
+                                URL.revokeObjectURL(objectUrl);
+                                resolve(canvas.toDataURL("image/png"));
+                              };
+                              img.onerror = (e) => {
+                                URL.revokeObjectURL(objectUrl);
+                                console.error("Image load error", e);
+                                reject(new Error("image load failed"));
+                              };
+                              img.src = objectUrl;
+                            });
+                          } catch (e) {
+                            console.error("toPng fallback error:", e);
+                            // Fallback to original method if fetch fails
+                            return new Promise<string>((resolve, reject) => {
+                              const img = new Image();
+                              img.crossOrigin = "anonymous";
+                              img.onload = () => {
+                                const canvas = document.createElement("canvas");
+                                canvas.width = w;
+                                canvas.height = h;
+                                const ctx = canvas.getContext("2d");
+                                if (!ctx) {
+                                  reject(new Error("canvas"));
+                                  return;
+                                }
+                                ctx.drawImage(img, 0, 0, w, h);
+                                resolve(canvas.toDataURL("image/png"));
+                              };
+                              img.onerror = () => reject(new Error("image"));
+                              img.src = url;
+                            });
+                          }
+                        };
 
                         let pdfPhoto: PDFImage | null = null;
                         try {

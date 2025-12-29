@@ -5,10 +5,10 @@ function authHeader(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-export async function listRoles() {
+export async function listRoles(opts?: { noCache?: boolean }) {
   const url = `${BASE}/api/rbac/roles`;
   const key = `cache:listRoles`;
-  if (typeof window !== "undefined") {
+  if (!opts?.noCache && typeof window !== "undefined") {
     try {
       const raw = sessionStorage.getItem(key);
       if (raw) {
@@ -17,10 +17,13 @@ export async function listRoles() {
       }
     } catch {}
   }
-  const resp = await fetch(url, { headers: { ...authHeader() } });
+  const resp = await fetch(url, {
+    headers: { ...authHeader() },
+    cache: "no-store",
+  });
   if (!resp.ok) throw new Error("Gagal mengambil roles");
   const data = await resp.json();
-  if (typeof window !== "undefined") {
+  if (!opts?.noCache && typeof window !== "undefined") {
     try {
       sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data }));
     } catch {}
@@ -41,10 +44,10 @@ export async function createRole(payload: {
   return resp.json();
 }
 
-export async function listPermissions() {
+export async function listPermissions(opts?: { noCache?: boolean }) {
   const url = `${BASE}/api/rbac/permissions`;
   const key = `cache:listPermissions`;
-  if (typeof window !== "undefined") {
+  if (!opts?.noCache && typeof window !== "undefined") {
     try {
       const raw = sessionStorage.getItem(key);
       if (raw) {
@@ -53,10 +56,13 @@ export async function listPermissions() {
       }
     } catch {}
   }
-  const resp = await fetch(url, { headers: { ...authHeader() } });
+  const resp = await fetch(url, {
+    headers: { ...authHeader() },
+    cache: "no-store",
+  });
   if (!resp.ok) throw new Error("Gagal mengambil permissions");
   const data = await resp.json();
-  if (typeof window !== "undefined") {
+  if (!opts?.noCache && typeof window !== "undefined") {
     try {
       sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data }));
     } catch {}

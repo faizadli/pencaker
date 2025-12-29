@@ -15,13 +15,16 @@ export type UserListItem = {
   updatedAt?: string;
 };
 
-export async function listUsers(params?: { page?: number; limit?: number }) {
+export async function listUsers(
+  params?: { page?: number; limit?: number },
+  opts?: { noCache?: boolean },
+) {
   const q = new URLSearchParams();
   if (params?.page) q.set("page", String(params.page));
   if (params?.limit) q.set("limit", String(params.limit));
   const url = `${BASE}/api/users${q.toString() ? `?${q.toString()}` : ""}`;
   const key = `cache:listUsers:${q.toString()}`;
-  if (typeof window !== "undefined") {
+  if (!opts?.noCache && typeof window !== "undefined") {
     try {
       const raw = sessionStorage.getItem(key);
       if (raw) {
@@ -34,13 +37,16 @@ export async function listUsers(params?: { page?: number; limit?: number }) {
       }
     } catch {}
   }
-  const resp = await fetch(url, { headers: { ...authHeader() } });
+  const resp = await fetch(url, {
+    headers: { ...authHeader() },
+    cache: "no-store",
+  });
   if (!resp.ok) throw new Error("Gagal mengambil data users");
   const data = (await resp.json()) as {
     data: UserListItem[];
     pagination?: { page: number; limit: number; total: number };
   };
-  if (typeof window !== "undefined") {
+  if (!opts?.noCache && typeof window !== "undefined") {
     try {
       sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data }));
     } catch {}
@@ -84,7 +90,26 @@ export async function createUser(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password, role }),
   });
-  if (!resp.ok) throw new Error("Gagal membuat user");
+  if (!resp.ok) {
+    const txt = await resp.text();
+    let msg = txt;
+    try {
+      const data = JSON.parse(txt);
+      if (data) {
+        if (typeof data.message === "string" && data.message)
+          msg = data.message;
+        else if (typeof data.errors === "string") msg = data.errors;
+        else if (Array.isArray(data.errors))
+          msg = data.errors
+            .map(
+              (e: { message?: string } | unknown) =>
+                (e as { message?: string })?.message || String(e),
+            )
+            .join(", ");
+      }
+    } catch {}
+    throw new Error(msg || "Gagal membuat user");
+  }
   return resp.json();
 }
 
