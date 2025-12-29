@@ -380,7 +380,32 @@ export async function presignDisnakerProfileUpload(
       user_id: uid,
     }),
   });
-  if (!resp.ok) throw new Error("Gagal presign upload disnaker");
+  if (!resp.ok) {
+    // Fallback: gunakan presign generic dengan namespace folder disnaker/<uid>
+    if (resp.status === 403 || resp.status === 401) {
+      const altFolder = `disnaker/${uid}${folder ? `/${folder}` : ""}`.replace(
+        /\s+/g,
+        "-",
+      );
+      const alt = await fetch(`${BASE}/api/uploads/presign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeader() },
+        body: JSON.stringify({
+          action: "put",
+          folder: altFolder,
+          filename,
+          content_type,
+        }),
+      });
+      if (!alt.ok) throw new Error("Gagal presign upload disnaker");
+      return (await alt.json()).data as {
+        url: string;
+        key: string;
+        public_url?: string;
+      };
+    }
+    throw new Error("Gagal presign upload disnaker");
+  }
   return (await resp.json()).data as {
     url: string;
     key: string;

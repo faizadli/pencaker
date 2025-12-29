@@ -241,13 +241,10 @@ export default function UsersPage() {
     try {
       if (editUser) {
         const baseCode = ROLE_MAP_TO_API[form.role];
-        const payload: {
-          email?: string;
-          role?: string;
-          password?: string;
-        } = {
-          email: form.email,
+        const payload: Record<string, string> = {
+          ...(form.email ? { email: form.email } : {}),
           ...(form.password ? { password: form.password } : {}),
+          ...(form.telepon ? { no_handphone: form.telepon } : {}),
         };
         if (baseCode) {
           payload.role = baseCode;
@@ -276,7 +273,12 @@ export default function UsersPage() {
           }
         }
         const baseCode = ROLE_MAP_TO_API[form.role] ?? ("disnaker" as const);
-        const created = await createUser(form.email, form.password!, baseCode);
+        const created = await createUser(
+          form.email,
+          form.password!,
+          baseCode,
+          form.telepon,
+        );
         try {
           let newUserId = "";
           if (created && typeof created === "object") {
@@ -640,6 +642,14 @@ export default function UsersPage() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 submitted={submitted}
                 error={fieldErrors.email}
+              />
+              <Input
+                type="tel"
+                label="No Handphone"
+                placeholder="Masukkan nomor handphone"
+                value={form.telepon}
+                onChange={(e) => setForm({ ...form, telepon: e.target.value })}
+                submitted={submitted}
               />
               <SearchableSelect
                 label="Role"

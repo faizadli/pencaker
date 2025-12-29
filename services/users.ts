@@ -60,6 +60,7 @@ export async function updateUser(
     email?: string;
     role?: string;
     password?: string;
+    no_handphone?: string;
   },
 ) {
   const resp = await fetch(`${BASE}/api/users/${encodeURIComponent(id)}`, {
@@ -84,11 +85,12 @@ export async function createUser(
   email: string,
   password: string,
   role: string,
+  no_handphone?: string,
 ) {
-  const resp = await fetch(`${BASE}/api/user/register`, {
+  const resp = await fetch(`${BASE}/api/users`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password, role }),
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify({ email, password, role, no_handphone }),
   });
   if (!resp.ok) {
     const txt = await resp.text();
