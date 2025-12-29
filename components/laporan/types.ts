@@ -36,6 +36,7 @@ export interface IPK3_7Row {
   penempatan: { d1: number; d2: number; d3: number };
   penghapusan: { d1: number; d2: number; d3: number };
   sisaIni: { d1: number; d2: number; d3: number };
+  isHeader?: boolean;
 }
 
 export interface IPK3_8Row {

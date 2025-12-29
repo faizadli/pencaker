@@ -18278,309 +18278,47 @@ export const ipk37Data: IPK3_7Row[] = [
   },
 ];
 
-export const ipk38Data: IPK3_8Row[] = [
-  {
-    code: "1",
-    education: "2",
-    akl: {
-      l: 3,
-      p: 4,
-    },
-    akad: {
-      l: 6,
-      p: 7,
-    },
-    akan: {
-      l: 9,
-      p: 10,
-    },
-  },
-  {
-    code: "1",
-    education: "NON",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
-  },
-  {
-    code: "2",
-    education: "SD",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
-  },
-  {
-    code: "3",
-    education: "SLTP",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
-  },
-  {
-    code: "4",
-    education: "SLTA",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
-  },
-  {
-    code: "5",
-    education: "DIPLOMA 1",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
-  },
-  {
-    code: "6",
-    education: "DIPLOMA 2",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
-  },
-  {
-    code: "7",
-    education: "D3/SARJANA MUDA",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
-  },
-  {
-    code: "8",
-    education: "D4/SARJANA SAINS TERAPAN",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
-  },
-  {
-    code: "9",
-    education: "AKTA 2",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
-  },
-  {
-    code: "10",
-    education: "AKTA 3",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
-  },
-  {
-    code: "11",
-    education: "SARJANA",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
-  },
-  {
-    code: "12",
-    education: "MAGISTER",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
-  },
-  {
-    code: "13",
-    education: "DOKTORAL",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
-  },
+export const ipk38DataPart2: IPK3_8Row[] = [
   {
     code: "1",
     education: "INSTANSI PEMERINTAH",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
+    akl: { l: 0, p: 0 },
+    akad: { l: 0, p: 0 },
+    akan: { l: 0, p: 0 },
   },
   {
     code: "2",
     education: "BUMN/BUMD",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
+    akl: { l: 0, p: 0 },
+    akad: { l: 0, p: 0 },
+    akan: { l: 0, p: 0 },
   },
   {
     code: "3",
     education: "KOPERASI",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
+    akl: { l: 0, p: 0 },
+    akad: { l: 0, p: 0 },
+    akan: { l: 0, p: 0 },
+  },
+  {
+    code: "4",
+    education: "PERUSAHAAN SWASTA",
+    akl: { l: 0, p: 0 },
+    akad: { l: 0, p: 0 },
+    akan: { l: 0, p: 0 },
   },
   {
     code: "5",
     education: "BADAN USAHA LAINNYA",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
+    akl: { l: 0, p: 0 },
+    akad: { l: 0, p: 0 },
+    akan: { l: 0, p: 0 },
   },
   {
     code: "6",
     education: "PERORANGAN",
-    akl: {
-      l: 0,
-      p: 0,
-    },
-    akad: {
-      l: 0,
-      p: 0,
-    },
-    akan: {
-      l: 0,
-      p: 0,
-    },
+    akl: { l: 0, p: 0 },
+    akad: { l: 0, p: 0 },
+    akan: { l: 0, p: 0 },
   },
 ];

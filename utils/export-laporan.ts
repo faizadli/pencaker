@@ -1,11 +1,7 @@
 import * as ExcelJS from "exceljs";
 import { getSheetTitle, getLabelHeader } from "../components/laporan/helpers";
-import {
-  initialData,
-  ipk37Data,
-  ipk38Data,
-} from "../components/laporan/real-data";
-import { GenericRow } from "../components/laporan/types";
+import { initialData, ipk37Data } from "../components/laporan/real-data";
+import { GenericRow, IPK3_8Row } from "../components/laporan/types";
 
 // Helper styles
 const thinBorder: Partial<ExcelJS.Borders> = {
@@ -513,8 +509,10 @@ export const exportIPK3_8 = (
   center: Partial<ExcelJS.Alignment>,
   left: Partial<ExcelJS.Alignment>,
   headerDateString: string,
+  data?: IPK3_8Row[],
 ) => {
   const defaultBorder = thinBorder;
+  const tableData = data || [];
 
   worksheet.mergeCells("A1:N1");
   worksheet.getCell("A1").value = getSheetTitle("ipk3.8");
@@ -560,7 +558,7 @@ export const exportIPK3_8 = (
   }
 
   let currentRow = 7;
-  ipk38Data.forEach((row) => {
+  tableData.forEach((row) => {
     worksheet.getCell(currentRow, 1).value = row.code;
     worksheet.getCell(currentRow, 2).value = row.education;
     // AKL

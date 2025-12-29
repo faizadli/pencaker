@@ -1,4 +1,4 @@
-import { BaseGroup, GenericRow } from "./types";
+import { BaseGroup, GenericRow, IPK3_7Row, IPK3_8Row } from "./types";
 
 export const getSheetTitle = (tabId: string) => {
   switch (tabId) {
@@ -15,7 +15,7 @@ export const getSheetTitle = (tabId: string) => {
     case "ipk3.6":
       return "IPK III/6 : LOWONGAN KERJA YANG TERDAFTAR MENURUT GOLONGAN POKOK LAPANGAN USAHA DAN JENIS KELAMIN";
     case "ipk3.7":
-      return "IPK III/7 : PENEMPATAN PENCARI KERJA MENURUT GOLONGAN POKOK LAPANGAN USAHA DAN JENIS KELAMIN";
+      return "IPK III/7 : PENCARI KERJA YANG TERDAFTAR, DITEMPATKAN DAN DIHAPUSKAN";
     case "ipk3.8":
       return "IPK III/8 : PENEMPATAN PENCARI KERJA MENURUT JENIS ANTAR KERJA TINGKAT PENDIDIKAN PENCARI KERJA";
     default:
@@ -106,4 +106,74 @@ export const processDataToRows = (data: BaseGroup[]): GenericRow[] => {
   });
 
   return rows;
+};
+
+export const processDataToIPK37Rows = (data: BaseGroup[]): IPK3_7Row[] => {
+  // Sort groups by code
+  data.sort((a, b) =>
+    a.code.localeCompare(b.code, undefined, { numeric: true }),
+  );
+
+  const rows: IPK3_7Row[] = [];
+  data.forEach((group) => {
+    // Sort items within group by code
+    group.items.sort((a, b) =>
+      a.code.localeCompare(b.code, undefined, { numeric: true }),
+    );
+
+    // Add Header Row (Group)
+    rows.push({
+      code: group.code,
+      label: group.name,
+      sisaLalu: { d1: 0, d2: 0, d3: 0 },
+      pendaftaran: { d1: 0, d2: 0, d3: 0 },
+      penempatan: { d1: 0, d2: 0, d3: 0 },
+      penghapusan: { d1: 0, d2: 0, d3: 0 },
+      sisaIni: { d1: 0, d2: 0, d3: 0 },
+      isHeader: true,
+    });
+
+    // Add Item Rows
+    group.items.forEach((item) => {
+      rows.push({
+        code: item.code,
+        label: item.name,
+        sisaLalu: { d1: 0, d2: 0, d3: 0 },
+        pendaftaran: { d1: 0, d2: 0, d3: 0 },
+        penempatan: { d1: 0, d2: 0, d3: 0 },
+        penghapusan: { d1: 0, d2: 0, d3: 0 },
+        sisaIni: { d1: 0, d2: 0, d3: 0 },
+        isHeader: false,
+      });
+    });
+  });
+
+  // Add JUMLAH row
+  rows.push({
+    code: "JUMLAH",
+    label: "JUMLAH",
+    sisaLalu: { d1: 0, d2: 0, d3: 0 },
+    pendaftaran: { d1: 0, d2: 0, d3: 0 },
+    penempatan: { d1: 0, d2: 0, d3: 0 },
+    penghapusan: { d1: 0, d2: 0, d3: 0 },
+    sisaIni: { d1: 0, d2: 0, d3: 0 },
+    isHeader: true,
+  });
+
+  return rows;
+};
+
+export const processDataToIPK38Rows = (data: BaseGroup[]): IPK3_8Row[] => {
+  // Sort groups by code
+  data.sort((a, b) =>
+    a.code.localeCompare(b.code, undefined, { numeric: true }),
+  );
+
+  return data.map((group) => ({
+    code: group.code,
+    education: group.name,
+    akl: { l: 0, p: 0 },
+    akad: { l: 0, p: 0 },
+    akan: { l: 0, p: 0 },
+  }));
 };
