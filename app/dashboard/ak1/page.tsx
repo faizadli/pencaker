@@ -23,7 +23,6 @@ import {
   presignDownload,
   getAk1Layout,
   getAk1Template,
-  requestAk1Renewal,
 } from "../../../services/ak1";
 import { useRouter } from "next/navigation";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
@@ -68,7 +67,6 @@ export default function Ak1Page() {
     status?: string;
     card_file?: string | null;
     card_created_at?: string;
-    card_expired_at?: string;
     no_urut_pendaftaran?: string;
     candidate_id?: string;
     id?: string;
@@ -77,7 +75,6 @@ export default function Ak1Page() {
     expired2?: string;
     expired3?: string;
     expired4?: string;
-    renewal_requested_at?: string;
     note?: string;
   } & {
     ktp_file?: string;
@@ -124,7 +121,6 @@ export default function Ak1Page() {
     status: "APPROVED" | "REJECTED";
     no_urut_pendaftaran?: string;
     card_created_at?: string;
-    card_expired_at?: string;
     file?: string;
     note?: string;
   }>({ ak1_document_id: "", status: "APPROVED", note: "" });
@@ -134,7 +130,6 @@ export default function Ak1Page() {
     candidate_id?: string;
     no_urut_pendaftaran?: string;
     card_created_at?: string;
-    card_expired_at?: string;
   }>({});
   const [genCandidate, setGenCandidate] = useState<CandidateProfileLite | null>(
     null,
@@ -142,18 +137,7 @@ export default function Ak1Page() {
   const [genDocDetail, setGenDocDetail] = useState<Ak1Document | null>(null);
   const [layout, setLayout] = useState<Ak1Layout | null>(null);
   const [genPasPhotoUrl, setGenPasPhotoUrl] = useState<string | null>(null);
-  const [showRenewModal, setShowRenewModal] = useState(false);
-  const [renewForm, setRenewForm] = useState<{
-    ktp_file: string;
-    ijazah_file: string;
-    pas_photo_file: string;
-    certificate_file?: string;
-  }>({
-    ktp_file: "",
-    ijazah_file: "",
-    pas_photo_file: "",
-    certificate_file: "",
-  });
+
   const genNoReg = useMemo(() => {
     const nik = genCandidate?.nik || "";
     const noUrut = genMeta.no_urut_pendaftaran || "";
@@ -1066,11 +1050,15 @@ export default function Ak1Page() {
                   apiToUIStatusAk1[statusRaw] || "Menunggu Verifikasi";
                 const statusColor = getStatusColor(uiStatus);
 
-                const currentExpiryDate = d.card_expired_at
-                  ? new Date(d.card_expired_at)
-                  : d.expired1
-                    ? new Date(d.expired1)
-                    : null;
+                const currentExpiryDate = d.expired4
+                  ? new Date(d.expired4)
+                  : d.expired3
+                    ? new Date(d.expired3)
+                    : d.expired2
+                      ? new Date(d.expired2)
+                      : d.expired1
+                        ? new Date(d.expired1)
+                        : null;
 
                 let daysLeft: number | null = null;
                 if (
@@ -1084,18 +1072,6 @@ export default function Ak1Page() {
                     currentExpiryDate.getTime() - today.getTime();
                   daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 }
-
-                const renewalStatus =
-                  (d as { renewal_status?: string }).renewal_status || "NONE";
-                const isRenewRequested = renewalStatus === "REQUESTED";
-
-                // Can renew if close to expiry (e.g. 7 days) and not pending renewal request
-                const canRenew =
-                  currentExpiryDate &&
-                  daysLeft !== null &&
-                  daysLeft <= 7 &&
-                  !isRenewRequested &&
-                  statusRaw === "APPROVED";
 
                 return (
                   <>
@@ -1125,17 +1101,6 @@ export default function Ak1Page() {
                               <p>
                                 {d.note ||
                                   "Mohon perbaiki data Anda dan ajukan kembali."}
-                              </p>
-                            </div>
-                          )}
-                          {isRenewRequested && (
-                            <div className="mt-3 p-3 bg-blue-50 text-blue-800 rounded-lg text-sm border border-blue-200">
-                              <p className="font-semibold mb-1">
-                                Perpanjangan Diajukan
-                              </p>
-                              <p>
-                                Pengajuan perpanjangan kartu Anda sedang
-                                menunggu persetujuan admin.
                               </p>
                             </div>
                           )}
@@ -1171,43 +1136,6 @@ export default function Ak1Page() {
                                 ? `Kadaluarsa ${Math.abs(daysLeft)} hari`
                                 : `${daysLeft} hari lagi`}
                             </div>
-                          </div>
-                        )}
-
-                        {canRenew && (
-                          <div className="pt-4 border-t">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                              Perpanjangan
-                            </h3>
-                            <p className="text-sm text-gray-600 mb-3">
-                              Masa berlaku kartu Anda akan segera habis. Silakan
-                              ajukan perpanjangan.
-                            </p>
-                            <button
-                              onClick={async () => {
-                                if (
-                                  confirm(
-                                    "Apakah anda yakin ingin mengajukan perpanjangan?",
-                                  )
-                                ) {
-                                  try {
-                                    setLoading(true);
-                                    await requestAk1Renewal();
-                                    showSuccess(
-                                      "Pengajuan perpanjangan berhasil dikirim",
-                                    );
-                                    window.location.reload();
-                                  } catch {
-                                    showError("Gagal mengajukan perpanjangan");
-                                    setLoading(false);
-                                  }
-                                }
-                              }}
-                              className="w-full py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 font-medium transition-colors flex justify-center items-center gap-2"
-                            >
-                              <i className="ri-refresh-line"></i>
-                              Ajukan Perpanjangan
-                            </button>
                           </div>
                         )}
                       </div>
@@ -1461,7 +1389,6 @@ export default function Ak1Page() {
                                           candidate_id: r.candidate_id,
                                           no_urut_pendaftaran: "",
                                           card_created_at: "",
-                                          card_expired_at: "",
                                         });
                                         setGenCandidate({
                                           full_name: r.full_name,
@@ -1811,7 +1738,6 @@ export default function Ak1Page() {
                                             candidate_id: r.candidate_id,
                                             no_urut_pendaftaran: "",
                                             card_created_at: "",
-                                            card_expired_at: "",
                                           });
                                           setGenCandidate({
                                             full_name: r.full_name,
@@ -2215,7 +2141,6 @@ export default function Ak1Page() {
                                         candidate_id: r.candidate_id,
                                         no_urut_pendaftaran: "",
                                         card_created_at: "",
-                                        card_expired_at: "",
                                       });
                                       setGenCandidate({
                                         full_name: r.full_name,
@@ -2609,8 +2534,6 @@ export default function Ak1Page() {
                           }
                           if (key === "ttl" || token === "ttl")
                             return `${String(genCandidate?.place_of_birth || "")} / ${formatDate(genCandidate?.birthdate)}`;
-                          if (key === "expired" || token === "expired")
-                            return String(formatDate(genMeta.card_expired_at));
                           if (key === "expired1" || token === "expired1") {
                             const base = genMeta.card_created_at
                               ? new Date(genMeta.card_created_at)
@@ -2681,10 +2604,6 @@ export default function Ak1Page() {
                               namespace === "ak1_doc" ||
                               namespace === "doc"
                             ) {
-                              if (k === "card_expired_at")
-                                return String(
-                                  formatDate(genMeta.card_expired_at),
-                                );
                               return String(
                                 (
                                   genDocDetail as unknown as Record<
@@ -3106,8 +3025,18 @@ export default function Ak1Page() {
                               FRONT_BASE.h -
                               posFront.expired.y * frontUnitY -
                               sizeText;
+
+                            // Calculate expired1 (6 months from created) as default expiry display
+                            const base = genMeta.card_created_at
+                              ? new Date(genMeta.card_created_at)
+                              : new Date();
+                            if (Number.isNaN(base.getTime()))
+                              base.setTime(Date.now());
+                            const exp1 = new Date(base);
+                            exp1.setMonth(exp1.getMonth() + 6);
+
                             page.drawText(
-                              String(formatDate(genMeta.card_expired_at)),
+                              String(formatDate(exp1.toISOString())),
                               {
                                 x,
                                 y,
@@ -3225,7 +3154,6 @@ export default function Ak1Page() {
                         no_urut_pendaftaran: genMeta.no_urut_pendaftaran,
                         no_pendaftaran_pencari_kerja: genNoReg,
                         card_created_at: baseCreated.toISOString(),
-                        card_expired_at: genMeta.card_expired_at,
                         expired1: getExp(6),
                         expired2: getExp(12),
                         expired3: getExp(18),
@@ -3503,13 +3431,6 @@ export default function Ak1Page() {
                                       if (normKey === "ttl" || key === "ttl")
                                         return `${String(genCandidate?.place_of_birth || "")} / ${formatDate(genCandidate?.birthdate)}`;
                                       if (
-                                        normKey === "expired" ||
-                                        key === "expired"
-                                      )
-                                        return String(
-                                          formatDate(genMeta.card_expired_at),
-                                        );
-                                      if (
                                         normKey === "expired1" ||
                                         key === "expired1"
                                       ) {
@@ -3597,12 +3518,6 @@ export default function Ak1Page() {
                                           namespace === "ak1_doc" ||
                                           namespace === "doc"
                                         ) {
-                                          if (k === "card_expired_at")
-                                            return String(
-                                              formatDate(
-                                                genMeta.card_expired_at,
-                                              ),
-                                            );
                                           return String(
                                             (
                                               genDocDetail as unknown as Record<
@@ -3920,13 +3835,6 @@ export default function Ak1Page() {
                                       if (normKey === "ttl" || key === "ttl")
                                         return `${String(genCandidate?.place_of_birth || "")} / ${formatDate(genCandidate?.birthdate)}`;
                                       if (
-                                        normKey === "expired" ||
-                                        key === "expired"
-                                      )
-                                        return String(
-                                          formatDate(genMeta.card_expired_at),
-                                        );
-                                      if (
                                         normKey === "expired1" ||
                                         key === "expired1"
                                       ) {
@@ -4002,12 +3910,6 @@ export default function Ak1Page() {
                                           namespace === "ak1_doc" ||
                                           namespace === "doc"
                                         ) {
-                                          if (k === "card_expired_at")
-                                            return String(
-                                              formatDate(
-                                                genMeta.card_expired_at,
-                                              ),
-                                            );
                                           return String(
                                             (
                                               genDocDetail as unknown as Record<
@@ -4069,273 +3971,6 @@ export default function Ak1Page() {
                   )}
                 </div>
               </div>
-            </div>
-          </Modal>
-
-          <Modal
-            open={showRenewModal}
-            title="Perpanjang Kartu AK1"
-            onClose={() => setShowRenewModal(false)}
-            actions={
-              <>
-                <button
-                  onClick={() => setShowRenewModal(false)}
-                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={async () => {
-                    try {
-                      await upsertAk1Document({
-                        ktp_file: renewForm.ktp_file,
-                        ijazah_file: renewForm.ijazah_file,
-                        pas_photo_file: renewForm.pas_photo_file,
-                        certificate_file: renewForm.certificate_file,
-                      });
-                      const uid =
-                        typeof window !== "undefined"
-                          ? localStorage.getItem("id") ||
-                            localStorage.getItem("user_id") ||
-                            ""
-                          : "";
-                      const d = await getAk1Document(uid);
-                      const ddoc = ((d as { data?: Ak1Document | null }).data ||
-                        null) as unknown as Record<string, unknown>;
-                      setDoc(ddoc as unknown as Ak1Document);
-                      if (permissions.includes("ak1.generate")) {
-                        try {
-                          const cid = String(
-                            rows[0]?.candidate_id ||
-                              (ddoc || {})?.candidate_id ||
-                              "",
-                          );
-                          setGenMeta({
-                            ak1_document_id: String(
-                              rows[0]?.ak1_document_id ||
-                                (ddoc || {})?.id ||
-                                "",
-                            ),
-                            candidate_id: cid,
-                            no_urut_pendaftaran: "",
-                            card_created_at: "",
-                            card_expired_at: "",
-                          });
-                          setGenCandidate(profile);
-                          setGenDocDetail(
-                            (ddoc as unknown as Ak1Document) || null,
-                          );
-                          const tpResp = (await getAk1Template()) as {
-                            data?: {
-                              name?: string;
-                              file_template?: string | null;
-                            };
-                          };
-                          const t = tpResp.data || null;
-                          const name = t?.name ? String(t.name) : undefined;
-                          if (t?.file_template)
-                            setFrontSrcUrl(String(t.file_template));
-                          const lyResp = await getAk1Layout(name);
-                          const lyData =
-                            (lyResp as { data?: Ak1Layout | null }).data ||
-                            null;
-                          setLayout(lyData);
-                          try {
-                            const rawPhoto = String(
-                              (ddoc || {})?.pas_photo_file || "",
-                            );
-                            if (rawPhoto) {
-                              const pre = await presignDownload(rawPhoto);
-                              setGenPasPhotoUrl(pre.url);
-                            } else {
-                              setGenPasPhotoUrl(null);
-                            }
-                          } catch {
-                            setGenPasPhotoUrl(null);
-                          }
-                        } catch {}
-                        setShowRenewModal(false);
-                        setShowGenerateModal(true);
-                      } else {
-                        setShowRenewModal(false);
-                        showSuccess("Dokumen diperbarui. Menunggu verifikasi.");
-                      }
-                    } catch {
-                      showError("Gagal memperbarui dokumen AK1");
-                    }
-                  }}
-                  className="ml-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
-                >
-                  Simpan
-                </button>
-              </>
-            }
-          >
-            <div className="grid grid-cols-1 gap-3">
-              <label className="text-sm text-gray-700">
-                Scan KTP
-                <input
-                  type="file"
-                  className="mt-1 w-full border rounded p-2"
-                  onChange={async (e) => {
-                    const f = (e.target as HTMLInputElement).files?.[0];
-                    if (!f) {
-                      setRenewForm({ ...renewForm, ktp_file: "" });
-                      return;
-                    }
-                    const uid =
-                      typeof window !== "undefined"
-                        ? localStorage.getItem("id") ||
-                          localStorage.getItem("user_id") ||
-                          ""
-                        : "";
-                    const pre = await presignUpload(
-                      `ak1/${uid}/ktp`,
-                      f.name,
-                      f.type || "application/octet-stream",
-                    );
-                    const resp = await fetch(pre.url, {
-                      method: "PUT",
-                      headers: {
-                        "Content-Type": f.type || "application/octet-stream",
-                      },
-                      body: f,
-                    });
-                    if (!resp.ok) {
-                      const txt = await resp.text();
-                      showError(`Upload gagal (${resp.status}): ${txt}`);
-                      return;
-                    }
-                    const objectUrl = pre.url.includes("?")
-                      ? pre.url.slice(0, pre.url.indexOf("?"))
-                      : pre.url;
-                    setRenewForm({ ...renewForm, ktp_file: objectUrl });
-                  }}
-                />
-              </label>
-              <label className="text-sm text-gray-700">
-                Ijazah
-                <input
-                  type="file"
-                  className="mt-1 w-full border rounded p-2"
-                  onChange={async (e) => {
-                    const f = (e.target as HTMLInputElement).files?.[0];
-                    if (!f) {
-                      setRenewForm({ ...renewForm, ijazah_file: "" });
-                      return;
-                    }
-                    const uid =
-                      typeof window !== "undefined"
-                        ? localStorage.getItem("id") ||
-                          localStorage.getItem("user_id") ||
-                          ""
-                        : "";
-                    const pre = await presignUpload(
-                      `ak1/${uid}/ijazah`,
-                      f.name,
-                      f.type || "application/octet-stream",
-                    );
-                    const resp = await fetch(pre.url, {
-                      method: "PUT",
-                      headers: {
-                        "Content-Type": f.type || "application/octet-stream",
-                      },
-                      body: f,
-                    });
-                    if (!resp.ok) {
-                      const txt = await resp.text();
-                      showError(`Upload gagal (${resp.status}): ${txt}`);
-                      return;
-                    }
-                    const objectUrl = pre.url.includes("?")
-                      ? pre.url.slice(0, pre.url.indexOf("?"))
-                      : pre.url;
-                    setRenewForm({ ...renewForm, ijazah_file: objectUrl });
-                  }}
-                />
-              </label>
-              <label className="text-sm text-gray-700">
-                Pas Foto
-                <input
-                  type="file"
-                  className="mt-1 w-full border rounded p-2"
-                  onChange={async (e) => {
-                    const f = (e.target as HTMLInputElement).files?.[0];
-                    if (!f) {
-                      setRenewForm({ ...renewForm, pas_photo_file: "" });
-                      return;
-                    }
-                    const uid =
-                      typeof window !== "undefined"
-                        ? localStorage.getItem("id") ||
-                          localStorage.getItem("user_id") ||
-                          ""
-                        : "";
-                    const pre = await presignUpload(
-                      `ak1/${uid}/pasfoto`,
-                      f.name,
-                      f.type || "application/octet-stream",
-                    );
-                    const resp = await fetch(pre.url, {
-                      method: "PUT",
-                      headers: {
-                        "Content-Type": f.type || "application/octet-stream",
-                      },
-                      body: f,
-                    });
-                    if (!resp.ok) {
-                      const txt = await resp.text();
-                      showError(`Upload gagal (${resp.status}): ${txt}`);
-                      return;
-                    }
-                    const objectUrl = pre.url.includes("?")
-                      ? pre.url.slice(0, pre.url.indexOf("?"))
-                      : pre.url;
-                    setRenewForm({ ...renewForm, pas_photo_file: objectUrl });
-                  }}
-                />
-              </label>
-              <label className="text-sm text-gray-700">
-                Sertifikat (Opsional)
-                <input
-                  type="file"
-                  className="mt-1 w-full border rounded p-2"
-                  onChange={async (e) => {
-                    const f = (e.target as HTMLInputElement).files?.[0];
-                    if (!f) {
-                      setRenewForm({ ...renewForm, certificate_file: "" });
-                      return;
-                    }
-                    const uid =
-                      typeof window !== "undefined"
-                        ? localStorage.getItem("id") ||
-                          localStorage.getItem("user_id") ||
-                          ""
-                        : "";
-                    const pre = await presignUpload(
-                      `ak1/${uid}/sertifikat`,
-                      f.name,
-                      f.type || "application/octet-stream",
-                    );
-                    const resp = await fetch(pre.url, {
-                      method: "PUT",
-                      headers: {
-                        "Content-Type": f.type || "application/octet-stream",
-                      },
-                      body: f,
-                    });
-                    if (!resp.ok) {
-                      const txt = await resp.text();
-                      showError(`Upload gagal (${resp.status}): ${txt}`);
-                      return;
-                    }
-                    const objectUrl = pre.url.includes("?")
-                      ? pre.url.slice(0, pre.url.indexOf("?"))
-                      : pre.url;
-                    setRenewForm({ ...renewForm, certificate_file: objectUrl });
-                  }}
-                />
-              </label>
             </div>
           </Modal>
 

@@ -24,7 +24,6 @@ export async function upsertAk1Document(payload: {
   certificate_file?: string;
   card_file?: string;
   card_created_at?: string;
-  card_expired_at?: string;
   no_pendaftaran_pencari_kerja?: string;
   expired1?: string;
   expired2?: string;
@@ -41,15 +40,6 @@ export async function upsertAk1Document(payload: {
     },
   );
   if (!resp.ok) throw new Error("Gagal menyimpan dokumen AK1");
-  return resp.json();
-}
-
-export async function requestAk1Renewal() {
-  const resp = await fetch(`${BASE}/api/profile/candidate/ak1/renewal`, {
-    method: "POST",
-    headers: { ...authHeader() },
-  });
-  if (!resp.ok) throw new Error("Gagal mengajukan perpanjangan AK1");
   return resp.json();
 }
 
@@ -143,7 +133,6 @@ export async function verifyAk1(payload: {
   no_urut_pendaftaran?: string;
   no_pendaftaran_pencari_kerja?: string;
   card_created_at?: string;
-  card_expired_at?: string;
   expired1?: string;
   expired2?: string;
   expired3?: string;

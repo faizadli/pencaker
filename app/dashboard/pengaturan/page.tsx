@@ -2687,7 +2687,6 @@ function Ak1LayoutEditor() {
     "certificate_file",
     "card_file",
     "card_created_at",
-    "card_expired_at",
     "expired1",
     "expired2",
     "expired3",
