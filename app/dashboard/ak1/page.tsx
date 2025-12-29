@@ -3243,19 +3243,57 @@ export default function Ak1Page() {
                         birthdate?: string;
                         status?: string;
                         file?: string | null;
+                        no_pendaftaran?: string;
                       }>;
-                      setRows(
-                        items.map((d) => ({
-                          full_name: d.full_name,
-                          nik: d.nik,
-                          place_of_birth: d.place_of_birth,
-                          birthdate: d.birthdate,
-                          status: d.status,
-                          file: d.file || null,
-                          candidate_id: d.candidate_id,
-                          ak1_document_id: d.id,
-                        })),
-                      );
+
+                      const baseRows: Ak1Row[] = items.map((d) => ({
+                        full_name: d.full_name,
+                        nik: d.nik,
+                        place_of_birth: d.place_of_birth,
+                        birthdate: d.birthdate,
+                        status: d.status,
+                        file: d.file || null,
+                        candidate_id: d.candidate_id,
+                        ak1_document_id: d.id,
+                        no_pendaftaran: d.no_pendaftaran,
+                      }));
+
+                      try {
+                        const ids = Array.from(
+                          new Set(baseRows.map((r) => r.candidate_id)),
+                        ).filter(Boolean);
+                        const candMap: Record<string, CandidateProfileLite> =
+                          {};
+                        await Promise.all(
+                          ids.map(async (id) => {
+                            try {
+                              const prof = await getCandidateProfileById(
+                                String(id),
+                              );
+                              const cand =
+                                (prof as { data?: CandidateProfileLite | null })
+                                  .data || null;
+                              if (cand) candMap[String(id)] = cand;
+                            } catch {}
+                          }),
+                        );
+                        const enriched = baseRows.map((r) => ({
+                          ...r,
+                          full_name:
+                            r.full_name ||
+                            candMap[String(r.candidate_id)]?.full_name,
+                          nik: r.nik || candMap[String(r.candidate_id)]?.nik,
+                          place_of_birth:
+                            r.place_of_birth ||
+                            candMap[String(r.candidate_id)]?.place_of_birth,
+                          birthdate:
+                            r.birthdate ||
+                            candMap[String(r.candidate_id)]?.birthdate,
+                        }));
+                        setRows(enriched);
+                      } catch {
+                        setRows(baseRows);
+                      }
                     } catch {
                       showError("Gagal generate PDF AK1");
                     } finally {
