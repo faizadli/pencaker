@@ -787,23 +787,21 @@ export default function PelamarLowonganPage() {
                     className="w-full sm:w-52"
                     placeholder="Sumber Pelamar"
                   />
+                  <button
+                    onClick={handleExportExcel}
+                    className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm transition flex items-center justify-center gap-2"
+                  >
+                    <i className="ri-file-excel-2-line"></i>
+                    Export Diterima
+                  </button>
                   {permissions.includes("lowongan.applicant.create") && (
-                    <>
-                      <button
-                        onClick={handleExportExcel}
-                        className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm transition flex items-center justify-center gap-2"
-                      >
-                        <i className="ri-file-excel-2-line"></i>
-                        Export Diterima
-                      </button>
-                      <button
-                        onClick={() => setShowAddModal(true)}
-                        className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center gap-2"
-                      >
-                        <i className="ri-user-add-line"></i>
-                        Tambah
-                      </button>
-                    </>
+                    <button
+                      onClick={() => setShowAddModal(true)}
+                      className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center gap-2"
+                    >
+                      <i className="ri-user-add-line"></i>
+                      Tambah
+                    </button>
                   )}
                 </div>
               </div>
