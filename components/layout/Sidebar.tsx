@@ -5,6 +5,12 @@ import Image from "next/image";
 import { Input } from "../ui/field";
 import { usePathname } from "next/navigation";
 import { logout } from "../../services/auth";
+import {
+  getNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+  NotificationItem,
+} from "../../services/notification";
 
 export type SidebarData = {
   user: { name: string; avatar: string; approved: boolean };
@@ -22,6 +28,10 @@ export default function Sidebar({
   const [isMinimized] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
   const role: string =
     roleProp ||
     (typeof window !== "undefined" ? localStorage.getItem("role") || "" : "");
@@ -33,6 +43,41 @@ export default function Sidebar({
   const brand = data?.brand || { name: "", logo: "" };
 
   const pathname = usePathname();
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await getNotifications();
+      setNotifications(res.data.items);
+      setUnreadCount(res.data.total_unread);
+    } catch (error) {
+      console.error("Failed to fetch notifications", error);
+    }
+  };
+
+  useEffect(() => {
+    const init = async () => {
+      await fetchNotifications();
+    };
+    init();
+  }, []);
+
+  const handleMarkRead = async (id: string) => {
+    try {
+      await markNotificationRead(id);
+      fetchNotifications();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllNotificationsRead();
+      fetchNotifications();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     const touch = () =>
@@ -254,6 +299,96 @@ export default function Sidebar({
         </div>
 
         <div className="flex items-center gap-3 sm:gap-6 ml-auto">
+          <div className="relative">
+            <button
+              onClick={() => setNotifOpen(!notifOpen)}
+              className="text-gray-500 hover:text-primary transition-colors relative"
+              aria-label="Notifikasi"
+            >
+              <i className="ri-notification-3-line text-xl"></i>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {notifOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                  <h3 className="font-semibold text-sm text-gray-700">
+                    Notifikasi
+                  </h3>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAllRead}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Tandai semua dibaca
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-gray-400 text-sm">
+                      Tidak ada notifikasi
+                    </div>
+                  ) : (
+                    <ul>
+                      {notifications.map((notif) => (
+                        <li
+                          key={notif.id}
+                          className={`p-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${!notif.is_read ? "bg-blue-50/50" : ""}`}
+                        >
+                          <div className="flex gap-3">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-800">
+                                {notif.title}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                                {notif.message}
+                              </p>
+                              <p className="text-[10px] text-gray-400 mt-2">
+                                {new Date(notif.created_at).toLocaleString(
+                                  "id-ID",
+                                  {
+                                    day: "numeric",
+                                    month: "short",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  },
+                                )}
+                              </p>
+                            </div>
+                            {!notif.is_read && (
+                              <button
+                                onClick={() => handleMarkRead(notif.id)}
+                                className="text-gray-400 hover:text-primary self-start"
+                                title="Tandai dibaca"
+                              >
+                                <i className="ri-check-double-line"></i>
+                              </button>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {notifications.length > 0 && (
+                  <div className="p-2 border-t border-gray-100 text-center">
+                    <Link
+                      href="/dashboard/notifications"
+                      className="text-xs text-primary hover:underline block w-full"
+                      onClick={() => setNotifOpen(false)}
+                    >
+                      Lihat Semua
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
