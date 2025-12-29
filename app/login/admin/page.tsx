@@ -14,8 +14,12 @@ export default function AdminLogin() {
   const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") || "" : "";
-    const uid = typeof window !== "undefined" ? localStorage.getItem("id") || localStorage.getItem("user_id") || "" : "";
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") || "" : "";
+    const uid =
+      typeof window !== "undefined"
+        ? localStorage.getItem("id") || localStorage.getItem("user_id") || ""
+        : "";
     (async () => {
       if (token && uid) {
         try {
@@ -40,9 +44,11 @@ export default function AdminLogin() {
     setLoading(true);
     try {
       const result = await login({ email: form.email }, form.password);
-      if (String(result.role) !== "super_admin") {
+      const roleStr = String(result.role || "");
+      const isAdmin = roleStr !== "candidate" && roleStr !== "company";
+      if (!isAdmin) {
         setLoading(false);
-        setError("Akun Anda bukan Admin Disnaker.");
+        setError("Akun Anda bukan Admin.");
         return;
       }
       startSession(result.role, result.id || null, result.token);
@@ -66,11 +72,18 @@ export default function AdminLogin() {
 
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{error}</div>
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+              {error}
+            </div>
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-500 mb-2">Email</label>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-500 mb-2"
+            >
+              Email
+            </label>
             <Input
               icon="ri-mail-line"
               type="text"
@@ -85,7 +98,12 @@ export default function AdminLogin() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-500 mb-2">Password</label>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-500 mb-2"
+            >
+              Password
+            </label>
             <Input
               icon="ri-lock-2-line"
               type="password"
@@ -99,7 +117,11 @@ export default function AdminLogin() {
             />
           </div>
 
-          <button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary-600 text-white font-medium py-2.5 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-primary hover:bg-primary-600 text-white font-medium py-2.5 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2"
+          >
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -112,7 +134,9 @@ export default function AdminLogin() {
         </form>
 
         <div className="bg-gray-50 px-8 py-4 text-center border-t border-gray-200">
-          <p className="text-xs text-gray-400">© 2025 Dinas Tenaga Kerja. Hak Cipta Dilindungi.</p>
+          <p className="text-xs text-gray-400">
+            © 2025 Dinas Tenaga Kerja. Hak Cipta Dilindungi.
+          </p>
         </div>
       </div>
     </div>
