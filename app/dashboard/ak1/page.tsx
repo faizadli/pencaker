@@ -205,6 +205,35 @@ export default function Ak1Page() {
   const [ak1Expired2, setAk1Expired2] = useState<string>("");
   const [ak1Expired3, setAk1Expired3] = useState<string>("");
   const [ak1Expired4, setAk1Expired4] = useState<string>("");
+
+  useEffect(() => {
+    if (!ak1CreatedAt) {
+      setAk1Expired1("");
+      setAk1Expired2("");
+      setAk1Expired3("");
+      setAk1Expired4("");
+      return;
+    }
+    const d = new Date(ak1CreatedAt);
+    if (Number.isNaN(d.getTime())) return;
+
+    const addMonths = (date: Date, months: number) => {
+      const newDate = new Date(date);
+      newDate.setMonth(newDate.getMonth() + months);
+      return newDate;
+    };
+    const fmt = (date: Date) => date.toISOString().split("T")[0];
+
+    const exp1 = addMonths(d, 6);
+    setAk1Expired1(fmt(exp1));
+    const exp2 = addMonths(exp1, 6);
+    setAk1Expired2(fmt(exp2));
+    const exp3 = addMonths(exp2, 6);
+    setAk1Expired3(fmt(exp3));
+    const exp4 = addMonths(exp3, 6);
+    setAk1Expired4(fmt(exp4));
+  }, [ak1CreatedAt]);
+
   const [skills, setSkills] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
@@ -905,33 +934,6 @@ export default function Ak1Page() {
                         value={ak1CreatedAt}
                         onChange={(e) => setAk1CreatedAt(e.target.value)}
                         error={fieldErrors["created_at"]}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Input
-                        label="Lapor Tanggal 1"
-                        type="date"
-                        value={ak1Expired1}
-                        onChange={(e) => setAk1Expired1(e.target.value)}
-                      />
-                      <Input
-                        label="Lapor Tanggal 2"
-                        type="date"
-                        value={ak1Expired2}
-                        onChange={(e) => setAk1Expired2(e.target.value)}
-                      />
-                      <Input
-                        label="Lapor Tanggal 3"
-                        type="date"
-                        value={ak1Expired3}
-                        onChange={(e) => setAk1Expired3(e.target.value)}
-                      />
-                      <Input
-                        label="Lapor Tanggal 4"
-                        type="date"
-                        value={ak1Expired4}
-                        onChange={(e) => setAk1Expired4(e.target.value)}
                       />
                     </div>
                   </div>

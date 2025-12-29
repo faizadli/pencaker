@@ -131,6 +131,35 @@ export default function RegisterCandidate() {
   const [ak1Expired2, setAk1Expired2] = useState<string>("");
   const [ak1Expired3, setAk1Expired3] = useState<string>("");
   const [ak1Expired4, setAk1Expired4] = useState<string>("");
+
+  useEffect(() => {
+    if (!ak1CreatedAt) {
+      setAk1Expired1("");
+      setAk1Expired2("");
+      setAk1Expired3("");
+      setAk1Expired4("");
+      return;
+    }
+    const d = new Date(ak1CreatedAt);
+    if (Number.isNaN(d.getTime())) return;
+
+    const addMonths = (date: Date, months: number) => {
+      const newDate = new Date(date);
+      newDate.setMonth(newDate.getMonth() + months);
+      return newDate;
+    };
+    const fmt = (date: Date) => date.toISOString().split("T")[0];
+
+    const exp1 = addMonths(d, 6);
+    setAk1Expired1(fmt(exp1));
+    const exp2 = addMonths(exp1, 6);
+    setAk1Expired2(fmt(exp2));
+    const exp3 = addMonths(exp2, 6);
+    setAk1Expired3(fmt(exp3));
+    const exp4 = addMonths(exp3, 6);
+    setAk1Expired4(fmt(exp4));
+  }, [ak1CreatedAt]);
+
   const [ak1NoReg, setAk1NoReg] = useState<string>("");
   const [skills, setSkills] = useState<string[]>([]);
   const [finalized, setFinalized] = useState(false);
@@ -1310,30 +1339,6 @@ export default function RegisterCandidate() {
                     value={ak1CreatedAt}
                     onChange={(e) => setAk1CreatedAt(e.target.value)}
                     error={fieldErrors.created_at}
-                  />
-                  <Input
-                    label="Tanggal Lapor 1"
-                    type="date"
-                    value={ak1Expired1}
-                    onChange={(e) => setAk1Expired1(e.target.value)}
-                  />
-                  <Input
-                    label="Tanggal Lapor 2"
-                    type="date"
-                    value={ak1Expired2}
-                    onChange={(e) => setAk1Expired2(e.target.value)}
-                  />
-                  <Input
-                    label="Tanggal Lapor 3"
-                    type="date"
-                    value={ak1Expired3}
-                    onChange={(e) => setAk1Expired3(e.target.value)}
-                  />
-                  <Input
-                    label="Tanggal Lapor 4"
-                    type="date"
-                    value={ak1Expired4}
-                    onChange={(e) => setAk1Expired4(e.target.value)}
                   />
                   <p className="text-xs text-gray-500">
                     Isi data kartu jika Anda sudah memiliki kartu AK1.
