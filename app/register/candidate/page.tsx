@@ -1412,13 +1412,6 @@ export default function RegisterCandidate() {
                 </button>
                 <div className="flex items-center gap-2">
                   <button
-                    type="button"
-                    className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-primary"
-                    onClick={() => setStep(4)}
-                  >
-                    Lewati
-                  </button>
-                  <button
                     type="submit"
                     disabled={loading}
                     className={`px-5 py-2.5 rounded-xl flex items-center gap-2 ${loading ? "bg-gray-200 text-gray-500" : "bg-primary text-white hover:bg-primary-600"}`}
