@@ -24,7 +24,6 @@ import {
   faqSchema,
   partnerSchema,
   testimonialSchema,
-  bkkSchema,
   holidayGreetingSchema,
   richTextContentSchema,
   simpleContentSchema,
@@ -44,7 +43,6 @@ export default function KontenPage() {
     | "faq"
     | "partners"
     | "testimonials"
-    | "bkk"
     | "about"
     | "holiday_greetings";
   type AboutSection =
@@ -98,13 +96,6 @@ export default function KontenPage() {
     image: string;
     status: "Publikasi" | "Draft";
   };
-  type Bkk = {
-    id: string;
-    nama: string;
-    alamat: string;
-    website: string;
-    status: "Publikasi" | "Draft";
-  };
   type RunningText = {
     id: string;
     text: string;
@@ -113,7 +104,7 @@ export default function KontenPage() {
 
   const [activeTab, setActiveTab] = useState<Tab>("faq");
   const [contentModal, setContentModal] = useState<{
-    section: "partners" | "testimonials" | "faqs" | "bkk" | "holiday_greetings";
+    section: "partners" | "testimonials" | "faqs" | "holiday_greetings";
     id?: string;
   } | null>(null);
   const [partnerLogoPreview, setPartnerLogoPreview] = useState<string>("");
@@ -139,7 +130,6 @@ export default function KontenPage() {
   const [editTestimonial, setEditTestimonial] = useState<Testimonial | null>(
     null,
   );
-  const [editBkk, setEditBkk] = useState<Bkk | null>(null);
   const [editHolidayGreeting, setEditHolidayGreeting] =
     useState<HolidayGreeting | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -156,7 +146,6 @@ export default function KontenPage() {
   const [faqList, setFaqList] = useState<Faq[]>([]);
   const [partnersList, setPartnersList] = useState<Partner[]>([]);
   const [testimonialsList, setTestimonialsList] = useState<Testimonial[]>([]);
-  const [bkkList, setBkkList] = useState<Bkk[]>([]);
   const [holidayGreetingsList, setHolidayGreetingsList] = useState<
     HolidayGreeting[]
   >([]);
@@ -263,38 +252,6 @@ export default function KontenPage() {
                 status: String(
                   r.status === "PUBLISHED" ? "Publikasi" : "Draft",
                 ) as Testimonial["status"],
-              }),
-            ),
-          );
-        } catch {}
-
-        try {
-          const bkkResp = (await listSiteContents({
-            page: "home",
-            section: "bkk",
-            published: false,
-          })) as ListResponse<{
-            nama?: string;
-            alamat?: string;
-            website?: string;
-          }>;
-          const rows = Array.isArray(bkkResp.data) ? bkkResp.data : [];
-          setBkkList(
-            rows.map(
-              (
-                r: SiteContentItem<{
-                  nama?: string;
-                  alamat?: string;
-                  website?: string;
-                }>,
-              ) => ({
-                id: String(r.id),
-                nama: String(r.data?.nama || ""),
-                alamat: String(r.data?.alamat || ""),
-                website: String(r.data?.website || ""),
-                status: String(
-                  r.status === "PUBLISHED" ? "Publikasi" : "Draft",
-                ) as Bkk["status"],
               }),
             ),
           );
@@ -489,16 +446,6 @@ export default function KontenPage() {
       setEditTestimonial(item);
       setTestimonialPhotoPreview("");
       setContentModal({ section: "testimonials", id: "__new__" });
-    } else if (section === "bkk") {
-      const item: Bkk = {
-        id: "__new__",
-        nama: "",
-        alamat: "",
-        website: "",
-        status: "Draft",
-      };
-      setEditBkk(item);
-      setContentModal({ section: "bkk", id: "__new__" });
     } else if (section === "holiday_greetings") {
       const item: HolidayGreeting = {
         id: "__new__",
@@ -515,7 +462,7 @@ export default function KontenPage() {
 
   const handleEdit = (
     section: Tab,
-    item: Faq | Partner | Testimonial | Bkk | HolidayGreeting,
+    item: Faq | Partner | Testimonial | HolidayGreeting,
   ) => {
     if (section === "faq") {
       setEditFaq(item as Faq);
@@ -542,10 +489,6 @@ export default function KontenPage() {
             .then((d) => setTestimonialPhotoPreview(d.url))
             .catch(() => {});
       } catch {}
-    }
-    if (section === "bkk") {
-      setEditBkk(item as Bkk);
-      setContentModal({ section: "bkk", id: String(item.id) });
     }
     if (section === "holiday_greetings") {
       setEditHolidayGreeting(item as HolidayGreeting);
@@ -738,66 +681,6 @@ export default function KontenPage() {
           ),
         );
         showSuccess("Testimoni disimpan");
-      } catch {}
-      setContentModal(null);
-    } else if (section === "bkk" && editBkk) {
-      setContentSubmitted(true);
-      setFieldErrors({});
-
-      const result = bkkSchema.safeParse(editBkk);
-      if (!result.success) {
-        const newErrors: Record<string, string> = {};
-        result.error.issues.forEach((err: ZodIssue) => {
-          if (err.path[0]) newErrors[err.path[0] as string] = err.message;
-        });
-        setFieldErrors(newErrors);
-        showError("Mohon periksa input anda");
-        return;
-      }
-
-      try {
-        await upsertSiteContent({
-          id: upsertId,
-          page: "home",
-          section: "bkk",
-          data: {
-            nama: editBkk.nama,
-            alamat: editBkk.alamat,
-            website: editBkk.website,
-          },
-          status: editBkk.status === "Publikasi" ? "PUBLISHED" : "DRAFT",
-          sort_order: 0,
-        });
-        const bkkResp = (await listSiteContents({
-          page: "home",
-          section: "bkk",
-          published: false,
-        })) as ListResponse<{
-          nama?: string;
-          alamat?: string;
-          website?: string;
-        }>;
-        const rows = Array.isArray(bkkResp.data) ? bkkResp.data : [];
-        setBkkList(
-          rows.map(
-            (
-              r: SiteContentItem<{
-                nama?: string;
-                alamat?: string;
-                website?: string;
-              }>,
-            ) => ({
-              id: String(r.id),
-              nama: String(r.data?.nama || ""),
-              alamat: String(r.data?.alamat || ""),
-              website: String(r.data?.website || ""),
-              status: String(
-                r.status === "PUBLISHED" ? "Publikasi" : "Draft",
-              ) as Bkk["status"],
-            }),
-          ),
-        );
-        showSuccess("Data BKK disimpan");
       } catch {}
       setContentModal(null);
     } else if (section === "holiday_greetings" && editHolidayGreeting) {
@@ -1090,7 +973,6 @@ export default function KontenPage() {
     setEditFaq(null);
     setEditPartner(null);
     setEditTestimonial(null);
-    setEditBkk(null);
     setEditHolidayGreeting(null);
     setEditFocus(null);
     setEditMission(null);
@@ -1170,7 +1052,6 @@ export default function KontenPage() {
         faq: "faqs",
         partners: "partners",
         testimonials: "testimonials",
-        bkk: "bkk",
         about: "",
         about_profile: "profile",
         about_vision: "vision",
@@ -1273,38 +1154,6 @@ export default function KontenPage() {
               status: String(
                 r.status === "PUBLISHED" ? "Publikasi" : "Draft",
               ) as Testimonial["status"],
-            }),
-          ),
-        );
-      } catch {}
-    } else if (section === "bkk") {
-      try {
-        const bkkResp = (await listSiteContents({
-          page: "home",
-          section: "bkk",
-          published: false,
-        })) as ListResponse<{
-          nama?: string;
-          alamat?: string;
-          website?: string;
-        }>;
-        const rows = Array.isArray(bkkResp.data) ? bkkResp.data : [];
-        setBkkList(
-          rows.map(
-            (
-              r: SiteContentItem<{
-                nama?: string;
-                alamat?: string;
-                website?: string;
-              }>,
-            ) => ({
-              id: String(r.id),
-              nama: String(r.data?.nama || ""),
-              alamat: String(r.data?.alamat || ""),
-              website: String(r.data?.website || ""),
-              status: String(
-                r.status === "PUBLISHED" ? "Publikasi" : "Draft",
-              ) as Bkk["status"],
             }),
           ),
         );
@@ -1496,7 +1345,6 @@ export default function KontenPage() {
                   label: "💬 Testimoni",
                   icon: "ri-chat-1-line",
                 },
-                { id: "bkk", label: "🏫 BKK", icon: "ri-school-line" },
                 {
                   id: "holiday_greetings",
                   label: "🎉 Ucapan",
@@ -2236,7 +2084,7 @@ export default function KontenPage() {
             <Modal
               open={true}
               size="md"
-              title={`${contentModal.id === "__new__" ? "Tambah" : "Edit"} ${contentModal.section === "partners" ? "Mitra" : contentModal.section === "testimonials" ? "Testimoni" : contentModal.section === "faqs" ? "FAQ" : contentModal.section === "bkk" ? "BKK" : "Ucapan Hari Raya"}`}
+              title={`${contentModal.id === "__new__" ? "Tambah" : "Edit"} ${contentModal.section === "partners" ? "Mitra" : contentModal.section === "testimonials" ? "Testimoni" : contentModal.section === "faqs" ? "FAQ" : "Ucapan Hari Raya"}`}
               onClose={() => setContentModal(null)}
               actions={
                 <>
@@ -2258,8 +2106,6 @@ export default function KontenPage() {
                         );
                       } else if (contentModal.section === "faqs" && editFaq) {
                         handleSave("faq", contentModal.id || editFaq.id);
-                      } else if (contentModal.section === "bkk" && editBkk) {
-                        handleSave("bkk", contentModal.id || editBkk.id);
                       } else if (
                         contentModal.section === "holiday_greetings" &&
                         editHolidayGreeting
@@ -2480,64 +2326,6 @@ export default function KontenPage() {
                   />
                 </div>
               )}
-              {contentModal.section === "bkk" && editBkk && (
-                <div className="space-y-3">
-                  <Input
-                    type="text"
-                    value={editBkk.nama}
-                    onChange={(e) =>
-                      setEditBkk({ ...(editBkk as Bkk), nama: e.target.value })
-                    }
-                    placeholder="Nama BKK"
-                    className="w-full"
-                    required
-                    submitted={contentSubmitted}
-                    error={fieldErrors.nama}
-                  />
-                  <Textarea
-                    value={editBkk.alamat}
-                    onChange={(e) =>
-                      setEditBkk({
-                        ...(editBkk as Bkk),
-                        alamat: e.target.value,
-                      })
-                    }
-                    rows={3}
-                    placeholder="Alamat"
-                    className="w-full"
-                    error={fieldErrors.alamat}
-                  />
-                  <Input
-                    type="text"
-                    value={editBkk.website}
-                    onChange={(e) =>
-                      setEditBkk({
-                        ...(editBkk as Bkk),
-                        website: e.target.value,
-                      })
-                    }
-                    placeholder="Website"
-                    className="w-full"
-                    error={fieldErrors.website}
-                  />
-                  <SearchableSelect
-                    value={editBkk.status}
-                    onChange={(v) =>
-                      setEditBkk({
-                        ...(editBkk as Bkk),
-                        status: v as Bkk["status"],
-                      })
-                    }
-                    options={[
-                      { value: "Draft", label: "Draft" },
-                      { value: "Publikasi", label: "Publikasi" },
-                    ]}
-                    required
-                    submitted={contentSubmitted}
-                    error={fieldErrors.status}
-                  />
-                </div>
-              )}
               {contentModal.section === "holiday_greetings" &&
                 editHolidayGreeting && (
                   <div className="space-y-3">
@@ -2677,73 +2465,6 @@ export default function KontenPage() {
             </div>
           )}
 
-          {activeTab === "bkk" && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-primary">
-                  Daftar BKK
-                </h2>
-                <button
-                  onClick={() => handleAdd("bkk")}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2"
-                >
-                  <i className="ri-add-line"></i>
-                  Tambah BKK
-                </button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {bkkList
-                  .slice(
-                    (page - 1) * pageSize,
-                    (page - 1) * pageSize + pageSize,
-                  )
-                  .map((b) => (
-                    <div
-                      key={b.id}
-                      className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden"
-                    >
-                      <div className="p-6">
-                        <div className="flex justify-between items-start gap-4">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-primary text-lg">
-                              {b.nama}
-                            </h3>
-                            <p className="text-sm text-gray-500 mt-1">
-                              {b.alamat}
-                            </p>
-                            <p className="text-sm text-blue-600 mt-1">
-                              {b.website}
-                            </p>
-                            <div className="flex items-center gap-3 mt-3">
-                              <span
-                                className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(b.status)}`}
-                              >
-                                {b.status}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleEdit("bkk", b)}
-                              className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1"
-                            >
-                              <i className="ri-edit-line"></i>Edit
-                            </button>
-                            <button
-                              onClick={() => handleDelete("bkk", b.id)}
-                              className="px-3 py-2 text-sm border border-red-200 text-red-700 rounded-lg hover:bg-red-50 transition flex items-center gap-1"
-                            >
-                              <i className="ri-delete-bin-line"></i>Hapus
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
-
           <div className="mt-4">
             <Pagination
               page={page}
@@ -2755,11 +2476,9 @@ export default function KontenPage() {
                     ? partnersList.length
                     : activeTab === "testimonials"
                       ? testimonialsList.length
-                      : activeTab === "bkk"
-                        ? bkkList.length
-                        : activeTab === "holiday_greetings"
-                          ? holidayGreetingsList.length
-                          : 1
+                      : activeTab === "holiday_greetings"
+                        ? holidayGreetingsList.length
+                        : 1
               }
               onPageChange={(p) => setPage(p)}
               onPageSizeChange={(s) => {

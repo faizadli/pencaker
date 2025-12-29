@@ -15,6 +15,7 @@ import {
   upsertSiteContent,
   deleteSiteContent,
 } from "../../../services/site";
+import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { useToast } from "../../../components/ui/Toast";
 import { stripHtml, formatDate } from "../../../utils/format";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
@@ -151,6 +152,39 @@ export default function BeritaPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [role, setRole] = useState("");
+
+  useEffect(() => {
+    const r =
+      typeof window !== "undefined" ? localStorage.getItem("role") || "" : "";
+    setRole(r);
+  }, []);
+
+  useEffect(() => {
+    async function fetchPerms() {
+      if (!role) return;
+      try {
+        const rolesResp = await listRoles();
+        const roleItems = (rolesResp.data || rolesResp) as {
+          id: number;
+          name: string;
+        }[];
+        const target = roleItems.find(
+          (x) => String(x.name).toLowerCase() === role.toLowerCase(),
+        );
+        if (target) {
+          const perms = await getRolePermissions(target.id);
+          const rows = (perms.data || perms) as {
+            code: string;
+            label: string;
+          }[];
+          setPermissions(rows.map((r) => r.code));
+        }
+      } catch {}
+    }
+    fetchPerms();
+  }, [role]);
 
   useEffect(() => {
     (async () => {
@@ -503,15 +537,34 @@ export default function BeritaPage() {
                   <SearchableSelect
                     label="Kategori"
                     options={[
-                      { value: "Informasi", label: "Informasi" },
-                      { value: "Pelatihan", label: "Pelatihan" },
-                      { value: "Transmigrasi", label: "Transmigrasi" },
-                      { value: "Penempatan", label: "Penempatan" },
+                      {
+                        value: "Informasi",
+                        label: "Informasi",
+                        perm: "news.category.informasi",
+                      },
+                      {
+                        value: "Pelatihan",
+                        label: "Pelatihan",
+                        perm: "news.category.pelatihan",
+                      },
+                      {
+                        value: "Transmigrasi",
+                        label: "Transmigrasi",
+                        perm: "news.category.transmigrasi",
+                      },
+                      {
+                        value: "Penempatan",
+                        label: "Penempatan",
+                        perm: "news.category.penempatan",
+                      },
                       {
                         value: "Hubungan Industri",
                         label: "Hubungan Industri",
+                        perm: "news.category.hubungan_industri",
                       },
-                    ]}
+                    ]
+                      .filter((c) => permissions.includes(c.perm))
+                      .map((c) => ({ value: c.value, label: c.label }))}
                     value={editBerita.kategori}
                     onChange={(v) =>
                       setEditBerita({ ...editBerita, kategori: v })

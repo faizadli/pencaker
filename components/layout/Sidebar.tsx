@@ -63,6 +63,11 @@ export default function Sidebar({
       path: "/dashboard/lowongan",
     },
     {
+      name: "Data BKK",
+      icon: "ri-community-line",
+      path: "/dashboard/bkk",
+    },
+    {
       name: "Lamaran Saya",
       icon: "ri-send-plane-2-line",
       path: "/dashboard/lamaran",
@@ -126,6 +131,8 @@ export default function Sidebar({
         return permissionCodes.includes("users.read");
       if (i.path === "/dashboard/konten" || i.path === "/dashboard/berita")
         return permissionCodes.includes("konten.read");
+      if (i.path === "/dashboard/bkk")
+        return permissionCodes.includes("bkk.read");
       if (i.path === "/dashboard/pengaturan")
         return permissionCodes.includes("pengaturan.read");
       if (i.path === "/dashboard/pelatihan")
