@@ -309,11 +309,11 @@ export default function UsersPage() {
       const rows = resp.data as UserListItem[];
       const mapped: User[] = rows.map((u, idx) => ({
         id: idx + 1,
-        nama: u.email,
-        email: u.email,
+        nama: u.full_name || u.email || "-",
+        email: u.email || "-",
         role: u.role,
         unit: "-",
-        telepon: "-",
+        telepon: u.no_handphone || "-",
         status: "Aktif",
         terakhirLogin: u.updatedAt
           ? new Date(u.updatedAt).toLocaleString("id-ID")
@@ -345,11 +345,11 @@ export default function UsersPage() {
       const rows = resp.data as UserListItem[];
       const mapped: User[] = rows.map((u, idx2) => ({
         id: idx2 + 1,
-        nama: u.email,
-        email: u.email,
+        nama: u.full_name || u.email || "-",
+        email: u.email || "-",
         role: u.role,
         unit: "-",
-        telepon: "-",
+        telepon: u.no_handphone || "-",
         status: "Aktif",
         terakhirLogin: u.updatedAt
           ? new Date(u.updatedAt).toLocaleString("id-ID")
