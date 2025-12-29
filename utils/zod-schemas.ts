@@ -111,29 +111,47 @@ export const candidateAccountSchema = z
     path: ["confirm"],
   });
 
-export const candidateProfileSchema = z.object({
-  full_name: z.string().min(1, "Nama Lengkap wajib diisi"),
-  birthdate: z.string().min(1, "Tanggal Lahir wajib diisi"),
-  place_of_birth: z.string().min(1, "Tempat Lahir wajib diisi"),
-  nik: nikSchema,
-  kecamatan: z.string().min(1, "Kecamatan wajib dipilih"),
-  kelurahan: z.string().min(1, "Kelurahan wajib dipilih"),
-  address: z.string().min(1, "Alamat Domisili wajib diisi"),
-  postal_code: z
-    .string()
-    .min(1, "Kode Pos wajib diisi")
-    .regex(/^\d+$/, "Kode Pos hanya boleh angka"),
-  gender: z.string().min(1, "Jenis Kelamin wajib dipilih"),
-  last_education: z.string().min(1, "Pendidikan Terakhir wajib dipilih"),
-  graduation_year: z
-    .string()
-    .min(1, "Tahun Lulus wajib diisi")
-    .regex(/^\d{4}$/, "Tahun harus 4 digit"),
-  status_perkawinan: z.string().min(1, "Status Perkawinan wajib dipilih"),
-  // Files
-  photo: fileSchema(IMAGE_TYPES, MAX_IMAGE_SIZE, MIN_FILE_SIZE, "Foto Profil"),
-  cv: fileSchema(PDF_TYPES, MAX_PDF_SIZE, MIN_FILE_SIZE, "CV"),
-});
+export const candidateProfileSchema = z
+  .object({
+    full_name: z.string().min(1, "Nama Lengkap wajib diisi"),
+    birthdate: z.string().min(1, "Tanggal Lahir wajib diisi"),
+    place_of_birth: z.string().min(1, "Tempat Lahir wajib diisi"),
+    nik: nikSchema,
+    kecamatan: z.string().min(1, "Kecamatan wajib dipilih"),
+    kelurahan: z.string().min(1, "Kelurahan wajib dipilih"),
+    address: z.string().min(1, "Alamat Domisili wajib diisi"),
+    postal_code: z
+      .string()
+      .min(1, "Kode Pos wajib diisi")
+      .regex(/^\d+$/, "Kode Pos hanya boleh angka"),
+    gender: z.string().min(1, "Jenis Kelamin wajib dipilih"),
+    last_education: z.string().min(1, "Pendidikan Terakhir wajib dipilih"),
+    graduation_year: z
+      .string()
+      .min(1, "Tahun Lulus wajib diisi")
+      .regex(/^\d{4}$/, "Tahun harus 4 digit"),
+    status_perkawinan: z.string().min(1, "Status Perkawinan wajib dipilih"),
+    resume_text: z.string().optional(),
+    // Files
+    photo: fileSchema(
+      IMAGE_TYPES,
+      MAX_IMAGE_SIZE,
+      MIN_FILE_SIZE,
+      "Foto Profil",
+    ),
+    cv: optionalFileSchema(PDF_TYPES, MAX_PDF_SIZE, MIN_FILE_SIZE, "CV"),
+  })
+  .refine(
+    (data) => {
+      const hasFile = data.cv instanceof File;
+      const hasText = data.resume_text && data.resume_text.trim().length > 0;
+      return hasFile || hasText;
+    },
+    {
+      message: "Wajib mengunggah CV atau mengisi Resume Text",
+      path: ["cv"],
+    },
+  );
 
 export const candidateAk1FilesSchema = z.object({
   ktp: optionalFileSchema(IMAGE_TYPES, MAX_IMAGE_SIZE, MIN_FILE_SIZE, "KTP"),
@@ -242,6 +260,7 @@ export const candidateProfileUpdateSchema = z.object({
   no_handphone: phoneSchema,
   photo_profile: z.string().optional().or(z.literal("")),
   cv_file: z.string().optional().or(z.literal("")),
+  resume_text: z.string().optional().or(z.literal("")),
 });
 
 export const createPencakerSchema = candidateProfileUpdateSchema.extend({

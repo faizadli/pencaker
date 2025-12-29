@@ -58,6 +58,8 @@ export default function PelamarLowonganPage() {
       address?: string;
       place_of_birth?: string;
       birthdate?: string;
+      cv_file?: string;
+      resume_text?: string;
     }>
   >([]);
   const [saving, setSaving] = useState<string>("");
@@ -325,6 +327,12 @@ export default function PelamarLowonganPage() {
           let address: string | undefined = undefined;
           let place_of_birth: string | undefined = undefined;
           let birthdate: string | undefined = undefined;
+          let cv_file: string | undefined = undefined;
+          let resume_text: string | undefined = undefined;
+          if (typeof objA["cv_file"] === "string")
+            cv_file = objA["cv_file"] as string;
+          if (typeof objA["resume_text"] === "string")
+            resume_text = objA["resume_text"] as string;
 
           const cname = objA["candidate_name"];
           const cbirth = objA["candidate_birthdate"];
@@ -393,7 +401,7 @@ export default function PelamarLowonganPage() {
 
           const createdAt =
             typeof objA["created_at"] === "string"
-              ? objA["created_at"]
+              ? (objA["created_at"] as string)
               : a.created_at || undefined;
 
           return {
@@ -416,6 +424,8 @@ export default function PelamarLowonganPage() {
             address,
             place_of_birth,
             birthdate,
+            cv_file,
+            resume_text,
           };
         }),
       );
@@ -572,6 +582,8 @@ export default function PelamarLowonganPage() {
             schedule_start?: string | null;
             schedule_end?: string | null;
             note?: string | null;
+            cv_file?: string;
+            resume_text?: string;
           }>)
         : [];
       const refreshed = await Promise.all(
@@ -593,6 +605,12 @@ export default function PelamarLowonganPage() {
           let address: string | undefined = undefined;
           let place_of_birth: string | undefined = undefined;
           let birthdate: string | undefined = undefined;
+          let cv_file: string | undefined = undefined;
+          let resume_text: string | undefined = undefined;
+          if (typeof objA["cv_file"] === "string")
+            cv_file = objA["cv_file"] as string;
+          if (typeof objA["resume_text"] === "string")
+            resume_text = objA["resume_text"] as string;
 
           const cname = objA["candidate_name"];
           const cbirth = objA["candidate_birthdate"];
@@ -657,6 +675,8 @@ export default function PelamarLowonganPage() {
             address,
             place_of_birth,
             birthdate,
+            cv_file,
+            resume_text,
           };
         }),
       );
@@ -691,6 +711,7 @@ export default function PelamarLowonganPage() {
         { header: "birthdate", key: "birthdate", width: 15 },
         { header: "district", key: "district", width: 20 },
         { header: "village", key: "village", width: 20 },
+        { header: "resume", key: "resume", width: 30 },
       ];
 
       // Set all columns to text format
@@ -722,6 +743,18 @@ export default function PelamarLowonganPage() {
         r.getCell(5).value = formatDateForExcel(row.birthdate);
         r.getCell(6).value = row.kecamatan || "";
         r.getCell(7).value = row.kelurahan || "";
+
+        if (row.cv_file) {
+          r.getCell(8).value = {
+            text: "Download CV",
+            hyperlink: row.cv_file,
+            tooltip: "Click to download",
+          };
+        } else if (row.resume_text) {
+          r.getCell(8).value = "Text Resume (Check Detail)";
+        } else {
+          r.getCell(8).value = "-";
+        }
 
         for (let i = 1; i <= 7; i++) {
           r.getCell(i).numFmt = "@";

@@ -9,6 +9,7 @@ import {
   SearchableSelect,
   SearchableSelectOption,
   Textarea,
+  SegmentedToggle,
 } from "../../../components/ui/field";
 import Pagination from "../../../components/ui/Pagination";
 import Modal from "../../../components/ui/Modal";
@@ -17,6 +18,7 @@ import {
   listCandidates,
   createCandidateProfile,
   updateCandidateProfile,
+  presignCandidateProfileUpload,
 } from "../../../services/profile";
 import {
   candidateProfileUpdateSchema,
@@ -128,6 +130,8 @@ export default function PencakerPage() {
     email?: string | null;
     created_at?: string;
     ak1_status?: "APPROVED" | "REJECTED" | "PENDING";
+    cv_file?: string;
+    resume_text?: string;
   };
   type Pencaker = {
     id: string;
@@ -143,6 +147,8 @@ export default function PencakerPage() {
     foto: string;
     ak1Status: "Terverifikasi" | "Menunggu Verifikasi" | "Ditolak" | "-";
     pelatihan: { id: number; nama: string; status: string; tanggal: string }[];
+    cv_file?: string;
+    resume_text?: string;
   };
   const [pencakers, setPencakers] = useState<Pencaker[]>([]);
   const [rawCandidates, setRawCandidates] = useState<CandidateApi[]>([]);
@@ -154,6 +160,7 @@ export default function PencakerPage() {
   const [editingCandidateId, setEditingCandidateId] = useState<string | null>(
     null,
   );
+  const [resumeType, setResumeType] = useState<"file" | "text">("file");
 
   const [formCandidate, setFormCandidate] = useState<{
     user_id?: string;
@@ -172,6 +179,7 @@ export default function PencakerPage() {
     graduation_year: number;
     status_perkawinan: string;
     cv_file?: string;
+    resume_text?: string;
   }>({
     full_name: "",
     birthdate: "",
@@ -188,6 +196,7 @@ export default function PencakerPage() {
     graduation_year: 0,
     status_perkawinan: "",
     cv_file: "",
+    resume_text: "",
   });
   const [userEmail, setUserEmail] = useState("");
   const [userPassword, setUserPassword] = useState("");
@@ -344,6 +353,8 @@ export default function PencakerPage() {
             createdAt: c.created_at, // Use real created_at from API
             statusPerkawinan: c.status_perkawinan || "-", // Added for filtering
             jurusan: "", // Placeholder as API doesn't seem to return major yet
+            cv_file: c.cv_file,
+            resume_text: c.resume_text,
           };
         }) as (Pencaker & {
           birthdate?: string;
@@ -705,7 +716,7 @@ export default function PencakerPage() {
                                         const src = rawCandidates.find(
                                           (c) => c.id === p.id,
                                         );
-                                        if (src)
+                                        if (src) {
                                           setFormCandidate({
                                             user_id: src.user_id,
                                             full_name: src.full_name || "",
@@ -729,8 +740,18 @@ export default function PencakerPage() {
                                             ),
                                             status_perkawinan:
                                               src.status_perkawinan || "",
-                                            cv_file: undefined,
+                                            cv_file: src.cv_file || undefined,
+                                            resume_text: src.resume_text || "",
                                           });
+                                          if (
+                                            src.resume_text &&
+                                            src.resume_text.trim().length > 0
+                                          ) {
+                                            setResumeType("text");
+                                          } else {
+                                            setResumeType("file");
+                                          }
+                                        }
                                         setShowFormModal(true);
                                       }}
                                       className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition"
@@ -933,7 +954,12 @@ export default function PencakerPage() {
                             formCandidate.graduation_year,
                           ),
                           status_perkawinan: formCandidate.status_perkawinan,
-                          cv_file: formCandidate.cv_file,
+                          cv_file:
+                            resumeType === "file" ? formCandidate.cv_file : "",
+                          resume_text:
+                            resumeType === "text"
+                              ? formCandidate.resume_text
+                              : "",
                           no_handphone: formCandidate.no_handphone,
                         };
 
@@ -971,7 +997,12 @@ export default function PencakerPage() {
                             formCandidate.graduation_year,
                           ),
                           status_perkawinan: formCandidate.status_perkawinan,
-                          cv_file: formCandidate.cv_file,
+                          cv_file:
+                            resumeType === "file" ? formCandidate.cv_file : "",
+                          resume_text:
+                            resumeType === "text"
+                              ? formCandidate.resume_text
+                              : "",
                           no_handphone: formCandidate.no_handphone,
                           user_email: userEmail,
                           user_password: userPassword,
@@ -1249,26 +1280,91 @@ export default function PencakerPage() {
                 }
                 error={fieldErrors.graduation_year}
               />
-              <div className="sm:col-span-2">
-                <Input
-                  label="CV"
-                  type="file"
-                  onChange={(e) => {
-                    const f = (e.target as HTMLInputElement).files?.[0];
-                    if (!f) {
-                      setFormCandidate({ ...formCandidate, cv_file: "" });
-                      return;
-                    }
-                    const r = new FileReader();
-                    r.onload = () =>
+              <div className="sm:col-span-2 space-y-4">
+                <label className="block text-sm font-medium text-gray-500">
+                  CV / Resume
+                </label>
+                <SegmentedToggle
+                  options={[
+                    { value: "file", label: "Upload File" },
+                    { value: "text", label: "Isi Text" },
+                  ]}
+                  value={resumeType}
+                  onChange={(v) => setResumeType(v as "file" | "text")}
+                />
+
+                {resumeType === "file" ? (
+                  <div>
+                    {formCandidate.cv_file && (
+                      <div className="text-sm text-blue-600 mb-2">
+                        <a
+                          href={formCandidate.cv_file}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline flex items-center gap-1"
+                        >
+                          <i className="ri-file-text-line"></i> Lihat CV Saat
+                          Ini
+                        </a>
+                      </div>
+                    )}
+                    <Input
+                      type="file"
+                      accept=".pdf"
+                      onChange={async (e) => {
+                        const f = (e.target as HTMLInputElement).files?.[0];
+                        if (!f) return;
+                        try {
+                          if (f.size > 5 * 1024 * 1024) {
+                            showError("Ukuran file maksimal 5MB");
+                            return;
+                          }
+                          const presign = await presignCandidateProfileUpload(
+                            "cv",
+                            f.name,
+                            f.type,
+                          );
+                          const uploadRes = await fetch(presign.url, {
+                            method: "PUT",
+                            body: f,
+                            headers: { "Content-Type": f.type },
+                          });
+                          if (!uploadRes.ok)
+                            throw new Error("Gagal upload ke storage");
+
+                          const objectUrl = presign.url.includes("?")
+                            ? presign.url.slice(0, presign.url.indexOf("?"))
+                            : presign.url;
+
+                          setFormCandidate({
+                            ...formCandidate,
+                            cv_file: objectUrl,
+                          });
+                          showSuccess("CV berhasil diunggah");
+                        } catch {
+                          showError("Gagal mengupload CV");
+                        }
+                      }}
+                      error={fieldErrors.cv_file}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Format: PDF. Maksimal 5MB.
+                    </p>
+                  </div>
+                ) : (
+                  <Textarea
+                    placeholder="Tuliskan pengalaman kerja, pendidikan, dan keahlian..."
+                    value={formCandidate.resume_text}
+                    onChange={(e) =>
                       setFormCandidate({
                         ...formCandidate,
-                        cv_file: String(r.result || ""),
-                      });
-                    r.readAsDataURL(f);
-                  }}
-                  error={fieldErrors.cv_file}
-                />
+                        resume_text: e.target.value,
+                      })
+                    }
+                    rows={6}
+                    error={fieldErrors.resume_text}
+                  />
+                )}
               </div>
             </div>
           </Modal>

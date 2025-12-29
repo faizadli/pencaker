@@ -60,6 +60,8 @@ export default function RegisterCandidate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [resumeType, setResumeType] = useState<"file" | "text">("file");
+  const [resumeText, setResumeText] = useState("");
 
   const checkAvailability = async (
     field: "email" | "no_handphone",
@@ -317,7 +319,8 @@ export default function RegisterCandidate() {
     const dataToValidate = {
       ...profile,
       photo: photoFile,
-      cv: cvFile,
+      cv: resumeType === "file" ? cvFile : undefined,
+      resume_text: resumeType === "text" ? resumeText : undefined,
     };
 
     const result = candidateProfileSchema.safeParse(dataToValidate);
@@ -620,7 +623,10 @@ export default function RegisterCandidate() {
         graduation_year: Number(profile.graduation_year || 0),
         status_perkawinan: profile.status_perkawinan,
         ...(photoUrl ? { photo_profile: photoUrl } : {}),
-        ...(cvUrl ? { cv_file: cvUrl } : {}),
+        ...(resumeType === "file" && cvUrl ? { cv_file: cvUrl } : {}),
+        ...(resumeType === "text" && resumeText
+          ? { resume_text: resumeText }
+          : {}),
       };
       await upsertCandidateProfile(basePayload);
       const profEnv = await getCandidateProfile(uid);
@@ -1200,16 +1206,42 @@ export default function RegisterCandidate() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="sm:col-span-2">
-                  <Input
-                    label="CV (PDF)"
-                    type="file"
-                    onChange={(e) =>
-                      setCvFile(
-                        (e.target as HTMLInputElement).files?.[0] || null,
-                      )
-                    }
-                    error={fieldErrors.cv}
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Resume / CV
+                  </label>
+                  <div className="mb-4">
+                    <SegmentedToggle
+                      options={[
+                        { value: "file", label: "Upload File (PDF)" },
+                        { value: "text", label: "Isi Text Manual" },
+                      ]}
+                      value={resumeType}
+                      onChange={(v) => setResumeType(v as "file" | "text")}
+                    />
+                  </div>
+
+                  {resumeType === "file" ? (
+                    <Input
+                      label="Upload CV (PDF)"
+                      type="file"
+                      accept=".pdf"
+                      onChange={(e) =>
+                        setCvFile(
+                          (e.target as HTMLInputElement).files?.[0] || null,
+                        )
+                      }
+                      error={fieldErrors.cv}
+                    />
+                  ) : (
+                    <Textarea
+                      label="Isi Resume"
+                      value={resumeText}
+                      onChange={(e) => setResumeText(e.target.value)}
+                      rows={10}
+                      placeholder="Tuliskan ringkasan profil, pengalaman kerja, pendidikan, dan keahlian Anda..."
+                      error={fieldErrors.cv}
+                    />
+                  )}
                 </div>
               </div>
               <div className="flex items-center justify-between">

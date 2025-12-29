@@ -32,6 +32,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const [fileName, setFileName] = useState<string | null>(null);
     const localFileRef = useRef<HTMLInputElement | null>(null);
     const [isDragging, setIsDragging] = useState(false);
+
+    // For non-file inputs
+    const [showPassword, setShowPassword] = useState(false);
+
     const setFileRef = (el: HTMLInputElement | null) => {
       localFileRef.current = el;
       if (typeof ref === "function") ref(el);
@@ -157,11 +161,22 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     // For non-file inputs, ensure value is always defined
     const inputValue = rest.value ?? "";
     const hasOnChange = rest.onChange !== undefined;
+    const isPassword = rest.type === "password";
+    const inputType = isPassword
+      ? showPassword
+        ? "text"
+        : "password"
+      : rest.type;
 
     // If no onChange, use defaultValue to make it uncontrolled
     const inputProps = hasOnChange
-      ? { ...rest, value: inputValue }
-      : { ...rest, defaultValue: inputValue, value: undefined };
+      ? { ...rest, value: inputValue, type: inputType }
+      : {
+          ...rest,
+          defaultValue: inputValue,
+          value: undefined,
+          type: inputType,
+        };
     const isEmpty =
       rest.type === "number"
         ? inputValue === undefined ||
@@ -187,8 +202,20 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             {...{ ...inputProps, required: isRequired }}
-            className={`w-full ${icon ? "pl-10" : "pl-3"} pr-4 py-3 h-11 border ${showError ? "border-red-400" : "border-gray-300"} rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-500 bg-white text-gray-900 text-sm text-left ${className || ""}`}
+            className={`w-full ${icon ? "pl-10" : "pl-3"} ${isPassword ? "pr-10" : "pr-4"} py-3 h-11 border ${showError ? "border-red-400" : "border-gray-300"} rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-500 bg-white text-gray-900 text-sm text-left ${className || ""}`}
           />
+          {isPassword && (
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary focus:outline-none"
+              tabIndex={-1}
+            >
+              <i
+                className={showPassword ? "ri-eye-off-line" : "ri-eye-line"}
+              ></i>
+            </button>
+          )}
         </div>
         {errorText && <p className="mt-1 text-xs text-red-600">{errorText}</p>}
         {hint && !errorText && (

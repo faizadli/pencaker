@@ -26,6 +26,7 @@ type CandidateDetail = {
   created_at?: string;
   ak1_status?: "APPROVED" | "REJECTED" | "PENDING";
   cv_file?: string;
+  resume_text?: string;
 };
 
 export default function DetailPencakerPage() {
@@ -161,14 +162,14 @@ export default function DetailPencakerPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <h4 className="font-medium text-gray-900 text-sm">
-                      Curriculum Vitae (CV)
+                      Curriculum Vitae (CV) / Resume
                     </h4>
                     <p className="text-xs text-gray-500 mt-1">
-                      Dokumen CV Kandidat
+                      Dokumen CV atau Text Resume Kandidat
                     </p>
                   </div>
                   <div className="bg-white p-2 rounded-lg shadow-sm">
-                    <i className="ri-file-pdf-line text-red-500 text-xl"></i>
+                    <i className="ri-file-text-line text-blue-500 text-xl"></i>
                   </div>
                 </div>
 
@@ -179,11 +180,18 @@ export default function DetailPencakerPage() {
                     rel="noreferrer"
                     className="mt-3 block w-full py-2 px-4 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 hover:text-primary transition-colors text-center shadow-sm"
                   >
+                    <i className="ri-download-line mr-2"></i>
                     Download CV
                   </a>
+                ) : candidate.resume_text ? (
+                  <div className="mt-3 w-full bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap max-h-60 overflow-y-auto">
+                      {candidate.resume_text}
+                    </p>
+                  </div>
                 ) : (
                   <div className="mt-3 w-full py-2 px-4 bg-gray-100 border border-gray-200 text-gray-400 text-sm font-medium rounded-lg text-center cursor-not-allowed">
-                    Tidak ada CV
+                    Tidak ada CV / Resume
                   </div>
                 )}
               </div>

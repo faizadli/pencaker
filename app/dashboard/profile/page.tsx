@@ -78,7 +78,9 @@ export default function ProfilePage() {
     graduation_year: "",
     status_perkawinan: "",
     cv_file: "",
+    resume_text: "",
   });
+  const [resumeType, setResumeType] = useState<"file" | "text">("file");
   const [candidatePhotoPreview, setCandidatePhotoPreview] =
     useState<string>("");
   const [districts, setDistricts] = useState<{ id: string; name: string }[]>(
@@ -280,6 +282,7 @@ export default function ProfilePage() {
           graduation_year: Number(candidateForm.graduation_year || 0),
           status_perkawinan: candidateForm.status_perkawinan,
           cv_file: candidateForm.cv_file || undefined,
+          resume_text: candidateForm.resume_text || undefined,
           no_handphone: candidateForm.no_handphone || undefined,
         });
         showSuccess("Profil pencaker berhasil disimpan");
@@ -455,7 +458,16 @@ export default function ProfilePage() {
               graduation_year: String(res.data.graduation_year || ""),
               status_perkawinan: res.data.status_perkawinan || "",
               cv_file: res.data.cv_file || "",
+              resume_text: res.data.resume_text || "",
             });
+            if (
+              res.data.resume_text &&
+              res.data.resume_text.trim().length > 0
+            ) {
+              setResumeType("text");
+            } else {
+              setResumeType("file");
+            }
             setCandidatePhotoPreview(res.data.photo_profile || "");
             setUser((u) => ({
               ...u,
@@ -1022,57 +1034,135 @@ export default function ProfilePage() {
                         error={fieldErrors["status_perkawinan"]}
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-2">
-                        CV
+                    <div className="md:col-span-2 space-y-4">
+                      <label className="block text-sm font-medium text-gray-500">
+                        CV / Resume
                       </label>
-                      <Input
-                        icon="ri-file-3-line"
-                        type="file"
-                        onChange={async (e) => {
-                          const f = e.target.files?.[0];
-                          if (!f) {
-                            setCandidateForm({ ...candidateForm, cv_file: "" });
-                            return;
-                          }
-                          try {
-                            const presign = await presignCandidateProfileUpload(
-                              "cv",
-                              f.name,
-                              f.type || "application/octet-stream",
-                            );
-                            const resp = await fetch(presign.url, {
-                              method: "PUT",
-                              headers: {
-                                "Content-Type":
-                                  f.type || "application/octet-stream",
-                              },
-                              body: f,
-                            });
-                            if (!resp.ok) {
-                              const txt = await resp.text();
-                              throw new Error(
-                                `Upload gagal (${resp.status}): ${txt}`,
-                              );
+                      <div className="flex items-center gap-6 mt-2">
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                          <div className="relative flex items-center justify-center">
+                            <input
+                              type="radio"
+                              name="resume_type"
+                              value="file"
+                              checked={resumeType === "file"}
+                              onChange={() => setResumeType("file")}
+                              className="peer sr-only"
+                            />
+                            <div className="w-5 h-5 border-2 border-gray-300 rounded-full peer-checked:border-primary peer-checked:border-[6px] transition-all bg-white"></div>
+                          </div>
+                          <span
+                            className={`text-sm font-medium transition-colors ${resumeType === "file" ? "text-primary" : "text-gray-600 group-hover:text-gray-900"}`}
+                          >
+                            Upload File (PDF)
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                          <div className="relative flex items-center justify-center">
+                            <input
+                              type="radio"
+                              name="resume_type"
+                              value="text"
+                              checked={resumeType === "text"}
+                              onChange={() => setResumeType("text")}
+                              className="peer sr-only"
+                            />
+                            <div className="w-5 h-5 border-2 border-gray-300 rounded-full peer-checked:border-primary peer-checked:border-[6px] transition-all bg-white"></div>
+                          </div>
+                          <span
+                            className={`text-sm font-medium transition-colors ${resumeType === "text" ? "text-primary" : "text-gray-600 group-hover:text-gray-900"}`}
+                          >
+                            Isi Text Manual
+                          </span>
+                        </label>
+                      </div>
+
+                      {resumeType === "file" ? (
+                        <div>
+                          <div className="flex flex-col gap-2">
+                            {candidateForm.cv_file && (
+                              <div className="text-sm text-blue-600 mb-2">
+                                <a
+                                  href={candidateForm.cv_file}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="underline flex items-center gap-1"
+                                >
+                                  <i className="ri-file-text-line"></i> Lihat CV
+                                  Saat Ini
+                                </a>
+                              </div>
+                            )}
+                            <Input
+                              icon="ri-file-3-line"
+                              type="file"
+                              accept=".pdf"
+                              onChange={async (e) => {
+                                const f = e.target.files?.[0];
+                                if (!f) return;
+                                try {
+                                  const presign =
+                                    await presignCandidateProfileUpload(
+                                      "cv",
+                                      f.name,
+                                      f.type || "application/octet-stream",
+                                    );
+                                  const resp = await fetch(presign.url, {
+                                    method: "PUT",
+                                    headers: {
+                                      "Content-Type":
+                                        f.type || "application/octet-stream",
+                                    },
+                                    body: f,
+                                  });
+                                  if (!resp.ok) {
+                                    const txt = await resp.text();
+                                    throw new Error(
+                                      `Upload gagal (${resp.status}): ${txt}`,
+                                    );
+                                  }
+                                  const objectUrl = presign.url.includes("?")
+                                    ? presign.url.slice(
+                                        0,
+                                        presign.url.indexOf("?"),
+                                      )
+                                    : presign.url;
+                                  setCandidateForm({
+                                    ...candidateForm,
+                                    cv_file: objectUrl,
+                                  });
+                                } catch (err) {
+                                  const msg =
+                                    err instanceof Error
+                                      ? err.message
+                                      : "Gagal upload CV";
+                                  showError(msg);
+                                }
+                              }}
+                              className="w-full px-4 py-3 rounded-xl"
+                              error={fieldErrors["cv_file"]}
+                            />
+                            <p className="text-xs text-gray-500">
+                              Format: PDF. Maksimal 5MB.
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <Textarea
+                            placeholder="Tuliskan pengalaman kerja, pendidikan, dan keahlian Anda di sini..."
+                            value={candidateForm.resume_text}
+                            onChange={(e) =>
+                              setCandidateForm({
+                                ...candidateForm,
+                                resume_text: e.target.value,
+                              })
                             }
-                            const objectUrl = presign.url.includes("?")
-                              ? presign.url.slice(0, presign.url.indexOf("?"))
-                              : presign.url;
-                            setCandidateForm({
-                              ...candidateForm,
-                              cv_file: objectUrl,
-                            });
-                          } catch (err) {
-                            const msg =
-                              err instanceof Error
-                                ? err.message
-                                : "Gagal upload CV";
-                            showError(msg);
-                          }
-                        }}
-                        className="w-full px-4 py-3 rounded-xl md:col-span-2"
-                        error={fieldErrors["cv_file"]}
-                      />
+                            className="w-full px-4 py-3 rounded-xl min-h-[200px]"
+                            error={fieldErrors["resume_text"]}
+                          />
+                        </div>
+                      )}
                     </div>
                   </React.Fragment>
                 )}
