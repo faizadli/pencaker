@@ -4,17 +4,17 @@ export const initialData: InitialData = {
   pencariKerja: [
     {
       label: "1. Pencari kerja yang belum ditempatkan pada bulan yang lalu",
-      data: [944, 3866, 1869, 421, 27, 30, 6, 0, 0, 7043, 2846, 9889, 0],
+      data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       bold: false,
     },
     {
       label: "2. Pencari kerja yang terdaftar pada bulan ini",
-      data: [5, 39, 10, 8, 2, 0, 0, 0, 0, 56, 17, 73, 0],
+      data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       bold: false,
     },
     {
       label: "A. JUMLAH (1+2)",
-      data: [949, 3905, 1879, 429, 29, 30, 6, 0, 0, 7099, 2863, 9962, 0],
+      data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       bold: true,
     },
     {
@@ -35,16 +35,16 @@ export const initialData: InitialData = {
     {
       label:
         "5. Pencari kerja yang belum ditempatkan pada akhir bulan ini (A-B)",
-      data: [949, 3905, 1879, 429, 29, 30, 6, 0, 0, 7099, 2863, 9962, 0],
+      data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       bold: false,
     },
   ],
   lowongan: [
     {
       label: "1. Lowongan yang belum dipenuhi pada akhir bulan lalu",
-      l: 485,
-      w: 17,
-      lw: 502,
+      l: 0,
+      w: 0,
+      lw: 0,
       bold: false,
     },
     {
@@ -56,9 +56,9 @@ export const initialData: InitialData = {
     },
     {
       label: "C. JUMLAH (1+2)",
-      l: 485,
-      w: 17,
-      lw: 502,
+      l: 0,
+      w: 0,
+      lw: 0,
       bold: true,
     },
     {
@@ -84,9 +84,9 @@ export const initialData: InitialData = {
     },
     {
       label: "5. Lowongan yang belum dipenuhi akhir bulan ini (C-D)",
-      l: 485,
-      w: 17,
-      lw: 502,
+      l: 0,
+      w: 0,
+      lw: 0,
       bold: false,
     },
   ],

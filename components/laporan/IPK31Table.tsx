@@ -107,8 +107,8 @@ export default function IPK31Table({ headerDateString }: IPK31TableProps) {
         <tr className="font-bold">
           <td className="border border-black p-1 text-center">II. LOWONGAN</td>
           <td className="border border-black p-1 text-center">L</td>
-          <td className="border border-black p-1 text-center">W</td>
-          <td className="border border-black p-1 text-center">L+W</td>
+          <td className="border border-black p-1 text-center">P</td>
+          <td className="border border-black p-1 text-center">L+P</td>
           {Array(10)
             .fill(null)
             .map((_, i) => (

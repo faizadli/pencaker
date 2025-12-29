@@ -98,7 +98,7 @@ export default function GenericIPKTable({
             .map((_, i) => (
               <React.Fragment key={`h-${i}`}>
                 <th className="border border-black p-1 text-center">L</th>
-                <th className="border border-black p-1 text-center">W</th>
+                <th className="border border-black p-1 text-center">P</th>
               </React.Fragment>
             ))}
         </tr>

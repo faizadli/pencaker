@@ -154,7 +154,7 @@ export const exportIPK3_1 = (
   cellL.border = thinBorder;
 
   const cellW = section2HeaderRow.getCell(3);
-  cellW.value = "W";
+  cellW.value = "P";
   cellW.alignment = center;
   cellW.font = { bold: true, name: "Calibri", size: 11 };
   cellW.border = thinBorder;
@@ -162,7 +162,7 @@ export const exportIPK3_1 = (
   // MERGE D:E for L+W
   worksheet.mergeCells(currentRowIdx, 4, currentRowIdx, 5);
   const cellLW = section2HeaderRow.getCell(4);
-  cellLW.value = "L+W";
+  cellLW.value = "L+P";
   cellLW.alignment = center;
   cellLW.font = { bold: true, name: "Calibri", size: 11 };
   cellLW.border = thinBorder;
@@ -310,7 +310,7 @@ export const exportGeneric12Col = (
     const cell = worksheet.getCell(4, p.colStart);
     cell.value = p.label;
     worksheet.getCell(6, p.colStart).value = "L";
-    worksheet.getCell(6, p.colStart + 1).value = "W";
+    worksheet.getCell(6, p.colStart + 1).value = "P";
   });
 
   for (let r = 4; r <= 6; r++) {
