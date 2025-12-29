@@ -4,7 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import FullPageLoading from "../components/ui/FullPageLoading";
 import { listPublicJobs } from "../services/jobs";
-import { getHomeContent, getPublicSiteSettings } from "../services/site";
+import {
+  getHomeContent,
+  getPublicSiteSettings,
+  getPublicLandingStats,
+} from "../services/site";
 import { getPublicCompanyById } from "../services/company";
 import { stripHtml, formatDate } from "../utils/format";
 
@@ -200,7 +204,7 @@ export default function HomePage() {
       gambar: string;
     }>
   >([]);
-  const [homeStats] = useState<
+  const [homeStats, setHomeStats] = useState<
     Array<{
       label: string;
       value: string | number;
@@ -210,25 +214,25 @@ export default function HomePage() {
   >([
     {
       label: "Pencari Kerja Terdaftar",
-      value: 1240,
+      value: 0,
       icon: "ri-user-search-line",
       color: "bg-blue-500",
     },
     {
       label: "Perusahaan Terdaftar",
-      value: 320,
+      value: 0,
       icon: "ri-building-line",
       color: "bg-emerald-500",
     },
     {
       label: "Lowongan Aktif",
-      value: 85,
+      value: 0,
       icon: "ri-briefcase-line",
       color: "bg-amber-500",
     },
     {
       label: "Pelatihan Tersedia",
-      value: 12,
+      value: 0,
       icon: "ri-graduation-cap-line",
       color: "bg-violet-500",
     },
@@ -313,7 +317,70 @@ export default function HomePage() {
             };
           }),
         );
-        // stats removed from API; keep dummy cards
+        try {
+          const [landing, jobs, trainings] = await Promise.all([
+            getPublicLandingStats(),
+            listPublicJobs({ page: 1, limit: 1 }),
+            (async () => {
+              const mod = await import("../services/training");
+              return mod.getPublicTrainings({
+                page: 1,
+                limit: 1,
+                status: "open",
+              });
+            })(),
+          ]);
+          type LandingStats = {
+            companyRegistered?: number;
+            contractEmployeesRegistered?: number;
+            permanentEmployeesRegistered?: number;
+          };
+          const landingObj = landing as unknown as {
+            ok?: boolean;
+            data?: LandingStats;
+          };
+          const landingData: LandingStats =
+            (landingObj?.data as LandingStats | undefined) ??
+            (landing as unknown as LandingStats);
+          const companies = Number(landingData?.companyRegistered || 0);
+          const jobSeekers =
+            Number(landingData?.contractEmployeesRegistered || 0) +
+            Number(landingData?.permanentEmployeesRegistered || 0);
+          const jobsTotal = Number(
+            (jobs as { pagination?: { total?: number } }).pagination?.total ||
+              0,
+          );
+          const trainingsTotal = Number(
+            (trainings as { pagination?: { total?: number } }).pagination
+              ?.total || 0,
+          );
+          setHomeStats([
+            {
+              label: "Pencari Kerja Terdaftar",
+              value: jobSeekers,
+              icon: "ri-user-search-line",
+              color: "bg-blue-500",
+            },
+            {
+              label: "Perusahaan Terdaftar",
+              value: companies,
+              icon: "ri-building-line",
+              color: "bg-emerald-500",
+            },
+            {
+              label: "Lowongan Aktif",
+              value: jobsTotal,
+              icon: "ri-briefcase-line",
+              color: "bg-amber-500",
+            },
+            {
+              label: "Pelatihan Tersedia",
+              value: trainingsTotal,
+              icon: "ri-graduation-cap-line",
+              color: "bg-violet-500",
+            },
+          ]);
+        } catch {}
         const testiItems = Array.isArray(hc.testimonials)
           ? hc.testimonials
           : [];

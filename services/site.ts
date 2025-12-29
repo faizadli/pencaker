@@ -170,3 +170,9 @@ export async function upsertPositionGroups(payload: {
   if (!resp.ok) throw new Error("Gagal menyimpan grup jabatan");
   return resp.json();
 }
+
+export async function getPublicLandingStats() {
+  const resp = await fetch(`${BASE}/api/public/landing/stats`);
+  if (!resp.ok) throw new Error("Gagal mengambil statistik landing");
+  return resp.json();
+}
