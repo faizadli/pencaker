@@ -88,6 +88,10 @@ export default function DetailLowonganPage() {
 
   useEffect(() => {
     async function boot() {
+      if (!role) {
+        setPermsLoaded(true);
+        return;
+      }
       try {
         const rolesResp = await listRoles();
         const roleItems = (rolesResp.data || rolesResp) as {
@@ -112,29 +116,43 @@ export default function DetailLowonganPage() {
       } catch {}
       setPermsLoaded(true);
     }
-    if (role) boot();
-    else setPermsLoaded(true);
+    boot();
   }, [role, userId]);
 
   useEffect(() => {
     if (!id) return;
-    (async () => {
+    let isMounted = true;
+
+    const fetchJob = async (attempt = 1) => {
       try {
         const resp = await getDashboardJobById(id);
         const data = resp.data || resp;
         if (data && !data.id) {
           data.id = data.jobs_id || id;
         }
-        setJob(data);
+        if (isMounted) {
+          setJob(data);
+          setLoading(false);
+        }
       } catch (e) {
-        console.error("Fetch job error:", e);
-        setError(
-          e instanceof Error ? e.message : "Gagal mengambil data lowongan",
-        );
-      } finally {
-        setLoading(false);
+        console.error(`Fetch job error (attempt ${attempt}):`, e);
+        if (attempt <= 3 && isMounted) {
+          // Retry logic: wait 1s, then 2s, then 3s
+          setTimeout(() => fetchJob(attempt + 1), 1000 * attempt);
+        } else if (isMounted) {
+          setError(
+            e instanceof Error ? e.message : "Gagal mengambil data lowongan",
+          );
+          setLoading(false);
+        }
       }
-    })();
+    };
+
+    fetchJob();
+
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
   const handleVerify = async () => {

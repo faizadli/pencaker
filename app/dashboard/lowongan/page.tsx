@@ -28,6 +28,7 @@ import {
   updateJob,
   listApplications,
 } from "../../../services/jobs";
+import { listCompanies } from "../../../services/company";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import { useToast } from "../../../components/ui/Toast";
 import {
@@ -64,6 +65,9 @@ export default function LowonganPage() {
   const [permsLoaded, setPermsLoaded] = useState(false);
   const [companyId, setCompanyId] = useState<string>("");
   const [companyName, setCompanyName] = useState<string>("");
+  const [companyOptions, setCompanyOptions] = useState<
+    SearchableSelectOption[]
+  >([]);
 
   // Options state
   const [positionOptions, setPositionOptions] = useState<
@@ -182,6 +186,7 @@ export default function LowonganPage() {
     max_salary: number;
     work_setup: string;
     placement?: string;
+    company_id?: string;
   };
 
   type ViewJob = {
@@ -293,6 +298,29 @@ export default function LowonganPage() {
     loadOptions();
   }, [transformGroupsToOptions]);
 
+  useEffect(() => {
+    async function loadCompanies() {
+      if (role && role !== "company") {
+        try {
+          const resp = await listCompanies({ status: "APPROVED", limit: 1000 });
+          const data = (resp.data || resp) as {
+            id: string;
+            company_name: string;
+          }[];
+          setCompanyOptions(
+            data.map((c) => ({
+              label: c.company_name,
+              value: c.id,
+            })),
+          );
+        } catch (e) {
+          console.error("Failed to load companies", e);
+        }
+      }
+    }
+    loadCompanies();
+  }, [role]);
+
   const enrichJobsWithCompanyName = useCallback(async (rows: Job[]) => {
     try {
       const ids = Array.from(new Set(rows.map((r) => r.company_id))).filter(
@@ -363,51 +391,26 @@ export default function LowonganPage() {
     }
   }, [permissions, permsLoaded, router, role]);
 
-  useEffect(() => {
-    async function loadJobs() {
-      try {
-        setLoading(true);
-        if (!permsLoaded) return;
-        if (role === "company" && companyId) {
-          if (permissions.includes("lowongan.read")) {
-            const statusParam =
-              statusFilter !== "all"
-                ? uiToApiStatus[statusFilter as UIStatusExtended]
-                : undefined;
-            const query: {
-              company_id: string;
-              status?: "pending" | "approved" | "rejected" | "closed";
-              page?: number;
-              limit?: number;
-            } = { company_id: companyId, page, limit: pageSize };
-            if (statusParam) query.status = statusParam;
-            const resp = await listJobs(query);
-            const rows = (resp.data || resp) as Job[];
-            const mapped = rows.map((r) => {
-              const obj = r as Record<string, unknown>;
-              const curr =
-                typeof obj["id"] === "string"
-                  ? (obj["id"] as string)
-                  : undefined;
-              const jobsId =
-                typeof obj["jobs_id"] === "string"
-                  ? (obj["jobs_id"] as string)
-                  : undefined;
-              const jobId =
-                typeof obj["job_id"] === "string"
-                  ? (obj["job_id"] as string)
-                  : undefined;
-              const nid = curr || jobsId || jobId || "";
-              return nid ? { ...r, id: nid } : r;
-            });
-            setLowonganList(mapped);
-          } else {
-            setLowonganList([]);
-          }
-        } else {
-          const resp = await listJobs({ page, limit: pageSize });
-          const rawRows = (resp.data || resp) as Job[];
-          const normalized = rawRows.map((r) => {
+  const loadJobs = useCallback(async () => {
+    try {
+      setLoading(true);
+      if (!permsLoaded) return;
+      if (role === "company" && companyId) {
+        if (permissions.includes("lowongan.read")) {
+          const statusParam =
+            statusFilter !== "all"
+              ? uiToApiStatus[statusFilter as UIStatusExtended]
+              : undefined;
+          const query: {
+            company_id: string;
+            status?: "pending" | "approved" | "rejected" | "closed";
+            page?: number;
+            limit?: number;
+          } = { company_id: companyId, page, limit: pageSize };
+          if (statusParam) query.status = statusParam;
+          const resp = await listJobs(query);
+          const rows = (resp.data || resp) as Job[];
+          const mapped = rows.map((r) => {
             const obj = r as Record<string, unknown>;
             const curr =
               typeof obj["id"] === "string" ? (obj["id"] as string) : undefined;
@@ -422,27 +425,51 @@ export default function LowonganPage() {
             const nid = curr || jobsId || jobId || "";
             return nid ? { ...r, id: nid } : r;
           });
-          const enriched = await enrichJobsWithCompanyName(normalized);
-          setLowonganList(enriched);
+          setLowonganList(mapped);
+        } else {
+          setLowonganList([]);
         }
-      } catch {
-        setLowonganList([]);
-      } finally {
-        setLoading(false);
+      } else {
+        const resp = await listJobs({ page, limit: pageSize });
+        const rawRows = (resp.data || resp) as Job[];
+        const normalized = rawRows.map((r) => {
+          const obj = r as Record<string, unknown>;
+          const curr =
+            typeof obj["id"] === "string" ? (obj["id"] as string) : undefined;
+          const jobsId =
+            typeof obj["jobs_id"] === "string"
+              ? (obj["jobs_id"] as string)
+              : undefined;
+          const jobId =
+            typeof obj["job_id"] === "string"
+              ? (obj["job_id"] as string)
+              : undefined;
+          const nid = curr || jobsId || jobId || "";
+          return nid ? { ...r, id: nid } : r;
+        });
+        const enriched = await enrichJobsWithCompanyName(normalized);
+        setLowonganList(enriched);
       }
+    } catch {
+      setLowonganList([]);
+    } finally {
+      setLoading(false);
     }
-    loadJobs();
   }, [
+    permsLoaded,
     role,
     companyId,
     permissions,
-    enrichJobsWithCompanyName,
     statusFilter,
-    permsLoaded,
     uiToApiStatus,
     page,
     pageSize,
+    enrichJobsWithCompanyName,
   ]);
+
+  useEffect(() => {
+    loadJobs();
+  }, [loadJobs]);
 
   const filteredLowongan: ViewJob[] = useMemo(() => {
     const toView: ViewJob[] = lowonganList.map((j) => ({
@@ -495,9 +522,22 @@ export default function LowonganPage() {
     async function loadCounts() {
       try {
         if (paginatedLowongan.length === 0) {
-          setAppCounts({});
+          // Do NOT reset appCounts here if we just refreshed the list
+          // setAppCounts({});
+          // Instead, just return or handle cleanup if needed.
+          // But actually, if paginatedLowongan is empty, clearing counts is correct.
+          // However, if we just added a job, paginatedLowongan might be momentarily stale or inconsistent.
+          // Let's keep it but ensure we handle the case where a new job ID isn't in appCounts yet.
+          setAppCounts((prev) => {
+            // Only clear if truly empty list to avoid flashing
+            return paginatedLowongan.length === 0 ? {} : prev;
+          });
           return;
         }
+
+        // Use a flag to check if component is mounted if needed, though useEffect cleanup is better.
+        // For now, let's just fetch.
+
         const entries = await Promise.all(
           paginatedLowongan.map(async (job) => {
             try {
@@ -523,23 +563,26 @@ export default function LowonganPage() {
             }
           }),
         );
-        const map: Record<
-          string,
-          { total: number; processed: number; approved: number }
-        > = {};
-        entries.forEach(([id, c]) => {
-          map[id] = c;
+
+        setAppCounts((prev) => {
+          const next = { ...prev };
+          entries.forEach(([id, c]) => {
+            next[id] = c;
+          });
+          return next;
         });
-        setAppCounts(map);
       } catch {
-        setAppCounts({});
+        // If error, don't wipe out everything immediately
       }
     }
     loadCounts();
   }, [paginatedLowongan, role, companyId]);
 
   const handleAddJob = async () => {
-    if (!companyId) {
+    const effectiveCompanyId =
+      role === "company" ? companyId : newJob.company_id;
+
+    if (!effectiveCompanyId) {
       showError("Perusahaan belum teridentifikasi");
       return;
     }
@@ -559,6 +602,7 @@ export default function LowonganPage() {
       placement: newJob.placement || "",
       deskripsi: newJob.deskripsi || "",
       skills_required: newJob.skills_required || "",
+      company_id: effectiveCompanyId,
     };
 
     const result = jobSchema.safeParse(validationPayload);
@@ -575,7 +619,7 @@ export default function LowonganPage() {
 
     try {
       const payload = {
-        company_id: companyId,
+        company_id: effectiveCompanyId,
         job_title: newJob.posisi, // Still use posisi from state which is synced with position_id label
         position_id: newJob.position_id,
         job_type: jobTypeMap[newJob.tipe],
@@ -609,8 +653,7 @@ export default function LowonganPage() {
       } else {
         await createJob(payload);
       }
-      const resp = await listJobs({ company_id: companyId });
-      setLowonganList((resp.data || resp) as Job[]);
+      await loadJobs();
       setNewJob(EMPTY_NEW_JOB);
       setShowForm(false);
       setEditingId(null);
@@ -819,6 +862,18 @@ export default function LowonganPage() {
             }
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {role !== "company" && (
+                <div className="md:col-span-2">
+                  <SearchableSelect
+                    label="Perusahaan"
+                    value={newJob.company_id || ""}
+                    onChange={(v) => setNewJob({ ...newJob, company_id: v })}
+                    options={companyOptions}
+                    submitted={submittedJob}
+                    error={fieldErrors["company_id"]}
+                  />
+                </div>
+              )}
               <SearchableSelect
                 label="Posisi"
                 value={newJob.position_id || ""}

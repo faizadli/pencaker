@@ -279,6 +279,7 @@ export const disnakerProfileUpdateSchema = z.object({
 
 export const jobSchema = z
   .object({
+    company_id: z.string().min(1, "Perusahaan wajib dipilih"),
     position_id: z.string().min(1, "Posisi wajib dipilih"),
     tipe: z.enum(
       ["Full-time", "Part-time", "Internship", "Freelance", "Contract"],
