@@ -243,7 +243,7 @@ export default function UsersPage() {
         const baseCode = ROLE_MAP_TO_API[form.role];
         const payload: {
           email?: string;
-          role?: "candidate" | "company" | "super_admin" | "disnaker";
+          role?: string;
           password?: string;
         } = {
           email: form.email,
@@ -295,7 +295,10 @@ export default function UsersPage() {
           if (newUserId && selectedRoleId) {
             await assignUserRole(String(newUserId), selectedRoleId);
           }
-        } catch {}
+        } catch (err) {
+          console.error("Failed to assign role:", err);
+          showError("User dibuat tapi gagal assign role spesifik");
+        }
       }
       const resp = await listUsers(
         { page, limit: pageSize },

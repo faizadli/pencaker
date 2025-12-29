@@ -10,7 +10,7 @@ export type UserListItem = {
   email: string;
   full_name?: string;
   no_handphone?: string;
-  role: "candidate" | "company" | "super_admin" | "disnaker";
+  role: string;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -58,7 +58,7 @@ export async function updateUser(
   id: string,
   payload: {
     email?: string;
-    role?: "candidate" | "company" | "super_admin" | "disnaker";
+    role?: string;
     password?: string;
   },
 ) {
@@ -83,7 +83,7 @@ export async function deleteUser(id: string) {
 export async function createUser(
   email: string,
   password: string,
-  role: "candidate" | "company" | "super_admin" | "disnaker",
+  role: string,
 ) {
   const resp = await fetch(`${BASE}/api/user/register`, {
     method: "POST",
