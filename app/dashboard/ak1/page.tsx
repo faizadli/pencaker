@@ -516,16 +516,18 @@ export default function Ak1Page() {
     expired: { x: 920, y: 460 },
     photo: { x: 430, y: 260 },
   };
-  const FRONT_BASE = { w: 3900, h: 1216 };
+  const FRONT_BASE = { w: 841.89, h: 311.81 }; // 29.7cm x 11cm
   const FRONT_DESIGN = { w: 1400, h: 600 };
   const frontUnitX = FRONT_BASE.w / FRONT_DESIGN.w;
   const frontUnitY = FRONT_BASE.h / FRONT_DESIGN.h;
+  const previewLayoutW = Number(layout?.front_width || FRONT_DESIGN.w);
+  const previewLayoutH = Number(layout?.front_height || FRONT_DESIGN.h);
 
   useEffect(() => {
     const calc = () => {
       try {
         const fw = frontContainerRef.current?.clientWidth || 0;
-        const autoFront = fw ? Math.min(fw / FRONT_BASE.w, 1) : 1;
+        const autoFront = fw ? fw / FRONT_BASE.w : 1;
         setFrontScale(autoFront);
       } catch {}
     };
@@ -2402,8 +2404,80 @@ export default function Ak1Page() {
                         return;
                       }
                       const buildPdf = async () => {
-                        const { PDFDocument, StandardFonts, rgb } =
-                          await import("pdf-lib");
+                        const pdfLib = await import("pdf-lib");
+                        const { PDFDocument, StandardFonts, rgb } = pdfLib;
+
+                        const cropImageToRatio = async (
+                          url: string,
+                          targetW: number,
+                          targetH: number,
+                        ): Promise<Uint8Array> => {
+                          return new Promise((resolve, reject) => {
+                            const img = new Image();
+                            img.crossOrigin = "anonymous";
+                            img.onload = () => {
+                              // Increase resolution multiplier to prevent blurriness
+                              const scale = 3; // 3x multiplier for high quality
+                              const finalW = targetW * scale;
+                              const finalH = targetH * scale;
+
+                              const iw = img.width;
+                              const ih = img.height;
+                              const ir = iw / ih;
+                              const tr = targetW / targetH;
+
+                              let sw = iw;
+                              let sh = ih;
+                              let sx = 0;
+                              let sy = 0;
+
+                              if (ir > tr) {
+                                sw = ih * tr;
+                                sx = (iw - sw) / 2;
+                              } else {
+                                sh = iw / tr;
+                                sy = (ih - sh) / 2;
+                              }
+
+                              const canvas = document.createElement("canvas");
+                              canvas.width = finalW;
+                              canvas.height = finalH;
+                              const ctx = canvas.getContext("2d");
+                              if (!ctx) {
+                                reject(new Error("canvas"));
+                                return;
+                              }
+
+                              // Use high quality image smoothing
+                              ctx.imageSmoothingEnabled = true;
+                              ctx.imageSmoothingQuality = "high";
+
+                              ctx.drawImage(
+                                img,
+                                sx,
+                                sy,
+                                sw,
+                                sh,
+                                0,
+                                0,
+                                finalW,
+                                finalH,
+                              );
+                              canvas.toBlob((blob) => {
+                                if (!blob) {
+                                  reject(new Error("blob"));
+                                  return;
+                                }
+                                blob
+                                  .arrayBuffer()
+                                  .then((buf) => resolve(new Uint8Array(buf)));
+                              }, "image/png");
+                            };
+                            img.onerror = () => reject(new Error("image load"));
+                            img.src = url;
+                          });
+                        };
+
                         const pdfDoc = await PDFDocument.create();
                         const font = await pdfDoc.embedFont(
                           StandardFonts.Helvetica,
@@ -2484,7 +2558,7 @@ export default function Ak1Page() {
                           }
                         };
 
-                        let pdfPhoto: PDFImage | null = null;
+                        let photoBlobUrl: string | null = null;
                         try {
                           const photoUrl =
                             genPasPhotoUrl ||
@@ -2505,12 +2579,8 @@ export default function Ak1Page() {
                               { headers },
                             );
                             const ab = await res.arrayBuffer();
-                            const u8 = new Uint8Array(ab);
-                            try {
-                              pdfPhoto = await pdfDoc.embedPng(u8);
-                            } catch {
-                              pdfPhoto = await pdfDoc.embedJpg(u8);
-                            }
+                            const blob = new Blob([ab]);
+                            photoBlobUrl = URL.createObjectURL(blob);
                           }
                         } catch {}
 
@@ -2641,19 +2711,19 @@ export default function Ak1Page() {
                         };
 
                         const layoutW = Number(
-                          layout?.front_width || FRONT_BASE.w,
+                          layout?.front_width || FRONT_DESIGN.w,
                         );
                         const layoutH = Number(
-                          layout?.front_height || FRONT_BASE.h,
+                          layout?.front_height || FRONT_DESIGN.h,
                         );
                         const unitX = FRONT_BASE.w / layoutW;
                         const unitY = FRONT_BASE.h / layoutH;
 
-                        const drawFields = (
+                        const drawFields = async (
                           p: PDFPage,
                           fields: Ak1LayoutField[],
                         ) => {
-                          fields.forEach((f) => {
+                          for (const f of fields) {
                             const isKeterampilan =
                               f.token === "ak1_doc:keterampilan" ||
                               f.token === "keterampilan";
@@ -2661,11 +2731,17 @@ export default function Ak1Page() {
                               ? "list"
                               : f.kind || "text";
 
+                            const isBack = f.side === "back";
+                            const yAdj = isBack ? 0.6 : 0.8;
+
                             if (kind === "list") {
                               const sizePx = Math.round((f.size || 16) * unitY);
                               const xPx = (f.x || 0) * unitX;
+                              // Adjust Y for baseline vs hanging
                               const yPx =
-                                FRONT_BASE.h - (f.y || 0) * unitY - sizePx;
+                                FRONT_BASE.h -
+                                (f.y || 0) * unitY -
+                                sizePx * yAdj;
                               const val = getTokenText(f.token);
 
                               if (val) {
@@ -2706,8 +2782,11 @@ export default function Ak1Page() {
                             } else if (kind === "text") {
                               const sizePx = Math.round((f.size || 16) * unitY);
                               const xPx = (f.x || 0) * unitX;
+                              // Adjust Y for baseline vs hanging
                               const yPx =
-                                FRONT_BASE.h - (f.y || 0) * unitY - sizePx;
+                                FRONT_BASE.h -
+                                (f.y || 0) * unitY -
+                                sizePx * yAdj;
                               const val = getTokenText(f.token);
                               p.drawText(val || String(f.token), {
                                 x: xPx,
@@ -2731,13 +2810,34 @@ export default function Ak1Page() {
                               const matchPas =
                                 tokenStr === "pas_photo" ||
                                 mKey === "pas_photo_file";
-                              if (matchPas && pdfPhoto) {
-                                p.drawImage(pdfPhoto, {
-                                  x,
-                                  y,
-                                  width: wPx,
-                                  height: hPx,
-                                });
+                              if (matchPas && photoBlobUrl) {
+                                try {
+                                  // Crop image using canvas to match the box ratio (cover)
+                                  const croppedBytes = await cropImageToRatio(
+                                    photoBlobUrl,
+                                    wPx,
+                                    hPx,
+                                  );
+                                  let fieldImg: PDFImage;
+                                  try {
+                                    fieldImg =
+                                      await pdfDoc.embedPng(croppedBytes);
+                                  } catch {
+                                    fieldImg =
+                                      await pdfDoc.embedJpg(croppedBytes);
+                                  }
+                                  p.drawImage(fieldImg, {
+                                    x,
+                                    y,
+                                    width: wPx,
+                                    height: hPx,
+                                  });
+                                } catch (e) {
+                                  console.error(
+                                    "Failed to crop/embed photo",
+                                    e,
+                                  );
+                                }
                               } else {
                                 p.drawRectangle({
                                   x,
@@ -2841,15 +2941,15 @@ export default function Ak1Page() {
                                 }
                               }
                             }
-                          });
+                          }
                         };
 
                         const srcUrl =
                           frontPreviewUrl || frontSrcUrl || "/ak1/front.svg";
                         const frontUrl = await toPng(
                           srcUrl,
-                          FRONT_BASE.w,
-                          FRONT_BASE.h,
+                          FRONT_BASE.w * 4,
+                          FRONT_BASE.h * 4,
                         );
                         const frontImg = await pdfDoc.embedPng(frontUrl);
                         const page = pdfDoc.addPage([
@@ -2870,7 +2970,7 @@ export default function Ak1Page() {
                         );
 
                         if (frontFields.length) {
-                          drawFields(page, frontFields);
+                          await drawFields(page, frontFields);
                         } else {
                           const CELL_W = 24 * frontUnitX;
                           const CELL_H = 32 * frontUnitY;
@@ -3067,18 +3167,31 @@ export default function Ak1Page() {
                           );
                         });
 
-                        if (!hasLayoutPhoto && pdfPhoto) {
+                        if (!hasLayoutPhoto && photoBlobUrl) {
                           const pw = 90 * frontUnitX;
                           const ph = 110 * frontUnitY;
                           const px = posFront.photo.x * frontUnitX;
                           const py =
                             FRONT_BASE.h - posFront.photo.y * frontUnitY - ph;
-                          page.drawImage(pdfPhoto, {
-                            x: px,
-                            y: py,
-                            width: pw,
-                            height: ph,
-                          });
+                          try {
+                            const croppedBytes = await cropImageToRatio(
+                              photoBlobUrl,
+                              pw,
+                              ph,
+                            );
+                            let fieldImg: PDFImage;
+                            try {
+                              fieldImg = await pdfDoc.embedPng(croppedBytes);
+                            } catch {
+                              fieldImg = await pdfDoc.embedJpg(croppedBytes);
+                            }
+                            page.drawImage(fieldImg, {
+                              x: px,
+                              y: py,
+                              width: pw,
+                              height: ph,
+                            });
+                          } catch {}
                         }
 
                         if (backPreviewUrl || backSrcUrl) {
@@ -3086,8 +3199,8 @@ export default function Ak1Page() {
                           if (backSrc) {
                             const backUrl = await toPng(
                               backSrc,
-                              FRONT_BASE.w,
-                              FRONT_BASE.h,
+                              FRONT_BASE.w * 4,
+                              FRONT_BASE.h * 4,
                             );
                             const backImg = await pdfDoc.embedPng(backUrl);
                             const pageBack = pdfDoc.addPage([
@@ -3104,10 +3217,13 @@ export default function Ak1Page() {
                             const backFields = allFields.filter(
                               (f) => f.side === "back",
                             );
-                            drawFields(pageBack, backFields);
+                            await drawFields(pageBack, backFields);
                           }
                         }
 
+                        if (photoBlobUrl) {
+                          URL.revokeObjectURL(photoBlobUrl);
+                        }
                         const bytes = await pdfDoc.save();
                         const uint = new Uint8Array(bytes);
                         return new Blob([uint], { type: "application/pdf" });
@@ -3267,7 +3383,7 @@ export default function Ak1Page() {
                   <div className="text-xs text-gray-500 mb-2">
                     Preview Kartu (depan)
                   </div>
-                  <div ref={frontContainerRef} className="w-full overflow-auto">
+                  <div ref={frontContainerRef} className="w-full">
                     <div
                       className="relative"
                       style={{
@@ -3277,7 +3393,7 @@ export default function Ak1Page() {
                     >
                       <div
                         ref={frontRef}
-                        className="relative border-2 border-black bg-white"
+                        className="relative bg-white"
                         style={{
                           width: FRONT_BASE.w,
                           height: FRONT_BASE.h,
@@ -3285,23 +3401,32 @@ export default function Ak1Page() {
                           transformOrigin: "top left",
                         }}
                       >
-                        <div
-                          aria-label="Front"
-                          style={{
-                            width: FRONT_BASE.w,
-                            height: FRONT_BASE.h,
-                            backgroundImage: `url(${frontPreviewUrl || frontSrcUrl || ""})`,
-                            backgroundSize: "cover",
-                            backgroundPosition: "center",
-                          }}
-                        />
                         <svg
                           width={FRONT_BASE.w}
                           height={FRONT_BASE.h}
-                          viewBox={`0 0 ${FRONT_BASE.w} ${FRONT_BASE.h}`}
+                          viewBox={`0 0 ${previewLayoutW} ${previewLayoutH}`}
+                          preserveAspectRatio="none"
                           xmlns="http://www.w3.org/2000/svg"
                           style={{ position: "absolute", inset: 0 }}
                         >
+                          {frontPreviewUrl || frontSrcUrl ? (
+                            <image
+                              href={frontPreviewUrl || frontSrcUrl || ""}
+                              x={0}
+                              y={0}
+                              width={previewLayoutW}
+                              height={previewLayoutH}
+                              preserveAspectRatio="none"
+                            />
+                          ) : (
+                            <rect
+                              x={0}
+                              y={0}
+                              width={previewLayoutW}
+                              height={previewLayoutH}
+                              fill="white"
+                            />
+                          )}
                           {(layout?.coordinates || []).length ? (
                             <>
                               {((layout?.coordinates || []) as Ak1LayoutField[])
@@ -3782,7 +3907,7 @@ export default function Ak1Page() {
                       <div className="text-xs text-gray-500 mb-2">
                         Preview Kartu (belakang)
                       </div>
-                      <div className="w-full overflow-auto">
+                      <div className="w-full">
                         <div
                           className="relative"
                           style={{
@@ -3791,7 +3916,7 @@ export default function Ak1Page() {
                           }}
                         >
                           <div
-                            className="relative border-2 border-black bg-white"
+                            className="relative bg-white"
                             style={{
                               width: FRONT_BASE.w,
                               height: FRONT_BASE.h,
@@ -3799,23 +3924,32 @@ export default function Ak1Page() {
                               transformOrigin: "top left",
                             }}
                           >
-                            <div
-                              aria-label="Back"
-                              style={{
-                                width: FRONT_BASE.w,
-                                height: FRONT_BASE.h,
-                                backgroundImage: `url(${backPreviewUrl})`,
-                                backgroundSize: "cover",
-                                backgroundPosition: "center",
-                              }}
-                            />
                             <svg
                               width={FRONT_BASE.w}
                               height={FRONT_BASE.h}
-                              viewBox={`0 0 ${FRONT_BASE.w} ${FRONT_BASE.h}`}
+                              viewBox={`0 0 ${previewLayoutW} ${previewLayoutH}`}
+                              preserveAspectRatio="none"
                               xmlns="http://www.w3.org/2000/svg"
                               style={{ position: "absolute", inset: 0 }}
                             >
+                              {backPreviewUrl ? (
+                                <image
+                                  href={backPreviewUrl}
+                                  x={0}
+                                  y={0}
+                                  width={previewLayoutW}
+                                  height={previewLayoutH}
+                                  preserveAspectRatio="none"
+                                />
+                              ) : (
+                                <rect
+                                  x={0}
+                                  y={0}
+                                  width={previewLayoutW}
+                                  height={previewLayoutH}
+                                  fill="white"
+                                />
+                              )}
                               {(layout?.coordinates || [])
                                 .filter((f) => f.side === "back")
                                 .map((f: Ak1LayoutField, i: number) => {
