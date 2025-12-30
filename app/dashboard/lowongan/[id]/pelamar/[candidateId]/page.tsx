@@ -30,7 +30,7 @@ type CandidateDetail = {
   status_perkawinan: string;
   email?: string | null;
   created_at?: string;
-  ak1_status?: "APPROVED" | "REJECTED" | "PENDING";
+  ak1_status?: "APPROVED" | "REJECTED" | "PENDING" | "PLACED";
   cv_file?: string;
   resume_text?: string;
 };
@@ -220,10 +220,15 @@ export default function ApplicantDetailPage() {
                     {candidate.full_name.charAt(0).toUpperCase()}
                   </div>
                 )}
-                {candidate.ak1_status === "APPROVED" && (
+                {(candidate.ak1_status === "APPROVED" ||
+                  candidate.ak1_status === "PLACED") && (
                   <div
-                    className="absolute bottom-1 right-1 w-6 h-6 bg-green-500 border-2 border-white rounded-full flex items-center justify-center"
-                    title="AK1 Terverifikasi"
+                    className={`absolute bottom-1 right-1 w-6 h-6 ${candidate.ak1_status === "PLACED" ? "bg-blue-500" : "bg-green-500"} border-2 border-white rounded-full flex items-center justify-center`}
+                    title={
+                      candidate.ak1_status === "PLACED"
+                        ? "Sudah Ditempatkan"
+                        : "AK1 Terverifikasi"
+                    }
                   >
                     <i className="ri-check-line text-white text-xs"></i>
                   </div>
@@ -244,10 +249,23 @@ export default function ApplicantDetailPage() {
                       ? "bg-green-50 text-green-700 border-green-100"
                       : candidate.ak1_status === "REJECTED"
                         ? "bg-red-50 text-red-700 border-red-100"
-                        : "bg-yellow-50 text-yellow-700 border-yellow-100"
+                        : candidate.ak1_status === "PENDING"
+                          ? "bg-yellow-50 text-yellow-700 border-yellow-100"
+                          : candidate.ak1_status === "PLACED"
+                            ? "bg-blue-50 text-blue-700 border-blue-100"
+                            : "bg-gray-50 text-gray-700 border-gray-100"
                   }`}
                 >
-                  AK1: {candidate.ak1_status || "PENDING"}
+                  AK1:{" "}
+                  {candidate.ak1_status === "APPROVED"
+                    ? "Aktif"
+                    : candidate.ak1_status === "REJECTED"
+                      ? "Ditolak"
+                      : candidate.ak1_status === "PENDING"
+                        ? "Sedang Melakukan Pengajuan"
+                        : candidate.ak1_status === "PLACED"
+                          ? "Sudah Ditempatkan"
+                          : "Belum Melakukan Pengajuan"}
                 </span>
               </div>
 

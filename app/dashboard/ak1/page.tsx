@@ -562,9 +562,14 @@ export default function Ak1Page() {
         PROCESS: "Menunggu Verifikasi",
         GENERATE: "Menunggu Pembuatan",
         REJECTED: "Ditolak",
+        PLACED: "Sudah Ditempatkan",
       }) as Record<
         string,
-        "Aktif" | "Menunggu Verifikasi" | "Ditolak" | "Menunggu Pembuatan"
+        | "Aktif"
+        | "Menunggu Verifikasi"
+        | "Ditolak"
+        | "Menunggu Pembuatan"
+        | "Sudah Ditempatkan"
       >,
     [],
   );
@@ -578,6 +583,8 @@ export default function Ak1Page() {
         return "bg-blue-100 text-blue-800";
       case "Ditolak":
         return "bg-red-100 text-red-800";
+      case "Sudah Ditempatkan":
+        return "bg-violet-100 text-violet-800";
       default:
         return "bg-gray-100 text-gray-800";
     }

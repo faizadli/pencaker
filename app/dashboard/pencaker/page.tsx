@@ -129,7 +129,7 @@ export default function PencakerPage() {
     status_perkawinan: string;
     email?: string | null;
     created_at?: string;
-    ak1_status?: "APPROVED" | "REJECTED" | "PENDING";
+    ak1_status?: "APPROVED" | "REJECTED" | "PENDING" | "PLACED";
     cv_file?: string;
     resume_text?: string;
   };
@@ -342,12 +342,14 @@ export default function PencakerPage() {
             foto: c.photo_profile || "https://picsum.photos/200",
             ak1Status:
               c.ak1_status === "APPROVED"
-                ? "Terverifikasi"
+                ? "Aktif"
                 : c.ak1_status === "REJECTED"
                   ? "Ditolak"
                   : c.ak1_status === "PENDING"
-                    ? "Menunggu Verifikasi"
-                    : "-",
+                    ? "Sedang Melakukan Pengajuan"
+                    : c.ak1_status === "PLACED"
+                      ? "Sudah Ditempatkan"
+                      : "Belum Melakukan Pengajuan",
             pelatihan: [],
             birthdate: c.birthdate, // Added for filtering
             createdAt: c.created_at, // Use real created_at from API

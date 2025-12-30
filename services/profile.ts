@@ -128,7 +128,7 @@ export async function upsertCandidateProfile(payload: {
 
 export async function getCandidateProfile(user_id: string) {
   const resp = await fetch(
-    `${BASE}/api/profile/candidate?user_id=${encodeURIComponent(user_id)}`,
+    `${BASE}/api/profile/candidate?user_id=${encodeURIComponent(user_id)}&_t=${Date.now()}`,
     { headers: { ...authHeader() } },
   );
   if (!resp.ok) throw new Error("Gagal mengambil profil pencaker");

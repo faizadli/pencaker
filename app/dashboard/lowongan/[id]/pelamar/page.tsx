@@ -315,6 +315,7 @@ export default function PelamarLowonganPage() {
         placement_regency: placementType === "AKAD" ? placementRegency : null,
         placement_country: placementType === "AKAN" ? placementCountry : null,
       });
+
       showSuccess("Penempatan berhasil disimpan");
       setShowPlacementModal(false);
       await fetchData();

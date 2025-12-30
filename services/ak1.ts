@@ -9,6 +9,10 @@ export async function getAk1Document(user_id?: string, candidate_id?: string) {
   let q = "";
   if (candidate_id) q = `?candidate_id=${encodeURIComponent(candidate_id)}`;
   else if (user_id) q = `?user_id=${encodeURIComponent(user_id)}`;
+
+  // Cache buster
+  q += (q ? "&" : "?") + `_t=${Date.now()}`;
+
   const resp = await fetch(`${BASE}/api/profile/candidate/ak1/document${q}`, {
     headers: { ...authHeader() },
   });
@@ -128,7 +132,7 @@ export async function deleteAk1Template(name: string) {
 
 export async function verifyAk1(payload: {
   ak1_document_id: string;
-  status: "APPROVED" | "REJECTED";
+  status: "APPROVED" | "REJECTED" | "PLACED";
   file?: string;
   no_urut_pendaftaran?: string;
   no_pendaftaran_pencari_kerja?: string;

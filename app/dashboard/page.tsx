@@ -2,14 +2,14 @@
 import dynamic from "next/dynamic";
 import FullPageLoading from "../../components/ui/FullPageLoading";
 import StatCard from "../../components/ui/StatCard";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { listRoles, getRolePermissions } from "../../services/rbac";
 import {
   listCandidates,
   getCompanyProfile,
   getCandidateProfile,
 } from "../../services/profile";
-import { getAk1Document } from "../../services/ak1";
+import { getAk1Document, listAk1Documents } from "../../services/ak1";
 import {
   listJobs,
   listApplications,
@@ -157,14 +157,30 @@ function DashboardPageComponent() {
     if (role) loadPerms();
   }, [role]);
 
-  const getCssVar = (name: string) =>
-    typeof window !== "undefined"
-      ? getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-      : "";
-  const primaryColor = getCssVar("--color-primary");
-  const secondaryColor = getCssVar("--color-secondary");
-  const primaryDark = getCssVar("--color-primary-dark");
-  const foregroundColor = getCssVar("--color-foreground");
+  const primaryColor = "var(--color-primary)";
+  const secondaryColor = "var(--color-secondary)";
+  const primaryDark = "var(--color-primary-dark)";
+  const foregroundColor = "var(--color-foreground)";
+
+  const apiToUIStatusAk1 = useMemo(
+    () =>
+      ({
+        APPROVED: "Aktif",
+        PENDING: "Menunggu Verifikasi",
+        PROCESS: "Menunggu Verifikasi",
+        GENERATE: "Menunggu Pembuatan",
+        REJECTED: "Ditolak",
+        PLACED: "Sudah Ditempatkan",
+      }) as Record<
+        string,
+        | "Aktif"
+        | "Menunggu Verifikasi"
+        | "Ditolak"
+        | "Menunggu Pembuatan"
+        | "Sudah Ditempatkan"
+      >,
+    [],
+  );
 
   const isCompany = role === "company";
   const isCandidate = role === "candidate";
@@ -203,14 +219,32 @@ function DashboardPageComponent() {
     isVerified: true,
   });
   const [candidateStats, setCandidateStats] = useState({
-    ak1Status: "Belum Mengajukan",
+    ak1Status: "Belum Melakukan Pengajuan",
     ak1Color: secondaryColor,
+    rawDebug: "",
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadStats = async () => {
       setLoading(true);
+
+      const getAk1StatusColor = (status: string) => {
+        switch (status) {
+          case "Aktif":
+            return "#22C55E";
+          case "Menunggu Verifikasi":
+            return "#EAB308";
+          case "Menunggu Pembuatan":
+            return "#3B82F6";
+          case "Ditolak":
+            return "#EF4444";
+          case "Sudah Ditempatkan":
+            return "#8B5CF6"; // Violet
+          default:
+            return secondaryColor;
+        }
+      };
 
       if (isCandidate) {
         try {
@@ -220,41 +254,83 @@ function DashboardPageComponent() {
                 localStorage.getItem("user_id") ||
                 ""
               : "";
+
+          console.log("Fetching dashboard stats. UID:", uid);
+
+          let ak1Doc: { status?: string } | null = null;
+          let profile: { ak1_status?: string; doc_status?: string } | null =
+            null;
+
           if (uid) {
-            const [ak1Resp] = await Promise.all([
-              getAk1Document(uid).catch(() => null),
-            ]);
-
-            // Handle AK1 Status
-            const ak1Doc = (ak1Resp?.data || ak1Resp) as {
-              status?: string;
-            } | null;
-            let ak1Status = "Belum Mengajukan";
-            let ak1Color = secondaryColor;
-
-            if (ak1Doc && ak1Doc.status) {
-              const s = String(ak1Doc.status).toLowerCase();
-              if (s === "process") {
-                ak1Status = "Verifikasi";
-                ak1Color = "#EAB308"; // Yellow
-              } else if (s === "generate") {
-                ak1Status = "Pembuatan";
-                ak1Color = "#3B82F6"; // Blue
-              } else if (s === "approved") {
-                ak1Status = "Aktif";
-                ak1Color = "#22C55E"; // Green
-              } else {
-                ak1Status = s; // Fallback
-                ak1Color = secondaryColor;
-              }
+            // Sequential fetch to debug potential race conditions
+            try {
+              const ak1Resp = await getAk1Document(uid);
+              console.log("AK1 Resp:", ak1Resp);
+              ak1Doc = (ak1Resp?.data || ak1Resp) as { status?: string } | null;
+            } catch (e) {
+              console.error("AK1 Fetch Error:", e);
             }
 
-            setCandidateStats({
-              ak1Status,
-              ak1Color,
-            });
+            try {
+              const profileResp = await getCandidateProfile(uid);
+              console.log("Profile Resp:", profileResp);
+              profile = (profileResp?.data || profileResp) as {
+                ak1_status?: string;
+                doc_status?: string;
+              } | null;
+            } catch (e) {
+              console.error("Profile Fetch Error:", e);
+            }
           }
-        } catch {}
+
+          let ak1Status = "Belum Melakukan Pengajuan";
+          let ak1Color = secondaryColor;
+
+          let rawStatus =
+            profile?.ak1_status || profile?.doc_status || ak1Doc?.status;
+          console.log("Raw Status Detected (from profile/doc):", rawStatus);
+
+          // Fallback to listAk1Documents (works with token only) if status is missing
+          if (!rawStatus) {
+            try {
+              const docsResp = await listAk1Documents();
+              const docs = (docsResp?.data || docsResp) as Array<{
+                status?: string;
+              }>;
+              if (Array.isArray(docs) && docs.length > 0) {
+                // Find approved or take the first one
+                const found =
+                  docs.find(
+                    (d) => String(d.status).toUpperCase() === "APPROVED",
+                  ) || docs[0];
+                if (found && found.status) {
+                  rawStatus = found.status;
+                }
+              }
+            } catch (e) {
+              console.error("List AK1 Error:", e);
+            }
+          }
+
+          if (rawStatus) {
+            const mapped =
+              apiToUIStatusAk1[String(rawStatus).toUpperCase()] ||
+              String(rawStatus);
+            ak1Status = mapped;
+            ak1Color = getAk1StatusColor(mapped);
+          }
+
+          setCandidateStats({
+            ak1Status,
+            ak1Color,
+            rawDebug: String(rawStatus || (uid ? "null" : "no-uid")),
+          });
+        } catch (e) {
+          setCandidateStats((prev) => ({
+            ...prev,
+            rawDebug: `Error: ${e instanceof Error ? e.message : String(e)}`,
+          }));
+        }
         setLoading(false);
         return;
       }
@@ -440,7 +516,7 @@ function DashboardPageComponent() {
       setStats(next);
       setLoading(false);
     };
-    if (canSeeOverview) {
+    if (canSeeOverview || isCandidate || isCompany) {
       loadStats();
     } else {
       const t = setTimeout(() => setLoading(false), 0);
@@ -455,6 +531,7 @@ function DashboardPageComponent() {
     isCompany,
     isCandidate,
     secondaryColor,
+    apiToUIStatusAk1,
   ]);
 
   if (loading) {
@@ -485,7 +562,7 @@ function DashboardPageComponent() {
                 <StatCard
                   title="Status AK1"
                   value={candidateStats.ak1Status}
-                  change="Status terkini"
+                  change={`Status terkini (${candidateStats.rawDebug})`}
                   color={candidateStats.ak1Color}
                   icon="ri-id-card-line"
                 />
