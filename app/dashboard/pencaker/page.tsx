@@ -9,7 +9,6 @@ import {
   SearchableSelect,
   SearchableSelectOption,
   Textarea,
-  SegmentedToggle,
 } from "../../../components/ui/field";
 import Pagination from "../../../components/ui/Pagination";
 import Modal from "../../../components/ui/Modal";
@@ -125,6 +124,7 @@ export default function PencakerPage() {
     no_handphone: string;
     photo_profile?: string;
     last_education: string;
+    education_name?: string;
     graduation_year: number;
     status_perkawinan: string;
     email?: string | null;
@@ -334,7 +334,7 @@ export default function PencakerPage() {
                 : c.gender === "P"
                   ? "Perempuan"
                   : c.gender || "-",
-            pendidikan: c.last_education || "-",
+            pendidikan: c.education_name || c.last_education || "-",
             telepon: c.no_handphone || "-",
             email: c.email || "-",
             alamat: c.address || "-",
@@ -606,7 +606,6 @@ export default function PencakerPage() {
                         <TH>Nama / NIK</TH>
                         <TH>TTL / Umur</TH>
                         <TH>Pendidikan</TH>
-                        <TH>Status Perkawinan</TH>
                         <TH>Kontak</TH>
                         <TH>Status AK1</TH>
                         <TH className="text-right">Aksi</TH>
@@ -675,11 +674,6 @@ export default function PencakerPage() {
                                   {p.pendidikan}
                                 </div>
                                 {/* <div className="text-xs text-gray-500">{pTyped.jurusan || "-"}</div> */}
-                              </TD>
-                              <TD>
-                                <div className="text-sm text-gray-900 capitalize">
-                                  {pTyped.statusPerkawinan}
-                                </div>
                               </TD>
                               <TD>
                                 <div className="text-sm text-gray-900">
@@ -952,8 +946,8 @@ export default function PencakerPage() {
                           gender: formCandidate.gender,
                           photo_profile: formCandidate.photo_profile,
                           last_education: formCandidate.last_education,
-                          graduation_year: Number(
-                            formCandidate.graduation_year,
+                          graduation_year: String(
+                            formCandidate.graduation_year || "",
                           ),
                           status_perkawinan: formCandidate.status_perkawinan,
                           cv_file:
@@ -995,8 +989,8 @@ export default function PencakerPage() {
                           gender: formCandidate.gender,
                           photo_profile: formCandidate.photo_profile,
                           last_education: formCandidate.last_education,
-                          graduation_year: Number(
-                            formCandidate.graduation_year,
+                          graduation_year: String(
+                            formCandidate.graduation_year || "",
                           ),
                           status_perkawinan: formCandidate.status_perkawinan,
                           cv_file:
@@ -1040,8 +1034,13 @@ export default function PencakerPage() {
                         nama: c.full_name,
                         nik: c.nik,
                         ttl: `${c.place_of_birth || "-"}, ${c.birthdate ? new Date(c.birthdate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "-"}`,
-                        jenisKelamin: c.gender || "-",
-                        pendidikan: c.last_education || "-",
+                        jenisKelamin:
+                          c.gender === "L"
+                            ? "Laki-laki"
+                            : c.gender === "P"
+                              ? "Perempuan"
+                              : c.gender || "-",
+                        pendidikan: c.education_name || c.last_education || "-",
                         telepon: c.no_handphone || "-",
                         email: c.email || "-",
                         alamat: c.address || "-",
@@ -1049,12 +1048,14 @@ export default function PencakerPage() {
                         foto: c.photo_profile || "https://picsum.photos/200",
                         ak1Status:
                           c.ak1_status === "APPROVED"
-                            ? "Terverifikasi"
+                            ? "Aktif"
                             : c.ak1_status === "REJECTED"
                               ? "Ditolak"
                               : c.ak1_status === "PENDING"
-                                ? "Menunggu Verifikasi"
-                                : "-",
+                                ? "Sedang Melakukan Pengajuan"
+                                : c.ak1_status === "PLACED"
+                                  ? "Sudah Ditempatkan"
+                                  : "Belum Melakukan Pengajuan",
                         pelatihan: [],
                       })) as Pencaker[];
                       setPencakers(mapped);
@@ -1286,87 +1287,107 @@ export default function PencakerPage() {
                 <label className="block text-sm font-medium text-gray-500">
                   CV / Resume
                 </label>
-                <SegmentedToggle
-                  options={[
-                    { value: "file", label: "Upload File" },
-                    { value: "text", label: "Isi Text" },
-                  ]}
-                  value={resumeType}
-                  onChange={(v) => setResumeType(v as "file" | "text")}
-                />
 
-                {resumeType === "file" ? (
-                  <div>
-                    {formCandidate.cv_file && (
-                      <div className="text-sm text-blue-600 mb-2">
-                        <a
-                          href={formCandidate.cv_file}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="underline flex items-center gap-1"
-                        >
-                          <i className="ri-file-text-line"></i> Lihat CV Saat
-                          Ini
-                        </a>
-                      </div>
-                    )}
-                    <Input
-                      type="file"
-                      accept=".pdf"
-                      onChange={async (e) => {
-                        const f = (e.target as HTMLInputElement).files?.[0];
-                        if (!f) return;
-                        try {
-                          if (f.size > 5 * 1024 * 1024) {
-                            showError("Ukuran file maksimal 5MB");
-                            return;
+                {/* Tab Menu Style Toggle */}
+                <div className="flex border-b border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setResumeType("file")}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-200 ${
+                      resumeType === "file"
+                        ? "border-primary text-primary"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    Upload File
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setResumeType("text")}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-200 ${
+                      resumeType === "text"
+                        ? "border-primary text-primary"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    Isi Text
+                  </button>
+                </div>
+
+                <div className="pt-2">
+                  {resumeType === "file" ? (
+                    <div>
+                      {formCandidate.cv_file && (
+                        <div className="text-sm text-blue-600 mb-2">
+                          <a
+                            href={formCandidate.cv_file}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline flex items-center gap-1"
+                          >
+                            <i className="ri-file-text-line"></i> Lihat CV Saat
+                            Ini
+                          </a>
+                        </div>
+                      )}
+                      <Input
+                        type="file"
+                        accept=".pdf"
+                        onChange={async (e) => {
+                          const f = (e.target as HTMLInputElement).files?.[0];
+                          if (!f) return;
+                          try {
+                            if (f.size > 5 * 1024 * 1024) {
+                              showError("Ukuran file maksimal 5MB");
+                              return;
+                            }
+                            const presign = await presignCandidateProfileUpload(
+                              "cv",
+                              f.name,
+                              f.type,
+                            );
+                            const uploadRes = await fetch(presign.url, {
+                              method: "PUT",
+                              body: f,
+                              headers: { "Content-Type": f.type },
+                            });
+                            if (!uploadRes.ok)
+                              throw new Error("Gagal upload ke storage");
+
+                            const objectUrl = presign.url.includes("?")
+                              ? presign.url.slice(0, presign.url.indexOf("?"))
+                              : presign.url;
+
+                            setFormCandidate({
+                              ...formCandidate,
+                              cv_file: objectUrl,
+                            });
+                            showSuccess("CV berhasil diunggah");
+                          } catch {
+                            showError("Gagal mengupload CV");
                           }
-                          const presign = await presignCandidateProfileUpload(
-                            "cv",
-                            f.name,
-                            f.type,
-                          );
-                          const uploadRes = await fetch(presign.url, {
-                            method: "PUT",
-                            body: f,
-                            headers: { "Content-Type": f.type },
-                          });
-                          if (!uploadRes.ok)
-                            throw new Error("Gagal upload ke storage");
-
-                          const objectUrl = presign.url.includes("?")
-                            ? presign.url.slice(0, presign.url.indexOf("?"))
-                            : presign.url;
-
-                          setFormCandidate({
-                            ...formCandidate,
-                            cv_file: objectUrl,
-                          });
-                          showSuccess("CV berhasil diunggah");
-                        } catch {
-                          showError("Gagal mengupload CV");
-                        }
-                      }}
-                      error={fieldErrors.cv_file}
+                        }}
+                        error={fieldErrors.cv_file}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Format: PDF. Maksimal 5MB.
+                      </p>
+                    </div>
+                  ) : (
+                    <Textarea
+                      placeholder="Tuliskan pengalaman kerja, pendidikan, dan keahlian..."
+                      value={formCandidate.resume_text}
+                      onChange={(e) =>
+                        setFormCandidate({
+                          ...formCandidate,
+                          resume_text: e.target.value,
+                        })
+                      }
+                      rows={6}
+                      error={fieldErrors.resume_text}
                     />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Format: PDF. Maksimal 5MB.
-                    </p>
-                  </div>
-                ) : (
-                  <Textarea
-                    placeholder="Tuliskan pengalaman kerja, pendidikan, dan keahlian..."
-                    value={formCandidate.resume_text}
-                    onChange={(e) =>
-                      setFormCandidate({
-                        ...formCandidate,
-                        resume_text: e.target.value,
-                      })
-                    }
-                    rows={6}
-                    error={fieldErrors.resume_text}
-                  />
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </Modal>

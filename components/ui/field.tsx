@@ -535,7 +535,7 @@ export function SearchableSelect({
                         setOpen(false);
                         setQuery("");
                       }}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${o.indent ? "pl-8" : ""} ${o.value === value ? "bg-secondary/20 text-primary font-medium" : "text-gray-900"}`}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${o.indent ? "pl-8" : ""} ${o.value === value ? "bg-primary/10 text-primary font-bold" : "text-gray-900"}`}
                     >
                       {o.label}
                     </button>

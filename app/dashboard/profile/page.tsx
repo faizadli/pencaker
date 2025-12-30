@@ -1,9 +1,10 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import {
   Input,
   SearchableSelect,
+  SearchableSelectOption,
   Textarea,
 } from "../../../components/ui/field";
 import Card from "../../../components/ui/Card";
@@ -27,6 +28,7 @@ import {
   disnakerProfileUpdateSchema,
 } from "../../../utils/zod-schemas";
 import { listDistricts, listVillages } from "../../../services/wilayah";
+import { getEducationGroups } from "../../../services/site";
 import { useToast } from "../../../components/ui/Toast";
 
 export default function ProfilePage() {
@@ -95,6 +97,54 @@ export default function ProfilePage() {
   const [villageOptionsCandidate, setVillageOptionsCandidate] = useState<
     { value: string; label: string }[]
   >([]);
+
+  type GroupItem = { id?: string; code?: string; name: string };
+  type GroupData = {
+    id?: string;
+    code?: string;
+    name: string;
+    items?: GroupItem[];
+  };
+
+  const [educationGroups, setEducationGroups] = useState<GroupData[]>([]);
+  const [educationOptions, setEducationOptions] = useState<
+    SearchableSelectOption[]
+  >([]);
+
+  const transformGroupsToOptions = useCallback(
+    (
+      groups: GroupData[],
+      valueKey: "id" | "name" = "name",
+      appendGroup = false,
+    ) => {
+      const opts: SearchableSelectOption[] = [];
+      groups.forEach((g) => {
+        opts.push({
+          value: `group-${g.id || g.name}`,
+          label: g.name,
+          isGroup: true,
+        });
+        if (Array.isArray(g.items)) {
+          g.items.forEach((item: GroupItem) => {
+            opts.push({
+              value: String(item[valueKey] || ""),
+              label: appendGroup ? `${item.name} - ${g.name}` : item.name,
+              indent: true,
+            });
+          });
+        }
+      });
+      return opts;
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (educationGroups.length > 0) {
+      setEducationOptions(transformGroupsToOptions(educationGroups, "id"));
+    }
+  }, [educationGroups, transformGroupsToOptions]);
+
   type EmsifaItem = { id: number | string; name: string };
 
   const [disnakerForm, setDisnakerForm] = useState<{
@@ -393,6 +443,34 @@ export default function ProfilePage() {
   }, [candidateForm.kecamatan, districts]);
 
   useEffect(() => {
+    const loadEducationGroups = async () => {
+      try {
+        const eduResp = await getEducationGroups();
+        const eduData = (eduResp.data || eduResp) as {
+          id?: string;
+          name?: string;
+          items?: { id?: string; name?: string }[];
+        }[];
+        setEducationGroups(
+          eduData.map((g) => ({
+            id: String(g.id || ""),
+            name: String(g.name || ""),
+            items: (g.items || []).map((i) => ({
+              id: String(i.id || ""),
+              name: String(i.name || ""),
+            })),
+          })),
+        );
+      } catch (err) {
+        console.error("Failed to load education groups", err);
+      }
+    };
+    if (role === "candidate") {
+      loadEducationGroups();
+    }
+  }, [role]);
+
+  useEffect(() => {
     const fetchProfile = async () => {
       try {
         if (!userId || !role) return;
@@ -454,7 +532,7 @@ export default function ProfilePage() {
               gender: res.data.gender || "",
               no_handphone: res.data.no_handphone || "",
               photo_profile: res.data.photo_profile || "",
-              last_education: res.data.last_education || "",
+              last_education: String(res.data.last_education || ""),
               graduation_year: String(res.data.graduation_year || ""),
               status_perkawinan: res.data.status_perkawinan || "",
               cv_file: res.data.cv_file || "",
@@ -983,13 +1061,7 @@ export default function ProfilePage() {
                             last_education: v,
                           })
                         }
-                        options={[
-                          { value: "", label: "Pilih..." },
-                          { value: "SMA/SMK", label: "SMA/SMK" },
-                          { value: "Diploma", label: "Diploma" },
-                          { value: "S1", label: "S1" },
-                          { value: "S2", label: "S2" },
-                        ]}
+                        options={educationOptions}
                         className="w-full"
                         error={fieldErrors["last_education"]}
                       />

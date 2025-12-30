@@ -36,7 +36,7 @@ import { companyProfileUpdateSchema } from "../../../utils/zod-schemas";
 
 export default function PerusahaanPage() {
   const router = useRouter();
-  const { showError } = useToast();
+  const { showError, showSuccess } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
@@ -497,6 +497,7 @@ export default function PerusahaanPage() {
                             setFormCompany({
                               company_name: p.company_name || "",
                               company_type: p.company_type || "",
+                              nib: p.nib || "",
                               company_logo: p.company_logo || "",
                               no_handphone: p.no_handphone || "",
                               kecamatan: p.kecamatan || "",
@@ -674,6 +675,7 @@ export default function PerusahaanPage() {
                             setFormCompany({
                               company_name: p.company_name || "",
                               company_type: p.company_type || "",
+                              nib: p.nib || "",
                               company_logo: p.company_logo || "",
                               no_handphone: p.no_handphone || "",
                               kecamatan: p.kecamatan || "",
@@ -796,6 +798,7 @@ export default function PerusahaanPage() {
                         search: searchTerm || undefined,
                       });
                       setPerusahaanList((resp.data || resp) as Company[]);
+                      showSuccess("Data perusahaan berhasil disimpan");
                       setShowFormModal(false);
                       setEditingCompanyId(null);
                       setEditingCompanyUserId(null);

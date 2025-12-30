@@ -18,7 +18,7 @@ type CandidateProfilePayload = {
   gender: string;
   photo_profile?: string;
   last_education: string;
-  graduation_year: number;
+  graduation_year: number | string;
   status_perkawinan: string;
   cv_file?: string;
   resume_text?: string;
