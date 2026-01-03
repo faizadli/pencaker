@@ -14,7 +14,6 @@ import {
   candidateAccountSchema,
   candidateProfileSchema,
   candidateAk1FilesSchema,
-  ak1CardSchema,
 } from "../../../utils/zod-schemas";
 import {
   login,
@@ -124,43 +123,6 @@ export default function RegisterCandidate() {
     pas_photo?: File | null;
     certificate?: File | null;
   }>({ ktp: null, ijazah: null, pas_photo: null, certificate: null });
-  const [hasAk1Card, setHasAk1Card] = useState<string>("ya");
-  const [ak1CardFile, setAk1CardFile] = useState<File | null>(null);
-  const [ak1CreatedAt, setAk1CreatedAt] = useState<string>("");
-  const [ak1Expired1, setAk1Expired1] = useState<string>("");
-  const [ak1Expired2, setAk1Expired2] = useState<string>("");
-  const [ak1Expired3, setAk1Expired3] = useState<string>("");
-  const [ak1Expired4, setAk1Expired4] = useState<string>("");
-
-  useEffect(() => {
-    if (!ak1CreatedAt) {
-      setAk1Expired1("");
-      setAk1Expired2("");
-      setAk1Expired3("");
-      setAk1Expired4("");
-      return;
-    }
-    const d = new Date(ak1CreatedAt);
-    if (Number.isNaN(d.getTime())) return;
-
-    const addMonths = (date: Date, months: number) => {
-      const newDate = new Date(date);
-      newDate.setMonth(newDate.getMonth() + months);
-      return newDate;
-    };
-    const fmt = (date: Date) => date.toISOString().split("T")[0];
-
-    const exp1 = addMonths(d, 6);
-    setAk1Expired1(fmt(exp1));
-    const exp2 = addMonths(exp1, 6);
-    setAk1Expired2(fmt(exp2));
-    const exp3 = addMonths(exp2, 6);
-    setAk1Expired3(fmt(exp3));
-    const exp4 = addMonths(exp3, 6);
-    setAk1Expired4(fmt(exp4));
-  }, [ak1CreatedAt]);
-
-  const [ak1NoReg, setAk1NoReg] = useState<string>("");
   const [skills, setSkills] = useState<string[]>([]);
   const [finalized, setFinalized] = useState(false);
 
@@ -388,47 +350,25 @@ export default function RegisterCandidate() {
     setError("");
     setFieldErrors({});
 
-    if (hasAk1Card === "ya") {
-      const dataToValidate = {
-        file: ak1CardFile,
-        created_at: ak1CreatedAt,
-        registration_number: ak1NoReg,
-      };
-      const result = ak1CardSchema.safeParse(dataToValidate);
-      if (!result.success) {
-        const formattedErrors: Record<string, string> = {};
-        result.error.issues.forEach((err) => {
-          if (err.path[0]) formattedErrors[err.path[0] as string] = err.message;
-        });
-        setFieldErrors(formattedErrors);
-        // Map specific file errors to generic error if needed or rely on inline
-        if (formattedErrors.file) setError(formattedErrors.file);
-        else if (formattedErrors.registration_number)
-          setError(formattedErrors.registration_number);
-        else setError("Mohon lengkapi data Kartu AK1 dengan benar.");
-        return;
-      }
-    } else {
-      const dataToValidate = {
-        ktp: ak1Files.ktp,
-        ijazah: ak1Files.ijazah,
-        pas_photo: ak1Files.pas_photo,
-        certificate: ak1Files.certificate,
-      };
-      const result = candidateAk1FilesSchema.safeParse(dataToValidate);
-      if (!result.success) {
-        const formattedErrors: Record<string, string> = {};
-        result.error.issues.forEach((err) => {
-          if (err.path[0]) formattedErrors[err.path[0] as string] = err.message;
-        });
-        setFieldErrors(formattedErrors);
-        // Map specific file errors
-        if (formattedErrors.ktp) setError(formattedErrors.ktp);
-        else if (formattedErrors.ijazah) setError(formattedErrors.ijazah);
-        else if (formattedErrors.pas_photo) setError(formattedErrors.pas_photo);
-        else setError("Mohon lengkapi dokumen AK1 dengan benar.");
-        return;
-      }
+    const dataToValidate = {
+      ktp: ak1Files.ktp,
+      ijazah: ak1Files.ijazah,
+      pas_photo: ak1Files.pas_photo,
+      certificate: ak1Files.certificate,
+    };
+    const result = candidateAk1FilesSchema.safeParse(dataToValidate);
+    if (!result.success) {
+      const formattedErrors: Record<string, string> = {};
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) formattedErrors[err.path[0] as string] = err.message;
+      });
+      setFieldErrors(formattedErrors);
+      // Map specific file errors
+      if (formattedErrors.ktp) setError(formattedErrors.ktp);
+      else if (formattedErrors.ijazah) setError(formattedErrors.ijazah);
+      else if (formattedErrors.pas_photo) setError(formattedErrors.pas_photo);
+      else setError("Mohon lengkapi dokumen AK1 dengan benar.");
+      return;
     }
 
     setStep(4);
@@ -547,17 +487,6 @@ export default function RegisterCandidate() {
         setStep(2);
         return;
       }
-      if (
-        ak1CardFile &&
-        !(ak1CardFile.type && ak1CardFile.type.startsWith("image/")) &&
-        tooLarge(ak1CardFile)
-      ) {
-        setError(
-          `Ukuran file AK1 terlalu besar (> ${limitMB}MB). Kompres atau unggah versi lebih kecil.`,
-        );
-        setStep(3);
-        return;
-      }
 
       const photoPromise = photoFile
         ? (async () => {
@@ -601,42 +530,7 @@ export default function RegisterCandidate() {
             );
           })()
         : Promise.resolve(undefined);
-      const ak1CardPromise =
-        hasAk1Card === "ya" && ak1CardFile
-          ? (async () => {
-              if (ak1CardFile.type && ak1CardFile.type.startsWith("image/")) {
-                const blob = await compressImage(ak1CardFile);
-                const filename = ak1CardFile.name.replace(/\.[^.]+$/, ".jpg");
-                const pre = await presignCandidateProfileUpload(
-                  "candidate/ak1",
-                  filename,
-                  "image/jpeg",
-                );
-                return await putSigned(
-                  pre.url,
-                  blob,
-                  "image/jpeg",
-                  pre.public_url,
-                );
-              }
-              const pre = await presignCandidateProfileUpload(
-                "candidate/ak1",
-                ak1CardFile.name,
-                ak1CardFile.type || "application/octet-stream",
-              );
-              return await putSigned(
-                pre.url,
-                ak1CardFile,
-                ak1CardFile.type || "application/octet-stream",
-                pre.public_url,
-              );
-            })()
-          : Promise.resolve(undefined);
-      const [photoUrl, cvUrl, ak1Url] = await Promise.all([
-        photoPromise,
-        cvPromise,
-        ak1CardPromise,
-      ]);
+      const [photoUrl, cvUrl] = await Promise.all([photoPromise, cvPromise]);
       const basePayload = {
         user_id: uid,
         full_name: profile.full_name,
@@ -669,24 +563,7 @@ export default function RegisterCandidate() {
           ? maybeData
           : profUnknown;
       const candidateId = String((src as { id?: string }).id || "");
-      if (hasAk1Card === "ya" && ak1Url) {
-        await upsertAk1Document({
-          candidate_id: candidateId,
-          card_file: ak1Url,
-          card_created_at: ak1CreatedAt || undefined,
-          no_pendaftaran_pencari_kerja: ak1NoReg || undefined,
-          expired1: ak1Expired1 || undefined,
-          expired2: ak1Expired2 || undefined,
-          expired3: ak1Expired3 || undefined,
-          expired4: ak1Expired4 || undefined,
-        });
-      }
-      if (
-        hasAk1Card !== "ya" &&
-        ak1Files.ktp &&
-        ak1Files.ijazah &&
-        ak1Files.pas_photo
-      ) {
+      if (ak1Files.ktp && ak1Files.ijazah && ak1Files.pas_photo) {
         const prepare = async (f: File) => {
           if (f.type && f.type.startsWith("image/")) {
             const blob = await compressImage(f);
@@ -1306,138 +1183,95 @@ export default function RegisterCandidate() {
                   {error}
                 </div>
               )}
-              <SegmentedToggle
-                options={[
-                  { value: "ya", label: "Sudah punya" },
-                  { value: "tidak", label: "Belum punya" },
-                ]}
-                value={hasAk1Card}
-                onChange={(v) => setHasAk1Card(v)}
-              />
-              {hasAk1Card === "ya" ? (
-                <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 gap-3">
+                <Input
+                  label="Scan KTP (JPG/PNG)"
+                  type="file"
+                  onChange={(e) =>
+                    uploadFile(
+                      "ktp",
+                      (e.target as HTMLInputElement).files?.[0] || undefined,
+                    )
+                  }
+                  error={fieldErrors.ktp}
+                />
+                <Input
+                  label="Ijazah (PDF)"
+                  type="file"
+                  onChange={(e) =>
+                    uploadFile(
+                      "ijazah",
+                      (e.target as HTMLInputElement).files?.[0] || undefined,
+                    )
+                  }
+                  error={fieldErrors.ijazah}
+                />
+                <Input
+                  label="Pas Foto (JPG/PNG)"
+                  type="file"
+                  onChange={(e) =>
+                    uploadFile(
+                      "pas_photo",
+                      (e.target as HTMLInputElement).files?.[0] || undefined,
+                    )
+                  }
+                  error={fieldErrors.pas_photo}
+                />
+                <Input
+                  label="Sertifikat (PDF, Opsional)"
+                  type="file"
+                  onChange={(e) =>
+                    uploadFile(
+                      "certificate",
+                      (e.target as HTMLInputElement).files?.[0] || undefined,
+                    )
+                  }
+                  error={fieldErrors.certificate}
+                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Keterampilan
+                  </label>
                   <Input
-                    label="File Kartu AK1 (PDF)"
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) =>
-                      setAk1CardFile(
-                        (e.target as HTMLInputElement).files?.[0] || null,
-                      )
-                    }
-                    error={fieldErrors.file}
-                  />
-                  <Input
-                    label="Nomor Pendaftaran Pencari Kerja"
-                    value={ak1NoReg}
-                    onChange={(e) => setAk1NoReg(e.target.value)}
-                    error={fieldErrors.registration_number}
-                  />
-                  <Input
-                    label="Tanggal Kartu Dibuat"
-                    type="date"
-                    value={ak1CreatedAt}
-                    onChange={(e) => setAk1CreatedAt(e.target.value)}
-                    error={fieldErrors.created_at}
-                  />
-                  <p className="text-xs text-gray-500">
-                    Isi data kartu jika Anda sudah memiliki kartu AK1.
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-3">
-                  <Input
-                    label="Scan KTP (JPG/PNG)"
-                    type="file"
-                    onChange={(e) =>
-                      uploadFile(
-                        "ktp",
-                        (e.target as HTMLInputElement).files?.[0] || undefined,
-                      )
-                    }
-                    error={fieldErrors.ktp}
-                  />
-                  <Input
-                    label="Ijazah (PDF)"
-                    type="file"
-                    onChange={(e) =>
-                      uploadFile(
-                        "ijazah",
-                        (e.target as HTMLInputElement).files?.[0] || undefined,
-                      )
-                    }
-                    error={fieldErrors.ijazah}
-                  />
-                  <Input
-                    label="Pas Foto (JPG/PNG)"
-                    type="file"
-                    onChange={(e) =>
-                      uploadFile(
-                        "pas_photo",
-                        (e.target as HTMLInputElement).files?.[0] || undefined,
-                      )
-                    }
-                    error={fieldErrors.pas_photo}
-                  />
-                  <Input
-                    label="Sertifikat (PDF, Opsional)"
-                    type="file"
-                    onChange={(e) =>
-                      uploadFile(
-                        "certificate",
-                        (e.target as HTMLInputElement).files?.[0] || undefined,
-                      )
-                    }
-                    error={fieldErrors.certificate}
-                  />
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Keterampilan
-                    </label>
-                    <Input
-                      placeholder="Ketik keterampilan lalu tekan Enter"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          const val = (
-                            e.target as HTMLInputElement
-                          ).value.trim();
-                          if (val && !skills.includes(val)) {
-                            setSkills([...skills, val]);
-                            (e.target as HTMLInputElement).value = "";
-                          }
+                    placeholder="Ketik keterampilan lalu tekan Enter"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const val = (e.target as HTMLInputElement).value.trim();
+                        if (val && !skills.includes(val)) {
+                          setSkills([...skills, val]);
+                          (e.target as HTMLInputElement).value = "";
                         }
-                      }}
-                    />
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {skills.map((s) => (
-                        <span
-                          key={s}
-                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                      }
+                    }}
+                  />
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {skills.map((s) => (
+                      <span
+                        key={s}
+                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                      >
+                        {s}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSkills(skills.filter((x) => x !== s))
+                          }
+                          className="text-blue-600 hover:text-blue-800"
                         >
-                          {s}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSkills(skills.filter((x) => x !== s))
-                            }
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            <i className="ri-close-line"></i>
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Tekan Enter untuk menambah keterampilan.
-                    </p>
+                          <i className="ri-close-line"></i>
+                        </button>
+                      </span>
+                    ))}
                   </div>
-                  <p className="text-xs text-gray-500">
-                    Jika belum memiliki AK1, unggah dokumen untuk verifikasi
-                    Disnaker.
+                  <p className="text-xs text-gray-500 mt-1">
+                    Tekan Enter untuk menambah keterampilan.
                   </p>
                 </div>
-              )}
+                <p className="text-xs text-gray-500">
+                  Unggah dokumen untuk verifikasi Disnaker.
+                </p>
+              </div>
               <div className="flex items-center justify-between">
                 <button
                   type="button"

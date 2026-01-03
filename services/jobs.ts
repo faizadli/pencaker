@@ -66,6 +66,42 @@ export async function listPublicJobs(params?: {
   return resp.json();
 }
 
+export async function getLowonganReport(params: {
+  company_id?: string;
+  start_date?: string;
+  end_date?: string;
+}) {
+  const q = new URLSearchParams();
+  if (params.company_id) q.set("company_id", params.company_id);
+  if (params.start_date) q.set("start_date", params.start_date);
+  if (params.end_date) q.set("end_date", params.end_date);
+
+  const resp = await fetch(
+    `${BASE}/api/reports/jobs/lowongan${q.toString() ? `?${q.toString()}` : ""}`,
+    { headers: { ...authHeader() } },
+  );
+  if (!resp.ok) throw new Error("Gagal mengambil laporan lowongan");
+  return resp.json();
+}
+
+export async function getPenempatanReport(params: {
+  company_id?: string;
+  start_date?: string;
+  end_date?: string;
+}) {
+  const q = new URLSearchParams();
+  if (params.company_id) q.set("company_id", params.company_id);
+  if (params.start_date) q.set("start_date", params.start_date);
+  if (params.end_date) q.set("end_date", params.end_date);
+
+  const resp = await fetch(
+    `${BASE}/api/reports/jobs/penempatan${q.toString() ? `?${q.toString()}` : ""}`,
+    { headers: { ...authHeader() } },
+  );
+  if (!resp.ok) throw new Error("Gagal mengambil laporan penempatan");
+  return resp.json();
+}
+
 export async function createJob(payload: JobPayload) {
   const resp = await fetch(`${BASE}/api/jobs`, {
     method: "POST",

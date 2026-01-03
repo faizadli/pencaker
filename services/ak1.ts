@@ -47,6 +47,38 @@ export async function upsertAk1Document(payload: {
   return resp.json();
 }
 
+export async function requestAk1Renewal(candidateId: string) {
+  const resp = await fetch(`${BASE}/api/profile/candidate/ak1/renew`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify({ candidate_id: candidateId }),
+  });
+  if (!resp.ok) throw new Error("Error requesting AK1 renewal");
+  return resp.json();
+}
+
+export async function approveAk1Renewal(payload: {
+  ak1_document_id: string;
+  card_file?: string;
+}) {
+  const resp = await fetch(`${BASE}/api/profile/candidate/ak1/approve-renew`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader() },
+    body: JSON.stringify(payload),
+  });
+  if (!resp.ok) throw new Error("Gagal menyetujui perpanjangan AK1");
+  return resp.json();
+}
+
+export async function checkAk1Expired() {
+  const resp = await fetch(`${BASE}/api/profile/candidate/ak1/check-expired`, {
+    method: "POST",
+    headers: { ...authHeader() },
+  });
+  if (!resp.ok) throw new Error("Gagal memeriksa kadaluarsa AK1");
+  return resp.json();
+}
+
 export type Ak1LayoutField = {
   token: string;
   x: number;
@@ -60,16 +92,26 @@ export type Ak1LayoutField = {
   source?: string;
   side?: "front" | "back";
   textType?: "plain" | "list";
+  w?: number;
+  h?: number;
+  digitSize?: number;
+  align?: "left" | "center" | "right";
 };
 export type Ak1Layout = {
-  name: string;
-  front_width: number;
-  front_height: number;
+  id?: string;
+  id_template: string;
   coordinates: Ak1LayoutField[];
+  // From join
+  front_width?: number;
+  front_height?: number;
+  file_template?: string;
+  template_name?: string;
 };
 
-export async function getAk1Layout(name?: string) {
-  const q = name ? `?name=${encodeURIComponent(name)}` : "";
+export async function getAk1Layout(id_template?: string) {
+  const q = id_template
+    ? `?id_template=${encodeURIComponent(id_template)}`
+    : "";
   const resp = await fetch(`${BASE}/api/ak1/layout${q}`, {
     headers: { ...authHeader() },
   });
@@ -77,7 +119,10 @@ export async function getAk1Layout(name?: string) {
   return resp.json();
 }
 
-export async function upsertAk1Layout(payload: Ak1Layout) {
+export async function upsertAk1Layout(payload: {
+  id_template: string;
+  coordinates: Ak1LayoutField[];
+}) {
   const resp = await fetch(`${BASE}/api/ak1/layout/upsert`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeader() },
@@ -88,8 +133,12 @@ export async function upsertAk1Layout(payload: Ak1Layout) {
 }
 
 export type Ak1Template = {
+  id?: string;
   name: string;
   file_template?: string | null;
+  front_width?: number;
+  front_height?: number;
+  order?: number;
 };
 
 export async function getAk1Template(name?: string) {
@@ -180,7 +229,7 @@ export async function presignDownload(keyOrUrl: string) {
   try {
     if (keyOrUrl.startsWith("http")) {
       const u = new URL(keyOrUrl);
-      filename = u.pathname.replace(/^\//, "");
+      filename = decodeURIComponent(u.pathname.replace(/^\//, ""));
     }
   } catch {}
   const resp = await fetch(`${BASE}/api/uploads/presign`, {

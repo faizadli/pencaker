@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { listCompanies } from "../../services/company";
+import { getLowonganReport, getPenempatanReport } from "../../services/jobs";
 import Card from "../ui/Card";
 import * as ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
@@ -15,6 +16,39 @@ interface Company {
   address?: string;
 }
 
+interface LowonganReportItem {
+  bulan: number;
+  tahun: number;
+  lapangan_usaha: string;
+  kode_jabatan: string;
+  nama_jabatan: string;
+  jumlah_dibutuhkan: number;
+  jenis_kelamin: string;
+  pendidikan: string;
+  jurusan: string;
+  keterampilan: string;
+}
+
+interface PenempatanReportItem {
+  bulan: number;
+  tahun: number;
+  nama_tenaga_kerja: string;
+  nik: string;
+  alamat_tenaga_kerja: string;
+  provinsi: string;
+  kab_kota: string;
+  email: string;
+  nomor_hp: string;
+  jenis_kelamin: string;
+  pendidikan: string;
+  jurusan: string;
+  kab_kota_penempatan: string;
+  nama_jabatan: string;
+  lapangan_usaha: string;
+  tanggal_mulai: string;
+  upah_gaji: number;
+}
+
 export default function LaporanLowonganView({
   onBack,
 }: LaporanLowonganViewProps) {
@@ -25,6 +59,11 @@ export default function LaporanLowonganView({
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [startDate, setStartDate] = useState("2025-08-01");
   const [endDate, setEndDate] = useState("2025-08-31");
+  const [lowonganData, setLowonganData] = useState<LowonganReportItem[]>([]);
+  const [penempatanData, setPenempatanData] = useState<PenempatanReportItem[]>(
+    [],
+  );
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -44,9 +83,54 @@ export default function LaporanLowonganView({
     fetchCompanies();
   }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!selectedCompanyId) {
+        setLowonganData([]);
+        setPenempatanData([]);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        if (activeTab === "lowongan") {
+          const response = await getLowonganReport({
+            company_id: selectedCompanyId,
+            start_date: startDate,
+            end_date: endDate,
+          });
+          if (response && response.data) {
+            setLowonganData(response.data);
+          } else {
+            setLowonganData([]);
+          }
+        } else if (activeTab === "penempatan") {
+          const response = await getPenempatanReport({
+            company_id: selectedCompanyId,
+            start_date: startDate,
+            end_date: endDate,
+          });
+          if (response && response.data) {
+            setPenempatanData(response.data);
+          } else {
+            setPenempatanData([]);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch report data", error);
+        if (activeTab === "lowongan") setLowonganData([]);
+        else setPenempatanData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [activeTab, selectedCompanyId, startDate, endDate]);
+
   const selectedCompany = companies.find((c) => c.id === selectedCompanyId);
 
-  const handleExport = async () => {
+  const handleExport = async (mode: "current" | "all") => {
     const workbook = new ExcelJS.Workbook();
 
     // Create Sheets
@@ -79,7 +163,7 @@ export default function LaporanLowonganView({
       { width: 15 }, // C (Bulan)
       { width: 10 }, // D (Tahun)
       { width: 25 }, // E (Nama TK)
-      { width: 20 }, // F (NIK)
+      { width: 25 }, // F (NIK) - Increased from 20
       { width: 30 }, // G (Alamat)
       { width: 20 }, // H (Prov)
       { width: 20 }, // I (Kab/Kota)
@@ -229,6 +313,145 @@ export default function LaporanLowonganView({
       }
     });
 
+    // Fetch and populate data
+    try {
+      let lowonganDataForExport: LowonganReportItem[] = [];
+      let penempatanDataForExport: PenempatanReportItem[] = [];
+
+      if (mode === "all") {
+        const [lowonganResp, penempatanResp] = await Promise.all([
+          getLowonganReport({
+            company_id: selectedCompanyId,
+            start_date: startDate,
+            end_date: endDate,
+          }),
+          getPenempatanReport({
+            company_id: selectedCompanyId,
+            start_date: startDate,
+            end_date: endDate,
+          }),
+        ]);
+        lowonganDataForExport = lowonganResp?.data || [];
+        penempatanDataForExport = penempatanResp?.data || [];
+      } else {
+        if (activeTab === "lowongan") {
+          const lowonganResp = await getLowonganReport({
+            company_id: selectedCompanyId,
+            start_date: startDate,
+            end_date: endDate,
+          });
+          lowonganDataForExport = lowonganResp?.data || [];
+        } else {
+          const penempatanResp = await getPenempatanReport({
+            company_id: selectedCompanyId,
+            start_date: startDate,
+            end_date: endDate,
+          });
+          penempatanDataForExport = penempatanResp?.data || [];
+        }
+      }
+
+      // Populate Lowongan Sheet
+      if (
+        (mode === "all" || activeTab === "lowongan") &&
+        lowonganDataForExport.length > 0
+      ) {
+        lowonganDataForExport.forEach((item, index) => {
+          const row = sheetLowongan.addRow([
+            null, // Margin
+            index + 1,
+            item.bulan,
+            item.tahun,
+            item.lapangan_usaha,
+            item.kode_jabatan,
+            item.nama_jabatan,
+            item.jumlah_dibutuhkan,
+            item.jenis_kelamin === "L"
+              ? "Laki-laki"
+              : item.jenis_kelamin === "P"
+                ? "Perempuan"
+                : "L/P",
+            item.pendidikan,
+            item.jurusan,
+            item.keterampilan,
+          ]);
+
+          // Apply borders to data rows
+          row.eachCell((cell, colNumber) => {
+            if (colNumber > 1) {
+              cell.border = {
+                top: { style: "thin" },
+                left: { style: "thin" },
+                bottom: { style: "thin" },
+                right: { style: "thin" },
+              };
+              cell.alignment = { vertical: "middle", wrapText: true };
+            }
+          });
+        });
+      }
+
+      // Populate Penempatan Sheet
+      if (
+        (mode === "all" || activeTab === "penempatan") &&
+        penempatanDataForExport.length > 0
+      ) {
+        penempatanDataForExport.forEach((item, index) => {
+          const row = sheetPenempatan.addRow([
+            null, // Margin
+            index + 1,
+            item.bulan,
+            item.tahun,
+            item.nama_tenaga_kerja,
+            item.nik,
+            item.alamat_tenaga_kerja,
+            item.provinsi,
+            item.kab_kota,
+            item.email,
+            item.nomor_hp,
+            item.jenis_kelamin === "L"
+              ? "Laki-laki"
+              : item.jenis_kelamin === "P"
+                ? "Perempuan"
+                : "L/P",
+            item.pendidikan,
+            item.jurusan,
+            item.kab_kota_penempatan,
+            item.nama_jabatan,
+            item.lapangan_usaha,
+            item.tanggal_mulai
+              ? new Date(item.tanggal_mulai).toLocaleDateString("id-ID")
+              : "-",
+            item.upah_gaji,
+          ]);
+
+          // Apply borders to data rows
+          row.eachCell((cell, colNumber) => {
+            if (colNumber > 1) {
+              cell.border = {
+                top: { style: "thin" },
+                left: { style: "thin" },
+                bottom: { style: "thin" },
+                right: { style: "thin" },
+              };
+              cell.alignment = { vertical: "middle", wrapText: true };
+            }
+          });
+        });
+      }
+
+      // Remove empty sheets if exporting single sheet
+      if (mode === "current") {
+        if (activeTab === "lowongan") {
+          workbook.removeWorksheet(sheetPenempatan.id);
+        } else {
+          workbook.removeWorksheet(sheetLowongan.id);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching data for export:", error);
+    }
+
     // Write Buffer
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(
@@ -332,12 +555,22 @@ export default function LaporanLowonganView({
           {/* Actions */}
           <div className="flex gap-3 w-full lg:w-auto">
             <button
-              onClick={handleExport}
+              onClick={() => handleExport("current")}
               disabled={!selectedCompanyId}
-              className="flex-1 lg:flex-none justify-center px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 text-sm font-medium transition-all shadow-sm hover:shadow flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 lg:flex-none justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 text-sm font-medium transition-all shadow-sm hover:shadow flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Export sheet yang sedang aktif"
             >
               <i className="ri-file-excel-2-line"></i>
-              Export Excel
+              Export Current
+            </button>
+            <button
+              onClick={() => handleExport("all")}
+              disabled={!selectedCompanyId}
+              className="flex-1 lg:flex-none justify-center px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 text-sm font-medium transition-all shadow-sm hover:shadow flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Export semua sheet (Lowongan & Penempatan)"
+            >
+              <i className="ri-file-excel-2-fill"></i>
+              Export All
             </button>
           </div>
         </div>
@@ -384,36 +617,37 @@ export default function LaporanLowonganView({
               <col className="w-10" />
               <col className="w-40" />
               <col className="w-16" />
-              {activeTab === "lowongan" ? (
-                <>
-                  <col className="w-32" />
-                  <col className="w-24" />
-                  <col className="w-32" />
-                  <col className="w-20" />
-                  <col className="w-20" />
-                  <col className="w-24" />
-                  <col className="w-32" />
-                  <col className="w-32" />
-                </>
-              ) : (
-                <>
-                  <col className="w-32" />
-                  <col className="w-24" />
-                  <col className="w-40" />
-                  <col className="w-24" />
-                  <col className="w-24" />
-                  <col className="w-32" />
-                  <col className="w-24" />
-                  <col className="w-20" />
-                  <col className="w-24" />
-                  <col className="w-32" />
-                  <col className="w-24" />
-                  <col className="w-32" />
-                  <col className="w-32" />
-                  <col className="w-24" />
-                  <col className="w-24" />
-                </>
-              )}
+              {(activeTab === "lowongan"
+                ? [
+                    "w-32",
+                    "w-24",
+                    "w-32",
+                    "w-20",
+                    "w-20",
+                    "w-24",
+                    "w-32",
+                    "w-32",
+                  ]
+                : [
+                    "w-32",
+                    "w-32", // NIK
+                    "w-40",
+                    "w-24",
+                    "w-24",
+                    "w-32",
+                    "w-24",
+                    "w-20",
+                    "w-24",
+                    "w-32",
+                    "w-24",
+                    "w-32",
+                    "w-32",
+                    "w-24",
+                    "w-24",
+                  ]
+              ).map((width, idx) => (
+                <col key={idx} className={width} />
+              ))}
             </colgroup>
             <thead>
               <tr>
@@ -531,15 +765,122 @@ export default function LaporanLowonganView({
               </tr>
             </thead>
             <tbody>
-              {/* Empty row as per request (no dummy data) */}
-              <tr>
-                <td
-                  colSpan={activeTab === "lowongan" ? 11 : 18}
-                  className="border border-black p-2 text-center text-gray-400 italic"
-                >
-                  Tidak ada data ditampilkan (Preview Template)
-                </td>
-              </tr>
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={activeTab === "lowongan" ? 11 : 18}
+                    className="border border-black p-2 text-center text-gray-400 italic"
+                  >
+                    Loading...
+                  </td>
+                </tr>
+              ) : activeTab === "lowongan" && lowonganData.length > 0 ? (
+                lowonganData.map((item, index) => (
+                  <tr key={index}>
+                    <td className="border border-black p-2 text-center">
+                      {index + 1}
+                    </td>
+                    <td className="border border-black p-2 text-center">
+                      {item.bulan}
+                    </td>
+                    <td className="border border-black p-2 text-center">
+                      {item.tahun}
+                    </td>
+                    <td className="border border-black p-2">
+                      {item.lapangan_usaha}
+                    </td>
+                    <td className="border border-black p-2 text-center">
+                      {item.kode_jabatan}
+                    </td>
+                    <td className="border border-black p-2">
+                      {item.nama_jabatan}
+                    </td>
+                    <td className="border border-black p-2 text-center">
+                      {item.jumlah_dibutuhkan}
+                    </td>
+                    <td className="border border-black p-2 text-center">
+                      {item.jenis_kelamin === "L"
+                        ? "Laki-laki"
+                        : item.jenis_kelamin === "P"
+                          ? "Perempuan"
+                          : "L/P"}
+                    </td>
+                    <td className="border border-black p-2">
+                      {item.pendidikan}
+                    </td>
+                    <td className="border border-black p-2">{item.jurusan}</td>
+                    <td className="border border-black p-2">
+                      {item.keterampilan}
+                    </td>
+                  </tr>
+                ))
+              ) : activeTab === "penempatan" && penempatanData.length > 0 ? (
+                penempatanData.map((item, index) => (
+                  <tr key={index}>
+                    <td className="border border-black p-2 text-center">
+                      {index + 1}
+                    </td>
+                    <td className="border border-black p-2 text-center">
+                      {item.bulan}
+                    </td>
+                    <td className="border border-black p-2 text-center">
+                      {item.tahun}
+                    </td>
+                    <td className="border border-black p-2">
+                      {item.nama_tenaga_kerja}
+                    </td>
+                    <td className="border border-black p-2">{item.nik}</td>
+                    <td className="border border-black p-2">
+                      {item.alamat_tenaga_kerja}
+                    </td>
+                    <td className="border border-black p-2">{item.provinsi}</td>
+                    <td className="border border-black p-2">{item.kab_kota}</td>
+                    <td className="border border-black p-2">{item.email}</td>
+                    <td className="border border-black p-2">{item.nomor_hp}</td>
+                    <td className="border border-black p-2 text-center">
+                      {item.jenis_kelamin === "L"
+                        ? "Laki-laki"
+                        : item.jenis_kelamin === "P"
+                          ? "Perempuan"
+                          : "L/P"}
+                    </td>
+                    <td className="border border-black p-2">
+                      {item.pendidikan}
+                    </td>
+                    <td className="border border-black p-2">{item.jurusan}</td>
+                    <td className="border border-black p-2">
+                      {item.kab_kota_penempatan}
+                    </td>
+                    <td className="border border-black p-2">
+                      {item.nama_jabatan}
+                    </td>
+                    <td className="border border-black p-2">
+                      {item.lapangan_usaha}
+                    </td>
+                    <td className="border border-black p-2 text-center">
+                      {item.tanggal_mulai
+                        ? new Date(item.tanggal_mulai).toLocaleDateString(
+                            "id-ID",
+                          )
+                        : "-"}
+                    </td>
+                    <td className="border border-black p-2 text-right">
+                      {item.upah_gaji}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={activeTab === "lowongan" ? 11 : 18}
+                    className="border border-black p-2 text-center text-gray-400 italic"
+                  >
+                    {activeTab === "lowongan"
+                      ? "Tidak ada data lowongan ditemukan"
+                      : "Tidak ada data penempatan ditemukan"}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

@@ -2663,6 +2663,7 @@ function Ak1LayoutEditor() {
     source?: string;
     w?: number;
     h?: number;
+    align?: "left" | "center" | "right";
   };
   const FRONT = { w: 3900, h: 1216 };
   const candidateColumns = [
@@ -2692,12 +2693,17 @@ function Ak1LayoutEditor() {
     "expired3",
     "expired4",
     "no_pendaftaran_pencari_kerja",
+    "no_urut_pendaftaran",
     "keterampilan",
+    "nip_create",
+    "nip_renew_1",
+    "nip_renew_2",
+    "nip_renew_3",
   ];
   const [fields, setFields] = useState<FieldCfg[]>([]);
   const [saving, setSaving] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>("");
-  const [templateName, setTemplateName] = useState<string>("");
+  const [templateId, setTemplateId] = useState<string>("");
   const [templates, setTemplates] = useState<Ak1Template[]>([]);
   const [frontDim, setFrontDim] = useState<{ w: number; h: number }>({
     w: FRONT.w,
@@ -2746,7 +2752,7 @@ function Ak1LayoutEditor() {
     recalc();
     window.addEventListener("resize", recalc);
     return () => window.removeEventListener("resize", recalc);
-  }, [frontDim.w, FRONT.w, previewUrl, templateName]);
+  }, [frontDim.w, FRONT.w, previewUrl, templateId]);
 
   useEffect(() => {
     (async () => {
@@ -2829,12 +2835,28 @@ function Ak1LayoutEditor() {
           Math.round((newTotalW - (count - 1) * baseGap) / count),
         );
         const newCellH = Math.max(4, Math.round(newTotalH));
-        updateField(resizeIdx, {
-          cellW: newCellW,
-          cellH: newCellH,
-          x: newX,
-          y: newY,
-        });
+
+        // Auto-scale font size for box based on cell height
+        // Typically text in a box is about 60-70% of the box height
+        const currentCellH = f.cellH || baseCellH;
+        if (newCellH !== currentCellH) {
+          const newSize = Math.max(8, Math.round(newCellH * 0.6));
+          updateField(resizeIdx, {
+            cellW: newCellW,
+            cellH: newCellH,
+            x: newX,
+            y: newY,
+            size: newSize,
+            digitSize: newSize, // Sync digitSize as it takes precedence
+          });
+        } else {
+          updateField(resizeIdx, {
+            cellW: newCellW,
+            cellH: newCellH,
+            x: newX,
+            y: newY,
+          });
+        }
       } else if (f.kind === "image") {
         const baseW = Math.max(
           8,
@@ -2885,7 +2907,21 @@ function Ak1LayoutEditor() {
           newH = Math.max(8, Math.round(baseH + dy));
           newX = Math.round((resizeOrigin.x || f.x) + dx);
         }
-        updateField(resizeIdx, { w: newW, h: newH, x: newX, y: newY });
+
+        // Auto-scale font size based on height change
+        const currentH = f.h || baseH;
+        if (newH !== currentH) {
+          const newSize = Math.max(8, Math.round(newH * 0.8)); // Approx 80% of box height
+          updateField(resizeIdx, {
+            w: newW,
+            h: newH,
+            x: newX,
+            y: newY,
+            size: newSize,
+          });
+        } else {
+          updateField(resizeIdx, { w: newW, h: newH, x: newX, y: newY });
+        }
       } else if (f.kind === "list") {
         const baseW = Math.max(
           8,
@@ -2933,7 +2969,21 @@ function Ak1LayoutEditor() {
           newH = Math.max(8, Math.round(baseH + dy));
           newX = Math.round((resizeOrigin.x || f.x) + dx);
         }
-        updateField(resizeIdx, { w: newW, h: newH, x: newX, y: newY });
+
+        // Auto-scale font size based on height change
+        const currentH = f.h || baseH;
+        if (newH !== currentH) {
+          const newSize = Math.max(8, Math.round(newH * 0.8));
+          updateField(resizeIdx, {
+            w: newW,
+            h: newH,
+            x: newX,
+            y: newY,
+            size: newSize,
+          });
+        } else {
+          updateField(resizeIdx, { w: newW, h: newH, x: newX, y: newY });
+        }
       } else {
         const baseW = Math.max(
           8,
@@ -2981,7 +3031,21 @@ function Ak1LayoutEditor() {
           newH = Math.max(8, Math.round(baseH + dy));
           newX = Math.round((resizeOrigin.x || f.x) + dx);
         }
-        updateField(resizeIdx, { w: newW, h: newH, x: newX, y: newY });
+
+        // Auto-scale font size based on height change
+        const currentH = f.h || baseH;
+        if (newH !== currentH) {
+          const newSize = Math.max(8, Math.round(newH * 0.8));
+          updateField(resizeIdx, {
+            w: newW,
+            h: newH,
+            x: newX,
+            y: newY,
+            size: newSize,
+          });
+        } else {
+          updateField(resizeIdx, { w: newW, h: newH, x: newX, y: newY });
+        }
       }
       return;
     }
@@ -3008,20 +3072,20 @@ function Ak1LayoutEditor() {
     }
   };
 
-  const handleDeleteTemplate = async (name: string) => {
+  const handleDeleteTemplate = async (t: Ak1Template) => {
     if (
       !confirm(
-        `Hapus template "${name}"? Layout yang menggunakan template ini mungkin akan rusak.`,
+        `Hapus template "${t.name}"? Layout yang menggunakan template ini mungkin akan rusak.`,
       )
     )
       return;
     try {
-      await deleteAk1Template(name);
+      await deleteAk1Template(t.name);
       showSuccess("Template berhasil dihapus");
       const data = await listAk1Templates();
       setTemplates(data?.data || []);
-      if (templateName === name) {
-        setTemplateName("");
+      if (templateId === t.id) {
+        setTemplateId("");
         setPreviewUrl("");
         setFields([]);
       }
@@ -3046,6 +3110,9 @@ function Ak1LayoutEditor() {
               templates.find((t) => t.name === editingTemplateName)
                 ?.file_template || ""
             }
+            initialOrder={
+              templates.find((t) => t.name === editingTemplateName)?.order || 0
+            }
             onDone={async () => {
               const data = await listAk1Templates();
               const list: Ak1Template[] = data?.data || [];
@@ -3062,6 +3129,7 @@ function Ak1LayoutEditor() {
               <TableHead>
                 <TableRow>
                   <TH>Nama Template</TH>
+                  <TH>Urutan</TH>
                   <TH>File</TH>
                   <TH>Aksi</TH>
                 </TableRow>
@@ -3069,7 +3137,7 @@ function Ak1LayoutEditor() {
               <TableBody>
                 {templates.length === 0 ? (
                   <TableRow>
-                    <TD colSpan={3} className="text-center py-4 text-gray-500">
+                    <TD colSpan={4} className="text-center py-4 text-gray-500">
                       Belum ada template
                     </TD>
                   </TableRow>
@@ -3077,6 +3145,7 @@ function Ak1LayoutEditor() {
                   templates.map((t, idx) => (
                     <TableRow key={idx}>
                       <TD>{t.name}</TD>
+                      <TD>{t.order || 0}</TD>
                       <TD>
                         {t.file_template ? (
                           <a
@@ -3103,7 +3172,7 @@ function Ak1LayoutEditor() {
                           <i className="ri-edit-line"></i>
                         </button>
                         <button
-                          onClick={() => handleDeleteTemplate(t.name)}
+                          onClick={() => handleDeleteTemplate(t)}
                           className="text-red-600 hover:text-red-800 p-1 hover:bg-red-50 rounded"
                           title="Hapus Template"
                         >
@@ -3133,34 +3202,44 @@ function Ak1LayoutEditor() {
                 label="Pilih Layout"
                 options={[
                   { value: "", label: "-- pilih --" },
-                  ...templates.map((t) => ({ value: t.name, label: t.name })),
+                  ...templates.map((t) => ({
+                    value: t.id || "",
+                    label: t.name,
+                  })),
                 ]}
-                value={templateName}
-                onChange={(name) => {
-                  setTemplateName(name);
-                  const t = templates.find((x) => x.name === name);
+                value={templateId}
+                onChange={(val) => {
+                  setTemplateId(val);
+                  const t = templates.find((x) => x.id === val);
                   if (t) {
                     const url = t.file_template || "";
                     setPreviewUrl(url);
-                    try {
-                      const img = new window.Image();
-                      img.onload = () => {
-                        const w = img.naturalWidth || FRONT.w;
-                        const h = img.naturalHeight || FRONT.h;
-                        setFrontDim({ w, h });
-                        const cw = containerRef.current?.clientWidth || w;
-                        setScale(Math.min(1, cw / w));
-                      };
-                      img.src = url;
-                    } catch {}
+                    if (t.front_width && t.front_height) {
+                      setFrontDim({ w: t.front_width, h: t.front_height });
+                      const cw =
+                        containerRef.current?.clientWidth || t.front_width;
+                      setScale(Math.min(1, cw / t.front_width));
+                    } else {
+                      try {
+                        const img = new window.Image();
+                        img.onload = () => {
+                          const w = img.naturalWidth || FRONT.w;
+                          const h = img.naturalHeight || FRONT.h;
+                          setFrontDim({ w, h });
+                          const cw = containerRef.current?.clientWidth || w;
+                          setScale(Math.min(1, cw / w));
+                        };
+                        img.src = url;
+                      } catch {}
+                    }
                   }
                   (async () => {
                     try {
-                      if (!name) {
+                      if (!val) {
                         setFields([]);
                         return;
                       }
-                      const data = await getAk1Layout(name);
+                      const data = await getAk1Layout(val);
                       const ly = data?.data || null;
                       setFields(
                         Array.isArray(ly?.coordinates)
@@ -3176,7 +3255,7 @@ function Ak1LayoutEditor() {
               />
             </div>
           </div>
-          {templateName ? (
+          {templateId ? (
             <div
               ref={containerRef}
               style={{ width: "100%", overflow: "hidden" }}
@@ -3208,7 +3287,9 @@ function Ak1LayoutEditor() {
                     const count = Math.max(1, Number(f.count || 1));
                     const cellW = Math.max(1, Number(f.cellW || 24)) * scale;
                     const cellH = Math.max(1, Number(f.cellH || 32)) * scale;
-                    const gap = Math.max(0, Number(f.gap || 4)) * scale;
+                    const gap =
+                      Math.max(0, Number(f.gap !== undefined ? f.gap : 4)) *
+                      scale;
                     const totalW = count * cellW + (count - 1) * gap;
                     const totalH = cellH;
                     return (
@@ -3232,15 +3313,8 @@ function Ak1LayoutEditor() {
                         data-field-item
                       >
                         {Array.from({ length: count }).map((_, i) => {
-                          const ch = 1;
-                          const fsAutoW = (cellW * 0.92) / (ch * 0.6);
-                          const fsAutoH = cellH * 0.85;
-                          const fsCell = Math.max(
-                            8 * scale,
-                            f.digitSize
-                              ? f.digitSize * scale
-                              : Math.min(fsAutoW, fsAutoH),
-                          );
+                          const val = Number(f.digitSize || f.size || 18);
+                          const fsCell = (val > 0 ? val : 18) * scale;
                           return (
                             <div
                               key={`cell-${i}`}
@@ -3255,9 +3329,8 @@ function Ak1LayoutEditor() {
                                 justifyContent: "center",
                                 marginRight: i < count - 1 ? gap : 0,
                                 fontSize: fsCell,
-                                lineHeight: fsCell,
+                                lineHeight: 1.2,
                                 whiteSpace: "nowrap",
-                                fontWeight: 600,
                                 zIndex: 1,
                               }}
                             >
@@ -3572,8 +3645,7 @@ function Ak1LayoutEditor() {
                             color: "var(--color-foreground)",
                             background: "transparent",
                             fontSize: fsLabel,
-                            lineHeight: fsLabel,
-                            fontWeight: 600,
+                            lineHeight: 1.2,
                             zIndex: 1,
                           }}
                         >
@@ -3833,12 +3905,20 @@ function Ak1LayoutEditor() {
                   }
                   const baseW = Math.max(
                     32,
-                    Number(f.w || Math.round((f.size || 16) * 8)),
+                    Number(
+                      f.w ||
+                        Math.round(
+                          (f.token || "").length * (f.size || 16) * 0.6 + 16,
+                        ),
+                    ),
                   );
-                  const baseH = Math.max(
-                    24,
-                    Number(f.h || Math.round((f.size || 16) * 2)),
-                  );
+                  const isText = !f.kind || f.kind === "text";
+                  const baseH = isText
+                    ? Math.round((f.size || 16) * 1.2)
+                    : Math.max(
+                        16,
+                        Number(f.h || Math.round((f.size || 16) * 1.2)),
+                      );
                   const boxW = baseW * scale;
                   const boxH = baseH * scale;
                   const fsText = Math.max(1, f.size || 16) * scale;
@@ -3849,8 +3929,19 @@ function Ak1LayoutEditor() {
                         position: "absolute",
                         left,
                         top,
-                        width: boxW,
-                        height: boxH,
+                        minWidth: boxW,
+                        minHeight: boxH,
+                        width: "auto",
+                        height: "auto",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "stretch",
+                        justifyContent:
+                          f.align === "left"
+                            ? "flex-start"
+                            : f.align === "right"
+                              ? "flex-end"
+                              : "center",
                       }}
                       onPointerDown={(e) => {
                         setSelectedIdx(idx);
@@ -3868,15 +3959,25 @@ function Ak1LayoutEditor() {
                         style={{
                           width: "100%",
                           height: "100%",
-                          overflow: "hidden",
+                          flex: 1,
+                          overflow: "visible",
                           display: "flex",
-                          alignItems: "center",
+                          alignItems:
+                            f.kind === "list" ? "flex-start" : "center",
                           justifyContent: "center",
                           fontSize: fsText,
-                          lineHeight: fsText,
+                          lineHeight: 1.2,
                           whiteSpace: "nowrap",
                           zIndex: 1,
                           color: "var(--color-foreground)",
+                          border:
+                            selectedIdx === idx
+                              ? "1px dashed var(--primary)"
+                              : "none",
+                          background:
+                            selectedIdx === idx
+                              ? "rgba(46,116,43,0.2)"
+                              : "transparent",
                         }}
                       >
                         {f.token}
@@ -3888,23 +3989,12 @@ function Ak1LayoutEditor() {
                               position: "absolute",
                               left: 0,
                               top: 0,
-                              width: boxW,
-                              height: boxH,
-                              border: "1px dashed var(--primary)",
-                              background: "rgba(46,116,43,0.2)",
-                              pointerEvents: "none",
-                              zIndex: 2,
-                            }}
-                          />
-                          <div
-                            style={{
-                              position: "absolute",
-                              left: -7,
-                              top: -7,
-                              width: 14,
-                              height: 14,
-                              borderRadius: 14,
-                              border: "2px solid white",
+                              width: 6,
+                              height: 6,
+                              marginLeft: -3,
+                              marginTop: -3,
+                              borderRadius: 6,
+                              border: "1px solid white",
                               background: "var(--primary)",
                               boxShadow: "0 0 0 1px var(--color-foreground)",
                               cursor: "nwse-resize",
@@ -3928,12 +4018,14 @@ function Ak1LayoutEditor() {
                           <div
                             style={{
                               position: "absolute",
-                              left: boxW - 7,
-                              top: -7,
-                              width: 14,
-                              height: 14,
-                              borderRadius: 14,
-                              border: "2px solid white",
+                              left: "100%",
+                              top: 0,
+                              width: 6,
+                              height: 6,
+                              marginLeft: -3,
+                              marginTop: -3,
+                              borderRadius: 6,
+                              border: "1px solid white",
                               background: "var(--primary)",
                               boxShadow: "0 0 0 1px var(--color-foreground)",
                               cursor: "nesw-resize",
@@ -3957,12 +4049,14 @@ function Ak1LayoutEditor() {
                           <div
                             style={{
                               position: "absolute",
-                              left: -7,
-                              top: boxH - 7,
-                              width: 14,
-                              height: 14,
-                              borderRadius: 14,
-                              border: "2px solid white",
+                              left: 0,
+                              top: "100%",
+                              width: 6,
+                              height: 6,
+                              marginLeft: -3,
+                              marginTop: -3,
+                              borderRadius: 6,
+                              border: "1px solid white",
                               background: "var(--primary)",
                               boxShadow: "0 0 0 1px var(--color-foreground)",
                               cursor: "nesw-resize",
@@ -3986,12 +4080,14 @@ function Ak1LayoutEditor() {
                           <div
                             style={{
                               position: "absolute",
-                              left: boxW - 7,
-                              top: boxH - 7,
-                              width: 14,
-                              height: 14,
-                              borderRadius: 14,
-                              border: "2px solid white",
+                              left: "100%",
+                              top: "100%",
+                              width: 6,
+                              height: 6,
+                              marginLeft: -3,
+                              marginTop: -3,
+                              borderRadius: 6,
+                              border: "1px solid white",
                               background: "var(--primary)",
                               boxShadow: "0 0 0 1px var(--color-foreground)",
                               cursor: "nwse-resize",
@@ -4015,12 +4111,14 @@ function Ak1LayoutEditor() {
                           <div
                             style={{
                               position: "absolute",
-                              left: boxW / 2 - 7,
-                              top: -7,
-                              width: 14,
-                              height: 14,
-                              borderRadius: 14,
-                              border: "2px solid white",
+                              left: "50%",
+                              top: 0,
+                              width: 6,
+                              height: 6,
+                              marginLeft: -3,
+                              marginTop: -3,
+                              borderRadius: 6,
+                              border: "1px solid white",
                               background: "var(--primary)",
                               boxShadow: "0 0 0 1px var(--color-foreground)",
                               cursor: "ns-resize",
@@ -4044,12 +4142,14 @@ function Ak1LayoutEditor() {
                           <div
                             style={{
                               position: "absolute",
-                              left: boxW / 2 - 7,
-                              top: boxH - 7,
-                              width: 14,
-                              height: 14,
-                              borderRadius: 14,
-                              border: "2px solid white",
+                              left: "50%",
+                              top: "100%",
+                              width: 6,
+                              height: 6,
+                              marginLeft: -3,
+                              marginTop: -3,
+                              borderRadius: 6,
+                              border: "1px solid white",
                               background: "var(--primary)",
                               boxShadow: "0 0 0 1px var(--color-foreground)",
                               cursor: "ns-resize",
@@ -4073,12 +4173,14 @@ function Ak1LayoutEditor() {
                           <div
                             style={{
                               position: "absolute",
-                              left: -7,
-                              top: boxH / 2 - 7,
-                              width: 14,
-                              height: 14,
-                              borderRadius: 14,
-                              border: "2px solid white",
+                              left: 0,
+                              top: "50%",
+                              width: 6,
+                              height: 6,
+                              marginLeft: -3,
+                              marginTop: -3,
+                              borderRadius: 6,
+                              border: "1px solid white",
                               background: "var(--primary)",
                               boxShadow: "0 0 0 1px var(--color-foreground)",
                               cursor: "ew-resize",
@@ -4102,12 +4204,14 @@ function Ak1LayoutEditor() {
                           <div
                             style={{
                               position: "absolute",
-                              left: boxW - 7,
-                              top: boxH / 2 - 7,
-                              width: 14,
-                              height: 14,
-                              borderRadius: 14,
-                              border: "2px solid white",
+                              left: "100%",
+                              top: "50%",
+                              width: 6,
+                              height: 6,
+                              marginLeft: -3,
+                              marginTop: -3,
+                              borderRadius: 6,
+                              border: "1px solid white",
                               background: "var(--primary)",
                               boxShadow: "0 0 0 1px var(--color-foreground)",
                               cursor: "ew-resize",
@@ -4142,7 +4246,7 @@ function Ak1LayoutEditor() {
             </div>
           )}
 
-          {templateName && (
+          {templateId && (
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <button
@@ -4185,6 +4289,14 @@ function Ak1LayoutEditor() {
                             value: `candidate:${k}`,
                             label: k,
                           })),
+                          {
+                            value: "candidate:education_year_concat",
+                            label: "Pendidikan + Tahun (SD TH 2000)",
+                          },
+                          {
+                            value: "candidate:ttl_comma",
+                            label: "Tempat, Tgl Lahir (Jakarta, 01-01-2000)",
+                          },
                           ...userColumns
                             .filter((k) => k !== "id")
                             .map((k) => ({ value: `user:${k}`, label: k })),
@@ -4280,6 +4392,22 @@ function Ak1LayoutEditor() {
                               })
                             }
                           />
+                          <div className="sm:col-span-3 lg:col-span-1">
+                            <SearchableSelect
+                              label="Align"
+                              options={[
+                                { value: "left", label: "Left" },
+                                { value: "center", label: "Center" },
+                                { value: "right", label: "Right" },
+                              ]}
+                              value={f.align || "center"}
+                              onChange={(val) =>
+                                updateField(idx, {
+                                  align: val as "left" | "center" | "right",
+                                })
+                              }
+                            />
+                          </div>
                         </>
                       )}
 
@@ -4317,6 +4445,22 @@ function Ak1LayoutEditor() {
                               })
                             }
                           />
+                          <div className="sm:col-span-3 lg:col-span-1">
+                            <SearchableSelect
+                              label="Align"
+                              options={[
+                                { value: "left", label: "Left" },
+                                { value: "center", label: "Center" },
+                                { value: "right", label: "Right" },
+                              ]}
+                              value={f.align || "left"}
+                              onChange={(val) =>
+                                updateField(idx, {
+                                  align: val as "left" | "center" | "right",
+                                })
+                              }
+                            />
+                          </div>
                         </>
                       )}
 
@@ -4388,7 +4532,7 @@ function Ak1LayoutEditor() {
                           <Input
                             type="number"
                             label="Jarak"
-                            value={f.gap || 4}
+                            value={f.gap !== undefined ? f.gap : 4}
                             onChange={(e) =>
                               updateField(idx, {
                                 gap: Number(
@@ -4443,7 +4587,7 @@ function Ak1LayoutEditor() {
             </div>
           )}
 
-          {templateName && (
+          {templateId && (
             <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
               <button
                 disabled={saving}
@@ -4463,9 +4607,7 @@ function Ak1LayoutEditor() {
                       return f;
                     });
                     await upsertAk1Layout({
-                      name: templateName || "default",
-                      front_width: FRONT.w,
-                      front_height: FRONT.h,
+                      id_template: templateId,
                       coordinates: normalized,
                     });
                     showSuccess("Layout disimpan");
@@ -4481,7 +4623,7 @@ function Ak1LayoutEditor() {
               </button>
               <button
                 onClick={async () => {
-                  const data = await getAk1Layout(templateName || undefined);
+                  const data = await getAk1Layout(templateId || undefined);
                   const ly = data?.data || null;
                   if (ly) setFields(ly.coordinates || fields);
                   showSuccess("Layout dimuat");
@@ -4511,15 +4653,19 @@ function UploadTemplateInline({
   onDone,
   initialName = "",
   initialUrl = "",
+  initialOrder = 0,
 }: {
   onDone: () => void;
   initialName?: string;
   initialUrl?: string;
+  initialOrder?: number;
 }) {
   const [name, setName] = useState(initialName);
+  const [order, setOrder] = useState(initialOrder);
   useEffect(() => {
     setName(initialName);
-  }, [initialName]);
+    setOrder(initialOrder);
+  }, [initialName, initialOrder]);
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -4527,16 +4673,29 @@ function UploadTemplateInline({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          label="Nama Template"
-          value={name}
-          onChange={(e) => setName((e.target as HTMLInputElement).value)}
-          placeholder="Masukkan nama template"
-          required
-          submitted={submitted}
-        />
-        <div className="space-y-1">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <div className="md:col-span-5">
+          <Input
+            label="Nama Template"
+            value={name}
+            onChange={(e) => setName((e.target as HTMLInputElement).value)}
+            placeholder="Masukkan nama template"
+            required
+            submitted={submitted}
+          />
+        </div>
+        <div className="md:col-span-2">
+          <Input
+            label="Urutan"
+            type="number"
+            value={String(order)}
+            onChange={(e) =>
+              setOrder(Number((e.target as HTMLInputElement).value))
+            }
+            placeholder="0"
+          />
+        </div>
+        <div className="space-y-1 md:col-span-5">
           <Input
             type="file"
             label={
@@ -4593,7 +4752,7 @@ function UploadTemplateInline({
                     : pre.url);
               }
 
-              await upsertAk1Template({ name, file_template: url });
+              await upsertAk1Template({ name, file_template: url, order });
 
               // If renamed, delete old one
               if (initialName && name !== initialName) {
@@ -4607,7 +4766,10 @@ function UploadTemplateInline({
                 }
               }
 
-              if (!initialName) setName("");
+              if (!initialName) {
+                setName("");
+                setOrder(0);
+              }
               setFile(null);
               onDone();
               showSuccess(
@@ -4634,6 +4796,7 @@ function UploadTemplateInline({
           <button
             onClick={() => {
               setName("");
+              setOrder(0);
               setFile(null);
               onDone();
             }}
