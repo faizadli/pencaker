@@ -35,7 +35,7 @@ import {
   getPositionGroups,
   getJobCategoryGroups,
 } from "../../services/site";
-import { getReportIPK31 } from "../../services/report";
+import { getReportIPK31, getReportIPK32 } from "../../services/report";
 
 interface LaporanIPKViewProps {
   onBack: () => void;
@@ -67,7 +67,16 @@ export default function LaporanIPKView({ onBack }: LaporanIPKViewProps) {
           console.error("Failed to fetch IPK 3.1 data", err);
           showError("Gagal mengambil data IPK 3.1");
         });
-    } else if (activeTab === "ipk3.2" || activeTab === "ipk3.4") {
+    } else if (activeTab === "ipk3.2") {
+      getReportIPK32(startDate, endDate)
+        .then((res: { data: GenericRow[] }) => {
+          setEducationData(res.data);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch IPK 3.2 data", err);
+          showError("Gagal mengambil data IPK 3.2");
+        });
+    } else if (activeTab === "ipk3.4") {
       getEducationGroups()
         .then((res: unknown) => {
           const response = res as { data: BaseGroup[] };
@@ -172,6 +181,13 @@ export default function LaporanIPKView({ onBack }: LaporanIPKViewProps) {
       } else if (
         ["ipk3.2", "ipk3.3", "ipk3.4", "ipk3.5", "ipk3.6"].includes(activeTab)
       ) {
+        if (activeTab === "ipk3.2" && educationData.length === 0) {
+          const res: { data: GenericRow[] } = await getReportIPK32(
+            startDate,
+            endDate,
+          );
+          setEducationData(res.data);
+        }
         exportGeneric12Col(
           worksheet,
           defaultBorder,
@@ -244,11 +260,12 @@ export default function LaporanIPKView({ onBack }: LaporanIPKViewProps) {
       };
 
       // Fetch all required data in parallel
-      const [eduRes, posRes, jobRes, ipk31Res] = await Promise.all([
+      const [eduRes, posRes, jobRes, ipk31Res, ipk32Res] = await Promise.all([
         getEducationGroups(),
         getPositionGroups(),
         getJobCategoryGroups(),
         getReportIPK31(startDate, endDate),
+        getReportIPK32(startDate, endDate),
       ]);
 
       const eduData = (eduRes as { data: BaseGroup[] }).data;
@@ -257,6 +274,7 @@ export default function LaporanIPKView({ onBack }: LaporanIPKViewProps) {
       const ipk31 = (ipk31Res as { data: InitialData }).data;
 
       const eduRows = processDataToRows(eduData);
+      const ipk32Rows = (ipk32Res as { data: GenericRow[] }).data;
       const posRows = processDataToRows(posData);
       const jobRows = processDataToRows(jobData);
 
@@ -272,7 +290,17 @@ export default function LaporanIPKView({ onBack }: LaporanIPKViewProps) {
             headerDateString,
             ipk31,
           );
-        } else if (tab.id === "ipk3.2" || tab.id === "ipk3.4") {
+        } else if (tab.id === "ipk3.2") {
+          exportGeneric12Col(
+            worksheet,
+            defaultBorder,
+            centerAlignment,
+            leftAlignment,
+            tab.id,
+            headerDateString,
+            ipk32Rows,
+          );
+        } else if (tab.id === "ipk3.4") {
           exportGeneric12Col(
             worksheet,
             defaultBorder,

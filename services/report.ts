@@ -18,3 +18,16 @@ export async function getReportIPK31(startDate: string, endDate: string) {
   if (!resp.ok) throw new Error("Gagal mengambil laporan IPK 3.1");
   return resp.json();
 }
+
+export async function getReportIPK32(startDate: string, endDate: string) {
+  const resp = await fetch(
+    `${BASE}/api/reports/ipk32?start_date=${encodeURIComponent(
+      startDate,
+    )}&end_date=${encodeURIComponent(endDate)}`,
+    {
+      headers: { ...authHeader() },
+    },
+  );
+  if (!resp.ok) throw new Error("Gagal mengambil laporan IPK 3.2");
+  return resp.json();
+}
