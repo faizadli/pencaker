@@ -1,8 +1,8 @@
 import * as ExcelJS from "exceljs";
 import { getSheetTitle, getLabelHeader } from "../components/laporan/helpers";
-import { ipk37Data } from "../components/laporan/real-data";
 import {
   GenericRow,
+  IPK3_7Row,
   IPK3_8Row,
   InitialData,
 } from "../components/laporan/types";
@@ -420,6 +420,7 @@ export const exportIPK3_7 = (
   center: Partial<ExcelJS.Alignment>,
   left: Partial<ExcelJS.Alignment>,
   headerDateString: string,
+  data?: IPK3_7Row[],
 ) => {
   const defaultBorder = thinBorder;
 
@@ -442,7 +443,7 @@ export const exportIPK3_7 = (
   worksheet.mergeCells("A4:A6");
   worksheet.getCell("A4").value = "KODE";
   worksheet.mergeCells("B4:B6");
-  worksheet.getCell("B4").value = "GOLONGAN POKOK LAPANGAN USAHA";
+  worksheet.getCell("B4").value = "TINGKAT PENDIDIKAN";
 
   const groups = [
     { label: "SISA AKHIR BULAN LALU", colStart: 3 },
@@ -470,10 +471,20 @@ export const exportIPK3_7 = (
     }
   }
 
+  const tableData = data || [];
   let currentRow = 7;
-  ipk37Data.forEach((row) => {
-    worksheet.getCell(currentRow, 1).value = row.code;
-    worksheet.getCell(currentRow, 2).value = row.label;
+  tableData.forEach((row) => {
+    const isJumlah = String(row.code).toUpperCase() === "JUMLAH";
+    if (isJumlah) {
+      worksheet.mergeCells(currentRow, 1, currentRow, 2);
+      worksheet.getCell(currentRow, 1).value = "JUMLAH";
+      worksheet.getCell(currentRow, 1).alignment = center;
+      setBorder(currentRow, 1);
+      setBorder(currentRow, 2);
+    } else {
+      worksheet.getCell(currentRow, 1).value = row.code;
+      worksheet.getCell(currentRow, 2).value = row.label;
+    }
 
     const fillGroup = (
       startCol: number,
@@ -494,11 +505,14 @@ export const exportIPK3_7 = (
       setBorder(currentRow, c);
       const cell = worksheet.getCell(currentRow, c);
       cell.font = { size: 11, name: "Calibri" };
-      if (c === 2) cell.alignment = left;
+      if (!isJumlah && c === 2) cell.alignment = left;
       else cell.alignment = center;
 
       // Bold totals (SISA AKHIR BULAN INI)
       if (c >= 15) {
+        cell.font = { bold: true, size: 11, name: "Calibri" };
+      }
+      if (isJumlah) {
         cell.font = { bold: true, size: 11, name: "Calibri" };
       }
     }
@@ -517,85 +531,132 @@ export const exportIPK3_8 = (
   left: Partial<ExcelJS.Alignment>,
   headerDateString: string,
   data?: IPK3_8Row[],
+  secondData?: IPK3_8Row[],
 ) => {
   const defaultBorder = thinBorder;
   const tableData = data || [];
+  const tableData2 = secondData || [];
 
-  worksheet.mergeCells("A1:N1");
+  worksheet.mergeCells("A1:K1");
   worksheet.getCell("A1").value = getSheetTitle("ipk3.8");
   worksheet.getCell("A1").alignment = center;
   worksheet.getCell("A1").font = { bold: true, size: 14, name: "Calibri" };
 
-  worksheet.mergeCells("A2:N2");
-  worksheet.getCell("A2").value = headerDateString;
+  worksheet.mergeCells("A2:K2");
+  worksheet.getCell("A2").value = "PENERIMA TENAGA KERJA DAN JENIS KELAMIN";
   worksheet.getCell("A2").alignment = center;
   worksheet.getCell("A2").font = { bold: true, size: 11, name: "Calibri" };
+
+  worksheet.mergeCells("A3:K3");
+  worksheet.getCell("A3").value = "DI KABUPATEN PASER";
+  worksheet.getCell("A3").alignment = center;
+  worksheet.getCell("A3").font = { bold: true, size: 11, name: "Calibri" };
+
+  worksheet.mergeCells("A4:K4");
+  worksheet.getCell("A4").value = headerDateString;
+  worksheet.getCell("A4").alignment = center;
+  worksheet.getCell("A4").font = { bold: true, size: 11, name: "Calibri" };
+
+  worksheet.mergeCells("A5:K5");
+  worksheet.getCell("A5").value = "";
 
   const setBorder = (r: number, c: number) => {
     worksheet.getCell(r, c).border = defaultBorder;
   };
 
-  worksheet.mergeCells("A4:A6");
-  worksheet.getCell("A4").value = "KODE";
-  worksheet.mergeCells("B4:B6");
-  worksheet.getCell("B4").value = "TINGKAT PENDIDIKAN";
+  // ---- SECTION I (14 columns like web) ----
+  worksheet.mergeCells("A6:A8");
+  worksheet.getCell("A6").value = "Kode";
+  worksheet.mergeCells("B6:B8");
+  worksheet.getCell("B6").value =
+    "I . Tingkat Pendidikan Pencari Kerja yg ditempatkan";
+  worksheet.mergeCells("C6:H6");
+  worksheet.getCell("C6").value = "Jenis Antar Kerja";
+  worksheet.mergeCells("I6:K7");
+  worksheet.getCell("I6").value = "Jumlah";
 
-  const groups = [
-    { label: "ANTAR KERJA LOKAL (AKL)", colStart: 3 },
-    { label: "ANTAR KERJA ANTAR DAERAH (AKAD)", colStart: 6 },
-    { label: "ANTAR KERJA ANTAR NEGARA (AKAN)", colStart: 9 },
-    { label: "JUMLAH", colStart: 12 },
-  ];
+  worksheet.mergeCells("C7:D7");
+  worksheet.getCell("C7").value = "AKL";
+  worksheet.mergeCells("E7:F7");
+  worksheet.getCell("E7").value = "AKAD";
+  worksheet.mergeCells("G7:H7");
+  worksheet.getCell("G7").value = "AKAN";
+  worksheet.getCell("C8").value = "L";
+  worksheet.getCell("D8").value = "P";
+  worksheet.getCell("E8").value = "L";
+  worksheet.getCell("F8").value = "P";
+  worksheet.getCell("G8").value = "L";
+  worksheet.getCell("H8").value = "P";
+  worksheet.getCell("I8").value = "L";
+  worksheet.getCell("J8").value = "P";
+  worksheet.getCell("K8").value = "JML";
 
-  groups.forEach((g) => {
-    worksheet.mergeCells(4, g.colStart, 5, g.colStart + 2);
-    worksheet.getCell(4, g.colStart).value = g.label;
-    worksheet.getCell(6, g.colStart).value = "L";
-    worksheet.getCell(6, g.colStart + 1).value = "P";
-    worksheet.getCell(6, g.colStart + 2).value = "JML";
-  });
-
-  for (let r = 4; r <= 6; r++) {
-    for (let c = 1; c <= 14; c++) {
+  for (let r = 6; r <= 8; r++) {
+    for (let c = 1; c <= 11; c++) {
       setBorder(r, c);
       const cell = worksheet.getCell(r, c);
       cell.alignment = center;
       cell.font = { bold: true, size: 11, name: "Calibri" };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFE5E7EB" },
+      };
     }
   }
 
-  let currentRow = 7;
+  worksheet.getCell(9, 1).value = "1";
+  worksheet.getCell(9, 2).value = "2";
+  for (let i = 3; i <= 11; i++) worksheet.getCell(9, i).value = i;
+  for (let c = 1; c <= 11; c++) {
+    setBorder(9, c);
+    const cell = worksheet.getCell(9, c);
+    cell.alignment = center;
+    cell.font = { bold: true, size: 11, name: "Calibri" };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE5E7EB" },
+    };
+  }
+
+  let currentRow = 10;
   tableData.forEach((row) => {
     worksheet.getCell(currentRow, 1).value = row.code;
-    worksheet.getCell(currentRow, 2).value = row.education;
-    // AKL
+    const isJumlah = String(row.code).toUpperCase() === "JUMLAH";
+    if (isJumlah) {
+      worksheet.mergeCells(currentRow, 1, currentRow, 2);
+      worksheet.getCell(currentRow, 1).value = "JUMLAH";
+      worksheet.getCell(currentRow, 1).alignment = center;
+      setBorder(currentRow, 1);
+      setBorder(currentRow, 2);
+    } else {
+      worksheet.getCell(currentRow, 2).value = row.education;
+    }
     worksheet.getCell(currentRow, 3).value = row.akl.l;
     worksheet.getCell(currentRow, 4).value = row.akl.p;
-    worksheet.getCell(currentRow, 5).value = row.akl.l + row.akl.p;
-    // AKAD
-    worksheet.getCell(currentRow, 6).value = row.akad.l;
-    worksheet.getCell(currentRow, 7).value = row.akad.p;
-    worksheet.getCell(currentRow, 8).value = row.akad.l + row.akad.p;
-    // AKAN
-    worksheet.getCell(currentRow, 9).value = row.akan.l;
-    worksheet.getCell(currentRow, 10).value = row.akan.p;
-    worksheet.getCell(currentRow, 11).value = row.akan.l + row.akan.p;
-    // Total
+    worksheet.getCell(currentRow, 5).value = row.akad.l;
+    worksheet.getCell(currentRow, 6).value = row.akad.p;
+    worksheet.getCell(currentRow, 7).value = row.akan.l;
+    worksheet.getCell(currentRow, 8).value = row.akan.p;
     const totalL = row.akl.l + row.akad.l + row.akan.l;
     const totalP = row.akl.p + row.akad.p + row.akan.p;
-    worksheet.getCell(currentRow, 12).value = totalL;
-    worksheet.getCell(currentRow, 13).value = totalP;
-    worksheet.getCell(currentRow, 14).value = totalL + totalP;
+    worksheet.getCell(currentRow, 9).value = totalL;
+    worksheet.getCell(currentRow, 10).value = totalP;
+    worksheet.getCell(currentRow, 11).value = totalL + totalP;
 
-    for (let c = 1; c <= 14; c++) {
+    for (let c = 1; c <= 11; c++) {
       setBorder(currentRow, c);
       const cell = worksheet.getCell(currentRow, c);
       cell.font = { size: 11, name: "Calibri" };
-      if (c === 2) cell.alignment = left;
+      if (!isJumlah && c === 2) cell.alignment = left;
       else cell.alignment = center;
 
       // Bold totals (JUMLAH)
-      if (c >= 12) {
+      if (c >= 9) {
+        cell.font = { bold: true, size: 11, name: "Calibri" };
+      }
+      if (isJumlah) {
         cell.font = { bold: true, size: 11, name: "Calibri" };
       }
     }
@@ -604,5 +665,92 @@ export const exportIPK3_8 = (
 
   worksheet.getColumn(1).width = 10;
   worksheet.getColumn(2).width = 40;
-  for (let i = 3; i <= 14; i++) worksheet.getColumn(i).width = 8;
+  for (let i = 3; i <= 11; i++) worksheet.getColumn(i).width = 8;
+
+  // ---- SECTION II (optional) ----
+  if (tableData2.length > 0) {
+    // spacer row
+    currentRow += 2;
+
+    // Headers for section II, aligned to web (11 columns)
+    worksheet.mergeCells(currentRow, 1, currentRow + 2, 1);
+    worksheet.getCell(currentRow, 1).value = "No";
+    worksheet.mergeCells(currentRow, 2, currentRow + 2, 2);
+    worksheet.getCell(currentRow, 2).value = "II. Penerima Pencari Kerja";
+
+    worksheet.mergeCells(currentRow, 3, currentRow, 8);
+    worksheet.getCell(currentRow, 3).value = "Jenis Antar Kerja";
+    worksheet.mergeCells(currentRow, 9, currentRow + 1, 11);
+    worksheet.getCell(currentRow, 9).value = "Jumlah";
+    worksheet.mergeCells(currentRow + 1, 3, currentRow + 1, 4);
+    worksheet.getCell(currentRow + 1, 3).value = "AKL";
+    worksheet.mergeCells(currentRow + 1, 5, currentRow + 1, 6);
+    worksheet.getCell(currentRow + 1, 5).value = "AKAD";
+    worksheet.mergeCells(currentRow + 1, 7, currentRow + 1, 8);
+    worksheet.getCell(currentRow + 1, 7).value = "AKAN";
+    worksheet.getCell(currentRow + 2, 3).value = "L";
+    worksheet.getCell(currentRow + 2, 4).value = "P";
+    worksheet.getCell(currentRow + 2, 5).value = "L";
+    worksheet.getCell(currentRow + 2, 6).value = "P";
+    worksheet.getCell(currentRow + 2, 7).value = "L";
+    worksheet.getCell(currentRow + 2, 8).value = "P";
+    worksheet.getCell(currentRow + 2, 9).value = "L";
+    worksheet.getCell(currentRow + 2, 10).value = "P";
+    worksheet.getCell(currentRow + 2, 11).value = "JML";
+
+    for (let r = currentRow; r <= currentRow + 2; r++) {
+      for (let c = 1; c <= 11; c++) {
+        setBorder(r, c);
+        const cell = worksheet.getCell(r, c);
+        cell.alignment = center;
+        cell.font = { bold: true, size: 11, name: "Calibri" };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFE5E7EB" },
+        };
+      }
+    }
+
+    let row2 = currentRow + 3;
+    tableData2.forEach((row) => {
+      worksheet.getCell(row2, 1).value = row.code;
+      const isJumlah2 = String(row.code).toUpperCase() === "JUMLAH";
+      if (isJumlah2) {
+        worksheet.mergeCells(row2, 1, row2, 2);
+        worksheet.getCell(row2, 1).value = "JUMLAH";
+        worksheet.getCell(row2, 1).alignment = center;
+        setBorder(row2, 1);
+        setBorder(row2, 2);
+      } else {
+        worksheet.getCell(row2, 2).value = row.education;
+      }
+      worksheet.getCell(row2, 3).value = row.akl.l;
+      worksheet.getCell(row2, 4).value = row.akl.p;
+      worksheet.getCell(row2, 5).value = row.akad.l;
+      worksheet.getCell(row2, 6).value = row.akad.p;
+      worksheet.getCell(row2, 7).value = row.akan.l;
+      worksheet.getCell(row2, 8).value = row.akan.p;
+      const totalL = row.akl.l + row.akad.l + row.akan.l;
+      const totalP = row.akl.p + row.akad.p + row.akan.p;
+      worksheet.getCell(row2, 9).value = totalL;
+      worksheet.getCell(row2, 10).value = totalP;
+      worksheet.getCell(row2, 11).value = totalL + totalP;
+
+      for (let c = 1; c <= 11; c++) {
+        setBorder(row2, c);
+        const cell = worksheet.getCell(row2, c);
+        cell.font = { size: 11, name: "Calibri" };
+        if (!isJumlah2 && c === 2) cell.alignment = left;
+        else cell.alignment = center;
+        if (c >= 9) {
+          cell.font = { bold: true, size: 11, name: "Calibri" };
+        }
+        if (isJumlah2) {
+          cell.font = { bold: true, size: 11, name: "Calibri" };
+        }
+      }
+      row2++;
+    });
+  }
 };

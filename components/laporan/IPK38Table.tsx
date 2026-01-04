@@ -1,18 +1,20 @@
 import React from "react";
-import { ipk38DataPart2 } from "./real-data";
 import { IPK3_8Row } from "./types";
 import { getSheetTitle } from "./helpers";
 
 interface IPK38TableProps {
   headerDateString: string;
   data?: IPK3_8Row[];
+  secondData?: IPK3_8Row[];
 }
 
 export default function IPK38Table({
   headerDateString,
   data: propData,
+  secondData,
 }: IPK38TableProps) {
-  const dataPart1 = propData || [];
+  const dataPart1 = (propData || []).filter((r) => r.code !== "JUMLAH");
+  const dataPart2 = (secondData || []).filter((r) => r.code !== "JUMLAH");
   const renderRow = (row: IPK3_8Row, idx: number) => {
     const totalL = row.akl.l + row.akad.l + row.akan.l;
     const totalP = row.akl.p + row.akad.p + row.akan.p;
@@ -25,21 +27,12 @@ export default function IPK38Table({
         {/* AKL */}
         <td className="border border-black p-1 text-center">{row.akl.l}</td>
         <td className="border border-black p-1 text-center">{row.akl.p}</td>
-        <td className="border border-black p-1 text-center">
-          {row.akl.l + row.akl.p}
-        </td>
         {/* AKAD */}
         <td className="border border-black p-1 text-center">{row.akad.l}</td>
         <td className="border border-black p-1 text-center">{row.akad.p}</td>
-        <td className="border border-black p-1 text-center">
-          {row.akad.l + row.akad.p}
-        </td>
         {/* AKAN */}
         <td className="border border-black p-1 text-center">{row.akan.l}</td>
         <td className="border border-black p-1 text-center">{row.akan.p}</td>
-        <td className="border border-black p-1 text-center">
-          {row.akan.l + row.akan.p}
-        </td>
         {/* Total */}
         <td className="border border-black p-1 text-center">{totalL}</td>
         <td className="border border-black p-1 text-center">{totalP}</td>
@@ -50,24 +43,24 @@ export default function IPK38Table({
 
   const calculateFooter = (data: IPK3_8Row[]) => {
     const sum = {
-      akl: { l: 0, p: 0, jml: 0 },
-      akad: { l: 0, p: 0, jml: 0 },
-      akan: { l: 0, p: 0, jml: 0 },
+      akl: { l: 0, p: 0 },
+      akad: { l: 0, p: 0 },
+      akan: { l: 0, p: 0 },
       total: { l: 0, p: 0, jml: 0 },
     };
 
     data.forEach((row) => {
       sum.akl.l += row.akl.l;
       sum.akl.p += row.akl.p;
-      sum.akl.jml += row.akl.l + row.akl.p;
+      // no JML per group
 
       sum.akad.l += row.akad.l;
       sum.akad.p += row.akad.p;
-      sum.akad.jml += row.akad.l + row.akad.p;
+      // no JML per group
 
       sum.akan.l += row.akan.l;
       sum.akan.p += row.akan.p;
-      sum.akan.jml += row.akan.l + row.akan.p;
+      // no JML per group
 
       const rowTotalL = row.akl.l + row.akad.l + row.akan.l;
       const rowTotalP = row.akl.p + row.akad.p + row.akan.p;
@@ -86,15 +79,12 @@ export default function IPK38Table({
         {/* AKL */}
         <td className="border border-black p-1 text-center">{sum.akl.l}</td>
         <td className="border border-black p-1 text-center">{sum.akl.p}</td>
-        <td className="border border-black p-1 text-center">{sum.akl.jml}</td>
         {/* AKAD */}
         <td className="border border-black p-1 text-center">{sum.akad.l}</td>
         <td className="border border-black p-1 text-center">{sum.akad.p}</td>
-        <td className="border border-black p-1 text-center">{sum.akad.jml}</td>
         {/* AKAN */}
         <td className="border border-black p-1 text-center">{sum.akan.l}</td>
         <td className="border border-black p-1 text-center">{sum.akan.p}</td>
-        <td className="border border-black p-1 text-center">{sum.akan.jml}</td>
         {/* Total */}
         <td className="border border-black p-1 text-center">{sum.total.l}</td>
         <td className="border border-black p-1 text-center">{sum.total.p}</td>
@@ -108,7 +98,7 @@ export default function IPK38Table({
       <colgroup>
         <col className="w-10" />
         <col className="w-[250px]" />
-        {Array(12)
+        {Array(9)
           .fill(null)
           .map((_, i) => (
             <col key={`g-${i}`} className="w-12" />
@@ -118,29 +108,29 @@ export default function IPK38Table({
         {/* Main Title */}
         <tr>
           <th
-            colSpan={14}
+            colSpan={11}
             className="p-2 text-center text-lg font-bold border-none"
           >
             {getSheetTitle("ipk3.8")}
           </th>
         </tr>
         <tr>
-          <th colSpan={14} className="p-1 text-center font-bold border-none">
+          <th colSpan={11} className="p-1 text-center font-bold border-none">
             PENERIMA TENAGA KERJA DAN JENIS KELAMIN
           </th>
         </tr>
         <tr>
-          <th colSpan={14} className="p-1 text-center font-bold border-none">
+          <th colSpan={11} className="p-1 text-center font-bold border-none">
             DI KABUPATEN PASER
           </th>
         </tr>
         <tr>
-          <th colSpan={14} className="p-1 text-center font-bold border-none">
+          <th colSpan={11} className="p-1 text-center font-bold border-none">
             {headerDateString}
           </th>
         </tr>
         <tr>
-          <th colSpan={14} className="h-4 border-none"></th>
+          <th colSpan={11} className="h-4 border-none"></th>
         </tr>
 
         {/* --- TABLE 1 HEADER --- */}
@@ -151,7 +141,7 @@ export default function IPK38Table({
           <th className="border border-black p-1 align-middle" rowSpan={3}>
             I . Tingkat Pendidikan Pencari Kerja yg ditempatkan
           </th>
-          <th className="border border-black p-1 align-middle" colSpan={9}>
+          <th className="border border-black p-1 align-middle" colSpan={6}>
             Jenis Antar Kerja
           </th>
           <th
@@ -163,13 +153,13 @@ export default function IPK38Table({
           </th>
         </tr>
         <tr className="bg-gray-200">
-          <th className="border border-black p-1 align-middle" colSpan={3}>
+          <th className="border border-black p-1 align-middle" colSpan={2}>
             AKL
           </th>
-          <th className="border border-black p-1 align-middle" colSpan={3}>
+          <th className="border border-black p-1 align-middle" colSpan={2}>
             AKAD
           </th>
-          <th className="border border-black p-1 align-middle" colSpan={3}>
+          <th className="border border-black p-1 align-middle" colSpan={2}>
             AKAN
           </th>
         </tr>
@@ -177,15 +167,12 @@ export default function IPK38Table({
           {/* AKL L/P/JML */}
           <th className="border border-black p-1 text-center">L</th>
           <th className="border border-black p-1 text-center">P</th>
-          <th className="border border-black p-1 text-center">JML</th>
           {/* AKAD L/P/JML */}
           <th className="border border-black p-1 text-center">L</th>
           <th className="border border-black p-1 text-center">P</th>
-          <th className="border border-black p-1 text-center">JML</th>
           {/* AKAN L/P/JML */}
           <th className="border border-black p-1 text-center">L</th>
           <th className="border border-black p-1 text-center">P</th>
-          <th className="border border-black p-1 text-center">JML</th>
           {/* TOTAL L/P/JML */}
           <th className="border border-black p-1 text-center">L</th>
           <th className="border border-black p-1 text-center">P</th>
@@ -195,7 +182,7 @@ export default function IPK38Table({
         <tr className="bg-gray-200">
           <th className="border border-black p-1 text-center font-normal">1</th>
           <th className="border border-black p-1 text-center font-normal">2</th>
-          {Array(12)
+          {Array(9)
             .fill(null)
             .map((_, i) => (
               <th
@@ -213,7 +200,7 @@ export default function IPK38Table({
 
         {/* --- SPACER --- */}
         <tr>
-          <td colSpan={14} className="h-6 border-none"></td>
+          <td colSpan={11} className="h-6 border-none"></td>
         </tr>
 
         {/* --- TABLE 2 HEADER --- */}
@@ -224,7 +211,7 @@ export default function IPK38Table({
           <th className="border border-black p-1 align-middle" rowSpan={3}>
             II. Penerima Pencari Kerja
           </th>
-          <th className="border border-black p-1 align-middle" colSpan={9}>
+          <th className="border border-black p-1 align-middle" colSpan={6}>
             Jenis Antar Kerja
           </th>
           <th
@@ -236,13 +223,13 @@ export default function IPK38Table({
           </th>
         </tr>
         <tr className="bg-gray-200">
-          <th className="border border-black p-1 align-middle" colSpan={3}>
+          <th className="border border-black p-1 align-middle" colSpan={2}>
             AKL
           </th>
-          <th className="border border-black p-1 align-middle" colSpan={3}>
+          <th className="border border-black p-1 align-middle" colSpan={2}>
             AKAD
           </th>
-          <th className="border border-black p-1 align-middle" colSpan={3}>
+          <th className="border border-black p-1 align-middle" colSpan={2}>
             AKAN
           </th>
         </tr>
@@ -250,15 +237,12 @@ export default function IPK38Table({
           {/* AKL L/P/JML */}
           <th className="border border-black p-1 text-center">L</th>
           <th className="border border-black p-1 text-center">P</th>
-          <th className="border border-black p-1 text-center">JML</th>
           {/* AKAD L/P/JML */}
           <th className="border border-black p-1 text-center">L</th>
           <th className="border border-black p-1 text-center">P</th>
-          <th className="border border-black p-1 text-center">JML</th>
           {/* AKAN L/P/JML */}
           <th className="border border-black p-1 text-center">L</th>
           <th className="border border-black p-1 text-center">P</th>
-          <th className="border border-black p-1 text-center">JML</th>
           {/* TOTAL L/P/JML */}
           <th className="border border-black p-1 text-center">L</th>
           <th className="border border-black p-1 text-center">P</th>
@@ -272,8 +256,8 @@ export default function IPK38Table({
             So NO numbering row for Table 2.
         */}
 
-        {ipk38DataPart2.map((row, idx) => renderRow(row, idx))}
-        {calculateFooter(ipk38DataPart2)}
+        {dataPart2.map((row, idx) => renderRow(row, idx))}
+        {calculateFooter(dataPart2)}
       </tbody>
     </table>
   );
