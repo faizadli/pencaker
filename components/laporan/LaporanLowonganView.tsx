@@ -57,8 +57,20 @@ export default function LaporanLowonganView({
   );
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
-  const [startDate, setStartDate] = useState("2025-08-01");
-  const [endDate, setEndDate] = useState("2025-08-31");
+  const [startDate, setStartDate] = useState(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    return `${y}-${m}-01`;
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth() + 1;
+    const lastDay = new Date(y, m, 0).getDate();
+    const mStr = String(m).padStart(2, "0");
+    return `${y}-${mStr}-${lastDay}`;
+  });
   const [lowonganData, setLowonganData] = useState<LowonganReportItem[]>([]);
   const [penempatanData, setPenempatanData] = useState<PenempatanReportItem[]>(
     [],
