@@ -358,3 +358,15 @@ export async function listRegencies() {
   if (!resp.ok) throw new Error("Gagal mengambil regencies");
   return resp.json();
 }
+
+export async function listDistrictsByRegency(regencyId: string) {
+  if (!regencyId) return { data: [] };
+  const resp = await fetch(
+    `${BASE}/api/regions/districts/${encodeURIComponent(regencyId)}`,
+    {
+      headers: { ...authHeader() },
+    },
+  );
+  if (!resp.ok) throw new Error("Gagal mengambil districts");
+  return resp.json();
+}

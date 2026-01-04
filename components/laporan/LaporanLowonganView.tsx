@@ -130,6 +130,22 @@ export default function LaporanLowonganView({
 
   const selectedCompany = companies.find((c) => c.id === selectedCompanyId);
 
+  const MONTH_NAMES = [
+    "",
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
+
   const handleExport = async (mode: "current" | "all") => {
     const workbook = new ExcelJS.Workbook();
 
@@ -360,7 +376,7 @@ export default function LaporanLowonganView({
           const row = sheetLowongan.addRow([
             null, // Margin
             index + 1,
-            item.bulan,
+            MONTH_NAMES[item.bulan] || item.bulan,
             item.tahun,
             item.lapangan_usaha,
             item.kode_jabatan,
@@ -400,13 +416,13 @@ export default function LaporanLowonganView({
           const row = sheetPenempatan.addRow([
             null, // Margin
             index + 1,
-            item.bulan,
+            MONTH_NAMES[item.bulan] || item.bulan,
             item.tahun,
             item.nama_tenaga_kerja,
             item.nik,
             item.alamat_tenaga_kerja,
-            item.provinsi,
-            item.kab_kota,
+            "Kalimantan Timur",
+            "Paser",
             item.email,
             item.nomor_hp,
             item.jenis_kelamin === "L"
@@ -639,7 +655,7 @@ export default function LaporanLowonganView({
                     "w-20",
                     "w-24",
                     "w-32",
-                    "w-24",
+                    "w-40",
                     "w-32",
                     "w-32",
                     "w-24",
@@ -781,7 +797,7 @@ export default function LaporanLowonganView({
                       {index + 1}
                     </td>
                     <td className="border border-black p-2 text-center">
-                      {item.bulan}
+                      {MONTH_NAMES[item.bulan] || item.bulan}
                     </td>
                     <td className="border border-black p-2 text-center">
                       {item.tahun}
@@ -821,7 +837,7 @@ export default function LaporanLowonganView({
                       {index + 1}
                     </td>
                     <td className="border border-black p-2 text-center">
-                      {item.bulan}
+                      {MONTH_NAMES[item.bulan] || item.bulan}
                     </td>
                     <td className="border border-black p-2 text-center">
                       {item.tahun}
@@ -833,8 +849,10 @@ export default function LaporanLowonganView({
                     <td className="border border-black p-2">
                       {item.alamat_tenaga_kerja}
                     </td>
-                    <td className="border border-black p-2">{item.provinsi}</td>
-                    <td className="border border-black p-2">{item.kab_kota}</td>
+                    <td className="border border-black p-2">
+                      Kalimantan Timur
+                    </td>
+                    <td className="border border-black p-2">Paser</td>
                     <td className="border border-black p-2">{item.email}</td>
                     <td className="border border-black p-2">{item.nomor_hp}</td>
                     <td className="border border-black p-2 text-center">
@@ -848,7 +866,7 @@ export default function LaporanLowonganView({
                       {item.pendidikan}
                     </td>
                     <td className="border border-black p-2">{item.jurusan}</td>
-                    <td className="border border-black p-2">
+                    <td className="border border-black p-2 break-words whitespace-normal">
                       {item.kab_kota_penempatan}
                     </td>
                     <td className="border border-black p-2">

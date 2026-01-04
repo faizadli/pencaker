@@ -23,6 +23,7 @@ import {
   getJobById,
   createApplicationByAdmin,
   listRegencies,
+  listDistrictsByRegency,
 } from "../../../../../services/jobs";
 import {
   getCandidateProfileById,
@@ -250,11 +251,16 @@ export default function PelamarLowonganPage() {
     "AKL",
   );
   const [placementRegency, setPlacementRegency] = useState<string>("");
+  const [placementCity, setPlacementCity] = useState<string>("");
   const [placementCountry, setPlacementCountry] = useState<string>("");
   const [regencies, setRegencies] = useState<{ id: string; name: string }[]>(
     [],
   );
   const [regencyLoading, setRegencyLoading] = useState(false);
+  const [districts, setDistricts] = useState<{ id: string; name: string }[]>(
+    [],
+  );
+  const [districtLoading, setDistrictLoading] = useState(false);
 
   // Start Work State
   const [startWorkDate, setStartWorkDate] = useState<string>("");
@@ -284,6 +290,35 @@ export default function PelamarLowonganPage() {
     }
   }, [regencies.length, hasData]);
 
+  useEffect(() => {
+    if (placementType === "AKAD" && placementRegency) {
+      const r = regencies.find((x) => x.name === placementRegency);
+      if (r) {
+        setDistrictLoading(true);
+        listDistrictsByRegency(r.id)
+          .then((res) => {
+            const data = hasData(res) ? res.data : res;
+            if (Array.isArray(data)) {
+              setDistricts(
+                (data as { id: string; name: string }[]).map((d) => ({
+                  id: String(d.id),
+                  name: String(d.name),
+                })),
+              );
+            } else {
+              setDistricts([]);
+            }
+          })
+          .catch(() => setDistricts([]))
+          .finally(() => setDistrictLoading(false));
+      } else {
+        setDistricts([]);
+      }
+    } else {
+      setDistricts([]);
+    }
+  }, [placementType, placementRegency, regencies, hasData]);
+
   const openPlacement = (row: {
     id: string;
     candidate_id: string;
@@ -300,7 +335,17 @@ export default function PelamarLowonganPage() {
       pType = pType.toUpperCase() as "AKL" | "AKAD" | "AKAN";
     }
     setPlacementType(pType as "AKL" | "AKAD" | "AKAN");
-    setPlacementRegency(row.placement_regency || "");
+
+    const regVal = row.placement_regency || "";
+    if (regVal.includes(",")) {
+      const parts = regVal.split(",");
+      setPlacementRegency(parts[0].trim());
+      setPlacementCity(parts.slice(1).join(",").trim());
+    } else {
+      setPlacementRegency(regVal);
+      setPlacementCity("");
+    }
+
     setPlacementCountry(row.placement_country || "");
     setShowPlacementModal(true);
     fetchRegencies();
@@ -310,9 +355,15 @@ export default function PelamarLowonganPage() {
     if (!selected) return;
     try {
       setSaving("placement-" + selected.id);
+
+      let finalRegency = placementRegency;
+      if (placementType === "AKAD" && placementCity) {
+        finalRegency = `${placementRegency},${placementCity}`;
+      }
+
       await updateApplication(selected.id, {
         placement_type: placementType,
-        placement_regency: placementType === "AKAD" ? placementRegency : null,
+        placement_regency: placementType === "AKAD" ? finalRegency : null,
         placement_country: placementType === "AKAN" ? placementCountry : null,
       });
 
@@ -1397,11 +1448,30 @@ export default function PelamarLowonganPage() {
                       label: r.name,
                     }))}
                     value={placementRegency}
-                    onChange={setPlacementRegency}
+                    onChange={(val) => {
+                      setPlacementRegency(val);
+                      setPlacementCity("");
+                    }}
                     placeholder="Pilih Kabupaten..."
                     isLoading={regencyLoading}
                     className="w-full"
                   />
+                  <div className="mt-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Pilih Kota/Kecamatan
+                    </label>
+                    <SearchableSelect
+                      options={districts.map((d) => ({
+                        value: d.name,
+                        label: d.name,
+                      }))}
+                      value={placementCity}
+                      onChange={setPlacementCity}
+                      placeholder="Pilih Kota/Kecamatan..."
+                      isLoading={districtLoading}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
               )}
 
