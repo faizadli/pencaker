@@ -25,6 +25,7 @@ type CandidateDetail = {
   email?: string | null;
   created_at?: string;
   ak1_status?: "APPROVED" | "REJECTED" | "PENDING" | "PLACED";
+  ak1_placed_at?: string;
   cv_file?: string;
   resume_text?: string;
 };
@@ -149,6 +150,12 @@ export default function DetailPencakerPage() {
                           ? "Sudah Ditempatkan"
                           : "Belum Melakukan Pengajuan"}
                 </span>
+                {candidate.ak1_status === "PLACED" &&
+                  candidate.ak1_placed_at && (
+                    <div className="mt-2 text-xs text-blue-600">
+                      Sejak {toDate(candidate.ak1_placed_at)}
+                    </div>
+                  )}
               </div>
 
               <div className="border-t border-gray-100 pt-4 text-left space-y-3">

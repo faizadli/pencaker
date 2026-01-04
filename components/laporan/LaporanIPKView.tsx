@@ -4,7 +4,14 @@ import { saveAs } from "file-saver";
 import { useState, useEffect } from "react";
 import Card from "../ui/Card";
 import { useToast } from "../ui/Toast";
-import { TABS, GenericRow, BaseGroup, IPK3_7Row, IPK3_8Row } from "./types";
+import {
+  TABS,
+  GenericRow,
+  BaseGroup,
+  IPK3_7Row,
+  IPK3_8Row,
+  InitialData,
+} from "./types";
 import {
   getSheetTitle,
   formatDateIndo,
@@ -28,6 +35,7 @@ import {
   getPositionGroups,
   getJobCategoryGroups,
 } from "../../services/site";
+import { getReportIPK31 } from "../../services/report";
 
 interface LaporanIPKViewProps {
   onBack: () => void;
@@ -37,17 +45,29 @@ export default function LaporanIPKView({ onBack }: LaporanIPKViewProps) {
   const { showSuccess, showError } = useToast();
 
   const [activeTab, setActiveTab] = useState("ipk3.1");
-  const [startDate, setStartDate] = useState("2025-08-01");
-  const [endDate, setEndDate] = useState("2025-08-31");
+  const [startDate, setStartDate] = useState("2026-01-01");
+  const [endDate, setEndDate] = useState("2026-01-31");
   const [educationData, setEducationData] = useState<GenericRow[]>([]);
   const [ipk37Data, setIPK37Data] = useState<IPK3_7Row[]>([]);
   const [ipk38Data, setIPK38Data] = useState<IPK3_8Row[]>([]);
+  const [ipk31Data, setIpk31Data] = useState<InitialData | undefined>(
+    undefined,
+  );
   const [isExporting, setIsExporting] = useState(false);
 
   const headerDateString = `PADA TANGGAL : ${formatDateIndo(startDate)} s/d ${formatDateIndo(endDate)}`;
 
   useEffect(() => {
-    if (activeTab === "ipk3.2" || activeTab === "ipk3.4") {
+    if (activeTab === "ipk3.1") {
+      getReportIPK31(startDate, endDate)
+        .then((res: { data: InitialData }) => {
+          setIpk31Data(res.data);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch IPK 3.1 data", err);
+          showError("Gagal mengambil data IPK 3.1");
+        });
+    } else if (activeTab === "ipk3.2" || activeTab === "ipk3.4") {
       getEducationGroups()
         .then((res: unknown) => {
           const response = res as { data: BaseGroup[] };
@@ -103,7 +123,7 @@ export default function LaporanIPKView({ onBack }: LaporanIPKViewProps) {
           showError("Gagal mengambil data pendidikan");
         });
     }
-  }, [activeTab, showError]);
+  }, [activeTab, showError, startDate, endDate]);
 
   const handleExportExcel = async () => {
     if (isExporting) return;
@@ -132,12 +152,22 @@ export default function LaporanIPKView({ onBack }: LaporanIPKViewProps) {
       };
 
       if (activeTab === "ipk3.1") {
+        let data = ipk31Data;
+        if (!data) {
+          const res: { data: InitialData } = await getReportIPK31(
+            startDate,
+            endDate,
+          );
+          data = res.data;
+          setIpk31Data(data);
+        }
         exportIPK3_1(
           worksheet,
           defaultBorder,
           centerAlignment,
           leftAlignment,
           headerDateString,
+          data,
         );
       } else if (
         ["ipk3.2", "ipk3.3", "ipk3.4", "ipk3.5", "ipk3.6"].includes(activeTab)
@@ -214,15 +244,17 @@ export default function LaporanIPKView({ onBack }: LaporanIPKViewProps) {
       };
 
       // Fetch all required data in parallel
-      const [eduRes, posRes, jobRes] = await Promise.all([
+      const [eduRes, posRes, jobRes, ipk31Res] = await Promise.all([
         getEducationGroups(),
         getPositionGroups(),
         getJobCategoryGroups(),
+        getReportIPK31(startDate, endDate),
       ]);
 
       const eduData = (eduRes as { data: BaseGroup[] }).data;
       const posData = (posRes as { data: BaseGroup[] }).data;
       const jobData = (jobRes as { data: BaseGroup[] }).data;
+      const ipk31 = (ipk31Res as { data: InitialData }).data;
 
       const eduRows = processDataToRows(eduData);
       const posRows = processDataToRows(posData);
@@ -238,6 +270,7 @@ export default function LaporanIPKView({ onBack }: LaporanIPKViewProps) {
             centerAlignment,
             leftAlignment,
             headerDateString,
+            ipk31,
           );
         } else if (tab.id === "ipk3.2" || tab.id === "ipk3.4") {
           exportGeneric12Col(
@@ -431,7 +464,10 @@ export default function LaporanIPKView({ onBack }: LaporanIPKViewProps) {
         <div className="overflow-x-auto">
           <div className="min-w-[1200px] p-6">
             {activeTab === "ipk3.1" && (
-              <IPK31Table headerDateString={headerDateString} />
+              <IPK31Table
+                headerDateString={headerDateString}
+                data={ipk31Data}
+              />
             )}
 
             {["ipk3.2", "ipk3.3", "ipk3.4", "ipk3.5", "ipk3.6"].includes(

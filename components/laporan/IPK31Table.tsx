@@ -1,11 +1,18 @@
-import { initialData } from "./real-data";
+import { InitialData } from "./types";
 import { getSheetTitle } from "./helpers";
 
 interface IPK31TableProps {
   headerDateString: string;
+  data?: InitialData;
 }
 
-export default function IPK31Table({ headerDateString }: IPK31TableProps) {
+export default function IPK31Table({
+  headerDateString,
+  data,
+}: IPK31TableProps) {
+  if (!data) return null;
+
+  const displayData = data;
   return (
     <table className="w-full border-collapse border border-black text-xs font-sans table-fixed">
       <colgroup>
@@ -89,7 +96,7 @@ export default function IPK31Table({ headerDateString }: IPK31TableProps) {
         </tr>
       </thead>
       <tbody>
-        {initialData.pencariKerja.map((row, idx) => (
+        {displayData.pencariKerja.map((row, idx) => (
           <tr
             key={`pk-${idx}`}
             className={row.bold ? "font-bold bg-gray-50" : ""}
@@ -126,7 +133,7 @@ export default function IPK31Table({ headerDateString }: IPK31TableProps) {
               <td key={`empty-n-${i}`} className="p-1"></td>
             ))}
         </tr>
-        {initialData.lowongan.map((row, idx) => (
+        {displayData.lowongan.map((row, idx) => (
           <tr
             key={`lw-${idx}`}
             className={row.bold ? "font-bold bg-gray-50" : ""}

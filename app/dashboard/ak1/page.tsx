@@ -92,6 +92,7 @@ type Ak1Document = {
   nip_renew_1?: string | null;
   nip_renew_2?: string | null;
   nip_renew_3?: string | null;
+  placed_at?: string;
 } & {
   ktp_file?: string;
   ijazah_file?: string;

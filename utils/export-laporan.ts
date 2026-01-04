@@ -1,7 +1,11 @@
 import * as ExcelJS from "exceljs";
 import { getSheetTitle, getLabelHeader } from "../components/laporan/helpers";
-import { initialData, ipk37Data } from "../components/laporan/real-data";
-import { GenericRow, IPK3_8Row } from "../components/laporan/types";
+import { ipk37Data } from "../components/laporan/real-data";
+import {
+  GenericRow,
+  IPK3_8Row,
+  InitialData,
+} from "../components/laporan/types";
 
 // Helper styles
 const thinBorder: Partial<ExcelJS.Borders> = {
@@ -33,6 +37,7 @@ export const exportIPK3_1 = (
   center: Partial<ExcelJS.Alignment>,
   left: Partial<ExcelJS.Alignment>,
   headerDateString: string,
+  data?: InitialData,
 ) => {
   // 1. Title Row (Row 1)
   worksheet.mergeCells("A1:N1");
@@ -116,7 +121,8 @@ export const exportIPK3_1 = (
 
   // 5. Data - PENCARI KERJA
   let currentRowIdx = 7;
-  initialData.pencariKerja.forEach((row) => {
+  const pencakerRows = data?.pencariKerja || [];
+  pencakerRows.forEach((row) => {
     const rowData = [row.label, ...row.data];
     const wsRow = worksheet.getRow(currentRowIdx);
 
@@ -212,7 +218,8 @@ export const exportIPK3_1 = (
   currentRowIdx++;
 
   // 8. Section II Data
-  initialData.lowongan.forEach((row) => {
+  const lowonganRows = data?.lowongan || [];
+  lowonganRows.forEach((row) => {
     const wsRow = worksheet.getRow(currentRowIdx);
     const cellLabel = wsRow.getCell(1);
     cellLabel.value = row.label;
