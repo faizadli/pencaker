@@ -58,21 +58,30 @@ export async function registerUser(
   return (data || {}) as AuthEnvelope;
 }
 
+export type LoginResponse = {
+  role: string;
+  id: string;
+  token: string;
+  confirmation_required?: boolean;
+};
+
 export async function login(
   credential: { email?: string; no_handphone?: string },
   password: string,
-) {
+  force_login?: boolean,
+): Promise<LoginResponse> {
   const resp = await fetch(`${BASE}/api/user/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...credential, password }),
+    body: JSON.stringify({ ...credential, password, force_login }),
   });
   if (!resp.ok) throw new Error("Login gagal");
   const data = await resp.json();
   return {
-    role: String(data.role),
-    id: String(data.id),
+    role: String(data.role || ""),
+    id: String(data.id || ""),
     token: String(data.token || ""),
+    confirmation_required: data.confirmation_required || false,
   };
 }
 
@@ -165,4 +174,50 @@ export async function verifyEmailOtp(email: string, code: string) {
   if (!resp.ok)
     throw new Error(String(data?.message || "Kode OTP email salah"));
   return { ok: true };
+}
+
+/**
+ * Logout for admin users - deletes session from database
+ * Should be called before clearing local auth for super_admin and disnaker roles
+ */
+export async function adminLogout(): Promise<{ ok: boolean }> {
+  const token = getToken();
+  if (!token) return { ok: true };
+  try {
+    await fetch(`${BASE}/api/session/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    // Ignore errors - continue with local logout
+  }
+  return { ok: true };
+}
+
+/**
+ * Validate admin session - returns false if session was invalidated
+ * Used for polling to detect when session was replaced by another device
+ */
+export async function validateAdminSession(): Promise<{
+  valid: boolean;
+  code?: string;
+}> {
+  const token = getToken();
+  if (!token) return { valid: false };
+  try {
+    const resp = await fetch(`${BASE}/api/session/validate`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) {
+      const json = await resp.json().catch(() => null);
+      return { valid: false, code: json?.code || "" };
+    }
+    return { valid: true };
+  } catch {
+    // Network error - assume still valid
+    return { valid: true };
+  }
 }

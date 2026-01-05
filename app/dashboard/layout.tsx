@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Sidebar, { SidebarData } from "../../components/layout/Sidebar";
 import ToastProvider from "../../components/ui/Toast";
 import FullPageLoading from "../../components/ui/FullPageLoading";
+import SessionInvalidatedModal from "../../components/ui/SessionInvalidatedModal";
 import {
   getUserById,
   getCandidateProfile,
@@ -12,6 +13,7 @@ import {
 } from "../../services/profile";
 import { listRoles, getRolePermissions } from "../../services/rbac";
 import { getPublicSiteSettings } from "../../services/site";
+import { validateAdminSession } from "../../services/auth";
 
 export default function DashboardLayout({
   children,
@@ -26,6 +28,50 @@ export default function DashboardLayout({
   const [sidebarData, setSidebarData] = useState<SidebarData | undefined>(
     undefined,
   );
+  const [showInvalidatedModal, setShowInvalidatedModal] = useState(false);
+
+  // Session validation polling for admin roles
+  useEffect(() => {
+    const storedRole =
+      typeof window !== "undefined" ? localStorage.getItem("role") || "" : "";
+
+    // Only poll for admin roles
+    if (storedRole !== "super_admin" && storedRole !== "disnaker") {
+      return;
+    }
+
+    const validateSession = async () => {
+      const result = await validateAdminSession();
+      if (!result.valid && result.code === "SESSION_INVALIDATED") {
+        // Clear local auth and show modal
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        localStorage.removeItem("id");
+        localStorage.removeItem("user_id");
+        if (typeof document !== "undefined") {
+          document.cookie = `sessionToken=; path=/; max-age=0`;
+          document.cookie = `role=; path=/; max-age=0`;
+        }
+        setShowInvalidatedModal(true);
+      }
+    };
+
+    // Initial check after 2 seconds
+    const initialTimeout = setTimeout(validateSession, 2000);
+
+    // Poll every 30 seconds
+    const interval = setInterval(validateSession, 30000);
+
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const handleCloseInvalidatedModal = () => {
+    setShowInvalidatedModal(false);
+    router.replace("/login/admin");
+  };
 
   useEffect(() => {
     const token =
@@ -144,6 +190,11 @@ export default function DashboardLayout({
       <ToastProvider>
         <div className="px-4 sm:px-6">{children}</div>
       </ToastProvider>
+
+      <SessionInvalidatedModal
+        isOpen={showInvalidatedModal}
+        onClose={handleCloseInvalidatedModal}
+      />
     </>
   );
 }

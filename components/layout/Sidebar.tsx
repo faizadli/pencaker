@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Input } from "../ui/field";
 import { usePathname } from "next/navigation";
-import { logout } from "../../services/auth";
+import { logout, adminLogout } from "../../services/auth";
 import {
   getNotifications,
   markAllNotificationsRead,
@@ -449,7 +449,13 @@ export default function Sidebar({
                 <hr className="my-1 border-gray-200" />
                 <li>
                   <button
-                    onClick={() => logout()}
+                    onClick={async () => {
+                      // For admin roles, delete session from database first
+                      if (role === "super_admin" || role === "disnaker") {
+                        await adminLogout();
+                      }
+                      logout();
+                    }}
                     className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-red-50 text-red-600 text-sm"
                   >
                     <i className="ri-logout-box-r-line"></i> Keluar
