@@ -148,7 +148,7 @@ export default function ApplicantDetailPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-20 p-6">
+    <main className="transition-all duration-300 min-h-screen bg-gray-50 pb-20 p-6 lg:ml-64">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6 flex items-center justify-between">
           <button

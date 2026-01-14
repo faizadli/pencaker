@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Input } from "../ui/field";
 import { usePathname } from "next/navigation";
 import { logout, adminLogout } from "../../services/auth";
 import {
@@ -202,60 +201,17 @@ export default function Sidebar({
     <>
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 top-16 lg:top-0 bg-black/50 z-20 lg:hidden"
           onClick={() => setIsMobileOpen(false)}
         ></div>
       )}
 
       <aside
-        className={`fixed top-0 left-0 z-50 h-screen bg-primary text-white transition-transform duration-300 flex flex-col
+        className={`fixed top-16 left-0 z-30 h-screen bg-primary text-white transition-transform duration-300 flex flex-col
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0 ${isMinimized ? "w-16" : "w-64"}`}
       >
-        <div className="flex items-center justify-between p-5 border-b border-white/20">
-          {isMinimized ? (
-            <div className="w-full flex justify-center">
-              {brand.logo ? (
-                <Image
-                  src={brand.logo}
-                  alt={brand.name || "Logo"}
-                  width={500}
-                  height={500}
-                  unoptimized
-                  priority
-                />
-              ) : (
-                <span className="text-2xl">💼</span>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              {brand.logo ? (
-                <Image
-                  src={brand.logo}
-                  alt={brand.name || "Logo"}
-                  width={500}
-                  height={500}
-                  unoptimized
-                  priority
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center">
-                  <i className="ri-building-line"></i>
-                </div>
-              )}
-            </div>
-          )}
-          <button
-            onClick={() => setIsMobileOpen(false)}
-            className="lg:hidden p-2 rounded hover:bg-white/10"
-            aria-label="Tutup Sidebar"
-          >
-            <i className="ri-close-line text-xl"></i>
-          </button>
-        </div>
-
-        <nav className="mt-4 px-2 flex-1 overflow-y-auto">
+        <nav className="px-2 pt-6 flex-1 overflow-y-auto">
           <ul className="space-y-1">
             {filteredItems.map((item) => {
               const isActive = pathname === item.path;
@@ -278,10 +234,7 @@ export default function Sidebar({
         </nav>
       </aside>
 
-      <header
-        className={`fixed top-0 right-0 left-0 z-40 bg-white shadow-sm border-b border-gray-200 px-4 py-3 transition-all duration-300 flex items-center gap-4
-        ${isMinimized ? "lg:left-16" : "lg:left-64"} min-h-16`}
-      >
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white shadow-sm border-b border-gray-200 px-4 py-3 transition-all duration-300 flex items-center gap-4 min-h-16">
         <button
           onClick={() => setIsMobileOpen(true)}
           className="lg:hidden p-2 text-gray-500"
@@ -290,13 +243,19 @@ export default function Sidebar({
           <i className="ri-menu-line text-xl"></i>
         </button>
 
-        <div className="hidden sm:flex flex-grow max-w-[300px]">
-          <Input
-            icon="ri-search-2-line"
-            placeholder="Cari data..."
-            className="bg-gray-50"
-          />
-        </div>
+        {brand.logo ? (
+          <div className="flex items-center gap-2">
+            <Image
+              src={brand.logo}
+              alt={brand.name || "Logo"}
+              width={240}
+              height={72}
+              unoptimized
+              priority
+              className="h-14 w-auto object-contain"
+            />
+          </div>
+        ) : null}
 
         <div className="flex items-center gap-3 sm:gap-6 ml-auto">
           <div className="relative">
