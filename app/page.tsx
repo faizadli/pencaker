@@ -66,6 +66,8 @@ export default function HomePage() {
     instansi_facebook?: string;
     instansi_instagram?: string;
     instansi_youtube?: string;
+    education_groups?: { items?: { id?: string; name?: string }[] }[];
+    kategori_pekerjaan_groups?: { items?: { id?: string; name?: string }[] }[];
   };
   const [activeFaq, setActiveFaq] = useState<string | null>(null);
   const [loadingJobs, setLoadingJobs] = useState(true);
@@ -89,6 +91,33 @@ export default function HomePage() {
     const load = async () => {
       try {
         const resp = await listPublicJobs({ limit: 3 });
+        const eduMap: Record<string, string> = {};
+        const catMap: Record<string, string> = {};
+        try {
+          const s = (await getPublicSiteSettings()) as {
+            data?: SiteSettingsShape;
+          };
+          const cfg: SiteSettingsShape =
+            s.data ?? (s as unknown as SiteSettingsShape);
+          const eduGroups = Array.isArray(cfg?.education_groups)
+            ? cfg.education_groups
+            : [];
+          for (const g of eduGroups) {
+            const items = Array.isArray(g.items) ? g.items : [];
+            for (const it of items) {
+              if (it?.id) eduMap[String(it.id)] = String(it.name || it.id);
+            }
+          }
+          const catGroups = Array.isArray(cfg?.kategori_pekerjaan_groups)
+            ? cfg.kategori_pekerjaan_groups
+            : [];
+          for (const g of catGroups) {
+            const items = Array.isArray(g.items) ? g.items : [];
+            for (const it of items) {
+              if (it?.id) catMap[String(it.id)] = String(it.name || it.id);
+            }
+          }
+        } catch {}
         const raw = resp as unknown as { data?: unknown };
         const arr = Array.isArray(raw.data)
           ? (raw.data as unknown[])
@@ -122,8 +151,10 @@ export default function HomePage() {
             const perusahaan = String(obj["company_name"] || companyId || "-");
             const lokasi = String(obj["work_setup"] || "-");
             const tipe = String(obj["job_type"] || "-");
-            const sektor = String(obj["category"] || "-");
-            const pendidikan = String(obj["education_required"] || "-");
+            const catRaw = String(obj["category"] || "");
+            const eduRaw = String(obj["education_required"] || "");
+            const sektor = String(catMap[catRaw] || catRaw || "-");
+            const pendidikan = String(eduMap[eduRaw] || eduRaw || "-");
             const tanggalSrc = String(
               (obj["updated_at"] ||
                 obj["createdAt"] ||
@@ -318,22 +349,14 @@ export default function HomePage() {
           }),
         );
         try {
-          const [landing, jobs, trainings] = await Promise.all([
-            getPublicLandingStats(),
-            listPublicJobs({ page: 1, limit: 1 }),
-            (async () => {
-              const mod = await import("../services/training");
-              return mod.getPublicTrainings({
-                page: 1,
-                limit: 1,
-                status: "open",
-              });
-            })(),
-          ]);
+          const landing = await getPublicLandingStats();
           type LandingStats = {
             companyRegistered?: number;
+            jobSeekersRegistered?: number;
             contractEmployeesRegistered?: number;
             permanentEmployeesRegistered?: number;
+            activeJobs?: number;
+            openTrainings?: number;
           };
           const landingObj = landing as unknown as {
             ok?: boolean;
@@ -344,16 +367,44 @@ export default function HomePage() {
             (landing as unknown as LandingStats);
           const companies = Number(landingData?.companyRegistered || 0);
           const jobSeekers =
-            Number(landingData?.contractEmployeesRegistered || 0) +
-            Number(landingData?.permanentEmployeesRegistered || 0);
-          const jobsTotal = Number(
-            (jobs as { pagination?: { total?: number } }).pagination?.total ||
-              0,
-          );
-          const trainingsTotal = Number(
-            (trainings as { pagination?: { total?: number } }).pagination
-              ?.total || 0,
-          );
+            landingData?.jobSeekersRegistered != null
+              ? Number(landingData.jobSeekersRegistered)
+              : Number(landingData?.contractEmployeesRegistered || 0) +
+                Number(landingData?.permanentEmployeesRegistered || 0);
+
+          let jobsTotal: number;
+          let trainingsTotal: number;
+
+          if (
+            landingData &&
+            typeof landingData.activeJobs === "number" &&
+            typeof landingData.openTrainings === "number"
+          ) {
+            jobsTotal = Number(landingData.activeJobs || 0);
+            trainingsTotal = Number(landingData.openTrainings || 0);
+          } else {
+            const [jobs, trainings] = await Promise.all([
+              listPublicJobs({ page: 1, limit: 1 }),
+              (async () => {
+                const mod = await import("../services/training");
+                return mod.getPublicTrainings({
+                  page: 1,
+                  limit: 1,
+                  status: "open",
+                });
+              })(),
+            ]);
+
+            jobsTotal = Number(
+              (jobs as { pagination?: { total?: number } }).pagination?.total ||
+                0,
+            );
+            trainingsTotal = Number(
+              (trainings as { pagination?: { total?: number } }).pagination
+                ?.total || 0,
+            );
+          }
+
           setHomeStats([
             {
               label: "Pencari Kerja Terdaftar",

@@ -9,6 +9,7 @@ import {
   applyJob,
   listApplications,
 } from "../../../services/jobs";
+import { getPublicSiteSettings } from "../../../services/site";
 import { getCandidateProfile } from "../../../services/profile";
 import { getPublicCompanyById } from "../../../services/company";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
@@ -50,6 +51,12 @@ export default function JobDetailPage() {
   const [applying, setApplying] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [catMap, setCatMap] = useState<Record<string, string>>({});
+  const [eduMap, setEduMap] = useState<Record<string, string>>({});
+  type SiteSettingsShape = {
+    education_groups?: { items?: { id?: string; name?: string }[] }[];
+    kategori_pekerjaan_groups?: { items?: { id?: string; name?: string }[] }[];
+  };
 
   useEffect(() => {
     async function boot() {
@@ -126,6 +133,34 @@ export default function JobDetailPage() {
             return jid ? { ...r, id: jid } : r;
           });
           setSimilar(mapped.filter((j) => String(j.id) !== id).slice(0, 3));
+        } catch {}
+        try {
+          const s = await getPublicSiteSettings();
+          const cfg: SiteSettingsShape =
+            (s as { data?: SiteSettingsShape }).data ??
+            (s as SiteSettingsShape);
+          const eduGroups = Array.isArray(cfg?.education_groups)
+            ? cfg.education_groups
+            : [];
+          const nextEdu: Record<string, string> = {};
+          for (const g of eduGroups) {
+            const items = Array.isArray(g.items) ? g.items : [];
+            for (const it of items) {
+              if (it?.id) nextEdu[String(it.id)] = String(it.name || it.id);
+            }
+          }
+          setEduMap(nextEdu);
+          const catGroups = Array.isArray(cfg?.kategori_pekerjaan_groups)
+            ? cfg.kategori_pekerjaan_groups
+            : [];
+          const nextCat: Record<string, string> = {};
+          for (const g of catGroups) {
+            const items = Array.isArray(g.items) ? g.items : [];
+            for (const it of items) {
+              if (it?.id) nextCat[String(it.id)] = String(it.name || it.id);
+            }
+          }
+          setCatMap(nextCat);
         } catch {}
       } catch {
         if (!hadCached) setError("Gagal memuat detail lowongan");
@@ -278,12 +313,13 @@ export default function JobDetailPage() {
                 )}
                 {job.education_required && (
                   <span className="px-2 py-1 text-xs bg-white/10 rounded">
-                    {job.education_required}
+                    {eduMap[String(job.education_required)] ||
+                      job.education_required}
                   </span>
                 )}
                 {job.category && (
                   <span className="px-2 py-1 text-xs bg-white/10 rounded">
-                    {job.category}
+                    {catMap[String(job.category)] || job.category}
                   </span>
                 )}
               </div>
@@ -577,7 +613,8 @@ export default function JobDetailPage() {
                       )}
                       {sj.education_required && (
                         <span className="px-2 py-1 text-[11px] bg-gray-100 text-primary rounded-full">
-                          {sj.education_required}
+                          {eduMap[String(sj.education_required)] ||
+                            sj.education_required}
                         </span>
                       )}
                     </div>

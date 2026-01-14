@@ -325,6 +325,12 @@ export default function JobsPage() {
 
 function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
   const [logo, setLogo] = useState("");
+  const [catMap, setCatMap] = useState<Record<string, string>>({});
+  const [eduMap, setEduMap] = useState<Record<string, string>>({});
+  type SiteSettingsShape = {
+    education_groups?: { items?: { id?: string; name?: string }[] }[];
+    kategori_pekerjaan_groups?: { items?: { id?: string; name?: string }[] }[];
+  };
   const skills = useMemo(
     () =>
       (job.skills_required || "")
@@ -337,6 +343,42 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
     let alive = true;
     (async () => {
       try {
+        // Populate local mapping if empty
+        if (
+          Object.keys(catMap).length === 0 ||
+          Object.keys(eduMap).length === 0
+        ) {
+          try {
+            const mod = await import("../../services/site");
+            const s = (await mod.getPublicSiteSettings()) as {
+              data?: SiteSettingsShape;
+            };
+            const cfg: SiteSettingsShape =
+              s.data ?? (s as unknown as SiteSettingsShape);
+            const eduGroups = Array.isArray(cfg?.education_groups)
+              ? cfg.education_groups
+              : [];
+            const nextEdu: Record<string, string> = {};
+            for (const g of eduGroups) {
+              const items = Array.isArray(g.items) ? g.items : [];
+              for (const it of items) {
+                if (it?.id) nextEdu[String(it.id)] = String(it.name || it.id);
+              }
+            }
+            if (alive) setEduMap(nextEdu);
+            const catGroups = Array.isArray(cfg?.kategori_pekerjaan_groups)
+              ? cfg.kategori_pekerjaan_groups
+              : [];
+            const nextCat: Record<string, string> = {};
+            for (const g of catGroups) {
+              const items = Array.isArray(g.items) ? g.items : [];
+              for (const it of items) {
+                if (it?.id) nextCat[String(it.id)] = String(it.name || it.id);
+              }
+            }
+            if (alive) setCatMap(nextCat);
+          } catch {}
+        }
         const c = await getPublicCompanyById(String(job.company_id));
         const cdata =
           (c as { data?: { company_logo?: string } }).data ||
@@ -349,7 +391,7 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
     return () => {
       alive = false;
     };
-  }, [job.company_id]);
+  }, [job.company_id, catMap, eduMap]);
   const deadline = job.application_deadline;
   const closed = job.status === "closed";
   const dateLabel = new Date(deadline).toLocaleDateString("id-ID", {
@@ -385,7 +427,7 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
             {job.category && (
               <span className="flex items-center gap-1">
                 <i className="ri-briefcase-line"></i>
-                {job.category}
+                {catMap[String(job.category)] || job.category}
               </span>
             )}
             {job.job_type && (
@@ -397,7 +439,8 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
             {job.education_required && (
               <span className="flex items-center gap-1">
                 <i className="ri-graduation-cap-line"></i>
-                {job.education_required}
+                {eduMap[String(job.education_required)] ||
+                  job.education_required}
               </span>
             )}
             {job.experience_required && (
