@@ -17,11 +17,6 @@ import {
   exportIPK3_8,
 } from "../../utils/export-laporan";
 import {
-  getEducationGroups,
-  getPositionGroups,
-  getJobCategoryGroups,
-} from "../../services/site";
-import {
   getReportIPK31,
   getReportIPK32,
   getReportIPK33,
@@ -292,7 +287,7 @@ export default function LaporanIPKView({ onBack }: LaporanIPKViewProps) {
         wrapText: true,
       };
 
-      // Fetch all required data in parallel
+      // Fetch all required report data in parallel
       const [
         ipk31Res,
         ipk32Res,
@@ -303,9 +298,6 @@ export default function LaporanIPKView({ onBack }: LaporanIPKViewProps) {
         ipk37Res,
         ipk38Res,
       ] = await Promise.all([
-        getEducationGroups(),
-        getPositionGroups(),
-        getJobCategoryGroups(),
         getReportIPK31(startDate, endDate),
         getReportIPK32(startDate, endDate),
         getReportIPK33(startDate, endDate),
