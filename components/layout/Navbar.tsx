@@ -22,10 +22,15 @@ export default function Navbar() {
     if (typeof window === "undefined") return () => {};
     const checkAndEmit = () => {
       const token = localStorage.getItem("token") || "";
-      const uid = localStorage.getItem("id") || localStorage.getItem("user_id") || "";
+      const uid =
+        localStorage.getItem("id") || localStorage.getItem("user_id") || "";
       const expMs = token ? decodeExpMs(token) : 0;
       const now = Date.now();
-      const hasCookie = typeof document !== "undefined" && document.cookie.split(";").some((c) => c.trim().startsWith("sessionToken="));
+      const hasCookie =
+        typeof document !== "undefined" &&
+        document.cookie
+          .split(";")
+          .some((c) => c.trim().startsWith("sessionToken="));
       const valid = Boolean(token && uid && expMs > now && hasCookie);
       if (!valid && (token || uid || hasCookie)) {
         try {
@@ -44,9 +49,18 @@ export default function Navbar() {
         window.dispatchEvent(new Event("auth:update"));
       }
     };
-    const timer = window.setInterval(() => { checkAndEmit(); cb(); }, 30000);
-    const onFocus = () => { checkAndEmit(); cb(); };
-    const onVisibility = () => { checkAndEmit(); cb(); };
+    const timer = window.setInterval(() => {
+      checkAndEmit();
+      cb();
+    }, 30000);
+    const onFocus = () => {
+      checkAndEmit();
+      cb();
+    };
+    const onVisibility = () => {
+      checkAndEmit();
+      cb();
+    };
     window.addEventListener("storage", cb);
     window.addEventListener("auth:update", cb as EventListener);
     window.addEventListener("focus", onFocus);
@@ -77,20 +91,35 @@ export default function Navbar() {
   const getSnapshot = () => {
     if (typeof window === "undefined") return "|";
     const token = localStorage.getItem("token") || "";
-    const uid = localStorage.getItem("id") || localStorage.getItem("user_id") || "";
+    const uid =
+      localStorage.getItem("id") || localStorage.getItem("user_id") || "";
     const expMs = token ? decodeExpMs(token) : 0;
     const now = Date.now();
-    const hasCookie = typeof document !== "undefined" && document.cookie.split(";").some((c) => c.trim().startsWith("sessionToken="));
+    const hasCookie =
+      typeof document !== "undefined" &&
+      document.cookie
+        .split(";")
+        .some((c) => c.trim().startsWith("sessionToken="));
     const valid = Boolean(token && uid && expMs > now && hasCookie);
     return valid ? `${token}|${uid}` : "|";
   };
   const getServerSnapshot = () => "|";
   const snap = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const isLoggedIn = (() => { const [t, u] = snap.split("|"); return Boolean(t && u); })();
-  const isAuthFlow = (pathname || "").startsWith("/login") || (pathname || "").startsWith("/register");
+  const isLoggedIn = (() => {
+    const [t, u] = snap.split("|");
+    return Boolean(t && u);
+  })();
+  const isAuthFlow =
+    (pathname || "").startsWith("/login") ||
+    (pathname || "").startsWith("/register");
   const showLoggedIn = isAuthFlow ? false : isLoggedIn;
   const closeMoreTimer = useRef<number | null>(null);
-  const cancelCloseMore = () => { if (closeMoreTimer.current) { clearTimeout(closeMoreTimer.current); closeMoreTimer.current = null; } };
+  const cancelCloseMore = () => {
+    if (closeMoreTimer.current) {
+      clearTimeout(closeMoreTimer.current);
+      closeMoreTimer.current = null;
+    }
+  };
   const isRoute = (href: string) => {
     if (!pathname) return false;
     return href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -99,7 +128,7 @@ export default function Navbar() {
     (pathname || "").startsWith("/pelatihan") ||
     (pathname || "").startsWith("/transmigrasi") ||
     (pathname || "").startsWith("/hubungan-industri") ||
-    (pathname || "").startsWith("/penempatan")
+    (pathname || "").startsWith("/penempatan"),
   );
 
   useEffect(() => {
@@ -117,13 +146,23 @@ export default function Navbar() {
   if (isDashboard) return null;
   return (
     <div>
-      <nav ref={navRef} className="bg-white shadow-lg border-b border-gray-200 fixed top-0 left-0 right-0 z-50 w-full">
+      <nav
+        ref={navRef}
+        className="bg-white shadow-lg border-b border-gray-200 fixed top-0 left-0 right-0 z-50 w-full"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center gap-3">
                 {brand.logo ? (
-                  <Image src={brand.logo} alt={brand.name || "Logo"} width={200} height={200} className="object-contain h-8 sm:h-10 md:h-12 w-auto" unoptimized />
+                  <Image
+                    src={brand.logo}
+                    alt={brand.name || "Logo"}
+                    width={200}
+                    height={200}
+                    className="object-contain h-8 sm:h-10 md:h-12 w-auto"
+                    unoptimized
+                  />
                 ) : (
                   <div className="bg-primary rounded-lg flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12">
                     <i className="ri-building-line text-white text-base sm:text-lg md:text-xl"></i>
@@ -134,24 +173,130 @@ export default function Navbar() {
 
             <div className="hidden xl:block">
               <div className="ml-6 lg:ml-10 flex items-baseline space-x-2 lg:space-x-3">
-                <Link href="/" className={isRoute("/") ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"}>Beranda</Link>
-                <Link href="/about" className={isRoute("/about") ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"}>
+                <Link
+                  href="/"
+                  className={
+                    isRoute("/")
+                      ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
+                      : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
+                  }
+                >
+                  Beranda
+                </Link>
+                <Link
+                  href="/about"
+                  className={
+                    isRoute("/about")
+                      ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
+                      : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
+                  }
+                >
                   <span className="hidden xl:inline">Tentang Kami</span>
                   <span className="xl:hidden">Tentang</span>
                 </Link>
-                <Link href="/jobs" className={isRoute("/jobs") ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"}>Lowongan</Link>
-                <Link href="/bkk" className={isRoute("/bkk") ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"}>BKK</Link>
-                <Link href="/informasi" className={isRoute("/informasi") ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"}>Informasi</Link>
-                <div className="relative" onMouseEnter={() => { cancelCloseMore(); setOpenMore(true); }} onMouseLeave={() => { cancelCloseMore(); closeMoreTimer.current = window.setTimeout(() => setOpenMore(false), 160); }}>
-                  <button className={isMoreActive ? "text-primary font-semibold px-3 py-2 rounded-lg bg-gray-50 transition-colors flex items-center gap-1" : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors flex items-center gap-1"}>
-                    Lainnya <i className={`ri-arrow-down-s-line transition-transform ${openMore ? "rotate-180" : ""}`}></i>
+                <Link
+                  href="/jobs"
+                  className={
+                    isRoute("/jobs")
+                      ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
+                      : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
+                  }
+                >
+                  Lowongan
+                </Link>
+                <Link
+                  href="/bkk"
+                  className={
+                    isRoute("/bkk")
+                      ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
+                      : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
+                  }
+                >
+                  BKK
+                </Link>
+                <Link
+                  href="/informasi"
+                  className={
+                    isRoute("/informasi")
+                      ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
+                      : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
+                  }
+                >
+                  Informasi
+                </Link>
+                <div
+                  className="relative"
+                  onMouseEnter={() => {
+                    cancelCloseMore();
+                    setOpenMore(true);
+                  }}
+                  onMouseLeave={() => {
+                    cancelCloseMore();
+                    closeMoreTimer.current = window.setTimeout(
+                      () => setOpenMore(false),
+                      160,
+                    );
+                  }}
+                >
+                  <button
+                    className={
+                      isMoreActive
+                        ? "text-primary font-semibold px-3 py-2 rounded-lg bg-gray-50 transition-colors flex items-center gap-1"
+                        : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors flex items-center gap-1"
+                    }
+                  >
+                    Lainnya{" "}
+                    <i
+                      className={`ri-arrow-down-s-line transition-transform ${openMore ? "rotate-180" : ""}`}
+                    ></i>
                   </button>
                   {openMore && (
-                    <div className="absolute right-0 mt-3 w-56 bg-white border border-gray-200 rounded-xl shadow-xl p-2" onMouseEnter={() => { cancelCloseMore(); setOpenMore(true); }} onMouseLeave={() => { cancelCloseMore(); closeMoreTimer.current = window.setTimeout(() => setOpenMore(false), 160); }}>
-                      <Link href="/pelatihan" onClick={() => setOpenMore(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/pelatihan") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}><i className="ri-graduation-cap-line text-primary"></i> <span>Pelatihan</span></Link>
-                      <Link href="/transmigrasi" onClick={() => setOpenMore(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/transmigrasi") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}><i className="ri-route-line text-primary"></i> <span>Bidang Transmigrasi</span></Link>
-                      <Link href="/penempatan" onClick={() => setOpenMore(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/penempatan") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}><i className="ri-map-pin-line text-primary"></i> <span>Penempatan</span></Link>
-                      <Link href="/hubungan-industri" onClick={() => setOpenMore(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/hubungan-industri") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}><i className="ri-briefcase-line text-primary"></i> <span>Hubungan Industri</span></Link>
+                    <div
+                      className="absolute right-0 mt-3 w-56 bg-white border border-gray-200 rounded-xl shadow-xl p-2"
+                      onMouseEnter={() => {
+                        cancelCloseMore();
+                        setOpenMore(true);
+                      }}
+                      onMouseLeave={() => {
+                        cancelCloseMore();
+                        closeMoreTimer.current = window.setTimeout(
+                          () => setOpenMore(false),
+                          160,
+                        );
+                      }}
+                    >
+                      <Link
+                        href="/pelatihan"
+                        onClick={() => setOpenMore(false)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/pelatihan") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}
+                      >
+                        <i className="ri-graduation-cap-line text-primary"></i>{" "}
+                        <span>Bidang Pelatihan</span>
+                      </Link>
+                      <Link
+                        href="/transmigrasi"
+                        onClick={() => setOpenMore(false)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/transmigrasi") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}
+                      >
+                        <i className="ri-route-line text-primary"></i>{" "}
+                        <span>Bidang Transmigrasi</span>
+                      </Link>
+                      <Link
+                        href="/penempatan"
+                        onClick={() => setOpenMore(false)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/penempatan") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}
+                      >
+                        <i className="ri-map-pin-line text-primary"></i>{" "}
+                        <span>Bidang Penempatan</span>
+                      </Link>
+                      <Link
+                        href="/hubungan-industri"
+                        onClick={() => setOpenMore(false)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/hubungan-industri") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}
+                      >
+                        <i className="ri-briefcase-line text-primary"></i>{" "}
+                        <span>Bidang Hubungan Industri</span>
+                      </Link>
                     </div>
                   )}
                 </div>
@@ -160,15 +305,26 @@ export default function Navbar() {
 
             {showLoggedIn ? (
               <div className="hidden lg:flex items-center gap-4">
-                <Link href="/dashboard" className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                <Link
+                  href="/dashboard"
+                  className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                >
                   <i className="ri-dashboard-line"></i>
                   Dashboard
                 </Link>
               </div>
             ) : (
               <div className="hidden xl:flex items-center gap-4">
-                <button onClick={() => setOpenLogin(true)} className="text-primary hover:text-primary font-medium transition-colors">Masuk</button>
-                <button onClick={() => setOpenRegister(true)} className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                <button
+                  onClick={() => setOpenLogin(true)}
+                  className="text-primary hover:text-primary font-medium transition-colors"
+                >
+                  Masuk
+                </button>
+                <button
+                  onClick={() => setOpenRegister(true)}
+                  className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                >
                   <i className="ri-user-add-line"></i>
                   Daftar
                 </button>
@@ -176,7 +332,11 @@ export default function Navbar() {
             )}
 
             <div className="xl:hidden">
-              <button aria-label="Menu" onClick={() => setOpenMobile(v => !v)} className="text-primary p-2">
+              <button
+                aria-label="Menu"
+                onClick={() => setOpenMobile((v) => !v)}
+                className="text-primary p-2"
+              >
                 <i className="ri-menu-line text-xl"></i>
               </button>
             </div>
@@ -185,85 +345,223 @@ export default function Navbar() {
       </nav>
       {/* Dropdown anchored card (desktop) restored */}
       {openMobile && (
-        <div className="xl:hidden fixed left-0 right-0 z-50 bg-white border-b border-gray-200 shadow" style={{ top: "var(--navbar-height, 64px)" }}>
+        <div
+          className="xl:hidden fixed left-0 right-0 z-50 bg-white border-b border-gray-200 shadow"
+          style={{ top: "var(--navbar-height, 64px)" }}
+        >
           <div className="px-4 py-3 space-y-3">
-            <Link href="/" onClick={() => setOpenMobile(false)} className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}>Beranda</Link>
-            <Link href="/about" onClick={() => setOpenMobile(false)} className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/about") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}>Tentang Kami</Link>
-            <Link href="/jobs" onClick={() => setOpenMobile(false)} className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/jobs") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}>Lowongan</Link>
-            <Link href="/bkk" onClick={() => setOpenMobile(false)} className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/bkk") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}>BKK</Link>
-            <Link href="/informasi" onClick={() => setOpenMobile(false)} className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/informasi") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}>Informasi</Link>
-            <button onClick={() => setOpenMobileMore(v => !v)} className="flex items-center justify-between w-full text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50">
+            <Link
+              href="/"
+              onClick={() => setOpenMobile(false)}
+              className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+            >
+              Beranda
+            </Link>
+            <Link
+              href="/about"
+              onClick={() => setOpenMobile(false)}
+              className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/about") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+            >
+              Tentang Kami
+            </Link>
+            <Link
+              href="/jobs"
+              onClick={() => setOpenMobile(false)}
+              className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/jobs") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+            >
+              Lowongan
+            </Link>
+            <Link
+              href="/bkk"
+              onClick={() => setOpenMobile(false)}
+              className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/bkk") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+            >
+              BKK
+            </Link>
+            <Link
+              href="/informasi"
+              onClick={() => setOpenMobile(false)}
+              className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/informasi") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+            >
+              Informasi
+            </Link>
+            <button
+              onClick={() => setOpenMobileMore((v) => !v)}
+              className="flex items-center justify-between w-full text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50"
+            >
               <span>Lainnya</span>
-              <i className={openMobileMore ? "ri-arrow-up-s-line" : "ri-arrow-down-s-line"}></i>
+              <i
+                className={
+                  openMobileMore ? "ri-arrow-up-s-line" : "ri-arrow-down-s-line"
+                }
+              ></i>
             </button>
             {openMobileMore && (
               <div className="pl-3 space-y-2">
-                <Link href="/pelatihan" onClick={() => setOpenMobile(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/pelatihan") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}><i className="ri-graduation-cap-line text-primary"></i><span>Pelatihan</span></Link>
-                <Link href="/transmigrasi" onClick={() => setOpenMobile(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/transmigrasi") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}><i className="ri-route-line text-primary"></i><span>Bidang Transmigrasi</span></Link>
-                <Link href="/penempatan" onClick={() => setOpenMobile(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/penempatan") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}><i className="ri-map-pin-line text-primary"></i><span>Penempatan</span></Link>
-                <Link href="/hubungan-industri" onClick={() => setOpenMobile(false)} className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/hubungan-industri") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}><i className="ri-briefcase-line text-primary"></i><span>Hubungan Industri</span></Link>
+                <Link
+                  href="/pelatihan"
+                  onClick={() => setOpenMobile(false)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/pelatihan") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+                >
+                  <i className="ri-graduation-cap-line text-primary"></i>
+                  <span>Pelatihan</span>
+                </Link>
+                <Link
+                  href="/transmigrasi"
+                  onClick={() => setOpenMobile(false)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/transmigrasi") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+                >
+                  <i className="ri-route-line text-primary"></i>
+                  <span>Bidang Transmigrasi</span>
+                </Link>
+                <Link
+                  href="/penempatan"
+                  onClick={() => setOpenMobile(false)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/penempatan") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+                >
+                  <i className="ri-map-pin-line text-primary"></i>
+                  <span>Penempatan</span>
+                </Link>
+                <Link
+                  href="/hubungan-industri"
+                  onClick={() => setOpenMobile(false)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/hubungan-industri") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+                >
+                  <i className="ri-briefcase-line text-primary"></i>
+                  <span>Hubungan Industri</span>
+                </Link>
               </div>
             )}
             {showLoggedIn ? (
-              <Link href="/dashboard" onClick={() => setOpenMobile(false)} className="block bg-primary text-white px-4 py-2 rounded-lg">Dashboard</Link>
+              <Link
+                href="/dashboard"
+                onClick={() => setOpenMobile(false)}
+                className="block bg-primary text-white px-4 py-2 rounded-lg"
+              >
+                Dashboard
+              </Link>
             ) : (
               <div className="flex gap-3">
-                <button onClick={() => { setOpenMobile(false); setOpenLogin(true); }} className="flex-1 text-primary border border-gray-300 px-4 py-2 rounded-lg">Masuk</button>
-                <button onClick={() => { setOpenMobile(false); setOpenRegister(true); }} className="flex-1 bg-primary text-white px-4 py-2 rounded-lg">Daftar</button>
+                <button
+                  onClick={() => {
+                    setOpenMobile(false);
+                    setOpenLogin(true);
+                  }}
+                  className="flex-1 text-primary border border-gray-300 px-4 py-2 rounded-lg"
+                >
+                  Masuk
+                </button>
+                <button
+                  onClick={() => {
+                    setOpenMobile(false);
+                    setOpenRegister(true);
+                  }}
+                  className="flex-1 bg-primary text-white px-4 py-2 rounded-lg"
+                >
+                  Daftar
+                </button>
               </div>
             )}
           </div>
         </div>
       )}
-      <Modal open={openLogin} title="Masuk" onClose={() => setOpenLogin(false)} size="xl">
+      <Modal
+        open={openLogin}
+        title="Masuk"
+        onClose={() => setOpenLogin(false)}
+        size="xl"
+      >
         <div className="space-y-6">
           <div className="text-center">
             <h2 className="text-xl font-bold text-primary mb-2">Masuk</h2>
-            <p className="text-sm text-gray-600">Silakan pilih jenis akun untuk masuk</p>
+            <p className="text-sm text-gray-600">
+              Silakan pilih jenis akun untuk masuk
+            </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Link href="/login/candidate" onClick={() => setOpenLogin(false)} className="group border border-gray-200 rounded-xl p-6 hover:border-primary transition-colors">
+            <Link
+              href="/login/candidate"
+              onClick={() => setOpenLogin(false)}
+              className="group border border-gray-200 rounded-xl p-6 hover:border-primary transition-colors"
+            >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-gray-100 text-primary flex items-center justify-center">
                   <i className="ri-user-line"></i>
                 </div>
                 <div>
                   <div className="font-semibold text-gray-800">Pencaker</div>
-                  <div className="text-sm text-gray-500">Login untuk pencari kerja</div>
+                  <div className="text-sm text-gray-500">
+                    Login untuk pencari kerja
+                  </div>
                 </div>
               </div>
             </Link>
-            <Link href="/login/company" onClick={() => setOpenLogin(false)} className="group border border-gray-200 rounded-xl p-6 hover:border-primary transition-colors">
+            <Link
+              href="/login/company"
+              onClick={() => setOpenLogin(false)}
+              className="group border border-gray-200 rounded-xl p-6 hover:border-primary transition-colors"
+            >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-gray-100 text-primary flex items-center justify-center">
                   <i className="ri-building-2-line"></i>
                 </div>
                 <div>
                   <div className="font-semibold text-gray-800">Perusahaan</div>
-                  <div className="text-sm text-gray-500">Login untuk perusahaan</div>
+                  <div className="text-sm text-gray-500">
+                    Login untuk perusahaan
+                  </div>
                 </div>
               </div>
             </Link>
           </div>
         </div>
       </Modal>
-      <Modal open={openRegister} title="Daftar" onClose={() => setOpenRegister(false)} size="xl">
+      <Modal
+        open={openRegister}
+        title="Daftar"
+        onClose={() => setOpenRegister(false)}
+        size="xl"
+      >
         <div className="space-y-6">
           <div className="text-center">
-            <h2 className="text-xl font-bold text-primary mb-2">Siap Mendapatkan Pekerjaan Impian?</h2>
-            <p className="text-sm text-gray-600">Bergabunglah dengan ribuan pencari kerja yang telah menemukan pekerjaan melalui platform kami</p>
+            <h2 className="text-xl font-bold text-primary mb-2">
+              Siap Mendapatkan Pekerjaan Impian?
+            </h2>
+            <p className="text-sm text-gray-600">
+              Bergabunglah dengan ribuan pencari kerja yang telah menemukan
+              pekerjaan melalui platform kami
+            </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/register/candidate" onClick={() => setOpenRegister(false)} className="px-8 py-4 bg-primary hover:bg-primary text-white font-semibold rounded-xl transition-all shadow-lg flex items-center justify-center gap-3">
+            <Link
+              href="/register/candidate"
+              onClick={() => setOpenRegister(false)}
+              className="px-8 py-4 bg-primary hover:bg-primary text-white font-semibold rounded-xl transition-all shadow-lg flex items-center justify-center gap-3"
+            >
               <i className="ri-user-add-line"></i>
               Daftar Pencari Kerja
             </Link>
-            <Link href="/register/company" onClick={() => setOpenRegister(false)} className="px-8 py-4 border-2 border-primary text-primary font-semibold rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-3">
+            <Link
+              href="/register/company"
+              onClick={() => setOpenRegister(false)}
+              className="px-8 py-4 border-2 border-primary text-primary font-semibold rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-3"
+            >
               <i className="ri-building-line"></i>
               Daftar Perusahaan
             </Link>
           </div>
-          <p className="mt-2 text-sm text-gray-600 text-center">Sudah punya akun? <button onClick={() => { setOpenRegister(false); setOpenLogin(true); }} className="text-primary hover:underline font-medium">Masuk di sini</button></p>
+          <p className="mt-2 text-sm text-gray-600 text-center">
+            Sudah punya akun?{" "}
+            <button
+              onClick={() => {
+                setOpenRegister(false);
+                setOpenLogin(true);
+              }}
+              className="text-primary hover:underline font-medium"
+            >
+              Masuk di sini
+            </button>
+          </p>
         </div>
       </Modal>
     </div>
