@@ -955,7 +955,7 @@ export default function HomePage() {
           }
           .marquee-track-partners {
             width: max-content;
-            animation: marqueePartners 80s linear infinite;
+            animation: marqueePartners 10s linear infinite;
             will-change: transform;
           }
           .marquee-track-partners:hover {
