@@ -1051,10 +1051,12 @@ export default function HomePage() {
                 Hubungi Kami
               </h3>
               <div className="space-y-4 text-gray-600">
-                <div className="flex items-center gap-3">
-                  <i className="ri-phone-line text-secondary"></i>
-                  <span>{instansi.telepon || "-"}</span>
-                </div>
+                {instansi.telepon ? (
+                  <div className="flex items-center gap-3">
+                    <i className="ri-phone-line text-secondary"></i>
+                    <span>{instansi.telepon}</span>
+                  </div>
+                ) : null}
                 <div className="flex items-center gap-3">
                   <i className="ri-mail-line text-secondary"></i>
                   <span>{instansi.email || "-"}</span>

@@ -163,75 +163,107 @@ export default function InformasiPage() {
                 Diperbarui hari ini
               </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {paged.map((n) => {
-                const title = String(n.data?.judul || "");
-                const rawDate = (n.data?.tanggal ||
-                  (n as unknown as Record<string, unknown>)?.["created_at"] ||
-                  (n as unknown as Record<string, unknown>)?.["createdAt"] ||
-                  (n as unknown as Record<string, unknown>)?.["updated_at"] ||
-                  (n as unknown as Record<string, unknown>)?.["updatedAt"] ||
-                  "") as string;
-                const date = formatDate(rawDate);
-                const cat = String(n.data?.kategori || "Informasi");
-                const thumb = String(n.data?.gambar || "");
-                const excerpt = stripHtml(n.data?.isi || "").slice(0, 160);
-                return (
-                  <div
-                    key={n.id}
-                    className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 transform hover:-translate-y-1"
-                  >
-                    {thumb ? (
-                      <Image
-                        src={thumb}
-                        alt={title}
-                        width={800}
-                        height={320}
-                        className="w-full h-40 sm:h-48 object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-40 sm:h-48 bg-gray-100 flex items-center justify-center text-gray-500">
-                        No Image
-                      </div>
-                    )}
-                    <div className="p-6">
-                      <h3 className="font-bold text-primary text-xl mb-3 hover:text-[var(--color-primary-dark)] transition-colors">
-                        {title}
-                      </h3>
-                      <p className="text-gray-600 mb-4 leading-relaxed">
-                        {excerpt}
-                        {excerpt ? "..." : ""}
-                      </p>
-                      <div className="min-w-0 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-500">
-                        <span className="inline-flex items-center gap-2">
-                          <i className="ri-calendar-line"></i>
-                          <span>{date}</span>
-                        </span>
-                        <span className="text-gray-300">•</span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-md bg-gray-100 text-gray-700">
-                          {cat}
-                        </span>
-                      </div>
-                      <Link
-                        href={`/informasi/${encodeURIComponent(n.id)}`}
-                        className="mt-2 inline-flex items-center gap-1 text-primary hover:text-[var(--color-primary-dark)] font-medium transition-colors"
+            {filtered.length === 0 ? (
+              <div className="text-center py-8 bg-white rounded-xl shadow-md border border-gray-200">
+                <i className="ri-newspaper-line text-4xl text-gray-300 mb-3"></i>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Tidak ada informasi ditemukan
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Coba ubah kata kunci pencarian atau filter kategori
+                </p>
+                <button
+                  onClick={() => {
+                    setCategory("");
+                    setQuery("");
+                    setPage(1);
+                  }}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition"
+                >
+                  Reset Pencarian
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {paged.map((n) => {
+                    const title = String(n.data?.judul || "");
+                    const rawDate = (n.data?.tanggal ||
+                      (n as unknown as Record<string, unknown>)?.[
+                        "created_at"
+                      ] ||
+                      (n as unknown as Record<string, unknown>)?.[
+                        "createdAt"
+                      ] ||
+                      (n as unknown as Record<string, unknown>)?.[
+                        "updated_at"
+                      ] ||
+                      (n as unknown as Record<string, unknown>)?.[
+                        "updatedAt"
+                      ] ||
+                      "") as string;
+                    const date = formatDate(rawDate);
+                    const cat = String(n.data?.kategori || "Informasi");
+                    const thumb = String(n.data?.gambar || "");
+                    const excerpt = stripHtml(n.data?.isi || "").slice(0, 160);
+                    return (
+                      <div
+                        key={n.id}
+                        className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 transform hover:-translate-y-1"
                       >
-                        Baca Selengkapnya{" "}
-                        <i className="ri-arrow-right-line"></i>
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mt-6">
-              <Pagination
-                page={page}
-                pageSize={pageSize}
-                total={filtered.length}
-                onPageChange={(p) => setPage(p)}
-              />
-            </div>
+                        {thumb ? (
+                          <Image
+                            src={thumb}
+                            alt={title}
+                            width={800}
+                            height={320}
+                            className="w-full h-40 sm:h-48 object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-40 sm:h-48 bg-gray-100 flex items-center justify-center text-gray-500">
+                            No Image
+                          </div>
+                        )}
+                        <div className="p-6">
+                          <h3 className="font-bold text-primary text-xl mb-3 hover:text-[var(--color-primary-dark)] transition-colors">
+                            {title}
+                          </h3>
+                          <p className="text-gray-600 mb-4 leading-relaxed">
+                            {excerpt}
+                            {excerpt ? "..." : ""}
+                          </p>
+                          <div className="min-w-0 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-500">
+                            <span className="inline-flex items-center gap-2">
+                              <i className="ri-calendar-line"></i>
+                              <span>{date}</span>
+                            </span>
+                            <span className="text-gray-300">•</span>
+                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-gray-100 text-gray-700">
+                              {cat}
+                            </span>
+                          </div>
+                          <Link
+                            href={`/informasi/${encodeURIComponent(n.id)}`}
+                            className="mt-2 inline-flex items-center gap-1 text-primary hover:text-[var(--color-primary-dark)] font-medium transition-colors"
+                          >
+                            Baca Selengkapnya{" "}
+                            <i className="ri-arrow-right-line"></i>
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-6">
+                  <Pagination
+                    page={page}
+                    pageSize={pageSize}
+                    total={filtered.length}
+                    onPageChange={(p) => setPage(p)}
+                  />
+                </div>
+              </>
+            )}
           </main>
         </div>
       </section>

@@ -5,7 +5,15 @@ import { getAboutContent, getPublicSiteSettings } from "../../services/site";
 import FullPageLoading from "../../components/ui/FullPageLoading";
 
 export default function AboutPage() {
-  const [teamMembers, setTeamMembers] = useState<Array<{ id: string; name: string; position: string; role: string; image: string }>>([
+  const [teamMembers, setTeamMembers] = useState<
+    Array<{
+      id: string;
+      name: string;
+      position: string;
+      role: string;
+      image: string;
+    }>
+  >([
     {
       id: "1",
       name: "Drs. H. Ahmad Syarifuloh, M.Si.",
@@ -50,7 +58,9 @@ export default function AboutPage() {
     },
   ]);
 
-  const [achievements] = useState<Array<{ value: string; label: string; sublabel: string; bgColor: string }>>([
+  const [achievements] = useState<
+    Array<{ value: string; label: string; sublabel: string; bgColor: string }>
+  >([
     {
       value: "2.500+",
       label: "Peserta Pelatihan",
@@ -77,7 +87,15 @@ export default function AboutPage() {
     },
   ]);
 
-  const [statistics] = useState<Array<{ icon: string; title?: string; value: string; label?: string; sublabel: string }>>([
+  const [statistics] = useState<
+    Array<{
+      icon: string;
+      title?: string;
+      value: string;
+      label?: string;
+      sublabel: string;
+    }>
+  >([
     {
       icon: "ri-group-line",
       value: "278.482",
@@ -139,38 +157,78 @@ export default function AboutPage() {
   ]);
   const [profileHtml, setProfileHtml] = useState<string>("");
   const [visionHtml, setVisionHtml] = useState<string>("");
-  const [contact, setContact] = useState<{ alamat: string; telepon: string; email: string; jam_layanan: string; facebook: string; instagram: string; youtube: string }>({ alamat: "", telepon: "", email: "", jam_layanan: "", facebook: "", instagram: "", youtube: "" });
+  const [contact, setContact] = useState<{
+    alamat: string;
+    telepon: string;
+    email: string;
+    jam_layanan: string;
+    facebook: string;
+    instagram: string;
+    youtube: string;
+  }>({
+    alamat: "",
+    telepon: "",
+    email: "",
+    jam_layanan: "",
+    facebook: "",
+    instagram: "",
+    youtube: "",
+  });
   const [loading, setLoading] = useState(true);
-  type SiteSettingsShape = { instansi_alamat?: string; instansi_telepon?: string; instansi_email?: string; instansi_jam_layanan?: string; instansi_facebook?: string; instansi_instagram?: string; instansi_youtube?: string };
+  type SiteSettingsShape = {
+    instansi_alamat?: string;
+    instansi_telepon?: string;
+    instansi_email?: string;
+    instansi_jam_layanan?: string;
+    instansi_facebook?: string;
+    instansi_instagram?: string;
+    instansi_youtube?: string;
+  };
 
   useEffect(() => {
     const load = async () => {
       try {
         type SiteContentItem<T> = { id: string; data: T };
-          type AboutContentResponse = {
-            profile: SiteContentItem<{ content_html?: string }>[];
-            focus_areas: SiteContentItem<{ text: string }>[];
-            vision: SiteContentItem<{ text?: string; content_html?: string }>[];
-            mission_points: SiteContentItem<{ text: string }>[];
-            team: SiteContentItem<{ name: string; position: string; role: string; image: string }>[];
-            // achievements/statistics removed from API; keep dummy
-          };
-          const ac = await getAboutContent() as AboutContentResponse;
+        type AboutContentResponse = {
+          profile: SiteContentItem<{ content_html?: string }>[];
+          focus_areas: SiteContentItem<{ text: string }>[];
+          vision: SiteContentItem<{ text?: string; content_html?: string }>[];
+          mission_points: SiteContentItem<{ text: string }>[];
+          team: SiteContentItem<{
+            name: string;
+            position: string;
+            role: string;
+            image: string;
+          }>[];
+          // achievements/statistics removed from API; keep dummy
+        };
+        const ac = (await getAboutContent()) as AboutContentResponse;
         const prof = Array.isArray(ac.profile) ? ac.profile : [];
         setProfileHtml(String(prof[0]?.data?.content_html || ""));
         const vis = Array.isArray(ac.vision) ? ac.vision : [];
-        setVisionHtml(String(vis[0]?.data?.text || vis[0]?.data?.content_html || ""));
+        setVisionHtml(
+          String(vis[0]?.data?.text || vis[0]?.data?.content_html || ""),
+        );
         const fa = Array.isArray(ac.focus_areas) ? ac.focus_areas : [];
         setFocusAreas(fa.map((x) => String(x.data?.text || "")));
         const ms = Array.isArray(ac.mission_points) ? ac.mission_points : [];
         setMissionPoints(ms.map((x) => String(x.data?.text || "")));
         const tm = Array.isArray(ac.team) ? ac.team : [];
-        setTeamMembers(tm.map((t) => ({ id: String(t.id || Math.random()), name: String(t.data?.name || ""), position: String(t.data?.position || ""), role: String(t.data?.role || ""), image: String(t.data?.image || "https://picsum.photos/200/200") })));
+        setTeamMembers(
+          tm.map((t) => ({
+            id: String(t.id || Math.random()),
+            name: String(t.data?.name || ""),
+            position: String(t.data?.position || ""),
+            role: String(t.data?.role || ""),
+            image: String(t.data?.image || "https://picsum.photos/200/200"),
+          })),
+        );
         // achievements/statistics: leave default dummy
       } catch {}
       try {
         const s = await getPublicSiteSettings();
-        const cfg: SiteSettingsShape = (s as { data?: SiteSettingsShape }).data ?? (s as SiteSettingsShape);
+        const cfg: SiteSettingsShape =
+          (s as { data?: SiteSettingsShape }).data ?? (s as SiteSettingsShape);
         setContact({
           alamat: String(cfg?.instansi_alamat || ""),
           telepon: String(cfg?.instansi_telepon || ""),
@@ -180,7 +238,8 @@ export default function AboutPage() {
           instagram: String(cfg?.instansi_instagram || ""),
           youtube: String(cfg?.instansi_youtube || ""),
         });
-      } catch {} finally {
+      } catch {
+      } finally {
         setLoading(false);
       }
     };
@@ -191,14 +250,17 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-white">
-
       {/* Hero Section */}
       <section className="relative bg-primary text-white py-16 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">Tentang ADIKARA</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-3">
+            Tentang ADIKARA
+          </h1>
           <p className="text-base md:text-lg opacity-95 leading-relaxed">
-            Dinas Ketenagakerjaan Kabupaten Paser - Berkomitmen Mewujudkan Tenaga Kerja
-            <br />yang Kompeten dan Berdaya Saing
+            Dinas Ketenagakerjaan Kabupaten Paser - Berkomitmen Mewujudkan
+            Tenaga Kerja
+            <br />
+            yang Kompeten dan Berdaya Saing
           </p>
         </div>
       </section>
@@ -209,17 +271,27 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Profile Text */}
             <div className="lg:col-span-2">
-              <h2 className="text-2xl font-bold text-primary mb-4">Profil ADIKARA</h2>
+              <h2 className="text-2xl font-bold text-primary mb-4">
+                Profil ADIKARA
+              </h2>
               <div className="space-y-3 text-gray-700 text-sm leading-relaxed">
                 {profileHtml ? (
                   <div dangerouslySetInnerHTML={{ __html: profileHtml }} />
                 ) : (
                   <>
                     <p>
-                      Dinas Ketenagakerjaan Kabupaten Paser merupakan instansi pemerintah yang bertanggung jawab dalam pengelolaan dan pengembangan ketenagakerjaan di wilayah Kabupaten Paser. Kami berkomitmen untuk meningkatkan kualitas tenaga kerja melalui berbagai program pelatihan, sertifikasi, dan penempatan kerja.
+                      Dinas Ketenagakerjaan Kabupaten Paser merupakan instansi
+                      pemerintah yang bertanggung jawab dalam pengelolaan dan
+                      pengembangan ketenagakerjaan di wilayah Kabupaten Paser.
+                      Kami berkomitmen untuk meningkatkan kualitas tenaga kerja
+                      melalui berbagai program pelatihan, sertifikasi, dan
+                      penempatan kerja.
                     </p>
                     <p>
-                      Sejak berdiri tahun 2001, ADIKARA Paser telah berkomitmen dalam pengembangan sumber daya manusia dan mengutamakan kompetisi tenaga kerja lokal untuk membina pembuatan lowongan ekonomi daerah yang berkelanjutan.
+                      Sejak berdiri tahun 2001, ADIKARA Paser telah berkomitmen
+                      dalam pengembangan sumber daya manusia dan mengutamakan
+                      kompetisi tenaga kerja lokal untuk membina pembuatan
+                      lowongan ekonomi daerah yang berkelanjutan.
                     </p>
                   </>
                 )}
@@ -228,7 +300,9 @@ export default function AboutPage() {
 
             {/* Right Column - Focus Areas */}
             <div className="bg-blue-50 p-6 rounded-lg">
-              <h3 className="text-lg font-bold text-primary mb-4">Fokus Utama Kami</h3>
+              <h3 className="text-lg font-bold text-primary mb-4">
+                Fokus Utama Kami
+              </h3>
               <div className="space-y-3">
                 {focusAreas.map((area, index) => (
                   <div key={index} className="flex items-start gap-3">
@@ -248,8 +322,12 @@ export default function AboutPage() {
       <section className="py-12 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-primary mb-2">Visi & Misi</h2>
-            <p className="text-gray-600 text-sm">Arah dan tujuan strategis ADIKARA Kabupaten Paser</p>
+            <h2 className="text-2xl font-bold text-primary mb-2">
+              Visi & Misi
+            </h2>
+            <p className="text-gray-600 text-sm">
+              Arah dan tujuan strategis ADIKARA Kabupaten Paser
+            </p>
           </div>
 
           {/* Vision */}
@@ -260,10 +338,15 @@ export default function AboutPage() {
             </div>
             <div className="bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-xl border border-green-200">
               {visionHtml ? (
-                 <div className="text-gray-800 text-center leading-relaxed text-base" dangerouslySetInnerHTML={{ __html: visionHtml }} />
+                <div
+                  className="text-gray-800 text-center leading-relaxed text-base"
+                  dangerouslySetInnerHTML={{ __html: visionHtml }}
+                />
               ) : (
                 <p className="text-gray-800 text-center leading-relaxed text-base">
-                  &quot;Mewujudkan Tenaga Kerja yang Kompeten, Produktif, dan Berdaya Saing dalam Mendukung Pembangunan Daerah yang Berkelanjutan&quot;
+                  &quot;Mewujudkan Tenaga Kerja yang Kompeten, Produktif, dan
+                  Berdaya Saing dalam Mendukung Pembangunan Daerah yang
+                  Berkelanjutan&quot;
                 </p>
               )}
             </div>
@@ -282,7 +365,9 @@ export default function AboutPage() {
                     <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center flex-shrink-0 font-semibold text-sm">
                       {index + 1}
                     </div>
-                    <p className="text-gray-700 text-sm leading-relaxed pt-1.5">{point}</p>
+                    <p className="text-gray-700 text-sm leading-relaxed pt-1.5">
+                      {point}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -295,26 +380,34 @@ export default function AboutPage() {
       <section className="py-12 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-primary mb-2">Struktur Organisasi</h2>
-            <p className="text-gray-600 text-sm">Tim profesional yang berkomitmen melayani di Kabupaten Paser</p>
+            <h2 className="text-2xl font-bold text-primary mb-2">
+              Struktur Organisasi
+            </h2>
+            <p className="text-gray-600 text-sm">
+              Tim profesional yang berkomitmen melayani di Kabupaten Paser
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {teamMembers.map((member) => (
               <div key={member.id} className="text-center">
                 <div className="relative w-32 h-32 mx-auto mb-4">
-                  <Image 
-                    src={member.image} 
-                    alt={member.name} 
-                    width={128} 
-                    height={128} 
+                  <Image
+                    src={member.image}
+                    alt={member.name}
+                    width={128}
+                    height={128}
                     className="w-full h-full rounded-full object-cover border-4 border-gray-200"
                   />
                 </div>
-                <h3 className="font-bold text-sm text-primary mb-2">{member.name}</h3>
+                <h3 className="font-bold text-sm text-primary mb-2">
+                  {member.name}
+                </h3>
                 <div className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full mb-2 font-medium">
                   {member.position}
                 </div>
-                <p className="text-gray-600 text-xs leading-relaxed">{member.role}</p>
+                <p className="text-gray-600 text-xs leading-relaxed">
+                  {member.role}
+                </p>
               </div>
             ))}
           </div>
@@ -325,19 +418,36 @@ export default function AboutPage() {
       <section className="py-12 bg-primary text-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold mb-2">Kabupaten Paser dalam Angka</h2>
-            <p className="text-blue-100 text-sm">Profil dan potensi wilayah kerja ADIKARA Paser</p>
+            <h2 className="text-2xl font-bold mb-2">
+              Kabupaten Paser dalam Angka
+            </h2>
+            <p className="text-blue-100 text-sm">
+              Profil dan potensi wilayah kerja ADIKARA Paser
+            </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {statistics.map((stat, index) => (
-              <div key={index} className="bg-white/10 backdrop-blur-sm p-5 rounded-lg text-center overflow-hidden">
+              <div
+                key={index}
+                className="bg-white/10 backdrop-blur-sm p-5 rounded-lg text-center overflow-hidden"
+              >
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
                   <i className={`${stat.icon} text-2xl text-white`}></i>
                 </div>
-                {stat.title && <p className="text-xs text-blue-100 mb-1">{stat.title}</p>}
-                <h3 className="text-base sm:text-lg md:text-xl font-bold mb-1 break-words leading-tight">{stat.value}</h3>
-                {stat.label && <p className="text-xs sm:text-sm text-blue-100 mb-0.5 break-words">{stat.label}</p>}
-                <p className="text-[11px] sm:text-xs text-blue-200 break-words">{stat.sublabel}</p>
+                {stat.title && (
+                  <p className="text-xs text-blue-100 mb-1">{stat.title}</p>
+                )}
+                <h3 className="text-base sm:text-lg md:text-xl font-bold mb-1 break-words leading-tight">
+                  {stat.value}
+                </h3>
+                {stat.label && (
+                  <p className="text-xs sm:text-sm text-blue-100 mb-0.5 break-words">
+                    {stat.label}
+                  </p>
+                )}
+                <p className="text-[11px] sm:text-xs text-blue-200 break-words">
+                  {stat.sublabel}
+                </p>
               </div>
             ))}
           </div>
@@ -348,14 +458,25 @@ export default function AboutPage() {
       <section className="py-12 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-primary mb-2">Pencapaian Kami</h2>
-            <p className="text-gray-600 text-sm">Komitmen ADIKARA Paser dalam pengembangan ketenagakerjaan</p>
+            <h2 className="text-2xl font-bold text-primary mb-2">
+              Pencapaian Kami
+            </h2>
+            <p className="text-gray-600 text-sm">
+              Komitmen ADIKARA Paser dalam pengembangan ketenagakerjaan
+            </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {achievements.map((achievement, index) => (
-              <div key={index} className={`${achievement.bgColor} p-6 rounded-lg text-center`}>
-                <h3 className="text-3xl font-bold text-gray-800 mb-2">{achievement.value}</h3>
-                <p className="font-semibold text-gray-700 text-sm mb-1">{achievement.label}</p>
+              <div
+                key={index}
+                className={`${achievement.bgColor} p-6 rounded-lg text-center`}
+              >
+                <h3 className="text-3xl font-bold text-gray-800 mb-2">
+                  {achievement.value}
+                </h3>
+                <p className="font-semibold text-gray-700 text-sm mb-1">
+                  {achievement.label}
+                </p>
                 <p className="text-xs text-gray-600">{achievement.sublabel}</p>
               </div>
             ))}
@@ -367,29 +488,43 @@ export default function AboutPage() {
       <section className="py-12 bg-gray-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-primary mb-2">Kontak Kami</h2>
-            <p className="text-gray-600 text-sm">Hubungi ADIKARA Paser untuk informasi lebih lanjut</p>
+            <h2 className="text-2xl font-bold text-primary mb-2">
+              Kontak Kami
+            </h2>
+            <p className="text-gray-600 text-sm">
+              Hubungi ADIKARA Paser untuk informasi lebih lanjut
+            </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
+          <div className="flex flex-col md:flex-row md:justify-center gap-6">
+            <div className="text-center md:flex-1">
               <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
                 <i className="ri-map-pin-line text-white text-2xl"></i>
               </div>
               <h3 className="font-bold text-primary mb-3">Alamat</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">{contact.alamat || "-"}</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="ri-phone-line text-white text-2xl"></i>
-              </div>
-              <h3 className="font-bold text-primary mb-3">Telepon</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                {contact.telepon || "-"}
-                <br />
-                {contact.jam_layanan || ""}
+              <p className="text-gray-600 text-sm leading-relaxed max-w-xs mx-auto break-words">
+                {contact.alamat || "-"}
               </p>
             </div>
-            <div className="text-center">
+            {contact.telepon || contact.jam_layanan ? (
+              <div className="text-center md:flex-1">
+                <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="ri-phone-line text-white text-2xl"></i>
+                </div>
+                <h3 className="font-bold text-primary mb-3">Telepon</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  {contact.telepon && (
+                    <>
+                      {contact.telepon}
+                      {contact.jam_layanan && <br />}
+                    </>
+                  )}
+                  {!contact.telepon && contact.jam_layanan
+                    ? contact.jam_layanan
+                    : null}
+                </p>
+              </div>
+            ) : null}
+            <div className="text-center md:flex-1">
               <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
                 <i className="ri-mail-line text-white text-2xl"></i>
               </div>
@@ -398,17 +533,32 @@ export default function AboutPage() {
                 <p>{contact.email || "-"}</p>
                 <div className="flex items-center justify-center gap-3 mt-2">
                   {contact.facebook ? (
-                    <a href={contact.facebook} className="text-primary hover:text-[var(--color-primary-dark)]" target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={contact.facebook}
+                      className="text-primary hover:text-[var(--color-primary-dark)]"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <i className="ri-facebook-line"></i>
                     </a>
                   ) : null}
                   {contact.instagram ? (
-                    <a href={contact.instagram} className="text-primary hover:text-[var(--color-primary-dark)]" target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={contact.instagram}
+                      className="text-primary hover:text-[var(--color-primary-dark)]"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <i className="ri-instagram-line"></i>
                     </a>
                   ) : null}
                   {contact.youtube ? (
-                    <a href={contact.youtube} className="text-primary hover:text-[var(--color-primary-dark)]" target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={contact.youtube}
+                      className="text-primary hover:text-[var(--color-primary-dark)]"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <i className="ri-youtube-line"></i>
                     </a>
                   ) : null}
@@ -418,7 +568,6 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-      
     </div>
   );
 }
