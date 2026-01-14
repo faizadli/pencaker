@@ -643,35 +643,35 @@ export default function LaporanLowonganView({
             {/* Fixed column widths for better preview */}
             <colgroup>
               <col className="w-10" />
-              <col className="w-40" />
+              <col className="w-24" />
               <col className="w-16" />
               {(activeTab === "lowongan"
                 ? [
-                    "w-32",
-                    "w-24",
-                    "w-32",
-                    "w-20",
-                    "w-20",
-                    "w-24",
-                    "w-32",
-                    "w-32",
+                    "w-40", // Lapangan Usaha
+                    "w-24", // Kode Jabatan
+                    "w-40", // Nama Jabatan
+                    "w-20", // Jumlah
+                    "w-16", // JK
+                    "w-32", // Pend
+                    "w-32", // Jurusan
+                    "w-40", // Keterampilan
                   ]
                 : [
-                    "w-32",
+                    "w-40", // Nama TK
                     "w-32", // NIK
-                    "w-40",
-                    "w-24",
-                    "w-24",
-                    "w-32",
-                    "w-24",
-                    "w-20",
-                    "w-24",
-                    "w-32",
-                    "w-40",
-                    "w-32",
-                    "w-32",
-                    "w-24",
-                    "w-24",
+                    "w-48", // Alamat
+                    "w-24", // Prov
+                    "w-24", // Kab/Kota
+                    "w-48", // Email
+                    "w-28", // HP
+                    "w-16", // JK
+                    "w-32", // Pend
+                    "w-32", // Jurusan
+                    "w-32", // Kab/Kota Pen
+                    "w-32", // Jabatan
+                    "w-32", // Lap Usaha
+                    "w-24", // Tgl
+                    "w-24", // Upah
                   ]
               ).map((width, idx) => (
                 <col key={idx} className={width} />
@@ -805,39 +805,41 @@ export default function LaporanLowonganView({
               ) : activeTab === "lowongan" && lowonganData.length > 0 ? (
                 lowonganData.map((item, index) => (
                   <tr key={index}>
-                    <td className="border border-black p-2 text-center">
+                    <td className="border border-black p-2 text-center break-words whitespace-normal">
                       {index + 1}
                     </td>
-                    <td className="border border-black p-2 text-center">
+                    <td className="border border-black p-2 text-center break-words whitespace-normal">
                       {MONTH_NAMES[item.bulan] || item.bulan}
                     </td>
-                    <td className="border border-black p-2 text-center">
+                    <td className="border border-black p-2 text-center break-words whitespace-normal">
                       {item.tahun}
                     </td>
-                    <td className="border border-black p-2">
+                    <td className="border border-black p-2 break-words whitespace-normal">
                       {item.lapangan_usaha}
                     </td>
-                    <td className="border border-black p-2 text-center">
+                    <td className="border border-black p-2 text-center break-words whitespace-normal">
                       {item.kode_jabatan}
                     </td>
-                    <td className="border border-black p-2">
+                    <td className="border border-black p-2 break-words whitespace-normal">
                       {item.nama_jabatan}
                     </td>
-                    <td className="border border-black p-2 text-center">
+                    <td className="border border-black p-2 text-center break-words whitespace-normal">
                       {item.jumlah_dibutuhkan}
                     </td>
-                    <td className="border border-black p-2 text-center">
+                    <td className="border border-black p-2 text-center break-words whitespace-normal">
                       {item.jenis_kelamin === "L"
                         ? "Laki-laki"
                         : item.jenis_kelamin === "P"
                           ? "Perempuan"
                           : "L/P"}
                     </td>
-                    <td className="border border-black p-2">
+                    <td className="border border-black p-2 break-words whitespace-normal">
                       {item.pendidikan}
                     </td>
-                    <td className="border border-black p-2">{item.jurusan}</td>
-                    <td className="border border-black p-2">
+                    <td className="border border-black p-2 break-words whitespace-normal">
+                      {item.jurusan}
+                    </td>
+                    <td className="border border-black p-2 break-words whitespace-normal">
                       {item.keterampilan}
                     </td>
                   </tr>
@@ -845,56 +847,66 @@ export default function LaporanLowonganView({
               ) : activeTab === "penempatan" && penempatanData.length > 0 ? (
                 penempatanData.map((item, index) => (
                   <tr key={index}>
-                    <td className="border border-black p-2 text-center">
+                    <td className="border border-black p-2 text-center break-words whitespace-normal">
                       {index + 1}
                     </td>
-                    <td className="border border-black p-2 text-center">
+                    <td className="border border-black p-2 text-center break-words whitespace-normal">
                       {MONTH_NAMES[item.bulan] || item.bulan}
                     </td>
-                    <td className="border border-black p-2 text-center">
+                    <td className="border border-black p-2 text-center break-words whitespace-normal">
                       {item.tahun}
                     </td>
-                    <td className="border border-black p-2">
+                    <td className="border border-black p-2 break-words whitespace-normal">
                       {item.nama_tenaga_kerja}
                     </td>
-                    <td className="border border-black p-2">{item.nik}</td>
-                    <td className="border border-black p-2">
+                    <td className="border border-black p-2 break-words whitespace-normal">
+                      {item.nik}
+                    </td>
+                    <td className="border border-black p-2 break-words whitespace-normal">
                       {item.alamat_tenaga_kerja}
                     </td>
-                    <td className="border border-black p-2">
+                    <td className="border border-black p-2 break-words whitespace-normal">
                       Kalimantan Timur
                     </td>
-                    <td className="border border-black p-2">Paser</td>
-                    <td className="border border-black p-2">{item.email}</td>
-                    <td className="border border-black p-2">{item.nomor_hp}</td>
-                    <td className="border border-black p-2 text-center">
+                    <td className="border border-black p-2 break-words whitespace-normal">
+                      Paser
+                    </td>
+                    <td className="border border-black p-2 break-words whitespace-normal">
+                      {item.email}
+                    </td>
+                    <td className="border border-black p-2 break-words whitespace-normal">
+                      {item.nomor_hp}
+                    </td>
+                    <td className="border border-black p-2 text-center break-words whitespace-normal">
                       {item.jenis_kelamin === "L"
                         ? "Laki-laki"
                         : item.jenis_kelamin === "P"
                           ? "Perempuan"
                           : "L/P"}
                     </td>
-                    <td className="border border-black p-2">
+                    <td className="border border-black p-2 break-words whitespace-normal">
                       {item.pendidikan}
                     </td>
-                    <td className="border border-black p-2">{item.jurusan}</td>
+                    <td className="border border-black p-2 break-words whitespace-normal">
+                      {item.jurusan}
+                    </td>
                     <td className="border border-black p-2 break-words whitespace-normal">
                       {item.kab_kota_penempatan}
                     </td>
-                    <td className="border border-black p-2">
+                    <td className="border border-black p-2 break-words whitespace-normal">
                       {item.nama_jabatan}
                     </td>
-                    <td className="border border-black p-2">
+                    <td className="border border-black p-2 break-words whitespace-normal">
                       {item.lapangan_usaha}
                     </td>
-                    <td className="border border-black p-2 text-center">
+                    <td className="border border-black p-2 text-center break-words whitespace-normal">
                       {item.tanggal_mulai
                         ? new Date(item.tanggal_mulai).toLocaleDateString(
                             "id-ID",
                           )
                         : "-"}
                     </td>
-                    <td className="border border-black p-2 text-right">
+                    <td className="border border-black p-2 text-right break-words whitespace-normal">
                       {item.upah_gaji}
                     </td>
                   </tr>

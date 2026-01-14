@@ -323,7 +323,12 @@ export default function PelamarLowonganPage() {
 
       await updateApplication(selected.id, {
         placement_type: placementType,
-        placement_regency: placementType === "AKAD" ? finalRegency : null,
+        placement_regency:
+          placementType === "AKL"
+            ? "Paser"
+            : placementType === "AKAD"
+              ? finalRegency
+              : null,
         placement_country: placementType === "AKAN" ? placementCountry : null,
       });
 
