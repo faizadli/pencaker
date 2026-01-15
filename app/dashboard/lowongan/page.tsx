@@ -70,6 +70,14 @@ export default function LowonganPage() {
   >([]);
 
   // Options state
+  type GroupItem = { id?: string; code?: string; name: string };
+  type GroupData = {
+    id?: string;
+    code?: string;
+    name: string;
+    items?: GroupItem[];
+  };
+
   const [positionOptions, setPositionOptions] = useState<
     SearchableSelectOption[]
   >([]);
@@ -79,6 +87,7 @@ export default function LowonganPage() {
   const [educationOptions, setEducationOptions] = useState<
     SearchableSelectOption[]
   >([]);
+  const [educationGroups, setEducationGroups] = useState<GroupData[]>([]);
 
   type Job = {
     id: string;
@@ -229,14 +238,6 @@ export default function LowonganPage() {
     Record<string, { total: number; processed: number; approved: number }>
   >({});
 
-  type GroupItem = { id?: string; code?: string; name: string };
-  type GroupData = {
-    id?: string;
-    code?: string;
-    name: string;
-    items?: GroupItem[];
-  };
-
   const transformGroupsToOptions = useCallback(
     (
       groups: GroupData[],
@@ -297,10 +298,11 @@ export default function LowonganPage() {
 
         const catRaw = catResp.data || catResp;
         const catData = Array.isArray(catRaw) ? catRaw : catRaw.groups || [];
-        setCategoryOptions(transformGroupsToOptions(catData, "name"));
+        setCategoryOptions(transformGroupsToOptions(catData, "id"));
 
         const eduRaw = eduResp.data || eduResp;
         const eduData = Array.isArray(eduRaw) ? eduRaw : eduRaw.groups || [];
+        setEducationGroups(eduData);
         setEducationOptions(transformGroupsToOptions(eduData, "name"));
       } catch (e) {
         console.error("Failed to load dropdown options", e);
@@ -994,9 +996,14 @@ export default function LowonganPage() {
               <SearchableSelect
                 label="Pendidikan"
                 value={newJob.education_required}
-                onChange={(v) =>
-                  setNewJob({ ...newJob, education_required: v })
-                }
+                onChange={(v) => {
+                  const opt = educationOptions.find((o) => o.value === v);
+                  if (!opt || opt.isGroup) {
+                    setNewJob({ ...newJob, education_required: "" });
+                    return;
+                  }
+                  setNewJob({ ...newJob, education_required: opt.value });
+                }}
                 options={educationOptions}
                 submitted={submittedJob}
                 error={fieldErrors["education_required"]}
@@ -1133,10 +1140,74 @@ export default function LowonganPage() {
                             const raw = lowonganList.find(
                               (j) => String(j.id) === String(job.id),
                             );
+
+                            // Find matching category
+                            let matchedCategory = raw?.category || job.sektor;
+                            if (matchedCategory)
+                              matchedCategory = String(matchedCategory);
+
+                            const foundCat = categoryOptions.find(
+                              (o) =>
+                                o.value === matchedCategory ||
+                                o.label === matchedCategory ||
+                                o.value.toLowerCase() ===
+                                  matchedCategory.toLowerCase() ||
+                                o.label.toLowerCase() ===
+                                  matchedCategory.toLowerCase(),
+                            );
+                            if (foundCat) matchedCategory = foundCat.value;
+
+                            // Find matching education
+                            let matchedEdu =
+                              raw?.education_required || job.education_required;
+                            if (matchedEdu) matchedEdu = String(matchedEdu);
+
+                            let foundEdu = educationOptions.find(
+                              (o) =>
+                                o.value === matchedEdu ||
+                                o.label === matchedEdu ||
+                                o.value.toLowerCase() ===
+                                  matchedEdu.toLowerCase() ||
+                                o.label.toLowerCase() ===
+                                  matchedEdu.toLowerCase(),
+                            );
+
+                            if (
+                              !foundEdu &&
+                              matchedEdu &&
+                              educationGroups.length > 0
+                            ) {
+                              for (const g of educationGroups) {
+                                if (g.items) {
+                                  const item = g.items.find(
+                                    (i) => String(i.id) === matchedEdu,
+                                  );
+                                  if (item) {
+                                    const name = item.name;
+                                    foundEdu = educationOptions.find(
+                                      (o) => o.value === name,
+                                    );
+                                    break;
+                                  }
+                                }
+                              }
+                            }
+
+                            if (foundEdu) {
+                              matchedEdu = foundEdu.value;
+                            }
+
                             setNewJob({
                               posisi: raw?.job_title || job.posisi,
-                              position_id: raw?.position_id || "",
-                              sektor: raw?.category || job.sektor,
+                              position_id: raw?.position_id
+                                ? String(raw.position_id)
+                                : "",
+                              company_id: raw?.company_id
+                                ? String(raw.company_id)
+                                : job.companyId
+                                  ? String(job.companyId)
+                                  : "",
+                              sektor: matchedCategory,
                               tipe: job.tipe as UITipe,
                               gender: raw?.gender || "L/P",
                               quota: raw?.quota || 1,
@@ -1144,9 +1215,7 @@ export default function LowonganPage() {
                               experience_required:
                                 raw?.experience_required ||
                                 job.experience_required,
-                              education_required:
-                                raw?.education_required ||
-                                job.education_required,
+                              education_required: matchedEdu,
                               skills_required:
                                 raw?.skills_required || job.skills_required,
                               min_salary:
@@ -1308,10 +1377,52 @@ export default function LowonganPage() {
                             const raw = lowonganList.find(
                               (j) => String(j.id) === String(job.id),
                             );
+                            let matchedCategory = raw?.category || job.sektor;
+                            const foundCat = categoryOptions.find(
+                              (o) =>
+                                o.value === matchedCategory ||
+                                o.label === matchedCategory ||
+                                o.value.toLowerCase() ===
+                                  String(matchedCategory).toLowerCase() ||
+                                o.label.toLowerCase() ===
+                                  String(matchedCategory).toLowerCase(),
+                            );
+                            if (foundCat) matchedCategory = foundCat.value;
+
+                            let matchedEdu =
+                              raw?.education_required || job.education_required;
+                            const foundEdu = educationOptions.find(
+                              (o) =>
+                                o.value === matchedEdu ||
+                                o.label === matchedEdu ||
+                                o.value.toLowerCase() ===
+                                  String(matchedEdu).toLowerCase() ||
+                                o.label.toLowerCase() ===
+                                  String(matchedEdu).toLowerCase(),
+                            );
+                            if (foundEdu) {
+                              matchedEdu = foundEdu.value;
+                            } else if (matchedEdu) {
+                              const exists = educationOptions.some(
+                                (o) => o.value === String(matchedEdu),
+                              );
+                              if (!exists) {
+                                setEducationOptions((prev) => [
+                                  ...prev,
+                                  {
+                                    value: String(matchedEdu),
+                                    label: String(matchedEdu),
+                                  },
+                                ]);
+                              }
+                            }
+
                             setNewJob({
                               posisi: raw?.job_title || job.posisi,
                               position_id: raw?.position_id || "",
-                              sektor: raw?.category || job.sektor,
+                              company_id:
+                                raw?.company_id || job.companyId || "",
+                              sektor: matchedCategory,
                               tipe: job.tipe as UITipe,
                               gender: raw?.gender || "L/P",
                               quota: raw?.quota || 1,
@@ -1319,9 +1430,7 @@ export default function LowonganPage() {
                               experience_required:
                                 raw?.experience_required ||
                                 job.experience_required,
-                              education_required:
-                                raw?.education_required ||
-                                job.education_required,
+                              education_required: matchedEdu,
                               skills_required:
                                 raw?.skills_required || job.skills_required,
                               min_salary:

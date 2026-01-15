@@ -182,25 +182,11 @@ export async function listCandidates(params?: {
   if (params?.status) q.set("status", params.status);
   if (params?.page) q.set("page", String(params.page));
   if (params?.limit) q.set("limit", String(params.limit));
+  q.set("_t", String(Date.now()));
   const url = `${BASE}/api/candidates${q.toString() ? `?${q.toString()}` : ""}`;
-  const key = `cache:listCandidates:${q.toString()}`;
-  if (typeof window !== "undefined") {
-    try {
-      const raw = sessionStorage.getItem(key);
-      if (raw) {
-        const obj = JSON.parse(raw) as { t: number; d: unknown };
-        if (Date.now() - obj.t < 30000) return obj.d as unknown;
-      }
-    } catch {}
-  }
   const resp = await fetch(url, { headers: { ...authHeader() } });
   if (!resp.ok) throw new Error("Gagal mengambil data pencaker");
   const data = await resp.json();
-  if (typeof window !== "undefined") {
-    try {
-      sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data }));
-    } catch {}
-  }
   return data;
 }
 

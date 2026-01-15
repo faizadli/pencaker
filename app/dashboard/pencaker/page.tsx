@@ -76,15 +76,29 @@ export default function PencakerPage() {
       valueKey: "id" | "name" = "name",
       appendGroup = false,
     ) => {
+      const sortedGroups = [...groups].sort((a, b) =>
+        String(a.code || a.name).localeCompare(
+          String(b.code || b.name),
+          undefined,
+          { numeric: true, sensitivity: "base" },
+        ),
+      );
       const opts: SearchableSelectOption[] = [];
-      groups.forEach((g) => {
+      sortedGroups.forEach((g) => {
         opts.push({
           value: `group-${g.id || g.name}`,
           label: g.name,
           isGroup: true,
         });
         if (Array.isArray(g.items)) {
-          g.items.forEach((item: GroupItem) => {
+          const sortedItems = [...g.items].sort((ia, ib) =>
+            String(ia.code || ia.name).localeCompare(
+              String(ib.code || ib.name),
+              undefined,
+              { numeric: true, sensitivity: "base" },
+            ),
+          );
+          sortedItems.forEach((item: GroupItem) => {
             opts.push({
               value: String(item[valueKey] || ""),
               label: appendGroup ? `${item.name} - ${g.name}` : item.name,
@@ -100,7 +114,7 @@ export default function PencakerPage() {
 
   useEffect(() => {
     if (educationGroups.length > 0) {
-      setEducationOptions(transformGroupsToOptions(educationGroups, "name"));
+      setEducationOptions(transformGroupsToOptions(educationGroups, "id"));
     }
   }, [educationGroups, transformGroupsToOptions]);
 
@@ -293,15 +307,18 @@ export default function PencakerPage() {
           const eduResp = await getEducationGroups();
           const eduData = (eduResp.data || eduResp) as {
             id?: string;
+            code?: string;
             name?: string;
-            items?: { id?: string; name?: string }[];
+            items?: { id?: string; code?: string; name?: string }[];
           }[];
           setEducationGroups(
             eduData.map((g) => ({
               id: String(g.id || ""),
+              code: String(g.code || ""),
               name: String(g.name || ""),
               items: (g.items || []).map((i) => ({
                 id: String(i.id || ""),
+                code: String(i.code || ""),
                 name: String(i.name || ""),
               })),
             })),
@@ -721,6 +738,26 @@ export default function PencakerPage() {
                                           (c) => c.id === p.id,
                                         );
                                         if (src) {
+                                          // Find matching education
+                                          let matchedEdu =
+                                            src.last_education || "";
+                                          const foundEdu =
+                                            educationOptions.find(
+                                              (o) =>
+                                                o.value === matchedEdu ||
+                                                o.label === matchedEdu ||
+                                                o.value.toLowerCase() ===
+                                                  String(
+                                                    matchedEdu,
+                                                  ).toLowerCase() ||
+                                                o.label.toLowerCase() ===
+                                                  String(
+                                                    matchedEdu,
+                                                  ).toLowerCase(),
+                                            );
+                                          if (foundEdu)
+                                            matchedEdu = foundEdu.value;
+
                                           setFormCandidate({
                                             user_id: src.user_id,
                                             full_name: src.full_name || "",
@@ -737,8 +774,7 @@ export default function PencakerPage() {
                                               src.no_handphone || "",
                                             photo_profile:
                                               src.photo_profile || "",
-                                            last_education:
-                                              src.last_education || "",
+                                            last_education: matchedEdu,
                                             graduation_year: Number(
                                               src.graduation_year || 0,
                                             ),
