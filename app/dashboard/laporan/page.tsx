@@ -51,6 +51,25 @@ export default function LaporanPage() {
                 pencari kerja, lowongan, dan penempatan.
               </p>
             </Link>
+
+            {/* Card 3: Laporan Rekap Data Pencaker */}
+            <Link
+              href="/dashboard/laporan/rekap-pencaker"
+              className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-lg bg-green-50 flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors">
+                  <i className="ri-file-user-line text-2xl"></i>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 group-hover:text-green-600 transition-colors">
+                  Rekap Data Pencaker
+                </h3>
+              </div>
+              <p className="text-gray-500 text-sm">
+                Laporan rekapitulasi data pencari kerja per bulan dengan format
+                Excel yang detail.
+              </p>
+            </Link>
           </div>
         </div>
       </div>
