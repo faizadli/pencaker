@@ -125,6 +125,23 @@ export const candidateProfileSchema = z
       .min(1, "Kode Pos wajib diisi")
       .regex(/^\d+$/, "Kode Pos hanya boleh angka"),
     gender: z.string().min(1, "Jenis Kelamin wajib dipilih"),
+    dis_kondisi: z.enum(["Non Disabilitas", "Disabilitas"], {
+      message: "Kondisi wajib dipilih",
+    }),
+    agama: z.enum(
+      [
+        "Islam",
+        "Kristen Protestan",
+        "Katolik",
+        "Hindu",
+        "Buddha",
+        "Konghucu",
+        "Kepercayaan Lainnya",
+      ],
+      {
+        message: "Agama wajib dipilih",
+      },
+    ),
     last_education: z.string().min(1, "Pendidikan Terakhir wajib dipilih"),
     graduation_year: z
       .string()
@@ -251,6 +268,23 @@ export const candidateProfileUpdateSchema = z.object({
     .min(1, "Kode Pos wajib diisi")
     .regex(/^\d+$/, "Kode Pos hanya boleh angka"),
   gender: z.string().min(1, "Jenis Kelamin wajib dipilih"),
+  dis_kondisi: z.enum(["Non Disabilitas", "Disabilitas"], {
+    message: "Kondisi wajib dipilih",
+  }),
+  agama: z.enum(
+    [
+      "Islam",
+      "Kristen Protestan",
+      "Katolik",
+      "Hindu",
+      "Buddha",
+      "Konghucu",
+      "Kepercayaan Lainnya",
+    ],
+    {
+      message: "Agama wajib dipilih",
+    },
+  ),
   last_education: z.string().min(1, "Pendidikan Terakhir wajib dipilih"),
   graduation_year: z
     .string()

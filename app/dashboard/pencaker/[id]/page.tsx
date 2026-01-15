@@ -22,6 +22,8 @@ type CandidateDetail = {
   last_education: string;
   graduation_year: number;
   status_perkawinan: string;
+  dis_kondisi?: string;
+  agama?: string;
   email?: string | null;
   created_at?: string;
   ak1_status?: "APPROVED" | "REJECTED" | "PENDING" | "PLACED";
@@ -274,6 +276,22 @@ export default function DetailPencakerPage() {
                   </label>
                   <p className="text-gray-900 font-medium capitalize">
                     {candidate.status_perkawinan || "-"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 uppercase tracking-wide font-semibold block mb-1">
+                    Kondisi
+                  </label>
+                  <p className="text-gray-900 font-medium capitalize">
+                    {candidate.dis_kondisi || "-"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 uppercase tracking-wide font-semibold block mb-1">
+                    Agama
+                  </label>
+                  <p className="text-gray-900 font-medium capitalize">
+                    {candidate.agama || "-"}
                   </p>
                 </div>
               </div>

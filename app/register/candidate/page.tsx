@@ -96,7 +96,7 @@ export default function RegisterCandidate() {
   });
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(true);
   const [otpChannel, setOtpChannel] = useState<"sms" | "wa">("sms");
 
   const [profile, setProfile] = useState({
@@ -109,6 +109,8 @@ export default function RegisterCandidate() {
     address: "",
     postal_code: "",
     gender: "",
+    dis_kondisi: "",
+    agama: "",
     no_handphone: "",
     last_education: "",
     graduation_year: "",
@@ -542,6 +544,8 @@ export default function RegisterCandidate() {
         address: profile.address,
         postal_code: profile.postal_code,
         gender: profile.gender,
+        dis_kondisi: profile.dis_kondisi,
+        agama: profile.agama,
         last_education: profile.last_education,
         graduation_year: Number(profile.graduation_year || 0),
         status_perkawinan: profile.status_perkawinan,
@@ -808,7 +812,7 @@ export default function RegisterCandidate() {
                   />
                 </div>
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 hidden">
                 <div className="text-sm font-medium text-gray-500">
                   Verifikasi Nomor Handphone
                 </div>
@@ -828,7 +832,7 @@ export default function RegisterCandidate() {
                   </button>
                 </div>
               </div>
-              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3 animate-in fade-in slide-in-from-top-2">
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3 animate-in fade-in slide-in-from-top-2 hidden">
                 <label
                   htmlFor="otp"
                   className="block text-sm font-medium text-gray-700"
@@ -1031,6 +1035,34 @@ export default function RegisterCandidate() {
                   value={profile.gender}
                   onChange={(v) => setProfile({ ...profile, gender: v })}
                   error={fieldErrors.gender}
+                />
+                <SearchableSelect
+                  label="Kondisi Disabilitas"
+                  options={[
+                    { value: "Non Disabilitas", label: "Non Disabilitas" },
+                    { value: "Disabilitas", label: "Disabilitas" },
+                  ]}
+                  value={profile.dis_kondisi}
+                  onChange={(v) => setProfile({ ...profile, dis_kondisi: v })}
+                  error={fieldErrors.dis_kondisi}
+                />
+                <SearchableSelect
+                  label="Agama"
+                  options={[
+                    { value: "Islam", label: "Islam" },
+                    { value: "Kristen Protestan", label: "Kristen Protestan" },
+                    { value: "Katolik", label: "Katolik" },
+                    { value: "Hindu", label: "Hindu" },
+                    { value: "Buddha", label: "Buddha" },
+                    { value: "Konghucu", label: "Konghucu" },
+                    {
+                      value: "Kepercayaan Lainnya",
+                      label: "Kepercayaan Lainnya",
+                    },
+                  ]}
+                  value={profile.agama}
+                  onChange={(v) => setProfile({ ...profile, agama: v })}
+                  error={fieldErrors.agama}
                 />
                 <SearchableSelect
                   label="Status Perkawinan"

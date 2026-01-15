@@ -76,6 +76,8 @@ export default function ProfilePage() {
     gender: "",
     no_handphone: "",
     photo_profile: "",
+    dis_kondisi: "",
+    agama: "",
     last_education: "",
     graduation_year: "",
     status_perkawinan: "",
@@ -327,6 +329,8 @@ export default function ProfilePage() {
           address: candidateForm.address,
           postal_code: candidateForm.postal_code,
           gender: candidateForm.gender,
+          dis_kondisi: candidateForm.dis_kondisi,
+          agama: candidateForm.agama,
           photo_profile: candidateForm.photo_profile || undefined,
           last_education: candidateForm.last_education,
           graduation_year: Number(candidateForm.graduation_year || 0),
@@ -532,6 +536,8 @@ export default function ProfilePage() {
               gender: res.data.gender || "",
               no_handphone: res.data.no_handphone || "",
               photo_profile: res.data.photo_profile || "",
+              dis_kondisi: res.data.dis_kondisi || "",
+              agama: res.data.agama || "",
               last_education: String(res.data.last_education || ""),
               graduation_year: String(res.data.graduation_year || ""),
               status_perkawinan: res.data.status_perkawinan || "",
@@ -1030,6 +1036,62 @@ export default function ProfilePage() {
                         ]}
                         className="w-full"
                         error={fieldErrors["gender"]}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-500 mb-2">
+                        Kondisi Disabilitas
+                      </label>
+                      <SearchableSelect
+                        value={candidateForm.dis_kondisi}
+                        onChange={(v) =>
+                          setCandidateForm({
+                            ...candidateForm,
+                            dis_kondisi: v,
+                          })
+                        }
+                        options={[
+                          { value: "", label: "Pilih..." },
+                          {
+                            value: "Non Disabilitas",
+                            label: "Non Disabilitas",
+                          },
+                          { value: "Disabilitas", label: "Disabilitas" },
+                        ]}
+                        className="w-full"
+                        error={fieldErrors["dis_kondisi"]}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-500 mb-2">
+                        Agama
+                      </label>
+                      <SearchableSelect
+                        value={candidateForm.agama}
+                        onChange={(v) =>
+                          setCandidateForm({
+                            ...candidateForm,
+                            agama: v,
+                          })
+                        }
+                        options={[
+                          { value: "", label: "Pilih..." },
+                          { value: "Islam", label: "Islam" },
+                          {
+                            value: "Kristen Protestan",
+                            label: "Kristen Protestan",
+                          },
+                          { value: "Katolik", label: "Katolik" },
+                          { value: "Hindu", label: "Hindu" },
+                          { value: "Buddha", label: "Buddha" },
+                          { value: "Konghucu", label: "Konghucu" },
+                          {
+                            value: "Kepercayaan Lainnya",
+                            label: "Kepercayaan Lainnya",
+                          },
+                        ]}
+                        className="w-full"
+                        error={fieldErrors["agama"]}
                       />
                     </div>
                     <div>

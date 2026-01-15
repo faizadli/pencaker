@@ -28,6 +28,8 @@ type CandidateDetail = {
   last_education: string;
   graduation_year: number;
   status_perkawinan: string;
+  dis_kondisi?: string;
+  agama?: string;
   email?: string | null;
   created_at?: string;
   ak1_status?: "APPROVED" | "REJECTED" | "PENDING" | "PLACED";

@@ -73,7 +73,7 @@ export default function RegisterCompany() {
   });
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(true);
   const [otpChannel, setOtpChannel] = useState<"sms" | "email">("sms");
   const [cooldown, setCooldown] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
@@ -547,7 +547,7 @@ export default function RegisterCompany() {
                   error={fieldErrors.confirm}
                 />
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 hidden">
                 <div className="text-sm font-medium text-gray-500">
                   Verifikasi Nomor Handphone
                 </div>
@@ -567,7 +567,7 @@ export default function RegisterCompany() {
                   </button>
                 </div>
               </div>
-              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3 animate-in fade-in slide-in-from-top-2">
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3 animate-in fade-in slide-in-from-top-2 hidden">
                 <label
                   htmlFor="otp"
                   className="block text-sm font-medium text-gray-700"

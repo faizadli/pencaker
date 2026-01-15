@@ -127,6 +127,8 @@ export default function PencakerPage() {
     education_name?: string;
     graduation_year: number;
     status_perkawinan: string;
+    dis_kondisi?: string;
+    agama?: string;
     email?: string | null;
     created_at?: string;
     ak1_status?: "APPROVED" | "REJECTED" | "PENDING" | "PLACED";
@@ -180,6 +182,8 @@ export default function PencakerPage() {
     status_perkawinan: string;
     cv_file?: string;
     resume_text?: string;
+    dis_kondisi: string;
+    agama: string;
   }>({
     full_name: "",
     birthdate: "",
@@ -197,6 +201,8 @@ export default function PencakerPage() {
     status_perkawinan: "",
     cv_file: "",
     resume_text: "",
+    dis_kondisi: "",
+    agama: "",
   });
   const [userEmail, setUserEmail] = useState("");
   const [userPassword, setUserPassword] = useState("");
@@ -584,6 +590,8 @@ export default function PencakerPage() {
                             graduation_year: 0,
                             status_perkawinan: "",
                             cv_file: "",
+                            dis_kondisi: "",
+                            agama: "",
                           });
                           setUserEmail("");
                           setUserPassword("");
@@ -738,6 +746,8 @@ export default function PencakerPage() {
                                               src.status_perkawinan || "",
                                             cv_file: src.cv_file || undefined,
                                             resume_text: src.resume_text || "",
+                                            dis_kondisi: src.dis_kondisi || "",
+                                            agama: src.agama || "",
                                           });
                                           if (
                                             src.resume_text &&
@@ -944,6 +954,8 @@ export default function PencakerPage() {
                           address: formCandidate.address,
                           postal_code: formCandidate.postal_code,
                           gender: formCandidate.gender,
+                          dis_kondisi: formCandidate.dis_kondisi,
+                          agama: formCandidate.agama,
                           photo_profile: formCandidate.photo_profile,
                           last_education: formCandidate.last_education,
                           graduation_year: String(
@@ -987,6 +999,8 @@ export default function PencakerPage() {
                           address: formCandidate.address,
                           postal_code: formCandidate.postal_code,
                           gender: formCandidate.gender,
+                          dis_kondisi: formCandidate.dis_kondisi,
+                          agama: formCandidate.agama,
                           photo_profile: formCandidate.photo_profile,
                           last_education: formCandidate.last_education,
                           graduation_year: String(
@@ -1189,6 +1203,41 @@ export default function PencakerPage() {
                   setFormCandidate({ ...formCandidate, gender: v })
                 }
                 error={fieldErrors.gender}
+              />
+              <SearchableSelect
+                label="Kondisi Disabilitas"
+                options={[
+                  { value: "Non Disabilitas", label: "Non Disabilitas" },
+                  { value: "Disabilitas", label: "Disabilitas" },
+                ]}
+                value={formCandidate.dis_kondisi}
+                onChange={(v) =>
+                  setFormCandidate({ ...formCandidate, dis_kondisi: v })
+                }
+                error={fieldErrors.dis_kondisi}
+              />
+              <SearchableSelect
+                label="Agama"
+                options={[
+                  { value: "Islam", label: "Islam" },
+                  {
+                    value: "Kristen Protestan",
+                    label: "Kristen Protestan",
+                  },
+                  { value: "Katolik", label: "Katolik" },
+                  { value: "Hindu", label: "Hindu" },
+                  { value: "Buddha", label: "Buddha" },
+                  { value: "Konghucu", label: "Konghucu" },
+                  {
+                    value: "Kepercayaan Lainnya",
+                    label: "Kepercayaan Lainnya",
+                  },
+                ]}
+                value={formCandidate.agama}
+                onChange={(v) =>
+                  setFormCandidate({ ...formCandidate, agama: v })
+                }
+                error={fieldErrors.agama}
               />
               <SearchableSelect
                 label="Status Perkawinan"
