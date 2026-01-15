@@ -51,7 +51,7 @@ declare global {
 
 export default function UsersPage() {
   const router = useRouter();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, confirmDelete } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -331,36 +331,37 @@ export default function UsersPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Yakin ingin menghapus pengguna ini?")) return;
-    try {
-      const idx = users.findIndex((u) => u.id === id);
-      const idStr = window.__usersIds?.[idx];
-      if (!idStr) throw new Error("id not found");
-      await deleteUser(idStr);
-      const resp = await listUsers(
-        { page, limit: pageSize },
-        { noCache: true },
-      );
-      const rows = resp.data as UserListItem[];
-      const mapped: User[] = rows.map((u, idx2) => ({
-        id: idx2 + 1,
-        nama: u.full_name || u.email || "-",
-        email: u.email || "-",
-        role: u.role,
-        unit: "-",
-        telepon: u.no_handphone || "-",
-        status: "Aktif",
-        terakhirLogin: u.updatedAt
-          ? new Date(u.updatedAt).toLocaleString("id-ID")
-          : "-",
-      }));
-      setUsers(mapped);
-      window.__usersIds = rows.map((u) => u.id);
-      showSuccess("Pengguna dihapus");
-    } catch {
-      showError("Gagal menghapus user");
-    }
+  const handleDelete = (id: number) => {
+    confirmDelete("Yakin ingin menghapus pengguna ini?", async () => {
+      try {
+        const idx = users.findIndex((u) => u.id === id);
+        const idStr = window.__usersIds?.[idx];
+        if (!idStr) throw new Error("id not found");
+        await deleteUser(idStr);
+        const resp = await listUsers(
+          { page, limit: pageSize },
+          { noCache: true },
+        );
+        const rows = resp.data as UserListItem[];
+        const mapped: User[] = rows.map((u, idx2) => ({
+          id: idx2 + 1,
+          nama: u.full_name || u.email || "-",
+          email: u.email || "-",
+          role: u.role,
+          unit: "-",
+          telepon: u.no_handphone || "-",
+          status: "Aktif",
+          terakhirLogin: u.updatedAt
+            ? new Date(u.updatedAt).toLocaleString("id-ID")
+            : "-",
+        }));
+        setUsers(mapped);
+        window.__usersIds = rows.map((u) => u.id);
+        showSuccess("Pengguna dihapus");
+      } catch {
+        showError("Gagal menghapus user");
+      }
+    });
   };
 
   const getRoleColor = (role: string) => {

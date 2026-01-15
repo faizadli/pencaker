@@ -42,7 +42,7 @@ export default function InstitutionDetail({
 }) {
   const { institutionId } = use(params);
   const router = useRouter();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, confirmDelete } = useToast();
   const [loading, setLoading] = useState(true);
   const [institution, setInstitution] = useState<TrainingInstitution | null>(
     null,
@@ -179,17 +179,22 @@ export default function InstitutionDetail({
     }
   };
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
+  const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm("Apakah Anda yakin ingin menghapus pelatihan ini?")) return;
-    try {
-      await deleteTraining(id);
-      showSuccess("Berhasil menghapus pelatihan");
-      fetchData();
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : "Gagal menghapus";
-      showError(msg);
-    }
+    confirmDelete(
+      "Apakah Anda yakin ingin menghapus pelatihan ini?",
+      async () => {
+        try {
+          await deleteTraining(id);
+          showSuccess("Berhasil menghapus pelatihan");
+          fetchData();
+        } catch (error) {
+          const msg =
+            error instanceof Error ? error.message : "Gagal menghapus";
+          showError(msg);
+        }
+      },
+    );
   };
 
   if (loading && !institution) {

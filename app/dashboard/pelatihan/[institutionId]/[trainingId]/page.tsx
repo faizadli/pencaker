@@ -36,7 +36,7 @@ export default function TrainingDetail({
 }) {
   const { trainingId } = use(params);
   const router = useRouter();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, confirmDelete } = useToast();
   const [loading, setLoading] = useState(true);
   const [training, setTraining] = useState<Training | null>(null);
   const [participants, setParticipants] = useState<TrainingParticipant[]>([]);
@@ -115,16 +115,17 @@ export default function TrainingDetail({
   };
 
   const handleRemoveParticipant = async (participantId: string) => {
-    if (!confirm("Hapus peserta ini?")) return;
-    try {
-      await removeParticipant(participantId);
-      showSuccess("Berhasil menghapus peserta");
-      fetchData();
-    } catch (error) {
-      const msg =
-        error instanceof Error ? error.message : "Gagal menghapus peserta";
-      showError(msg);
-    }
+    confirmDelete("Hapus peserta ini?", async () => {
+      try {
+        await removeParticipant(participantId);
+        showSuccess("Berhasil menghapus peserta");
+        fetchData();
+      } catch (error) {
+        const msg =
+          error instanceof Error ? error.message : "Gagal menghapus peserta";
+        showError(msg);
+      }
+    });
   };
 
   const handleUpdateStatus = async (participantId: string, status: string) => {

@@ -146,7 +146,7 @@ export default function BeritaPage() {
   const [pageSize, setPageSize] = useState(10);
   const [editBerita, setEditBerita] = useState<Berita | null>(null);
   const [beritaList, setBeritaList] = useState<Berita[]>([]);
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, confirmDelete } = useToast();
   const [, setContentSubmitted] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -364,14 +364,15 @@ export default function BeritaPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Hapus berita ini?")) return;
-    try {
-      await deleteSiteContent(id);
-      setBeritaList(beritaList.filter((x) => x.id !== id));
-      showSuccess("Berita dihapus");
-    } catch {
-      showError("Gagal menghapus berita");
-    }
+    confirmDelete("Hapus berita ini?", async () => {
+      try {
+        await deleteSiteContent(id);
+        setBeritaList(beritaList.filter((x) => x.id !== id));
+        showSuccess("Berita dihapus");
+      } catch {
+        showError("Gagal menghapus berita");
+      }
+    });
   };
 
   const handleFileChange = async (

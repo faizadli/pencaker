@@ -29,7 +29,7 @@ const institutionSchema = z.object({
 
 export default function TrainingInstitutionsPage() {
   const router = useRouter();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, confirmDelete } = useToast();
   const [loading, setLoading] = useState(true);
   const [institutions, setInstitutions] = useState<TrainingInstitution[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -136,17 +136,22 @@ export default function TrainingInstitutionsPage() {
     }
   };
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigation
-    if (!confirm("Apakah Anda yakin ingin menghapus lembaga ini?")) return;
-    try {
-      await deleteInstitution(id);
-      showSuccess("Berhasil menghapus lembaga");
-      fetchData();
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : "Gagal menghapus";
-      showError(msg);
-    }
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    confirmDelete(
+      "Apakah Anda yakin ingin menghapus lembaga ini?",
+      async () => {
+        try {
+          await deleteInstitution(id);
+          showSuccess("Berhasil menghapus lembaga");
+          fetchData();
+        } catch (error) {
+          const msg =
+            error instanceof Error ? error.message : "Gagal menghapus";
+          showError(msg);
+        }
+      },
+    );
   };
 
   if (loading && !institutions.length) {

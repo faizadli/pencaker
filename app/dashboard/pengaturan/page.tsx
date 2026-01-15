@@ -235,7 +235,7 @@ export default function PengaturanPage() {
   >("instansi");
   const [logoUrl, setLogoUrl] = useState<string>("");
   const [bannerUrl, setBannerUrl] = useState<string>("");
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, confirmDelete } = useToast();
   const [settingsSubmitted, setSettingsSubmitted] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [modalErrors, setModalErrors] = useState<Record<string, string>>({});
@@ -957,89 +957,94 @@ export default function PengaturanPage() {
   };
 
   const handleDeleteCategoryGroup = async (idx: number) => {
-    if (!confirm("Hapus grup ini beserta semua kategorinya?")) return;
-    try {
-      const nextGroups = kategoriGroups.filter((_, i) => i !== idx);
-      const payloadGroups = nextGroups.map((g) => ({
-        id: g.id,
-        code: g.code || "",
-        name: g.name,
-        items: (g.items || []).map((it) => ({
-          id: it.id,
-          code: it.code || "",
-          name: it.name,
-        })),
-      }));
-      await upsertJobCategoryGroups({ groups: payloadGroups });
+    confirmDelete("Hapus grup ini beserta semua kategorinya?", async () => {
+      try {
+        const nextGroups = kategoriGroups.filter((_, i) => i !== idx);
+        const payloadGroups = nextGroups.map((g) => ({
+          id: g.id,
+          code: g.code || "",
+          name: g.name,
+          items: (g.items || []).map((it) => ({
+            id: it.id,
+            code: it.code || "",
+            name: it.name,
+          })),
+        }));
+        await upsertJobCategoryGroups({ groups: payloadGroups });
 
-      const s2 = await getSiteSettings();
-      const cfg2 =
-        (s2 as unknown as { data?: SiteSettingsShape }).data ??
-        (s2 as unknown as SiteSettingsShape);
-      const rawGroups = cfg2?.kategori_pekerjaan_groups;
-      const groupsArr: JobCategoryGroup[] = Array.isArray(rawGroups)
-        ? rawGroups
-        : [];
-      const mapped = groupsArr.map((g) => ({
-        id: String(g.id || ""),
-        code: String(g.code || ""),
-        name: String(g.name || ""),
-        items: Array.isArray(g.items)
-          ? g.items.map((it) => ({
-              id: String(it.id || ""),
-              code: String(it.code || ""),
-              name: String(it.name || ""),
-            }))
-          : [],
-      }));
-      setKategoriGroups(mapped);
-      showSuccess("Grup dihapus");
-    } catch {
-      showError("Gagal menghapus grup");
-    }
+        const s2 = await getSiteSettings();
+        const cfg2 =
+          (s2 as unknown as { data?: SiteSettingsShape }).data ??
+          (s2 as unknown as SiteSettingsShape);
+        const rawGroups = cfg2?.kategori_pekerjaan_groups;
+        const groupsArr: JobCategoryGroup[] = Array.isArray(rawGroups)
+          ? rawGroups
+          : [];
+        const mapped = groupsArr.map((g) => ({
+          id: String(g.id || ""),
+          code: String(g.code || ""),
+          name: String(g.name || ""),
+          items: Array.isArray(g.items)
+            ? g.items.map((it) => ({
+                id: String(it.id || ""),
+                code: String(it.code || ""),
+                name: String(it.name || ""),
+              }))
+            : [],
+        }));
+        setKategoriGroups(mapped);
+        showSuccess("Grup dihapus");
+      } catch {
+        showError("Gagal menghapus grup");
+      }
+    });
   };
 
   const handleDeleteEducationGroup = async (idx: number) => {
-    if (!confirm("Hapus grup pendidikan ini beserta semua tingkatnya?")) return;
-    try {
-      const nextGroups = educationGroups.filter((_, i) => i !== idx);
-      const payloadGroups = nextGroups.map((g) => ({
-        id: g.id,
-        code: g.code || "",
-        name: g.name,
-        items: (g.items || []).map((it) => ({
-          id: it.id,
-          code: it.code || "",
-          name: it.name,
-        })),
-      }));
-      await upsertEducationGroups({ groups: payloadGroups });
+    confirmDelete(
+      "Hapus grup pendidikan ini beserta semua tingkatnya?",
+      async () => {
+        try {
+          const nextGroups = educationGroups.filter((_, i) => i !== idx);
+          const payloadGroups = nextGroups.map((g) => ({
+            id: g.id,
+            code: g.code || "",
+            name: g.name,
+            items: (g.items || []).map((it) => ({
+              id: it.id,
+              code: it.code || "",
+              name: it.name,
+            })),
+          }));
+          await upsertEducationGroups({ groups: payloadGroups });
 
-      const s2 = await getSiteSettings();
-      const cfg2 =
-        (s2 as unknown as { data?: SiteSettingsShape }).data ??
-        (s2 as unknown as SiteSettingsShape);
-      const rawGroups = cfg2?.education_groups;
-      const groupsArr: EducationGroup[] = Array.isArray(rawGroups)
-        ? rawGroups
-        : [];
-      const mapped = groupsArr.map((g) => ({
-        id: String(g.id || ""),
-        code: String(g.code || ""),
-        name: String(g.name || ""),
-        items: Array.isArray(g.items)
-          ? g.items.map((it) => ({
-              id: String(it.id || ""),
-              code: String(it.code || ""),
-              name: String(it.name || ""),
-            }))
-          : [],
-      }));
-      setEducationGroups(mapped);
-      showSuccess("Grup pendidikan dihapus");
-    } catch {
-      showError("Gagal menghapus grup pendidikan");
-    }
+          const s2 = await getSiteSettings();
+          const cfg2 =
+            (s2 as unknown as { data?: SiteSettingsShape }).data ??
+            (s2 as unknown as SiteSettingsShape);
+          const rawGroups = cfg2?.education_groups;
+          const groupsArr: EducationGroup[] = Array.isArray(rawGroups)
+            ? rawGroups
+            : [];
+          const mapped = groupsArr.map((g) => ({
+            id: String(g.id || ""),
+            code: String(g.code || ""),
+            name: String(g.name || ""),
+            items: Array.isArray(g.items)
+              ? g.items.map((it) => ({
+                  id: String(it.id || ""),
+                  code: String(it.code || ""),
+                  name: String(it.name || ""),
+                }))
+              : [],
+          }));
+          setEducationGroups(mapped);
+          showSuccess("Grup pendidikan dihapus");
+        } catch {
+          showError("Gagal menghapus grup pendidikan");
+        }
+      },
+    );
   };
 
   const handleSavePosGroup = async () => {
@@ -1119,46 +1124,50 @@ export default function PengaturanPage() {
   };
 
   const handleDeletePosGroup = async (idx: number) => {
-    if (!confirm("Hapus grup jabatan ini beserta semua jabatannya?")) return;
-    try {
-      const nextGroups = positionGroups.filter((_, i) => i !== idx);
-      const payloadGroups = nextGroups.map((g) => ({
-        id: g.id,
-        code: g.code || "",
-        name: g.name,
-        items: (g.items || []).map((it) => ({
-          id: it.id,
-          code: it.code || "",
-          name: it.name,
-        })),
-      }));
-      await upsertPositionGroups({ groups: payloadGroups });
+    confirmDelete(
+      "Hapus grup jabatan ini beserta semua jabatannya?",
+      async () => {
+        try {
+          const nextGroups = positionGroups.filter((_, i) => i !== idx);
+          const payloadGroups = nextGroups.map((g) => ({
+            id: g.id,
+            code: g.code || "",
+            name: g.name,
+            items: (g.items || []).map((it) => ({
+              id: it.id,
+              code: it.code || "",
+              name: it.name,
+            })),
+          }));
+          await upsertPositionGroups({ groups: payloadGroups });
 
-      const s2 = await getSiteSettings();
-      const cfg2 =
-        (s2 as unknown as { data?: SiteSettingsShape }).data ??
-        (s2 as unknown as SiteSettingsShape);
-      const rawGroups = cfg2?.position_groups;
-      const groupsArr: PositionGroup[] = Array.isArray(rawGroups)
-        ? rawGroups
-        : [];
-      const mapped = groupsArr.map((g) => ({
-        id: String(g.id || ""),
-        code: String(g.code || ""),
-        name: String(g.name || ""),
-        items: Array.isArray(g.items)
-          ? g.items.map((it) => ({
-              id: String(it.id || ""),
-              code: String(it.code || ""),
-              name: String(it.name || ""),
-            }))
-          : [],
-      }));
-      setPositionGroups(mapped);
-      showSuccess("Grup jabatan berhasil dihapus");
-    } catch {
-      showError("Gagal menghapus grup jabatan");
-    }
+          const s2 = await getSiteSettings();
+          const cfg2 =
+            (s2 as unknown as { data?: SiteSettingsShape }).data ??
+            (s2 as unknown as SiteSettingsShape);
+          const rawGroups = cfg2?.position_groups;
+          const groupsArr: PositionGroup[] = Array.isArray(rawGroups)
+            ? rawGroups
+            : [];
+          const mapped = groupsArr.map((g) => ({
+            id: String(g.id || ""),
+            code: String(g.code || ""),
+            name: String(g.name || ""),
+            items: Array.isArray(g.items)
+              ? g.items.map((it) => ({
+                  id: String(it.id || ""),
+                  code: it.code || "",
+                  name: it.name,
+                }))
+              : [],
+          }));
+          setPositionGroups(mapped);
+          showSuccess("Grup jabatan berhasil dihapus");
+        } catch {
+          showError("Gagal menghapus grup jabatan");
+        }
+      },
+    );
   };
 
   const handleSavePosTitle = async () => {
@@ -2740,7 +2749,8 @@ function Ak1LayoutEditor() {
   >(null);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [editingTemplateName, setEditingTemplateName] = useState("");
-  const { showSuccess, showError } = useToast();
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const { showSuccess, showError, confirmDelete } = useToast();
 
   useEffect(() => {
     const recalc = () => {
@@ -3073,54 +3083,48 @@ function Ak1LayoutEditor() {
   };
 
   const handleDeleteTemplate = async (t: Ak1Template) => {
-    if (
-      !confirm(
-        `Hapus template "${t.name}"? Layout yang menggunakan template ini mungkin akan rusak.`,
-      )
-    )
-      return;
-    try {
-      await deleteAk1Template(t.name);
-      showSuccess("Template berhasil dihapus");
-      const data = await listAk1Templates();
-      setTemplates(data?.data || []);
-      if (templateId === t.id) {
-        setTemplateId("");
-        setPreviewUrl("");
-        setFields([]);
-      }
-    } catch {
-      showError("Gagal menghapus template");
-    }
+    confirmDelete(
+      `Hapus template "${t.name}"? Layout yang menggunakan template ini mungkin akan rusak.`,
+      async () => {
+        try {
+          await deleteAk1Template(t.name);
+          showSuccess("Template berhasil dihapus");
+          const data = await listAk1Templates();
+          setTemplates(data?.data || []);
+          if (templateId === t.id) {
+            setTemplateId("");
+            setPreviewUrl("");
+            setFields([]);
+          }
+        } catch {
+          showError("Gagal menghapus template");
+        }
+      },
+    );
   };
 
   return (
     <>
       <Card
         header={
-          <h3 className="text-lg font-semibold text-primary">
-            Kelola Template
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-primary">
+              Kelola Template
+            </h3>
+            <button
+              onClick={() => {
+                setEditingTemplateName("");
+                setIsTemplateModalOpen(true);
+              }}
+              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm flex items-center gap-2"
+            >
+              <i className="ri-add-line"></i>
+              Tambah Template
+            </button>
+          </div>
         }
       >
         <div className="space-y-6">
-          <UploadTemplateInline
-            initialName={editingTemplateName}
-            initialUrl={
-              templates.find((t) => t.name === editingTemplateName)
-                ?.file_template || ""
-            }
-            initialOrder={
-              templates.find((t) => t.name === editingTemplateName)?.order || 0
-            }
-            onDone={async () => {
-              const data = await listAk1Templates();
-              const list: Ak1Template[] = data?.data || [];
-              setTemplates(list);
-              setEditingTemplateName("");
-            }}
-          />
-
           <div className="border-t pt-4">
             <h4 className="text-sm font-medium text-gray-700 mb-3">
               Daftar Template Tersedia
@@ -3164,7 +3168,7 @@ function Ak1LayoutEditor() {
                         <button
                           onClick={() => {
                             setEditingTemplateName(t.name);
-                            window.scrollTo({ top: 0, behavior: "smooth" });
+                            setIsTemplateModalOpen(true);
                           }}
                           className="text-blue-600 hover:text-blue-800 p-1 hover:bg-blue-50 rounded mr-2"
                           title="Edit Template"
@@ -3187,6 +3191,33 @@ function Ak1LayoutEditor() {
           </div>
         </div>
       </Card>
+      <Modal
+        open={isTemplateModalOpen}
+        onClose={() => {
+          setIsTemplateModalOpen(false);
+          setEditingTemplateName("");
+        }}
+        title={editingTemplateName ? "Edit Template" : "Tambah Template"}
+        size="md"
+      >
+        <UploadTemplateInline
+          initialName={editingTemplateName}
+          initialUrl={
+            templates.find((t) => t.name === editingTemplateName)
+              ?.file_template || ""
+          }
+          initialOrder={
+            templates.find((t) => t.name === editingTemplateName)?.order || 0
+          }
+          onDone={async () => {
+            const data = await listAk1Templates();
+            const list: Ak1Template[] = data?.data || [];
+            setTemplates(list);
+            setEditingTemplateName("");
+            setIsTemplateModalOpen(false);
+          }}
+        />
+      </Modal>
       <Card
         className="mt-6"
         header={
@@ -4674,7 +4705,7 @@ function UploadTemplateInline({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        <div className="md:col-span-5">
+        <div className="md:col-span-8">
           <Input
             label="Nama Template"
             value={name}
@@ -4684,7 +4715,7 @@ function UploadTemplateInline({
             submitted={submitted}
           />
         </div>
-        <div className="md:col-span-2">
+        <div className="md:col-span-4">
           <Input
             label="Urutan"
             type="number"
@@ -4695,7 +4726,7 @@ function UploadTemplateInline({
             placeholder="0"
           />
         </div>
-        <div className="space-y-1 md:col-span-5">
+        <div className="space-y-1 md:col-span-12">
           <Input
             type="file"
             label={
