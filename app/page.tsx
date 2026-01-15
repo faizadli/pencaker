@@ -899,33 +899,34 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="marquee-partners relative w-full overflow-hidden">
-            <div className="marquee-track-partners flex gap-12 items-center">
-              {/* Loop 8 sets of partners to ensure infinite seamless scrolling */}
-              {[...Array(8)].flatMap((_, setIndex) =>
-                (partners.length > 0 ? partners : []).map((partner, index) => (
-                  <div
-                    key={`${setIndex}-${partner.id}-${index}`}
-                    className="flex-shrink-0 grayscale hover:grayscale-0 transition-all duration-300 opacity-70 hover:opacity-100"
-                  >
-                    <Image
-                      src={partner.logo}
-                      alt={partner.name}
-                      width={150}
-                      height={60}
-                      className="h-16 w-auto object-contain"
-                      priority
-                    />
-                  </div>
-                )),
-              )}
-              {partners.length === 0 && (
-                <div className="text-gray-400 italic px-4 w-full text-center">
-                  Belum ada mitra terdaftar
-                </div>
-              )}
+          {partners.length > 0 ? (
+            <div className="marquee-partners relative w-full overflow-hidden">
+              <div className="marquee-track-partners flex gap-12 items-center">
+                {/* Loop 8 sets of partners to ensure infinite seamless scrolling */}
+                {[...Array(8)].flatMap((_, setIndex) =>
+                  partners.map((partner, index) => (
+                    <div
+                      key={`${setIndex}-${partner.id}-${index}`}
+                      className="flex-shrink-0 grayscale hover:grayscale-0 transition-all duration-300 opacity-70 hover:opacity-100"
+                    >
+                      <Image
+                        src={partner.logo}
+                        alt={partner.name}
+                        width={150}
+                        height={60}
+                        className="h-16 w-auto object-contain"
+                        priority
+                      />
+                    </div>
+                  )),
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="text-gray-400 italic px-4 w-full text-center">
+              Belum ada mitra terdaftar
+            </div>
+          )}
         </div>
         <style jsx>{`
           @keyframes marqueePartners {
