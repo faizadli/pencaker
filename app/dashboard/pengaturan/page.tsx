@@ -198,6 +198,11 @@ export default function PengaturanPage() {
 
   // Position Modals state
   const [isPosGroupModalOpen, setIsPosGroupModalOpen] = useState(false);
+
+  // Search state for group items
+  const [groupItemSearchTerm, setGroupItemSearchTerm] = useState("");
+  const [eduGroupItemSearchTerm, setEduGroupItemSearchTerm] = useState("");
+  const [posGroupItemSearchTerm, setPosGroupItemSearchTerm] = useState("");
   const [editingPosGroup, setEditingPosGroup] = useState<{
     idx: number;
     code: string;
@@ -1875,70 +1880,93 @@ export default function PengaturanPage() {
                         </label>
                         <button
                           type="button"
-                          onClick={() =>
+                          onClick={() => {
                             setNewGroupData({
                               ...newGroupData,
                               items: [...newGroupData.items, { name: "" }],
-                            })
-                          }
+                            });
+                            setGroupItemSearchTerm("");
+                          }}
                           className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium"
                         >
                           + Tambah Kategori
                         </button>
                       </div>
+                      <div className="mb-2">
+                        <Input
+                          value={groupItemSearchTerm}
+                          onChange={(e) =>
+                            setGroupItemSearchTerm(e.target.value)
+                          }
+                          placeholder="Cari kategori..."
+                        />
+                      </div>
                       <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                        {newGroupData.items.map((item, idx) => (
-                          <div key={idx} className="flex gap-2">
-                            <Input
-                              value={item.code || ""}
-                              onChange={(e) => {
-                                const newItems = [...newGroupData.items];
-                                newItems[idx] = {
-                                  ...newItems[idx],
-                                  code: e.target.value,
-                                };
-                                setNewGroupData({
-                                  ...newGroupData,
-                                  items: newItems,
-                                });
-                              }}
-                              placeholder="Kode"
-                              className="w-24"
-                            />
-                            <Input
-                              value={item.name}
-                              onChange={(e) => {
-                                const newItems = [...newGroupData.items];
-                                newItems[idx] = {
-                                  ...newItems[idx],
-                                  name: e.target.value,
-                                };
-                                setNewGroupData({
-                                  ...newGroupData,
-                                  items: newItems,
-                                });
-                              }}
-                              placeholder="Nama Kategori"
-                              className="flex-1"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newItems = newGroupData.items.filter(
-                                  (_, i) => i !== idx,
-                                );
-                                setNewGroupData({
-                                  ...newGroupData,
-                                  items: newItems,
-                                });
-                              }}
-                              className="px-2 text-red-500 hover:bg-red-50 rounded"
-                              title="Hapus Kategori"
-                            >
-                              <i className="ri-delete-bin-line" />
-                            </button>
-                          </div>
-                        ))}
+                        {newGroupData.items
+                          .map((item, idx) => ({ item, idx }))
+                          .filter(
+                            ({ item }) =>
+                              !groupItemSearchTerm ||
+                              item.name
+                                .toLowerCase()
+                                .includes(groupItemSearchTerm.toLowerCase()) ||
+                              (item.code &&
+                                item.code
+                                  .toLowerCase()
+                                  .includes(groupItemSearchTerm.toLowerCase())),
+                          )
+                          .map(({ item, idx }) => (
+                            <div key={idx} className="flex gap-2">
+                              <Input
+                                value={item.code || ""}
+                                onChange={(e) => {
+                                  const newItems = [...newGroupData.items];
+                                  newItems[idx] = {
+                                    ...newItems[idx],
+                                    code: e.target.value,
+                                  };
+                                  setNewGroupData({
+                                    ...newGroupData,
+                                    items: newItems,
+                                  });
+                                }}
+                                placeholder="Kode"
+                                className="w-24"
+                              />
+                              <Input
+                                value={item.name}
+                                onChange={(e) => {
+                                  const newItems = [...newGroupData.items];
+                                  newItems[idx] = {
+                                    ...newItems[idx],
+                                    name: e.target.value,
+                                  };
+                                  setNewGroupData({
+                                    ...newGroupData,
+                                    items: newItems,
+                                  });
+                                }}
+                                placeholder="Nama Kategori"
+                                className="flex-1"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newItems = newGroupData.items.filter(
+                                    (_, i) => i !== idx,
+                                  );
+                                  setNewGroupData({
+                                    ...newGroupData,
+                                    items: newItems,
+                                  });
+                                }}
+                                className="px-2 text-red-500 hover:bg-red-50 rounded"
+                                title="Hapus Kategori"
+                              >
+                                <i className="ri-delete-bin-line" />
+                              </button>
+                            </div>
+                          ))}
                         {newGroupData.items.length === 0 && (
                           <p className="text-sm text-gray-400 italic text-center py-4 bg-gray-50 rounded border border-dashed">
                             Belum ada kategori dalam grup ini
@@ -2183,70 +2211,97 @@ export default function PengaturanPage() {
                         </label>
                         <button
                           type="button"
-                          onClick={() =>
+                          onClick={() => {
                             setNewEduGroupData({
                               ...newEduGroupData,
                               items: [...newEduGroupData.items, { name: "" }],
-                            })
-                          }
+                            });
+                            setEduGroupItemSearchTerm("");
+                          }}
                           className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium"
                         >
                           + Tambah Tingkat
                         </button>
                       </div>
+                      <div className="mb-2">
+                        <Input
+                          value={eduGroupItemSearchTerm}
+                          onChange={(e) =>
+                            setEduGroupItemSearchTerm(e.target.value)
+                          }
+                          placeholder="Cari tingkat..."
+                        />
+                      </div>
                       <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                        {newEduGroupData.items.map((item, idx) => (
-                          <div key={idx} className="flex gap-2">
-                            <Input
-                              value={item.code || ""}
-                              onChange={(e) => {
-                                const newItems = [...newEduGroupData.items];
-                                newItems[idx] = {
-                                  ...newItems[idx],
-                                  code: e.target.value,
-                                };
-                                setNewEduGroupData({
-                                  ...newEduGroupData,
-                                  items: newItems,
-                                });
-                              }}
-                              placeholder="Kode"
-                              className="w-24"
-                            />
-                            <Input
-                              value={item.name}
-                              onChange={(e) => {
-                                const newItems = [...newEduGroupData.items];
-                                newItems[idx] = {
-                                  ...newItems[idx],
-                                  name: e.target.value,
-                                };
-                                setNewEduGroupData({
-                                  ...newEduGroupData,
-                                  items: newItems,
-                                });
-                              }}
-                              placeholder="Nama Tingkat"
-                              className="flex-1"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newItems = newEduGroupData.items.filter(
-                                  (_, i) => i !== idx,
-                                );
-                                setNewEduGroupData({
-                                  ...newEduGroupData,
-                                  items: newItems,
-                                });
-                              }}
-                              className="px-2 text-red-500 hover:bg-red-50 rounded"
-                              title="Hapus Tingkat"
-                            >
-                              <i className="ri-delete-bin-line" />
-                            </button>
-                          </div>
-                        ))}
+                        {newEduGroupData.items
+                          .map((item, idx) => ({ item, idx }))
+                          .filter(
+                            ({ item }) =>
+                              !eduGroupItemSearchTerm ||
+                              item.name
+                                .toLowerCase()
+                                .includes(
+                                  eduGroupItemSearchTerm.toLowerCase(),
+                                ) ||
+                              (item.code &&
+                                item.code
+                                  .toLowerCase()
+                                  .includes(
+                                    eduGroupItemSearchTerm.toLowerCase(),
+                                  )),
+                          )
+                          .map(({ item, idx }) => (
+                            <div key={idx} className="flex gap-2">
+                              <Input
+                                value={item.code || ""}
+                                onChange={(e) => {
+                                  const newItems = [...newEduGroupData.items];
+                                  newItems[idx] = {
+                                    ...newItems[idx],
+                                    code: e.target.value,
+                                  };
+                                  setNewEduGroupData({
+                                    ...newEduGroupData,
+                                    items: newItems,
+                                  });
+                                }}
+                                placeholder="Kode"
+                                className="w-24"
+                              />
+                              <Input
+                                value={item.name}
+                                onChange={(e) => {
+                                  const newItems = [...newEduGroupData.items];
+                                  newItems[idx] = {
+                                    ...newItems[idx],
+                                    name: e.target.value,
+                                  };
+                                  setNewEduGroupData({
+                                    ...newEduGroupData,
+                                    items: newItems,
+                                  });
+                                }}
+                                placeholder="Nama Tingkat"
+                                className="flex-1"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newItems = newEduGroupData.items.filter(
+                                    (_, i) => i !== idx,
+                                  );
+                                  setNewEduGroupData({
+                                    ...newEduGroupData,
+                                    items: newItems,
+                                  });
+                                }}
+                                className="px-2 text-red-500 hover:bg-red-50 rounded"
+                                title="Hapus Tingkat"
+                              >
+                                <i className="ri-delete-bin-line" />
+                              </button>
+                            </div>
+                          ))}
                         {newEduGroupData.items.length === 0 && (
                           <p className="text-sm text-gray-400 italic text-center py-4 bg-gray-50 rounded border border-dashed">
                             Belum ada tingkat dalam grup ini
@@ -2496,70 +2551,97 @@ export default function PengaturanPage() {
                         </label>
                         <button
                           type="button"
-                          onClick={() =>
+                          onClick={() => {
                             setNewPosGroupData({
                               ...newPosGroupData,
                               items: [...newPosGroupData.items, { name: "" }],
-                            })
-                          }
+                            });
+                            setPosGroupItemSearchTerm("");
+                          }}
                           className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium"
                         >
                           + Tambah Jabatan
                         </button>
                       </div>
+                      <div className="mb-2">
+                        <Input
+                          value={posGroupItemSearchTerm}
+                          onChange={(e) =>
+                            setPosGroupItemSearchTerm(e.target.value)
+                          }
+                          placeholder="Cari jabatan..."
+                        />
+                      </div>
                       <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                        {newPosGroupData.items.map((item, idx) => (
-                          <div key={idx} className="flex gap-2">
-                            <Input
-                              value={item.code || ""}
-                              onChange={(e) => {
-                                const newItems = [...newPosGroupData.items];
-                                newItems[idx] = {
-                                  ...newItems[idx],
-                                  code: e.target.value,
-                                };
-                                setNewPosGroupData({
-                                  ...newPosGroupData,
-                                  items: newItems,
-                                });
-                              }}
-                              placeholder="Kode"
-                              className="w-24"
-                            />
-                            <Input
-                              value={item.name}
-                              onChange={(e) => {
-                                const newItems = [...newPosGroupData.items];
-                                newItems[idx] = {
-                                  ...newItems[idx],
-                                  name: e.target.value,
-                                };
-                                setNewPosGroupData({
-                                  ...newPosGroupData,
-                                  items: newItems,
-                                });
-                              }}
-                              placeholder="Nama Jabatan"
-                              className="flex-1"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newItems = newPosGroupData.items.filter(
-                                  (_, i) => i !== idx,
-                                );
-                                setNewPosGroupData({
-                                  ...newPosGroupData,
-                                  items: newItems,
-                                });
-                              }}
-                              className="px-2 text-red-500 hover:bg-red-50 rounded"
-                              title="Hapus Jabatan"
-                            >
-                              <i className="ri-delete-bin-line" />
-                            </button>
-                          </div>
-                        ))}
+                        {newPosGroupData.items
+                          .map((item, idx) => ({ item, idx }))
+                          .filter(
+                            ({ item }) =>
+                              !posGroupItemSearchTerm ||
+                              item.name
+                                .toLowerCase()
+                                .includes(
+                                  posGroupItemSearchTerm.toLowerCase(),
+                                ) ||
+                              (item.code &&
+                                item.code
+                                  .toLowerCase()
+                                  .includes(
+                                    posGroupItemSearchTerm.toLowerCase(),
+                                  )),
+                          )
+                          .map(({ item, idx }) => (
+                            <div key={idx} className="flex gap-2">
+                              <Input
+                                value={item.code || ""}
+                                onChange={(e) => {
+                                  const newItems = [...newPosGroupData.items];
+                                  newItems[idx] = {
+                                    ...newItems[idx],
+                                    code: e.target.value,
+                                  };
+                                  setNewPosGroupData({
+                                    ...newPosGroupData,
+                                    items: newItems,
+                                  });
+                                }}
+                                placeholder="Kode"
+                                className="w-24"
+                              />
+                              <Input
+                                value={item.name}
+                                onChange={(e) => {
+                                  const newItems = [...newPosGroupData.items];
+                                  newItems[idx] = {
+                                    ...newItems[idx],
+                                    name: e.target.value,
+                                  };
+                                  setNewPosGroupData({
+                                    ...newPosGroupData,
+                                    items: newItems,
+                                  });
+                                }}
+                                placeholder="Nama Jabatan"
+                                className="flex-1"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newItems = newPosGroupData.items.filter(
+                                    (_, i) => i !== idx,
+                                  );
+                                  setNewPosGroupData({
+                                    ...newPosGroupData,
+                                    items: newItems,
+                                  });
+                                }}
+                                className="px-2 text-red-500 hover:bg-red-50 rounded"
+                                title="Hapus Jabatan"
+                              >
+                                <i className="ri-delete-bin-line" />
+                              </button>
+                            </div>
+                          ))}
                         {newPosGroupData.items.length === 0 && (
                           <p className="text-sm text-gray-400 italic text-center py-4 bg-gray-50 rounded border border-dashed">
                             Belum ada jabatan dalam grup ini
