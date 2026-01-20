@@ -2010,6 +2010,11 @@ export default function KontenPage() {
                       </div>
                     </div>
                   ))}
+                {partnersList.length === 0 && (
+                  <div className="col-span-full text-center py-8 text-gray-500">
+                    Belum ada mitra
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -2076,6 +2081,11 @@ export default function KontenPage() {
                       </div>
                     </div>
                   ))}
+                {testimonialsList.length === 0 && (
+                  <div className="col-span-full text-center py-8 text-gray-500">
+                    Belum ada testimoni
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -2461,6 +2471,11 @@ export default function KontenPage() {
                       </div>
                     </div>
                   ))}
+                {faqList.length === 0 && (
+                  <div className="col-span-full text-center py-8 text-gray-500">
+                    Belum ada FAQ
+                  </div>
+                )}
               </div>
             </div>
           )}
