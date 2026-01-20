@@ -68,6 +68,8 @@ export default function PerusahaanPage() {
     disnaker_id?: string;
     createdAt: string;
     updatedAt: string;
+    job_vacancies_count?: number;
+    applicants_count?: number;
   };
   const [perusahaanList, setPerusahaanList] = useState<Company[]>([]);
   const [page, setPage] = useState(1);
@@ -570,12 +572,16 @@ export default function PerusahaanPage() {
                       </TD>
                       <TD>
                         <div className="text-center">
-                          <p className="font-bold text-primary">-</p>
+                          <p className="font-bold text-primary">
+                            {p.job_vacancies_count || 0}
+                          </p>
                         </div>
                       </TD>
                       <TD>
                         <div className="text-center">
-                          <p className="font-bold text-primary">-</p>
+                          <p className="font-bold text-primary">
+                            {p.applicants_count || 0}
+                          </p>
                         </div>
                       </TD>
                       <TD>
