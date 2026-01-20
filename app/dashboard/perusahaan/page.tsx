@@ -378,6 +378,7 @@ export default function PerusahaanPage() {
                     { value: "Menunggu Verifikasi", label: "Menunggu" },
                     { value: "Ditolak", label: "Ditolak" },
                   ]}
+                  className="w-full sm:w-[11rem]"
                 />
 
                 <SegmentedToggle
@@ -387,6 +388,7 @@ export default function PerusahaanPage() {
                     { value: "grid", icon: "ri-grid-line" },
                     { value: "table", icon: "ri-list-check" },
                   ]}
+                  className="w-full sm:w-[11rem]"
                 />
 
                 {canCreate && (
@@ -412,7 +414,7 @@ export default function PerusahaanPage() {
                       setSubmittedCompany(false);
                       setFieldErrors({});
                     }}
-                    className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center"
+                    className="px-4 py-3 h-full w-full sm:w-[11rem] bg-primary text-white rounded-xl hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center"
                   >
                     + Tambah
                   </button>

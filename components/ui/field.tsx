@@ -567,7 +567,7 @@ export function SegmentedToggle({
 }: SegmentedToggleProps) {
   return (
     <div
-      className={`flex items-stretch border border-gray-200 rounded-xl overflow-hidden w-full sm:w-auto sm:min-w-[9rem] shrink-0 h-full ${className || ""} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
+      className={`flex items-stretch border border-gray-200 rounded-xl overflow-hidden w-full sm:w-auto sm:min-w-[9rem] shrink-0 h-11 ${className || ""} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
     >
       {options.map((opt) => (
         <button
@@ -575,7 +575,7 @@ export function SegmentedToggle({
           type="button"
           disabled={disabled}
           onClick={() => onChange(opt.value)}
-          className={`flex-1 px-4 py-3 flex items-center justify-center whitespace-nowrap ${value === opt.value ? "bg-primary text-white" : "bg-white text-gray-600"}`}
+          className={`flex-1 px-4 flex items-center justify-center whitespace-nowrap text-sm ${value === opt.value ? "bg-primary text-white" : "bg-white text-gray-600"}`}
         >
           {opt.icon && <i className={opt.icon}></i>}
           {opt.label && <span>{opt.label}</span>}
