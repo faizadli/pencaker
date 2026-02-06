@@ -122,6 +122,11 @@ export default function Sidebar({
       icon: "ri-book-open-line",
       path: "/dashboard/pelatihan",
     },
+    {
+      name: "Informal",
+      icon: "ri-graduation-cap-line",
+      path: "/dashboard/informal",
+    },
     // { name: "Pengaduan", icon: "ri-alert-line", path: "/dashboard/pengaduan" },
     { name: "Laporan", icon: "ri-file-chart-line", path: "/dashboard/laporan" },
     { name: "Berita", icon: "ri-newspaper-line", path: "/dashboard/berita" },
@@ -182,6 +187,8 @@ export default function Sidebar({
         return permissionCodes.includes("pengaturan.read");
       if (i.path === "/dashboard/pelatihan")
         return permissionCodes.includes("pelatihan.read");
+      if (i.path === "/dashboard/informal")
+        return role === "super_admin" || role === "disnaker";
       if (i.path === "/dashboard/pengaduan")
         return permissionCodes.includes("pengaduan.read");
       if (i.path === "/dashboard/laporan")
