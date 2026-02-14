@@ -13,7 +13,7 @@ import FullPageLoading from "../../../components/ui/FullPageLoading";
 import {
   candidateAccountSchema,
   candidateProfileSchema,
-  candidateAk1FilesSchema,
+  candidateAk1RegisterSchema,
 } from "../../../utils/zod-schemas";
 import {
   login,
@@ -374,8 +374,9 @@ export default function RegisterCandidate() {
       ijazah: ak1Files.ijazah,
       pas_photo: ak1Files.pas_photo,
       certificate: ak1Files.certificate,
+      skills,
     };
-    const result = candidateAk1FilesSchema.safeParse(dataToValidate);
+    const result = candidateAk1RegisterSchema.safeParse(dataToValidate);
     if (!result.success) {
       const formattedErrors: Record<string, string> = {};
       result.error.issues.forEach((err) => {
@@ -386,6 +387,7 @@ export default function RegisterCandidate() {
       if (formattedErrors.ktp) setError(formattedErrors.ktp);
       else if (formattedErrors.ijazah) setError(formattedErrors.ijazah);
       else if (formattedErrors.pas_photo) setError(formattedErrors.pas_photo);
+      else if (formattedErrors.skills) setError(formattedErrors.skills);
       else setError("Mohon lengkapi dokumen AK1 dengan benar.");
       return;
     }
@@ -1313,6 +1315,11 @@ export default function RegisterCandidate() {
                       </span>
                     ))}
                   </div>
+                  {fieldErrors.skills && (
+                    <p className="text-xs text-red-600 mt-1">
+                      {fieldErrors.skills}
+                    </p>
+                  )}
                   <p className="text-xs text-gray-500 mt-1">
                     Tekan Enter untuk menambah keterampilan.
                   </p>

@@ -4425,6 +4425,10 @@ function Ak1LayoutEditor() {
                             value: "disnaker_profile:nip",
                             label: "Disnaker: NIP",
                           },
+                          {
+                            value: "disnaker_profile:jabatan",
+                            label: "Disnaker: Jabatan",
+                          },
                         ]}
                         value={f.token}
                         onChange={(val) => updateField(idx, { token: val })}

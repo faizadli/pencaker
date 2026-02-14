@@ -188,6 +188,22 @@ export const candidateAk1FilesSchema = z.object({
   // Kartu AK1 handled separately if needed
 });
 
+// AK1 validation for registration step (all required except certificate)
+export const candidateAk1RegisterSchema = z.object({
+  ktp: fileSchema(IMAGE_TYPES, MAX_IMAGE_SIZE, MIN_FILE_SIZE, "KTP"),
+  ijazah: fileSchema(PDF_TYPES, MAX_PDF_SIZE, MIN_FILE_SIZE, "Ijazah"),
+  pas_photo: fileSchema(IMAGE_TYPES, MAX_IMAGE_SIZE, MIN_FILE_SIZE, "Pas Foto"),
+  certificate: optionalFileSchema(
+    PDF_TYPES,
+    MAX_PDF_SIZE,
+    MIN_FILE_SIZE,
+    "Sertifikat",
+  ),
+  skills: z
+    .array(z.string().trim().min(1, "Keterampilan tidak boleh kosong"))
+    .min(1, "Minimal isi 1 keterampilan"),
+});
+
 export const ak1CardSchema = z.object({
   file: optionalFileSchema(PDF_TYPES, MAX_PDF_SIZE, MIN_FILE_SIZE, "Kartu AK1"),
   created_at: z.string().optional().or(z.literal("")),
@@ -223,6 +239,25 @@ export const companyProfileSchema = z.object({
     MAX_IMAGE_SIZE,
     MIN_FILE_SIZE,
     "Logo Perusahaan",
+  ),
+  // Dokumen Wajib
+  nib_doc: fileSchema(
+    [...PDF_TYPES, ...IMAGE_TYPES],
+    MAX_PDF_SIZE,
+    MIN_FILE_SIZE,
+    "Surat Izin Usaha (NIB)",
+  ),
+  company_profile_doc: fileSchema(
+    PDF_TYPES,
+    MAX_PDF_SIZE,
+    MIN_FILE_SIZE,
+    "Company Profile",
+  ),
+  npwp_doc: fileSchema(
+    [...PDF_TYPES, ...IMAGE_TYPES],
+    MAX_PDF_SIZE,
+    MIN_FILE_SIZE,
+    "NPWP",
   ),
 });
 

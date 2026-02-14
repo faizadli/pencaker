@@ -169,10 +169,12 @@ export default function ProfilePage() {
   const [disnakerForm, setDisnakerForm] = useState<{
     full_name: string;
     nip: string;
+    jabatan: string;
     photo_profile: string;
   }>({
     full_name: "",
     nip: "",
+    jabatan: "",
     photo_profile: "",
   });
   const [disnakerPhotoPreview, setDisnakerPhotoPreview] = useState<string>("");
@@ -373,6 +375,7 @@ export default function ProfilePage() {
           user_id: userId,
           full_name: disnakerForm.full_name,
           nip: disnakerForm.nip,
+          jabatan: disnakerForm.jabatan || undefined,
           photo_profile: disnakerForm.photo_profile || undefined,
         });
         showSuccess("Profil disnaker berhasil disimpan");
@@ -583,6 +586,7 @@ export default function ProfilePage() {
             setDisnakerForm({
               full_name: res.data.full_name || "",
               nip: res.data.nip || "",
+              jabatan: res.data.jabatan || "",
               photo_profile: res.data.photo_profile || "",
             });
             setDisnakerPhotoPreview(res.data.photo_profile || "");
@@ -1351,6 +1355,23 @@ export default function ProfilePage() {
                         }
                         className="w-full px-4 py-3 rounded-xl"
                         error={fieldErrors["nip"]}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-500 mb-2">
+                        Jabatan
+                      </label>
+                      <Input
+                        type="text"
+                        value={disnakerForm.jabatan}
+                        onChange={(e) =>
+                          setDisnakerForm({
+                            ...disnakerForm,
+                            jabatan: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 rounded-xl"
+                        error={fieldErrors["jabatan"]}
                       />
                     </div>
                   </React.Fragment>

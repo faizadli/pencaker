@@ -39,6 +39,9 @@ export async function upsertCompanyProfile(payload: {
   company_type?: string;
   nib?: string;
   company_logo?: string;
+  nib_file_url?: string;
+  company_profile_file_url?: string;
+  npwp_file_url?: string;
   no_handphone?: string;
   kecamatan: string;
   kelurahan: string;
@@ -267,6 +270,7 @@ export async function upsertDisnakerProfile(payload: {
   user_id: string;
   full_name: string;
   nip: string;
+  jabatan?: string;
   photo_profile?: string;
 }) {
   const resp = await fetch(`${BASE}/api/profile/disnaker/upsert`, {

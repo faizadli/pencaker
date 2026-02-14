@@ -1134,6 +1134,21 @@ export default function Ak1Page() {
     }
   };
   const generateAk1Pdf = async (docOverride?: Ak1Document | null) => {
+    try {
+      const role =
+        typeof window !== "undefined" ? localStorage.getItem("role") || "" : "";
+      const uid =
+        (typeof window !== "undefined" &&
+          (localStorage.getItem("id") || localStorage.getItem("user_id"))) ||
+        "";
+      if (!currentDisnaker && role && role !== "candidate" && uid) {
+        try {
+          const dp = await getDisnakerProfile(uid);
+          const dData = (dp.data || dp) as { full_name?: string; nip?: string };
+          if (dData) setCurrentDisnaker(dData);
+        } catch {}
+      }
+    } catch {}
     const pdfLib = await import("pdf-lib");
     const { PDFDocument, StandardFonts, rgb } = pdfLib;
     const pdfDoc = await PDFDocument.create();
@@ -1377,6 +1392,14 @@ export default function Ak1Page() {
         );
       }
 
+      if (
+        key === "disnaker_full_name" ||
+        key === "petugas" ||
+        key === "petugas_nama"
+      ) {
+        return String(currentDisnaker?.full_name || "");
+      }
+
       if (key.startsWith("expired")) {
         let add = 24;
         if (key === "expired1") add = 6;
@@ -1535,6 +1558,36 @@ export default function Ak1Page() {
         .split("");
     };
 
+    const getTokenRaw = (token: string): unknown => {
+      const [src, key] = token.includes(":")
+        ? (token.split(":", 2) as [string, string])
+        : ["", token];
+      const readFrom = (ns: string, k: string): unknown => {
+        let obj: Record<string, unknown> | null = null;
+        if (ns === "candidate") {
+          obj = (genCandidate as unknown as Record<string, unknown>) || null;
+        } else if (ns === "user") {
+          obj = (genUser as Record<string, unknown> | null) || null;
+        } else if (ns === "disnaker_profile") {
+          obj = (currentDisnaker as Record<string, unknown> | null) || null;
+        } else if (ns === "ak1_doc" || ns === "doc") {
+          obj =
+            ((docOverride || genDocDetail) as Record<string, unknown> | null) ||
+            null;
+        }
+        return obj ? obj[k] : undefined;
+      };
+      if (src) {
+        const v = readFrom(src, key);
+        if (v !== undefined && v !== null) return v;
+      }
+      return (
+        readFrom("candidate", key) ??
+        readFrom("user", key) ??
+        readFrom("doc", key)
+      );
+    };
+
     const drawFields = async (
       page: PDFPage,
       items: DrawFieldItem[],
@@ -1562,41 +1615,63 @@ export default function Ak1Page() {
             });
           }
         } else if (item.kind === "list") {
-          const txt = getTokenText(item.value);
+          const rawVal = getTokenRaw(item.value);
           let lines: string[] = [];
-          try {
-            const parsed = JSON.parse(txt);
-            if (Array.isArray(parsed))
-              lines = parsed
-                .map((x: unknown) => String(x || "").trim())
-                .filter(Boolean);
-          } catch {
-            lines = String(txt)
-              .split(/[\n,]/)
-              .map((s) => s.trim())
+          if (Array.isArray(rawVal)) {
+            lines = (rawVal as unknown[])
+              .map((x) => String(x || "").trim())
               .filter(Boolean);
+          } else if (typeof rawVal === "string") {
+            try {
+              const parsed = JSON.parse(rawVal);
+              if (Array.isArray(parsed)) {
+                lines = parsed
+                  .map((x: unknown) => String(x || "").trim())
+                  .filter(Boolean);
+              } else {
+                lines = String(rawVal)
+                  .split(/[\n,]/)
+                  .map((s) => s.trim())
+                  .filter(Boolean);
+              }
+            } catch {
+              lines = String(rawVal)
+                .split(/[\n,]/)
+                .map((s) => s.trim())
+                .filter(Boolean);
+            }
           }
 
           const fSize = item.style?.fontSize || 10;
           const sizePx = Math.max(1, fSize);
-          const startX = item.x;
           const align = item.style?.textAlign || "left";
+          const hasWidth = Number(item.width || 0) > 0;
 
           lines.forEach((l, idx) => {
             const content = `• ${l}`;
             const w = font.widthOfTextAtSize(content, fSize);
 
-            const baseW = Math.max(
-              32,
-              Number(item.width || Math.round(sizePx * 8)),
-            );
-            let cx = startX;
-            if (align === "center") cx = startX + baseW / 2;
-            else if (align === "right") cx = startX + baseW;
-
-            let finalX = cx;
-            if (align === "center") finalX = cx - w / 2;
-            else if (align === "right") finalX = cx - w;
+            let finalX: number;
+            if (hasWidth) {
+              const baseW = Math.max(
+                32,
+                Number(item.width || Math.round(sizePx * 8)),
+              );
+              let cx = item.x;
+              if (align === "center") cx = item.x + baseW / 2;
+              else if (align === "right") cx = item.x + baseW;
+              finalX =
+                align === "center"
+                  ? cx - w / 2
+                  : align === "right"
+                    ? cx - w
+                    : cx;
+            } else {
+              // Anchor-based alignment when width is not set
+              if (align === "center") finalX = item.x - w / 2;
+              else if (align === "right") finalX = item.x - w;
+              else finalX = item.x;
+            }
 
             const y = pgH - (item.y + idx * sizePx) - sizePx * 0.8;
 
@@ -1614,23 +1689,32 @@ export default function Ak1Page() {
           const align = item.style?.textAlign || "left";
 
           const sizePx = Math.max(1, fSize);
-          const baseW = Math.max(
-            32,
-            Number(item.width || Math.round(sizePx * 8)),
-          );
+          const w = font.widthOfTextAtSize(txt, fSize);
           const baseH = Math.round(sizePx * 1.2);
-
-          let cx = item.x + baseW / 2;
-          if (align === "left") cx = item.x;
-          else if (align === "right") cx = item.x + baseW;
+          const hasWidth = Number(item.width || 0) > 0;
+          let finalX: number;
+          if (hasWidth) {
+            const baseW = Math.max(
+              32,
+              Number(item.width || Math.round(sizePx * 8)),
+            );
+            let cx = item.x + baseW / 2;
+            if (align === "left") cx = item.x;
+            else if (align === "right") cx = item.x + baseW;
+            finalX =
+              align === "left" ? cx : align === "right" ? cx - w : cx - w / 2;
+          } else {
+            // Anchor-based alignment: treat x as anchor
+            finalX =
+              align === "left"
+                ? item.x
+                : align === "right"
+                  ? item.x - w
+                  : item.x - w / 2;
+          }
 
           const cy = item.y + baseH / 2;
           const pdfY = pgH - cy - fSize / 3;
-
-          const w = font.widthOfTextAtSize(txt, fSize);
-          let finalX = cx - w / 2;
-          if (align === "left") finalX = cx;
-          else if (align === "right") finalX = cx - w;
 
           page.drawText(txt, {
             x: finalX,
@@ -1731,7 +1815,7 @@ export default function Ak1Page() {
           const y = (f.y || 0) * scaleY;
           const width = (f.w || 0) * scaleX;
           const height = (f.h || 0) * scaleY;
-          const fontSize = (f.size || 10) * scaleY;
+          const fontSize = (f.size || 10) * scaleX;
           const cellW = (f.cellW || 0) * scaleX;
           const cellH = (f.cellH || 0) * scaleY;
           const gap = (f.gap || 0) * scaleX;
@@ -1793,7 +1877,7 @@ export default function Ak1Page() {
           const y = (f.y || 0) * scaleY;
           const width = (f.w || 0) * scaleX;
           const height = (f.h || 0) * scaleY;
-          const fontSize = (f.size || 10) * scaleY;
+          const fontSize = (f.size || 10) * scaleX;
           const cellW = (f.cellW || 0) * scaleX;
           const cellH = (f.cellH || 0) * scaleY;
           const gap = (f.gap || 0) * scaleX;
