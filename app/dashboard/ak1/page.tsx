@@ -47,7 +47,10 @@ import type {
   Ak1Template,
 } from "../../../services/ak1";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
-import { candidateAk1FilesSchema } from "../../../utils/zod-schemas";
+import {
+  candidateAk1FilesSchema,
+  ak1NoUrutSchema,
+} from "../../../utils/zod-schemas";
 import { PDFPage, PDFFont } from "pdf-lib";
 
 type Ak1LayoutFieldExt = Ak1LayoutField & {
@@ -3960,10 +3963,60 @@ export default function Ak1Page() {
                         showError("Data AK1 tidak ditemukan.");
                         return;
                       }
-                      if (!genMeta.no_urut_pendaftaran) {
-                        showError("Isi no urut pendaftaran.");
+                      // Zod validation for no_urut_pendaftaran (exactly 8 digits)
+                      const valid = ak1NoUrutSchema.safeParse({
+                        no_urut_pendaftaran: String(
+                          genMeta.no_urut_pendaftaran || "",
+                        ),
+                      });
+                      if (!valid.success) {
+                        const msg =
+                          valid.error.issues[0]?.message ||
+                          "No Urut Pendaftaran tidak valid";
+                        showError(msg);
                         return;
                       }
+                      // Optional client-side uniqueness check (best-effort; backend also enforces)
+                      try {
+                        const list = await listAk1Documents();
+                        const raw = (list as { data?: unknown })?.data || [];
+                        const toStr = (
+                          obj: Record<string, unknown>,
+                          key: string,
+                        ): string | undefined => {
+                          const v = obj[key];
+                          return typeof v === "string" ? v : undefined;
+                        };
+                        const items: Array<{
+                          id?: string;
+                          ak1_document_id?: string;
+                          no_urut_pendaftaran?: string;
+                        }> = Array.isArray(raw)
+                          ? (raw as Array<unknown>).map((u) => {
+                              const r = (u || {}) as Record<string, unknown>;
+                              return {
+                                id: toStr(r, "id"),
+                                ak1_document_id: toStr(r, "ak1_document_id"),
+                                no_urut_pendaftaran: toStr(
+                                  r,
+                                  "no_urut_pendaftaran",
+                                ),
+                              };
+                            })
+                          : [];
+                        const exists = items.some((d) => {
+                          const val = String(d.no_urut_pendaftaran || "");
+                          const id = String(d.id || d.ak1_document_id || "");
+                          return (
+                            val === String(genMeta.no_urut_pendaftaran) &&
+                            id !== String(genMeta.ak1_document_id || "")
+                          );
+                        });
+                        if (exists) {
+                          showError("No Urut Pendaftaran sudah digunakan.");
+                          return;
+                        }
+                      } catch {}
                       const blob = await generateAk1Pdf();
                       const filename = `ak1_${genMeta.candidate_id || "unknown"}.pdf`;
                       const pre = await presignUpload(
