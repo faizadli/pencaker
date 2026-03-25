@@ -36,7 +36,6 @@ export default function HomePage() {
       jawaban?: string;
       a?: string;
     }>[];
-    partners: SiteContentItem<{ name?: string; logo?: string }>[];
     testimonials: SiteContentItem<{
       nama?: string;
       pekerjaan?: string;
@@ -278,9 +277,6 @@ export default function HomePage() {
       foto: string;
     }>
   >([]);
-  const [partners, setPartners] = useState<
-    Array<{ id: string; name: string; logo: string }>
-  >([]);
   const [faqs, setFaqs] = useState<Array<{ id: string; q: string; a: string }>>(
     [],
   );
@@ -443,14 +439,6 @@ export default function HomePage() {
             perusahaan: String(t.data?.perusahaan || ""),
             testimoni: String(t.data?.testimoni || ""),
             foto: String(t.data?.foto || "https://picsum.photos/200"),
-          })),
-        );
-        const partnerItems = Array.isArray(hc.partners) ? hc.partners : [];
-        setPartners(
-          partnerItems.map((p) => ({
-            id: String(p.id || Math.random()),
-            name: String(p.data?.name || ""),
-            logo: String(p.data?.logo || "https://picsum.photos/200"),
           })),
         );
         const faqItems = Array.isArray(hc.faqs) ? hc.faqs : [];
@@ -886,83 +874,6 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
-
-      <section className="py-16 bg-gray-100 overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
-              Perusahaan Mitra
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Bekerjasama dengan perusahaan-perusahaan terpercaya
-            </p>
-          </div>
-
-          {partners.length > 0 ? (
-            <div className="marquee-partners relative w-full overflow-hidden">
-              <div className="marquee-track-partners flex gap-12 items-center">
-                {/* Loop 8 sets of partners to ensure infinite seamless scrolling */}
-                {[...Array(8)].flatMap((_, setIndex) =>
-                  partners.map((partner, index) => (
-                    <div
-                      key={`${setIndex}-${partner.id}-${index}`}
-                      className="flex-shrink-0 grayscale hover:grayscale-0 transition-all duration-300 opacity-70 hover:opacity-100"
-                    >
-                      <Image
-                        src={partner.logo}
-                        alt={partner.name}
-                        width={150}
-                        height={60}
-                        className="h-16 w-auto object-contain"
-                        priority
-                      />
-                    </div>
-                  )),
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="text-gray-400 italic px-4 w-full text-center">
-              Belum ada mitra terdaftar
-            </div>
-          )}
-        </div>
-        <style jsx>{`
-          @keyframes marqueePartners {
-            0% {
-              transform: translateX(0);
-            }
-            100% {
-              transform: translateX(-12.5%);
-            }
-          }
-          .marquee-partners {
-            position: relative;
-            mask-image: linear-gradient(
-              to right,
-              transparent,
-              black 10%,
-              black 90%,
-              transparent
-            );
-            -webkit-mask-image: linear-gradient(
-              to right,
-              transparent,
-              black 10%,
-              black 90%,
-              transparent
-            );
-          }
-          .marquee-track-partners {
-            width: max-content;
-            animation: marqueePartners 10s linear infinite;
-            will-change: transform;
-          }
-          .marquee-track-partners:hover {
-            animation-play-state: paused;
-          }
-        `}</style>
       </section>
 
       <section className="py-20 bg-gray-50">
