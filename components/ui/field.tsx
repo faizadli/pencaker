@@ -1,6 +1,17 @@
 "use client";
 import { forwardRef, useMemo, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+
+/** Placeholder baku dari label jika pemanggil tidak mengisi `placeholder`. */
+function defaultPlaceholderFromLabel(label?: string): string | undefined {
+  if (!label) return undefined;
+  const t = String(label)
+    .replace(/\s*\*\s*$/g, "")
+    .replace(/:\s*$/g, "")
+    .trim();
+  if (!t) return undefined;
+  return `Isi ${t.toLowerCase()}`;
+}
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -25,6 +36,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       error,
       required,
       submitted,
+      placeholder,
       ...rest
     } = props;
     const isRequired = required ?? Boolean(label);
@@ -169,13 +181,25 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       : rest.type;
 
     // If no onChange, use defaultValue to make it uncontrolled
+    const resolvedPlaceholder =
+      placeholder !== undefined && placeholder !== null
+        ? placeholder
+        : (defaultPlaceholderFromLabel(label) ??
+          (icon === "ri-search-line" ? "Cari..." : undefined));
+
     const inputProps = hasOnChange
-      ? { ...rest, value: inputValue, type: inputType }
+      ? {
+          ...rest,
+          value: inputValue,
+          type: inputType,
+          placeholder: resolvedPlaceholder,
+        }
       : {
           ...rest,
           defaultValue: inputValue,
           value: undefined,
           type: inputType,
+          placeholder: resolvedPlaceholder,
         };
     const isEmpty =
       rest.type === "number"
@@ -237,18 +261,36 @@ type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
 };
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   function Textarea(props, ref) {
-    const { className, label, hint, error, required, submitted, ...rest } =
-      props;
+    const {
+      className,
+      label,
+      hint,
+      error,
+      required,
+      submitted,
+      placeholder,
+      ...rest
+    } = props;
     const isRequired = required ?? Boolean(label);
 
     // Ensure value is always defined
     const textareaValue = rest.value !== undefined ? rest.value : "";
     const hasOnChange = rest.onChange !== undefined;
 
+    const resolvedPlaceholder =
+      placeholder !== undefined && placeholder !== null
+        ? placeholder
+        : (defaultPlaceholderFromLabel(label) ?? "Tuliskan di sini...");
+
     // If no onChange, use defaultValue to make it uncontrolled
     const textareaProps = hasOnChange
-      ? { ...rest, value: textareaValue }
-      : { ...rest, defaultValue: textareaValue, value: undefined };
+      ? { ...rest, value: textareaValue, placeholder: resolvedPlaceholder }
+      : {
+          ...rest,
+          defaultValue: textareaValue,
+          value: undefined,
+          placeholder: resolvedPlaceholder,
+        };
     const showError =
       !!error ||
       (!!submitted && isRequired && String(textareaValue).trim() === "");
@@ -300,7 +342,7 @@ export function SearchableSelect({
   options,
   value,
   onChange,
-  placeholder = "Pilih...",
+  placeholder: placeholderProp,
   className,
   disabled,
   label,
@@ -311,6 +353,13 @@ export function SearchableSelect({
   onSearch,
   isLoading,
 }: SearchableSelectProps) {
+  const placeholder =
+    placeholderProp !== undefined && placeholderProp !== null
+      ? placeholderProp
+      : (defaultPlaceholderFromLabel(label)?.replace(
+          /^Isi /,
+          "Cari atau pilih ",
+        ) ?? "Pilih...");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const selected = useMemo(
