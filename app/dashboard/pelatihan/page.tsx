@@ -551,7 +551,6 @@ export default function TrainingInstitutionsPage() {
                     />
                   </div>
                   <SearchableSelect
-                    label="Sumber data"
                     options={ALUMNI_SOURCE_OPTIONS}
                     value={alumniSource}
                     onChange={(v) =>
