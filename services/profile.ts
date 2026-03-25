@@ -91,6 +91,17 @@ export async function getCompanyProfileById(id: string) {
   return data;
 }
 
+export type PriorTrainingPayload = {
+  had_training: boolean;
+  training_name?: string;
+  training_year?: number;
+  alumni_name?: string;
+  last_education?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+};
+
 export async function upsertCandidateProfile(payload: {
   user_id: string;
   full_name: string;
@@ -111,6 +122,7 @@ export async function upsertCandidateProfile(payload: {
   no_handphone?: string;
   dis_kondisi?: string;
   agama?: string;
+  prior_training?: PriorTrainingPayload;
 }): Promise<ApiEnvelope> {
   const resp = await fetch(`${BASE}/api/profile/candidate/upsert`, {
     method: "POST",

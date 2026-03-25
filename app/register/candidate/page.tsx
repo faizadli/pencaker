@@ -128,6 +128,17 @@ export default function RegisterCandidate() {
   const [skills, setSkills] = useState<string[]>([]);
   const [finalized, setFinalized] = useState(false);
 
+  const [priorTraining, setPriorTraining] = useState({
+    had_training: false,
+    training_name: "",
+    training_year: "",
+    alumni_name: "",
+    last_education: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
+
   // const limitMB = 8;
   // const tooLarge = (f: File) => f.size > limitMB * 1024 * 1024;
   const [districts, setDistricts] = useState<{ id: string; name: string }[]>(
@@ -328,6 +339,14 @@ export default function RegisterCandidate() {
 
     const dataToValidate = {
       ...profile,
+      had_prior_training: priorTraining.had_training,
+      prior_training_name: priorTraining.training_name,
+      prior_training_year: priorTraining.training_year,
+      prior_training_alumni_name: priorTraining.alumni_name,
+      prior_training_last_education: priorTraining.last_education,
+      prior_training_email: priorTraining.email,
+      prior_training_phone: priorTraining.phone,
+      prior_training_address: priorTraining.address,
       photo: photoFile,
       cv: resumeType === "file" ? cvFile : undefined,
       resume_text: resumeType === "text" ? resumeText : undefined,
@@ -573,6 +592,28 @@ export default function RegisterCandidate() {
         ...(resumeType === "text" && resumeText
           ? { resume_text: resumeText }
           : {}),
+        prior_training: {
+          had_training: priorTraining.had_training,
+          ...(priorTraining.had_training
+            ? {
+                training_name: priorTraining.training_name.trim(),
+                training_year: Number(priorTraining.training_year),
+                alumni_name: priorTraining.alumni_name.trim(),
+                last_education: (() => {
+                  const opt = educationOptions.find(
+                    (o) =>
+                      o.value === priorTraining.last_education && !o.isGroup,
+                  );
+                  return (
+                    opt?.label?.trim() || priorTraining.last_education.trim()
+                  );
+                })(),
+                email: priorTraining.email.trim(),
+                phone: priorTraining.phone.replace(/\s/g, "").trim(),
+                address: priorTraining.address.trim(),
+              }
+            : {}),
+        },
       };
       await upsertCandidateProfile(basePayload);
       const profEnv = await getCandidateProfile(uid);
@@ -1161,6 +1202,144 @@ export default function RegisterCandidate() {
                   error={fieldErrors.graduation_year}
                 />
               </div>
+
+              <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/80 space-y-4">
+                <h3 className="text-sm font-semibold text-primary flex items-center gap-2">
+                  <i className="ri-graduation-cap-line"></i>
+                  Riwayat pelatihan kerja
+                </h3>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Apakah pernah mengikuti pelatihan kerja?
+                  </label>
+                  <SegmentedToggle
+                    options={[
+                      { value: "tidak", label: "Tidak" },
+                      { value: "ya", label: "Pernah" },
+                    ]}
+                    value={priorTraining.had_training ? "ya" : "tidak"}
+                    onChange={(v) => {
+                      const on = v === "ya";
+                      setPriorTraining((p) =>
+                        on
+                          ? {
+                              had_training: true,
+                              training_name: p.training_name,
+                              training_year: p.training_year,
+                              alumni_name:
+                                p.alumni_name || profile.full_name || "",
+                              last_education:
+                                p.last_education ||
+                                profile.last_education ||
+                                "",
+                              email: p.email || account.email || "",
+                              phone: p.phone || account.no_handphone || "",
+                              address: p.address || profile.address || "",
+                            }
+                          : {
+                              had_training: false,
+                              training_name: "",
+                              training_year: "",
+                              alumni_name: "",
+                              last_education: "",
+                              email: "",
+                              phone: "",
+                              address: "",
+                            },
+                      );
+                    }}
+                  />
+                </div>
+                {priorTraining.had_training && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Input
+                      label="Nama pelatihan yang pernah diikuti"
+                      value={priorTraining.training_name}
+                      onChange={(e) =>
+                        setPriorTraining({
+                          ...priorTraining,
+                          training_name: e.target.value,
+                        })
+                      }
+                      error={fieldErrors.prior_training_name}
+                    />
+                    <Input
+                      label="Tahun mengikuti pelatihan"
+                      type="number"
+                      placeholder="contoh: 2023"
+                      value={priorTraining.training_year}
+                      onChange={(e) =>
+                        setPriorTraining({
+                          ...priorTraining,
+                          training_year: e.target.value,
+                        })
+                      }
+                      error={fieldErrors.prior_training_year}
+                    />
+                    <Input
+                      label="Nama alumni pelatihan"
+                      value={priorTraining.alumni_name}
+                      onChange={(e) =>
+                        setPriorTraining({
+                          ...priorTraining,
+                          alumni_name: e.target.value,
+                        })
+                      }
+                      error={fieldErrors.prior_training_alumni_name}
+                    />
+                    <SearchableSelect
+                      label="Pendidikan terakhir (terkait pelatihan)"
+                      options={educationOptions}
+                      value={priorTraining.last_education}
+                      onChange={(value) =>
+                        setPriorTraining({
+                          ...priorTraining,
+                          last_education: value,
+                        })
+                      }
+                      error={fieldErrors.prior_training_last_education}
+                    />
+                    <Input
+                      label="Email"
+                      type="email"
+                      value={priorTraining.email}
+                      onChange={(e) =>
+                        setPriorTraining({
+                          ...priorTraining,
+                          email: e.target.value,
+                        })
+                      }
+                      error={fieldErrors.prior_training_email}
+                    />
+                    <Input
+                      label="No. Telp"
+                      value={priorTraining.phone}
+                      onChange={(e) =>
+                        setPriorTraining({
+                          ...priorTraining,
+                          phone: e.target.value,
+                        })
+                      }
+                      error={fieldErrors.prior_training_phone}
+                    />
+                    <div className="sm:col-span-2">
+                      <Textarea
+                        label="Alamat lengkap"
+                        rows={3}
+                        value={priorTraining.address}
+                        onChange={(e) =>
+                          setPriorTraining({
+                            ...priorTraining,
+                            address: e.target.value,
+                          })
+                        }
+                        error={fieldErrors.prior_training_address}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">

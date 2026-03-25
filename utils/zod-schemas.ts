@@ -149,6 +149,14 @@ export const candidateProfileSchema = z
       .regex(/^\d{4}$/, "Tahun harus 4 digit"),
     status_perkawinan: z.string().min(1, "Status Perkawinan wajib dipilih"),
     resume_text: z.string().optional(),
+    had_prior_training: z.boolean(),
+    prior_training_name: z.string().optional(),
+    prior_training_year: z.string().optional(),
+    prior_training_alumni_name: z.string().optional(),
+    prior_training_last_education: z.string().optional(),
+    prior_training_email: z.string().optional(),
+    prior_training_phone: z.string().optional(),
+    prior_training_address: z.string().optional(),
     // Files
     photo: fileSchema(
       IMAGE_TYPES,
@@ -168,7 +176,72 @@ export const candidateProfileSchema = z
       message: "Wajib mengunggah CV atau mengisi Resume Text",
       path: ["cv"],
     },
-  );
+  )
+  .superRefine((data, ctx) => {
+    if (!data.had_prior_training) return;
+    if (!data.prior_training_name?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Nama pelatihan wajib diisi",
+        path: ["prior_training_name"],
+      });
+    }
+    const y = data.prior_training_year?.trim();
+    if (!y || !/^\d{4}$/.test(y)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Tahun pelatihan wajib 4 digit",
+        path: ["prior_training_year"],
+      });
+    } else {
+      const n = Number(y);
+      const max = new Date().getFullYear() + 1;
+      if (n < 1950 || n > max) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Tahun antara 1950 dan ${max}`,
+          path: ["prior_training_year"],
+        });
+      }
+    }
+    if (!data.prior_training_alumni_name?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Nama alumni pelatihan wajib diisi",
+        path: ["prior_training_alumni_name"],
+      });
+    }
+    if (!data.prior_training_last_education?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Pendidikan terakhir wajib diisi",
+        path: ["prior_training_last_education"],
+      });
+    }
+    const em = data.prior_training_email?.trim();
+    if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Email tidak valid",
+        path: ["prior_training_email"],
+      });
+    }
+    const ph = data.prior_training_phone?.replace(/\s/g, "") || "";
+    if (ph.length < 10 || ph.length > 15 || !/^\d+$/.test(ph)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "No. telp 10–15 digit angka",
+        path: ["prior_training_phone"],
+      });
+    }
+    if (!data.prior_training_address?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Alamat lengkap wajib diisi",
+        path: ["prior_training_address"],
+      });
+    }
+  });
 
 export const candidateAk1FilesSchema = z.object({
   ktp: optionalFileSchema(IMAGE_TYPES, MAX_IMAGE_SIZE, MIN_FILE_SIZE, "KTP"),

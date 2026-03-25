@@ -166,6 +166,16 @@ export default function DashboardLayout({
             }
           }
 
+          if (typeof window !== "undefined") {
+            try {
+              sessionStorage.setItem(
+                "dashboard_permissions",
+                JSON.stringify(perms),
+              );
+            } catch {
+              /* ignore */
+            }
+          }
           setSidebarData({
             user: userData,
             permissions: perms,
