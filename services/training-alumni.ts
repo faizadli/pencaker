@@ -10,11 +10,16 @@ export interface TrainingAlumniRow {
   id: string;
   training_name: string;
   training_year: number;
+  kejuruan?: string | null;
   full_name: string;
   last_education?: string;
   email?: string;
   phone?: string;
   address?: string;
+  nik?: string | null;
+  gender?: "L" | "P" | null;
+  birth_place?: string | null;
+  birth_date?: string | null;
   candidate_id?: string | null;
   source: "admin_manual" | "candidate_registration";
   created_at?: string;
@@ -26,11 +31,19 @@ export interface TrainingAlumniRow {
 export interface CreateTrainingAlumniRequest {
   training_name: string;
   training_year: number;
+  /** Program kejuruan (wajib form manual; opsional impor Excel) */
+  kejuruan?: string;
   full_name: string;
   last_education: string;
   email: string;
   phone: string;
   address: string;
+  /** Diisi pada form manual; boleh tidak dikirim saat impor Excel */
+  nik?: string;
+  gender?: "L" | "P";
+  birth_place?: string;
+  /** Format YYYY-MM-DD */
+  birth_date?: string;
 }
 
 export async function listTrainingAlumni(params?: {

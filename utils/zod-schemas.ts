@@ -72,7 +72,7 @@ const optionalFileSchema = (
     );
 
 // Common fields
-const nikSchema = z
+export const nikSchema = z
   .string()
   .min(1, "NIK wajib diisi")
   .length(16, "NIK harus 16 digit")
