@@ -14,6 +14,7 @@ import { getCandidateProfile } from "../../../services/profile";
 import { getPublicCompanyById } from "../../../services/company";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
 import Modal from "../../../components/ui/Modal";
+import toast from "react-hot-toast";
 
 type Job = {
   id?: string;
@@ -508,7 +509,17 @@ export default function JobDetailPage() {
                 } catch (e) {
                   const msg =
                     e instanceof Error ? e.message : "Gagal mengirim lamaran";
-                  alert(msg);
+                  toast.error(msg, {
+                    duration: 9000,
+                    className: "rounded-lg shadow-lg",
+                    style: {
+                      fontSize: "1rem",
+                      padding: "14px 16px",
+                      minWidth: "320px",
+                      background: "var(--color-danger)",
+                      color: "white",
+                    },
+                  });
                   setConfirmOpen(false);
                 } finally {
                   setApplying(false);

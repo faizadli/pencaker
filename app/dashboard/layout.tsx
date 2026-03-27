@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import Sidebar, { SidebarData } from "../../components/layout/Sidebar";
 import ToastProvider from "../../components/ui/Toast";
 import FullPageLoading from "../../components/ui/FullPageLoading";
@@ -14,6 +15,32 @@ import {
 import { listRoles, getRolePermissions } from "../../services/rbac";
 import { getPublicSiteSettings } from "../../services/site";
 import { validateAdminSession } from "../../services/auth";
+
+function showCandidateBlacklistToastOnce(endDate: string, reason: string) {
+  if (typeof window === "undefined") return;
+  const key = `adikara_candidate_bl_${endDate}`;
+  try {
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+  } catch {
+    /* ignore */
+  }
+  const alasan = reason?.trim() || "-";
+  toast.error(
+    `Anda sedang dalam masa blacklist hingga ${endDate}. Alasan: ${alasan}. Selama periode ini Anda tidak dapat mengikuti pelatihan.`,
+    {
+      duration: 9000,
+      className: "rounded-lg shadow-lg",
+      style: {
+        fontSize: "1rem",
+        padding: "14px 16px",
+        minWidth: "320px",
+        background: "var(--color-danger)",
+        color: "white",
+      },
+    },
+  );
+}
 
 export default function DashboardLayout({
   children,
@@ -82,6 +109,7 @@ export default function DashboardLayout({
         : "";
     const storedRole =
       typeof window !== "undefined" ? localStorage.getItem("role") || "" : "";
+    const roleNorm = String(storedRole).toLowerCase();
 
     (async () => {
       if (token && uid) {
@@ -98,8 +126,8 @@ export default function DashboardLayout({
               listRoles(),
               getPublicSiteSettings(),
               (async () => {
-                if (storedRole === "company") return getCompanyProfile(uid);
-                if (storedRole === "candidate") return getCandidateProfile(uid);
+                if (roleNorm === "company") return getCompanyProfile(uid);
+                if (roleNorm === "candidate") return getCandidateProfile(uid);
                 return getDisnakerProfile(uid);
               })(),
             ]);
@@ -144,7 +172,7 @@ export default function DashboardLayout({
           if (profileResp.status === "fulfilled" && profileResp.value) {
             const d = (profileResp.value.data || {}) as unknown;
             const dataObj = d as Record<string, unknown>;
-            if (storedRole === "company") {
+            if (roleNorm === "company") {
               const raw = String(dataObj.status || "").toLowerCase();
               const approved =
                 Boolean(dataObj.disnaker_id) ||
@@ -163,6 +191,17 @@ export default function DashboardLayout({
                 avatar: String(dataObj.photo_profile || ""),
                 approved: false,
               };
+              if (roleNorm === "candidate") {
+                const bl = dataObj.active_blacklist as
+                  | { end_date?: string; reason?: string }
+                  | undefined;
+                if (bl?.end_date) {
+                  showCandidateBlacklistToastOnce(
+                    String(bl.end_date),
+                    String(bl.reason ?? ""),
+                  );
+                }
+              }
             }
           }
 

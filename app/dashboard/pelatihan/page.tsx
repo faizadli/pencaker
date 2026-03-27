@@ -23,13 +23,28 @@ import {
 } from "../../../services/training-institution";
 import {
   listTrainingAlumni,
+  listTrainingAlumniAllPages,
   createTrainingAlumni,
+  createTrainingAlumniBatch,
+  updateTrainingAlumni,
+  deleteTrainingAlumni,
+  blacklistTrainingAlumniRow,
+  getTrainingAlumniNikBlacklistStatus,
+  formatTrainingAlumniBlacklistErrorMessage,
   TrainingAlumniRow,
   CreateTrainingAlumniRequest,
 } from "../../../services/training-alumni";
 import {
+  normalizeTrainingAlumniNik,
+  trainingAlumniNikYearKey,
+  buildNikYearSetFromRows,
+  rowMatchesNikAndYear,
+} from "../../../utils/training-alumni-nik-year";
+import {
   downloadTrainingAlumniTemplate,
   parseTrainingAlumniExcel,
+  type TrainingAlumniParsedInvalid,
+  type TrainingAlumniParsedValid,
 } from "../../../utils/training-alumni-excel";
 import { transformEducationGroupsToSelectOptions } from "../../../utils/education-select-options";
 import { getPublicEducationGroups } from "../../../services/site";
@@ -101,16 +116,13 @@ const alumniSchema = z.object({
   address: z.string().min(1, "Alamat wajib diisi"),
 });
 
-/** Tab Impor Excel: konteks batch + isi baris dari template-alumni.xlsx */
+/** Tab Impor Excel: konteks batch; kejuruan diambil dari judul blok di file Excel */
 const alumniExcelImportContextSchema = z.object({
   training_name: z.string().min(1, "Nama pelatihan wajib diisi"),
   training_year: z.coerce
     .number()
     .min(1950)
     .max(new Date().getFullYear() + 1),
-  kejuruan: z.enum(TRAINING_ALUMNI_KEJURUAN_LIST, {
-    message: "Kejuruan wajib dipilih",
-  }),
 });
 
 export default function TrainingInstitutionsPage() {
@@ -146,11 +158,24 @@ export default function TrainingInstitutionsPage() {
     "all" | "admin_manual" | "candidate_registration"
   >("all");
   const [alumniModalOpen, setAlumniModalOpen] = useState(false);
+  const [alumniEditingId, setAlumniEditingId] = useState<string | null>(null);
+  /** Baris tabel alumni yang menu titik-tiganya terbuka */
+  const [alumniActionsMenuOpenId, setAlumniActionsMenuOpenId] = useState<
+    string | null
+  >(null);
   const [alumniAddModalTab, setAlumniAddModalTab] = useState<"form" | "excel">(
     "form",
   );
   const [alumniSubmitting, setAlumniSubmitting] = useState(false);
   const [alumniImporting, setAlumniImporting] = useState(false);
+  const [alumniBlacklistModalOpen, setAlumniBlacklistModalOpen] =
+    useState(false);
+  const [alumniBlacklistRowId, setAlumniBlacklistRowId] = useState<
+    string | null
+  >(null);
+  const [alumniBlacklistReason, setAlumniBlacklistReason] = useState("");
+  const [alumniBlacklistSubmitting, setAlumniBlacklistSubmitting] =
+    useState(false);
   const alumniExcelInputRef = useRef<HTMLInputElement>(null);
   const alumniExcelDragDepth = useRef(0);
   const [alumniExcelDragActive, setAlumniExcelDragActive] = useState(false);
@@ -158,10 +183,16 @@ export default function TrainingInstitutionsPage() {
   const [alumniExcelTrainingYear, setAlumniExcelTrainingYear] = useState(() =>
     new Date().getFullYear(),
   );
-  const [alumniExcelKejuruan, setAlumniExcelKejuruan] = useState("");
   const [alumniExcelImportErrors, setAlumniExcelImportErrors] = useState<
     Record<string, string>
   >({});
+  /** File sudah di-parse; data menunggu klik Simpan sebelum hit API */
+  const [alumniExcelStaged, setAlumniExcelStaged] = useState<{
+    valid: TrainingAlumniParsedValid[];
+    invalid: TrainingAlumniParsedInvalid[];
+    fileName: string;
+  } | null>(null);
+  const [alumniExcelParsing, setAlumniExcelParsing] = useState(false);
   const [alumniFieldErrors, setAlumniFieldErrors] = useState<
     Record<string, string>
   >({});
@@ -190,6 +221,18 @@ export default function TrainingInstitutionsPage() {
   useEffect(() => {
     setDashboardPerms(readDashboardPermissions());
   }, []);
+
+  useEffect(() => {
+    if (alumniActionsMenuOpenId == null) return;
+    const close = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      if (!t.closest("[data-training-alumni-row-actions]")) {
+        setAlumniActionsMenuOpenId(null);
+      }
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [alumniActionsMenuOpenId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -276,6 +319,7 @@ export default function TrainingInstitutionsPage() {
   }, [activeTab, canAlumniRead, fetchAlumni]);
 
   const handleOpenAlumniModal = () => {
+    setAlumniEditingId(null);
     setAlumniForm({
       training_name: "",
       training_year: new Date().getFullYear(),
@@ -293,8 +337,9 @@ export default function TrainingInstitutionsPage() {
     setAlumniFieldErrors({});
     setAlumniExcelTrainingName("");
     setAlumniExcelTrainingYear(new Date().getFullYear());
-    setAlumniExcelKejuruan("");
     setAlumniExcelImportErrors({});
+    setAlumniExcelStaged(null);
+    setAlumniExcelParsing(false);
     alumniExcelDragDepth.current = 0;
     setAlumniExcelDragActive(false);
     setAlumniAddModalTab("form");
@@ -303,8 +348,11 @@ export default function TrainingInstitutionsPage() {
 
   const handleCloseAlumniModal = () => {
     setAlumniModalOpen(false);
+    setAlumniEditingId(null);
     setAlumniAddModalTab("form");
     setAlumniExcelImportErrors({});
+    setAlumniExcelStaged(null);
+    setAlumniExcelParsing(false);
     alumniExcelDragDepth.current = 0;
     setAlumniExcelDragActive(false);
   };
@@ -324,9 +372,42 @@ export default function TrainingInstitutionsPage() {
       setAlumniSubmitting(false);
       return;
     }
+    const nikNorm = normalizeTrainingAlumniNik(parsed.data.nik ?? "");
     try {
-      await createTrainingAlumni(parsed.data);
-      showSuccess("Alumni pelatihan tersimpan");
+      const bl = await getTrainingAlumniNikBlacklistStatus(nikNorm);
+      if (bl.active && bl.end_date) {
+        showError(
+          formatTrainingAlumniBlacklistErrorMessage(bl.end_date, bl.reason),
+        );
+        setAlumniSubmitting(false);
+        return;
+      }
+
+      const dupCheck = await listTrainingAlumni({
+        search: nikNorm,
+        limit: 500,
+        page: 1,
+        source: "all",
+      });
+      const clash = dupCheck.data.some(
+        (r) =>
+          r.id !== alumniEditingId &&
+          rowMatchesNikAndYear(r, nikNorm, parsed.data.training_year),
+      );
+      if (clash) {
+        showError(
+          "NIK ini sudah memiliki data pelatihan pada tahun yang sama. Satu orang hanya boleh satu pelatihan per tahun.",
+        );
+        setAlumniSubmitting(false);
+        return;
+      }
+      if (alumniEditingId) {
+        await updateTrainingAlumni(alumniEditingId, parsed.data);
+        showSuccess("Alumni pelatihan diperbarui");
+      } else {
+        await createTrainingAlumni(parsed.data);
+        showSuccess("Alumni pelatihan tersimpan");
+      }
       handleCloseAlumniModal();
       fetchAlumni();
     } catch (err) {
@@ -334,6 +415,74 @@ export default function TrainingInstitutionsPage() {
       showError(msg);
     } finally {
       setAlumniSubmitting(false);
+    }
+  };
+
+  const handleOpenAlumniBlacklist = (row: TrainingAlumniRow) => {
+    setAlumniBlacklistRowId(row.id);
+    setAlumniBlacklistReason("");
+    setAlumniBlacklistModalOpen(true);
+  };
+
+  const handleOpenAlumniEdit = (row: TrainingAlumniRow) => {
+    const bd = row.birth_date ? String(row.birth_date).slice(0, 10) : "";
+    setAlumniForm({
+      training_name: row.training_name,
+      training_year: row.training_year,
+      kejuruan: row.kejuruan ?? "",
+      full_name: row.full_name,
+      nik: (row.nik ?? "").replace(/\D/g, "").slice(0, 16),
+      gender: row.gender === "L" || row.gender === "P" ? row.gender : undefined,
+      birth_place: row.birth_place ?? "",
+      birth_date: bd,
+      last_education: row.last_education ?? "",
+      email: row.email ?? "",
+      phone: (row.phone ?? "").replace(/\D/g, ""),
+      address: row.address ?? "",
+    });
+    setAlumniFieldErrors({});
+    setAlumniEditingId(row.id);
+    setAlumniAddModalTab("form");
+    setAlumniModalOpen(true);
+  };
+
+  const handleDeleteAlumniRow = (row: TrainingAlumniRow) => {
+    confirmDelete(
+      `Hapus "${row.full_name}" dari rekap alumni pelatihan?`,
+      async () => {
+        try {
+          await deleteTrainingAlumni(row.id);
+          showSuccess("Data alumni dihapus");
+          fetchAlumni();
+        } catch (e) {
+          showError(
+            e instanceof Error ? e.message : "Gagal menghapus data alumni",
+          );
+        }
+      },
+    );
+  };
+
+  const handleSubmitAlumniBlacklist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!alumniBlacklistRowId) return;
+    const reason = alumniBlacklistReason.trim();
+    if (!reason) {
+      showError("Alasan blacklist wajib diisi");
+      return;
+    }
+    setAlumniBlacklistSubmitting(true);
+    try {
+      await blacklistTrainingAlumniRow(alumniBlacklistRowId, reason);
+      showSuccess("Pencaker berhasil di-blacklist selama 1 bulan");
+      setAlumniBlacklistModalOpen(false);
+      fetchAlumni();
+    } catch (err) {
+      showError(
+        err instanceof Error ? err.message : "Gagal memblacklist pencaker",
+      );
+    } finally {
+      setAlumniBlacklistSubmitting(false);
     }
   };
 
@@ -347,14 +496,13 @@ export default function TrainingInstitutionsPage() {
     }
   };
 
-  const processAlumniExcelFile = async (file: File | null | undefined) => {
+  const stageAlumniExcelFromFile = async (file: File | null | undefined) => {
     if (!file) return;
 
     setAlumniExcelImportErrors({});
     const ctxParsed = alumniExcelImportContextSchema.safeParse({
       training_name: alumniExcelTrainingName.trim(),
       training_year: alumniExcelTrainingYear,
-      kejuruan: alumniExcelKejuruan,
     });
     if (!ctxParsed.success) {
       const ne: Record<string, string> = {};
@@ -362,16 +510,15 @@ export default function TrainingInstitutionsPage() {
         if (err.path[0]) ne[err.path[0] as string] = err.message;
       });
       setAlumniExcelImportErrors(ne);
-      showError(
-        "Lengkapi nama pelatihan, tahun, dan kejuruan sebelum mengimpor file",
-      );
+      showError("Lengkapi nama pelatihan dan tahun sebelum mengunggah file");
       return;
     }
 
-    setAlumniImporting(true);
+    setAlumniExcelParsing(true);
     try {
       const result = await parseTrainingAlumniExcel(file);
       if (!result.ok) {
+        setAlumniExcelStaged(null);
         showError(result.message);
         return;
       }
@@ -379,6 +526,7 @@ export default function TrainingInstitutionsPage() {
       const { valid, invalid } = result;
 
       if (valid.length === 0) {
+        setAlumniExcelStaged(null);
         const hint =
           invalid.length > 0
             ? invalid
@@ -394,48 +542,152 @@ export default function TrainingInstitutionsPage() {
         return;
       }
 
-      let saved = 0;
-      const apiErrors: string[] = [];
-      const { training_name, training_year, kejuruan } = ctxParsed.data;
-      for (const row of valid) {
-        try {
-          await createTrainingAlumni({
-            ...row.data,
-            training_name,
-            training_year,
-            kejuruan,
-          });
-          saved++;
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : "Gagal menyimpan";
-          apiErrors.push(`Baris ${row.rowNumber}: ${msg}`);
-        }
-      }
-
-      fetchAlumni();
-
-      const problems = [
-        ...invalid.map((x) => `Baris ${x.rowNumber} (validasi): ${x.message}`),
-        ...apiErrors,
-      ];
-
-      if (saved > 0) {
-        showSuccess(
-          `Impor: ${saved} alumni tersimpan${problems.length > 0 ? `, ${problems.length} baris bermasalah` : ""}.`,
-        );
-      }
-
-      if (problems.length > 0) {
-        const preview = problems.slice(0, 4).join(" · ");
-        showError(`${preview}${problems.length > 4 ? " · …" : ""}`);
-      } else if (saved === 0) {
-        showError("Tidak ada data yang berhasil disimpan");
-      } else {
-        handleCloseAlumniModal();
-      }
+      setAlumniExcelStaged({
+        valid,
+        invalid,
+        fileName: file.name || "berkas.xlsx",
+      });
     } catch (err) {
       console.error(err);
-      showError("Gagal memproses file Excel");
+      setAlumniExcelStaged(null);
+      showError("Gagal membaca file Excel");
+    } finally {
+      setAlumniExcelParsing(false);
+    }
+  };
+
+  const cancelAlumniExcelStaged = () => {
+    setAlumniExcelStaged(null);
+  };
+
+  const saveStagedAlumniExcel = async () => {
+    if (!alumniExcelStaged) return;
+
+    setAlumniExcelImportErrors({});
+    const ctxParsed = alumniExcelImportContextSchema.safeParse({
+      training_name: alumniExcelTrainingName.trim(),
+      training_year: alumniExcelTrainingYear,
+    });
+    if (!ctxParsed.success) {
+      const ne: Record<string, string> = {};
+      ctxParsed.error.issues.forEach((err) => {
+        if (err.path[0]) ne[err.path[0] as string] = err.message;
+      });
+      setAlumniExcelImportErrors(ne);
+      showError("Lengkapi nama pelatihan dan tahun sebelum menyimpan");
+      return;
+    }
+
+    const { valid, invalid } = alumniExcelStaged;
+    if (valid.length === 0) {
+      showError("Tidak ada baris valid untuk disimpan");
+      return;
+    }
+
+    if (invalid.length > 0) {
+      showError(
+        `Tidak dapat menyimpan: ada ${invalid.length} baris tidak valid di file. Perbaiki semua baris lalu unggah ulang.`,
+      );
+      return;
+    }
+
+    setAlumniImporting(true);
+    try {
+      let existingNikYear: Set<string>;
+      try {
+        const existingRows = await listTrainingAlumniAllPages({
+          source: "all",
+        });
+        existingNikYear = buildNikYearSetFromRows(existingRows);
+      } catch (e) {
+        console.error(e);
+        showError(
+          "Gagal memuat data alumni untuk pengecekan duplikat NIK/tahun",
+        );
+        return;
+      }
+
+      const { training_name, training_year } = ctxParsed.data;
+      const batchNikYear = new Set<string>();
+      const preflightErrors: string[] = [];
+
+      const uniqueNikForBl = new Set<string>();
+      for (const row of valid) {
+        const nn = normalizeTrainingAlumniNik(row.data.nik ?? "");
+        if (nn) uniqueNikForBl.add(nn);
+      }
+      const blacklistHitByNik = new Map<
+        string,
+        { end_date: string; reason: string | null }
+      >();
+      try {
+        await Promise.all(
+          [...uniqueNikForBl].map(async (nikKey) => {
+            const st = await getTrainingAlumniNikBlacklistStatus(nikKey);
+            if (st.active && st.end_date) {
+              blacklistHitByNik.set(nikKey, {
+                end_date: st.end_date,
+                reason: st.reason,
+              });
+            }
+          }),
+        );
+      } catch (e) {
+        console.error(e);
+        showError("Gagal memeriksa status blacklist NIK untuk impor Excel");
+        return;
+      }
+
+      for (const row of valid) {
+        const nikNorm = normalizeTrainingAlumniNik(row.data.nik ?? "");
+        const blRow = blacklistHitByNik.get(nikNorm);
+        if (blRow) {
+          preflightErrors.push(
+            `Baris ${row.rowNumber}: ${formatTrainingAlumniBlacklistErrorMessage(blRow.end_date, blRow.reason)}`,
+          );
+          continue;
+        }
+        const key = trainingAlumniNikYearKey(nikNorm, training_year);
+        if (batchNikYear.has(key)) {
+          preflightErrors.push(
+            `Baris ${row.rowNumber}: NIK duplikat untuk tahun ini dalam file`,
+          );
+          continue;
+        }
+        if (existingNikYear.has(key)) {
+          preflightErrors.push(
+            `Baris ${row.rowNumber}: NIK sudah terdaftar untuk pelatihan pada tahun yang sama`,
+          );
+          continue;
+        }
+        batchNikYear.add(key);
+      }
+
+      if (preflightErrors.length > 0) {
+        const preview = preflightErrors.slice(0, 5).join(" · ");
+        showError(
+          `${preview}${preflightErrors.length > 5 ? " · …" : ""} — tidak ada data yang disimpan.`,
+        );
+        return;
+      }
+
+      const rowsPayload = valid.map((row) => ({
+        ...row.data,
+        training_name,
+        training_year,
+        kejuruan: row.kejuruan,
+      }));
+
+      await createTrainingAlumniBatch(rowsPayload);
+      fetchAlumni();
+      showSuccess(`Impor: ${valid.length} alumni tersimpan.`);
+      setAlumniExcelStaged(null);
+      handleCloseAlumniModal();
+    } catch (err) {
+      console.error(err);
+      showError(
+        err instanceof Error ? err.message : "Gagal menyimpan impor Excel",
+      );
     } finally {
       setAlumniImporting(false);
     }
@@ -446,7 +698,7 @@ export default function TrainingInstitutionsPage() {
   ) => {
     const f = e.target.files?.[0];
     e.target.value = "";
-    void processAlumniExcelFile(f);
+    void stageAlumniExcelFromFile(f);
   };
 
   const handleOpenCreate = () => {
@@ -797,14 +1049,16 @@ export default function TrainingInstitutionsPage() {
                         <TH>JK</TH>
                         <TH>Pendidikan</TH>
                         <TH>Kontak</TH>
-                        <TH>Pencaker</TH>
+                        {canAlumniCreate && (
+                          <TH className="w-14 text-center">Aksi</TH>
+                        )}
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {alumniRows.length === 0 ? (
                         <TableRow>
                           <TD
-                            colSpan={10}
+                            colSpan={canAlumniCreate ? 10 : 9}
                             className="text-center text-gray-500 py-8"
                           >
                             Belum ada data
@@ -851,23 +1105,110 @@ export default function TrainingInstitutionsPage() {
                                 {row.phone || "—"}
                               </div>
                             </TD>
-                            <TD>
-                              {row.candidate_id ? (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    router.push(
-                                      `/dashboard/pencaker/${row.candidate_id}`,
-                                    )
-                                  }
-                                  className="text-primary text-sm hover:underline"
+                            {canAlumniCreate && (
+                              <TD className="align-middle text-center">
+                                <div
+                                  data-training-alumni-row-actions
+                                  className="relative inline-flex justify-center"
                                 >
-                                  Lihat profil
-                                </button>
-                              ) : (
-                                <span className="text-gray-400 text-sm">—</span>
-                              )}
-                            </TD>
+                                  <button
+                                    type="button"
+                                    aria-label="Menu aksi"
+                                    aria-expanded={
+                                      alumniActionsMenuOpenId === row.id
+                                    }
+                                    onClick={() =>
+                                      setAlumniActionsMenuOpenId((id) =>
+                                        id === row.id ? null : row.id,
+                                      )
+                                    }
+                                    className="p-2 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition"
+                                  >
+                                    <i
+                                      className="ri-more-2-fill text-xl leading-none"
+                                      aria-hidden
+                                    />
+                                  </button>
+                                  {alumniActionsMenuOpenId === row.id && (
+                                    <ul
+                                      role="menu"
+                                      className="absolute right-0 top-full z-40 mt-1 min-w-[11rem] rounded-lg border border-gray-200 bg-white py-1 shadow-lg text-left"
+                                    >
+                                      <li role="none">
+                                        <button
+                                          type="button"
+                                          role="menuitem"
+                                          className="w-full px-3 py-2 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
+                                          onClick={() => {
+                                            setAlumniActionsMenuOpenId(null);
+                                            handleOpenAlumniEdit(row);
+                                          }}
+                                        >
+                                          <i
+                                            className="ri-pencil-line text-base text-primary"
+                                            aria-hidden
+                                          />
+                                          Edit
+                                        </button>
+                                      </li>
+                                      <li role="none">
+                                        <button
+                                          type="button"
+                                          role="menuitem"
+                                          className="w-full px-3 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
+                                          onClick={() => {
+                                            setAlumniActionsMenuOpenId(null);
+                                            handleDeleteAlumniRow(row);
+                                          }}
+                                        >
+                                          <i
+                                            className="ri-delete-bin-line text-base"
+                                            aria-hidden
+                                          />
+                                          Hapus
+                                        </button>
+                                      </li>
+                                      <li role="none">
+                                        <button
+                                          type="button"
+                                          role="menuitem"
+                                          disabled={
+                                            !row.candidate_id &&
+                                            (row.nik ?? "").replace(/\D/g, "")
+                                              .length === 0
+                                          }
+                                          title={
+                                            row.candidate_id ||
+                                            (row.nik ?? "").replace(/\D/g, "")
+                                              .length > 0
+                                              ? "Blacklist NIK ini selama 1 bulan (sama seperti blacklist peserta pelatihan)"
+                                              : "Isi NIK pada baris ini, atau gunakan data dari pendaftaran pencaker"
+                                          }
+                                          className="w-full px-3 py-2 text-sm flex items-center gap-2 disabled:opacity-45 disabled:cursor-not-allowed hover:bg-gray-50 text-gray-900"
+                                          onClick={() => {
+                                            if (
+                                              !row.candidate_id &&
+                                              (row.nik ?? "").replace(/\D/g, "")
+                                                .length === 0
+                                            ) {
+                                              return;
+                                            }
+                                            setAlumniActionsMenuOpenId(null);
+                                            handleOpenAlumniBlacklist(row);
+                                          }}
+                                        >
+                                          <i
+                                            className="ri-forbid-line text-base text-gray-800"
+                                            aria-hidden
+                                          />
+                                          Blacklist
+                                        </button>
+                                      </li>
+                                    </ul>
+                                  )}
+                                </div>
+                              </TD>
+                            )}
                           </TableRow>
                         ))
                       )}
@@ -975,52 +1316,61 @@ export default function TrainingInstitutionsPage() {
         <Modal
           open={alumniModalOpen}
           onClose={handleCloseAlumniModal}
-          title="Tambah Alumni Pelatihan"
+          title={
+            alumniEditingId
+              ? "Edit Alumni Pelatihan"
+              : "Tambah Alumni Pelatihan"
+          }
           size="lg"
         >
-          <div
-            className="flex gap-1 mb-4 border-b border-gray-200 -mt-1"
-            role="tablist"
-            aria-label="Cara input alumni"
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={alumniAddModalTab === "form"}
-              onClick={() => setAlumniAddModalTab("form")}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition rounded-t-lg ${
-                alumniAddModalTab === "form"
-                  ? "border-primary text-primary bg-primary/5"
-                  : "border-transparent text-gray-500 hover:text-gray-800"
-              }`}
+          {!alumniEditingId && (
+            <div
+              className="flex gap-1 mb-4 border-b border-gray-200 -mt-1"
+              role="tablist"
+              aria-label="Cara input alumni"
             >
-              <span className="inline-flex items-center gap-2">
-                <i className="ri-edit-line text-lg" aria-hidden />
-                Input form
-              </span>
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={alumniAddModalTab === "excel"}
-              onClick={() => setAlumniAddModalTab("excel")}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition rounded-t-lg ${
-                alumniAddModalTab === "excel"
-                  ? "border-primary text-primary bg-primary/5"
-                  : "border-transparent text-gray-500 hover:text-gray-800"
-              }`}
-            >
-              <span className="inline-flex items-center gap-2">
-                <i
-                  className="ri-file-excel-2-line text-lg text-emerald-700"
-                  aria-hidden
-                />
-                Impor Excel
-              </span>
-            </button>
-          </div>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={alumniAddModalTab === "form"}
+                onClick={() => {
+                  setAlumniAddModalTab("form");
+                  setAlumniExcelStaged(null);
+                }}
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition rounded-t-lg ${
+                  alumniAddModalTab === "form"
+                    ? "border-primary text-primary bg-primary/5"
+                    : "border-transparent text-gray-500 hover:text-gray-800"
+                }`}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <i className="ri-edit-line text-lg" aria-hidden />
+                  Input form
+                </span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={alumniAddModalTab === "excel"}
+                onClick={() => setAlumniAddModalTab("excel")}
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition rounded-t-lg ${
+                  alumniAddModalTab === "excel"
+                    ? "border-primary text-primary bg-primary/5"
+                    : "border-transparent text-gray-500 hover:text-gray-800"
+                }`}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <i
+                    className="ri-file-excel-2-line text-lg text-emerald-700"
+                    aria-hidden
+                  />
+                  Impor Excel
+                </span>
+              </button>
+            </div>
+          )}
 
-          {alumniAddModalTab === "form" ? (
+          {alumniEditingId || alumniAddModalTab === "form" ? (
             <form
               onSubmit={handleSubmitAlumni}
               className="space-y-4"
@@ -1191,7 +1541,13 @@ export default function TrainingInstitutionsPage() {
                   disabled={alumniSubmitting}
                   className="px-4 py-2 text-white bg-primary rounded-lg hover:brightness-90 transition disabled:opacity-50"
                 >
-                  {alumniSubmitting ? "Menyimpan..." : "Simpan"}
+                  {alumniSubmitting
+                    ? alumniEditingId
+                      ? "Memperbarui..."
+                      : "Menyimpan..."
+                    : alumniEditingId
+                      ? "Perbarui"
+                      : "Simpan"}
                 </button>
               </div>
             </form>
@@ -1230,24 +1586,6 @@ export default function TrainingInstitutionsPage() {
                 error={alumniExcelImportErrors.training_year}
                 required
               />
-              <SearchableSelect
-                label="Kejuruan"
-                options={TRAINING_ALUMNI_KEJURUAN_OPTIONS}
-                value={alumniExcelKejuruan}
-                onChange={(v) => {
-                  setAlumniExcelKejuruan(v);
-                  if (alumniExcelImportErrors.kejuruan) {
-                    setAlumniExcelImportErrors((prev) => {
-                      const next = { ...prev };
-                      delete next.kejuruan;
-                      return next;
-                    });
-                  }
-                }}
-                error={alumniExcelImportErrors.kejuruan}
-                placeholder="Cari atau pilih kejuruan..."
-                required
-              />
               <div
                 role="region"
                 aria-label="Unggah atau seret file Excel"
@@ -1276,13 +1614,13 @@ export default function TrainingInstitutionsPage() {
                   alumniExcelDragDepth.current = 0;
                   setAlumniExcelDragActive(false);
                   const f = e.dataTransfer.files?.[0];
-                  void processAlumniExcelFile(f);
+                  void stageAlumniExcelFromFile(f);
                 }}
                 className={`rounded-xl border-2 border-dashed px-5 py-8 flex flex-col items-center justify-center gap-4 text-center transition-colors ${
                   alumniExcelDragActive
                     ? "border-primary bg-primary/5"
                     : "border-gray-300 bg-gray-50/90 hover:border-gray-400"
-                } ${alumniImporting ? "pointer-events-none opacity-60" : ""}`}
+                } ${alumniExcelParsing || alumniImporting ? "pointer-events-none opacity-60" : ""}`}
               >
                 <div className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500">
                   <i className="ri-upload-cloud-2-line text-2xl" aria-hidden />
@@ -1306,26 +1644,133 @@ export default function TrainingInstitutionsPage() {
                   />
                   <button
                     type="button"
-                    disabled={alumniImporting}
+                    disabled={alumniExcelParsing || alumniImporting}
                     onClick={() => alumniExcelInputRef.current?.click()}
-                    className="px-4 py-2.5 w-full sm:flex-1 sm:min-w-[10rem] border border-secondary/40 bg-secondary/10 text-secondary rounded-lg hover:bg-secondary/15 text-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="px-4 py-2.5 w-full sm:flex-1 sm:min-w-[10rem] border-2 border-primary bg-primary text-white font-medium rounded-lg hover:brightness-110 text-sm shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:brightness-100"
                   >
-                    <i className="ri-folder-open-line text-lg" />
-                    {alumniImporting ? "Mengimpor…" : "Pilih file"}
+                    <i className="ri-folder-open-line text-lg text-white" />
+                    {alumniExcelParsing
+                      ? "Membaca file…"
+                      : alumniImporting
+                        ? "Menyimpan…"
+                        : alumniExcelStaged
+                          ? "Ganti file"
+                          : "Pilih file"}
                   </button>
                 </div>
+                {alumniExcelStaged && (
+                  <div
+                    role="status"
+                    className={`w-full max-w-lg rounded-md border px-3 py-2 text-xs sm:text-sm text-left ${
+                      alumniExcelStaged.invalid.length > 0
+                        ? "border-amber-300 bg-amber-50 text-amber-950"
+                        : "border-emerald-300 bg-emerald-50/90 text-emerald-950"
+                    }`}
+                  >
+                    <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                      <i
+                        className={
+                          alumniExcelStaged.invalid.length > 0
+                            ? "ri-alert-line text-base text-amber-600 shrink-0"
+                            : "ri-checkbox-circle-line text-base text-emerald-600 shrink-0"
+                        }
+                        aria-hidden
+                      />
+                      <span className="font-mono break-all">
+                        {alumniExcelStaged.fileName}
+                      </span>
+                      <span className="text-gray-600">·</span>
+                      <span>
+                        {alumniExcelStaged.valid.length} baris
+                        {alumniExcelStaged.invalid.length > 0 ? (
+                          <>
+                            ,{" "}
+                            <strong className="text-amber-800">
+                              {alumniExcelStaged.invalid.length} error
+                            </strong>{" "}
+                            — unggah ulang
+                          </>
+                        ) : (
+                          " — Simpan atau Ganti file"
+                        )}
+                      </span>
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={handleCloseAlumniModal}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
-                >
-                  Tutup
-                </button>
+                {alumniExcelStaged ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={alumniImporting || alumniExcelParsing}
+                      onClick={cancelAlumniExcelStaged}
+                      className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition disabled:opacity-50"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="button"
+                      disabled={alumniImporting || alumniExcelParsing}
+                      onClick={() => void saveStagedAlumniExcel()}
+                      className="px-4 py-2 text-white bg-primary rounded-lg hover:brightness-90 transition disabled:opacity-50"
+                    >
+                      {alumniImporting ? "Menyimpan…" : "Simpan"}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleCloseAlumniModal}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+                  >
+                    Tutup
+                  </button>
+                )}
               </div>
             </div>
           )}
+        </Modal>
+      )}
+
+      {canAlumniCreate && (
+        <Modal
+          open={alumniBlacklistModalOpen}
+          onClose={() => setAlumniBlacklistModalOpen(false)}
+          title="Blacklist pencaker"
+          size="md"
+        >
+          <form onSubmit={handleSubmitAlumniBlacklist} className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Pencaker akan di-blacklist selama <strong>1 bulan</strong> dan
+              tidak dapat mengikuti pelatihan (sama seperti blacklist peserta
+              pada jadwal pelatihan).
+            </p>
+            <Input
+              label="Alasan blacklist"
+              value={alumniBlacklistReason}
+              onChange={(e) => setAlumniBlacklistReason(e.target.value)}
+              required
+            />
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setAlumniBlacklistModalOpen(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={alumniBlacklistSubmitting}
+                className="px-4 py-2 text-white bg-gray-900 rounded-lg hover:bg-black transition disabled:opacity-50"
+              >
+                {alumniBlacklistSubmitting
+                  ? "Memproses…"
+                  : "Blacklist pencaker"}
+              </button>
+            </div>
+          </form>
         </Modal>
       )}
     </>

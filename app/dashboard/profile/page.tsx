@@ -380,8 +380,12 @@ export default function ProfilePage() {
         });
         showSuccess("Profil disnaker berhasil disimpan");
       }
-    } catch {
-      showError("Gagal menyimpan profil");
+    } catch (e: unknown) {
+      const msg =
+        e instanceof Error && typeof e.message === "string" && e.message.trim()
+          ? e.message
+          : "Gagal menyimpan profil";
+      showError(msg);
     }
   };
 
