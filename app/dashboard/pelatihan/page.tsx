@@ -383,13 +383,11 @@ export default function TrainingInstitutionsPage() {
         return;
       }
 
-      const dupCheck = await listTrainingAlumni({
-        search: nikNorm,
-        limit: 500,
-        page: 1,
+      const dupRows = await listTrainingAlumniAllPages({
         source: "all",
+        search: nikNorm,
       });
-      const clash = dupCheck.data.some(
+      const clash = dupRows.some(
         (r) =>
           r.id !== alumniEditingId &&
           rowMatchesNikAndYear(r, nikNorm, parsed.data.training_year),

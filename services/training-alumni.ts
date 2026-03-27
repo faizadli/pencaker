@@ -109,20 +109,22 @@ export async function listTrainingAlumni(params?: {
 }
 
 /**
- * Beberapa endpoint membatasi `limit` (mis. maks 100–500). Untuk indeks duplikat
- * NIK+tahun, ambil semua halaman dengan ukuran halaman aman.
+ * API membatasi `limit` (maks 100). Untuk duplikat NIK+tahun / impor, ambil semua halaman.
  */
 const TRAINING_ALUMNI_LIST_SAFE_PAGE_SIZE = 100;
 
 export async function listTrainingAlumniAllPages(params?: {
   source?: "admin_manual" | "candidate_registration" | "all";
+  /** Filter pencarian (sama seperti list biasa); dipaginasi per halaman aman. */
+  search?: string;
 }): Promise<TrainingAlumniRow[]> {
   const source = params?.source ?? "all";
+  const search = params?.search?.trim() || undefined;
   const limit = TRAINING_ALUMNI_LIST_SAFE_PAGE_SIZE;
   const out: TrainingAlumniRow[] = [];
   let page = 1;
   for (;;) {
-    const res = await listTrainingAlumni({ page, limit, source });
+    const res = await listTrainingAlumni({ page, limit, source, search });
     if (res.data.length === 0) break;
     out.push(...res.data);
     if (res.data.length < limit) break;
