@@ -180,7 +180,7 @@ export default function Sidebar({
       if (i.path === "/dashboard/pengaturan")
         return permissionCodes.includes("pengaturan.read");
       if (i.path === "/dashboard/pelatihan")
-        return permissionCodes.includes("pelatihan.read");
+        return permissionCodes.includes("training_alumni.read");
       if (i.path === "/dashboard/pengaduan")
         return permissionCodes.includes("pengaduan.read");
       if (i.path === "/dashboard/laporan")

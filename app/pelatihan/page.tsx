@@ -5,8 +5,6 @@ import Link from "next/link";
 import Card from "../../components/ui/Card";
 import FullPageLoading from "../../components/ui/FullPageLoading";
 import { getHomeContent } from "../../services/site";
-import { getPublicTrainings, Training } from "../../services/training";
-
 export default function PelatihanPage() {
   const tugas = [
     "Melaksanakan perumusan kebijakan teknis dan pelaksanaan kebijakan di bidang Pelatihan dan Peningkatan Keterampilan Kerja",
@@ -18,7 +16,16 @@ export default function PelatihanPage() {
     "Pelaporan dan evaluasi pelaksanaan pelatihan kerja",
   ];
 
-  const [upcoming, setUpcoming] = useState<Training[]>([]);
+  const [upcoming, setUpcoming] = useState<
+    Array<{
+      id: string;
+      title: string;
+      instructor?: string;
+      status?: string;
+      location?: string;
+      quota?: number;
+    }>
+  >([]);
   const [relatedNews, setRelatedNews] = useState<
     Array<{
       id: string;
@@ -69,13 +76,7 @@ export default function PelatihanPage() {
           mapped.filter((n) => n.kategori.toLowerCase() === "pelatihan"),
         );
 
-        // Fetch Trainings
-        const trainingResp = await getPublicTrainings({
-          limit: 6,
-          status: "open",
-        });
-        const trainingData = (trainingResp.data || []) as Training[];
-        setUpcoming(trainingData);
+        setUpcoming([]);
       } catch {
         setRelatedNews([]);
         setUpcoming([]);
@@ -228,17 +229,18 @@ export default function PelatihanPage() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
               <h2 className="text-2xl md:text-3xl font-bold text-primary">
-                Pelatihan yang Akan Datang
+                Informasi program pelatihan
               </h2>
               <p className="text-gray-600 mt-2">
-                Tingkatkan keterampilan Anda dengan program Pelatihan
+                Jadwal pelatihan tidak dipublikasikan sebagai daftar online.
+                Pantau berita dan pengumuman di halaman Informasi.
               </p>
             </div>
             <Link
-              href="/dashboard/pelatihan"
+              href="/informasi"
               className="text-primary hover:text-primary font-medium flex items-center gap-2 transition-colors"
             >
-              Lihat Detail
+              Lihat berita
               <i className="ri-arrow-right-line"></i>
             </Link>
           </div>
@@ -288,8 +290,10 @@ export default function PelatihanPage() {
                 </div>
               ))
             ) : (
-              <div className="col-span-full text-center py-10 text-gray-500">
-                Belum ada pelatihan yang akan datang
+              <div className="col-span-full text-center py-10 text-gray-500 max-w-xl mx-auto">
+                Belum ada daftar pelatihan yang ditampilkan di halaman ini.
+                Silakan cek bagian berita di atas atau halaman Informasi untuk
+                pengumuman terbaru.
               </div>
             )}
           </div>

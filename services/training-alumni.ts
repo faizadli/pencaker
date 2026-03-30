@@ -10,7 +10,9 @@ export interface TrainingAlumniRow {
   id: string;
   training_name: string;
   training_year: number;
-  kejuruan?: string | null;
+  institution_name?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
   full_name: string;
   last_education?: string;
   email?: string;
@@ -31,8 +33,11 @@ export interface TrainingAlumniRow {
 export interface CreateTrainingAlumniRequest {
   training_name: string;
   training_year: number;
-  /** Program kejuruan (wajib form manual; opsional impor Excel) */
-  kejuruan?: string;
+  institution_name: string;
+  /** Format YYYY-MM-DD */
+  start_date: string;
+  /** Format YYYY-MM-DD */
+  end_date: string;
   full_name: string;
   last_education: string;
   email: string;
@@ -86,22 +91,46 @@ export function formatTrainingAlumniBlacklistErrorMessage(
   return `NIK terdaftar dalam blacklist hingga ${endDate}. Alasan: ${r}.`;
 }
 
+export interface TrainingAlumniDistinctOptions {
+  latest: { training_name: string; training_year: number } | null;
+  training_names: string[];
+  training_years: number[];
+}
+
+export async function getTrainingAlumniDistinctOptions(): Promise<TrainingAlumniDistinctOptions> {
+  const resp = await fetch(`${BASE}/api/training-alumni/distinct-options`, {
+    headers: { ...authHeader() },
+  });
+  if (!resp.ok) throw new Error("Gagal memuat opsi filter peserta latihan");
+  return resp.json() as Promise<TrainingAlumniDistinctOptions>;
+}
+
 export async function listTrainingAlumni(params?: {
   page?: number;
   limit?: number;
-  search?: string;
-  source?: "admin_manual" | "candidate_registration" | "all";
+  training_name?: string;
+  training_year?: number;
 }) {
   const q = new URLSearchParams();
   if (params?.page) q.set("page", String(params.page));
   if (params?.limit) q.set("limit", String(params.limit));
-  if (params?.search) q.set("search", params.search);
-  if (params?.source && params.source !== "all") q.set("source", params.source);
+  if (
+    params?.training_name != null &&
+    String(params.training_name).trim() !== ""
+  ) {
+    q.set("training_name", String(params.training_name).trim());
+  }
+  if (
+    params?.training_year != null &&
+    !Number.isNaN(Number(params.training_year))
+  ) {
+    q.set("training_year", String(params.training_year));
+  }
 
   const resp = await fetch(`${BASE}/api/training-alumni?${q.toString()}`, {
     headers: { ...authHeader() },
   });
-  if (!resp.ok) throw new Error("Gagal mengambil data alumni pelatihan");
+  if (!resp.ok) throw new Error("Gagal mengambil data peserta latihan");
   return resp.json() as Promise<{
     data: TrainingAlumniRow[];
     pagination: { page: number; limit: number; total: number };
@@ -114,17 +143,18 @@ export async function listTrainingAlumni(params?: {
 const TRAINING_ALUMNI_LIST_SAFE_PAGE_SIZE = 100;
 
 export async function listTrainingAlumniAllPages(params?: {
-  source?: "admin_manual" | "candidate_registration" | "all";
-  /** Filter pencarian (sama seperti list biasa); dipaginasi per halaman aman. */
-  search?: string;
+  /** Untuk pengecekan duplikat NIK+tahun pada impor: batasi ke tahun yang sama. */
+  training_year?: number;
 }): Promise<TrainingAlumniRow[]> {
-  const source = params?.source ?? "all";
-  const search = params?.search?.trim() || undefined;
   const limit = TRAINING_ALUMNI_LIST_SAFE_PAGE_SIZE;
   const out: TrainingAlumniRow[] = [];
   let page = 1;
   for (;;) {
-    const res = await listTrainingAlumni({ page, limit, source, search });
+    const res = await listTrainingAlumni({
+      page,
+      limit,
+      training_year: params?.training_year,
+    });
     if (res.data.length === 0) break;
     out.push(...res.data);
     if (res.data.length < limit) break;
@@ -146,7 +176,7 @@ export async function createTrainingAlumni(data: CreateTrainingAlumniRequest) {
     const err = await resp.json().catch(() => ({}));
     throw new Error(
       (err as { message?: string }).message ||
-        "Gagal menyimpan alumni pelatihan",
+        "Gagal menyimpan data peserta latihan",
     );
   }
   return resp.json();
@@ -187,7 +217,7 @@ export async function deleteTrainingAlumni(id: string) {
     const err = await resp.json().catch(() => ({}));
     throw new Error(
       (err as { message?: string }).message ||
-        "Gagal menghapus alumni pelatihan",
+        "Gagal menghapus data peserta latihan",
     );
   }
   return resp.json();
@@ -205,7 +235,7 @@ export async function createTrainingAlumniBatch(
     const err = await resp.json().catch(() => ({}));
     throw new Error(
       (err as { message?: string }).message ||
-        "Gagal menyimpan impor alumni (semua baris dibatalkan)",
+        "Gagal menyimpan impor peserta latihan (semua baris dibatalkan)",
     );
   }
   return resp.json() as Promise<{ message: string; count: number }>;

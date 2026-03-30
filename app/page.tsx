@@ -261,7 +261,7 @@ export default function HomePage() {
       color: "bg-amber-500",
     },
     {
-      label: "Pelatihan Tersedia",
+      label: "Peserta latihan (rekap)",
       value: 0,
       icon: "ri-graduation-cap-line",
       color: "bg-violet-500",
@@ -379,25 +379,16 @@ export default function HomePage() {
             jobsTotal = Number(landingData.activeJobs || 0);
             trainingsTotal = Number(landingData.openTrainings || 0);
           } else {
-            const [jobs, trainings] = await Promise.all([
-              listPublicJobs({ page: 1, limit: 1 }),
-              (async () => {
-                const mod = await import("../services/training");
-                return mod.getPublicTrainings({
-                  page: 1,
-                  limit: 1,
-                  status: "open",
-                });
-              })(),
-            ]);
+            const jobs = await listPublicJobs({ page: 1, limit: 1 });
 
             jobsTotal = Number(
               (jobs as { pagination?: { total?: number } }).pagination?.total ||
                 0,
             );
             trainingsTotal = Number(
-              (trainings as { pagination?: { total?: number } }).pagination
-                ?.total || 0,
+              landingData && typeof landingData.openTrainings === "number"
+                ? landingData.openTrainings
+                : 0,
             );
           }
 
@@ -421,7 +412,7 @@ export default function HomePage() {
               color: "bg-amber-500",
             },
             {
-              label: "Pelatihan Tersedia",
+              label: "Peserta latihan (rekap)",
               value: trainingsTotal,
               icon: "ri-graduation-cap-line",
               color: "bg-violet-500",

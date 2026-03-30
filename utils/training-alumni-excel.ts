@@ -1,9 +1,5 @@
 import * as XLSX from "xlsx";
 import { z } from "zod";
-import {
-  matchTemplateKejuruanTitle,
-  type TrainingAlumniKejuruan,
-} from "../constants/training-alumni-kejuruan";
 import type { CreateTrainingAlumniRequest } from "../services/training-alumni";
 import { nikSchema } from "./zod-schemas";
 
@@ -12,7 +8,7 @@ export const TRAINING_ALUMNI_TEMPLATE_PUBLIC_PATH = "/template-alumni.xlsx";
 export const TRAINING_ALUMNI_TEMPLATE_DOWNLOAD_NAME = "template-alumni.xlsx";
 export const TRAINING_ALUMNI_IMPORT_MAX_ROWS = 200;
 
-/** Kolom isian per baris di lembar Excel (nama & tahun pelatihan dari modal admin; kejuruan dari judul blok di kolom A) */
+/** Kolom isian per baris data; konteks pelatihan (nama, lembaga, tahun, periode) dari form admin */
 export type TrainingAlumniExcelRowData = Pick<
   CreateTrainingAlumniRequest,
   | "full_name"
@@ -108,10 +104,6 @@ function cellToString(v: unknown): string {
   return String(v).trim();
 }
 
-/**
- * Excel sering menyimpan NIK sebagai angka → tampilan 3,27E+15 dan presisi hilang.
- * Kolom NIK sebaiknya format Teks di Excel. Fungsi ini memperbaiki string notasi ilmiah / angka jika masih bisa.
- */
 function nikFromExcelCell(raw: unknown): string {
   if (raw == null || raw === "") return "";
   if (typeof raw === "string") {
@@ -172,28 +164,6 @@ export function parseExcelDateValue(v: unknown): string {
 function isHeaderRow(row: unknown[]): boolean {
   const norms = row.map((c) => normalizeHeader(cellToString(c)));
   return norms.includes("nama") && norms.includes("nik");
-}
-
-function rowHasAnyContent(row: unknown[]): boolean {
-  for (const c of row) {
-    if (c == null || c === "") continue;
-    if (typeof c === "number" && Number.isFinite(c) && c !== 0) return true;
-    if (typeof c === "string" && c.trim()) return true;
-  }
-  return false;
-}
-
-/** Baris tampak seperti judul blok tapi tidak ada di master (typo / format salah). */
-function looksLikeUnknownKejuruanTitleRow(row: unknown[]): boolean {
-  if (isHeaderRow(row)) return false;
-  const a0 = cellToString(row[0]);
-  if (a0.length < 8) return false;
-  const upper = a0.toUpperCase();
-  if (!upper.includes("KEJURUAN") && !upper.includes("PENGOLAHAN")) {
-    return false;
-  }
-  const otherFilled = row.slice(1).filter((c) => cellToString(c)).length;
-  return otherFilled <= 2;
 }
 
 function buildColumnMap(
@@ -315,7 +285,6 @@ export function downloadTrainingAlumniTemplate(): void {
 
 export type TrainingAlumniParsedValid = {
   rowNumber: number;
-  kejuruan: TrainingAlumniKejuruan;
   data: TrainingAlumniExcelRowData;
 };
 
@@ -366,48 +335,34 @@ export async function parseTrainingAlumniExcel(
     return { ok: false, message: "Lembar kerja kosong" };
   }
 
+  let headerRowIdx = -1;
+  for (let i = 0; i < matrix.length; i++) {
+    if (isHeaderRow(matrix[i] ?? [])) {
+      headerRowIdx = i;
+      break;
+    }
+  }
+  if (headerRowIdx < 0) {
+    return {
+      ok: false,
+      message:
+        "Baris header tabel (kolom NAMA, NIK, …) tidak ditemukan. Gunakan template-alumni.xlsx terbaru.",
+    };
+  }
+
+  const built = buildColumnMap(matrix[headerRowIdx] ?? []);
+  if ("error" in built) {
+    return { ok: false, message: built.error };
+  }
+  const colMap = built.map;
+
   const schema = excelRowSchema();
   const valid: TrainingAlumniParsedValid[] = [];
   const invalid: TrainingAlumniParsedInvalid[] = [];
   let dataRowCount = 0;
 
-  let activeKejuruan: TrainingAlumniKejuruan | null = null;
-  let colMap: Map<number, ExcelFieldKey> | null = null;
-
-  for (let i = 0; i < matrix.length; i++) {
+  for (let i = headerRowIdx + 1; i < matrix.length; i++) {
     const row = matrix[i] ?? [];
-    const a0 = cellToString(row[0]);
-
-    const titleMatch = matchTemplateKejuruanTitle(a0);
-    if (titleMatch) {
-      activeKejuruan = titleMatch;
-      continue;
-    }
-
-    if (looksLikeUnknownKejuruanTitleRow(row)) {
-      return {
-        ok: false,
-        message: `Baris ${i + 1}: judul kejuruan tidak dikenali (“${a0}”). Gunakan teks judul blok persis seperti di template-alumni.xlsx.`,
-      };
-    }
-
-    if (isHeaderRow(row)) {
-      const built = buildColumnMap(row);
-      if ("error" in built) {
-        return { ok: false, message: built.error };
-      }
-      colMap = built.map;
-      continue;
-    }
-
-    if (activeKejuruan && !colMap && rowHasAnyContent(row)) {
-      return {
-        ok: false,
-        message: `Baris ${i + 1}: setelah judul kejuruan (kolom A) harus ada baris header kolom (NAMA, NIK, …).`,
-      };
-    }
-
-    if (!activeKejuruan || !colMap) continue;
 
     if (rowIsEmpty(row, colMap)) continue;
 
@@ -417,7 +372,7 @@ export async function parseTrainingAlumniExcel(
     if (dataRowCount > TRAINING_ALUMNI_IMPORT_MAX_ROWS) {
       return {
         ok: false,
-        message: `Maksimal ${TRAINING_ALUMNI_IMPORT_MAX_ROWS} baris data per file (semua blok).`,
+        message: `Maksimal ${TRAINING_ALUMNI_IMPORT_MAX_ROWS} baris data per file.`,
       };
     }
 
@@ -434,29 +389,21 @@ export async function parseTrainingAlumniExcel(
 
     valid.push({
       rowNumber,
-      kejuruan: activeKejuruan,
       data: parsed.data,
     });
   }
 
   if (dataRowCount === 0) {
-    const anyHeader = matrix.some((r) => isHeaderRow(r ?? []));
-    const anyTitle = matrix.some((r) =>
-      matchTemplateKejuruanTitle(cellToString((r ?? [])[0])),
-    );
-    if (anyHeader && !anyTitle) {
-      return {
-        ok: false,
-        message:
-          "Judul blok kejuruan di kolom A tidak ditemukan. Gunakan template-alumni.xlsx terbaru (satu baris judul per blok, lalu baris NAMA/NIK).",
-      };
-    }
     return {
       ok: false,
       message:
-        "Tidak ada baris data yang diisi. Isi baris pada blok kejuruan yang dipakai; blok lain boleh dikosongkan.",
+        "Tidak ada baris data yang diisi. Isi baris di bawah header tabel (NAMA, NIK, …).",
     };
   }
 
-  return { ok: true, valid, invalid };
+  return {
+    ok: true,
+    valid,
+    invalid,
+  };
 }
