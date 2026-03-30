@@ -1,9 +1,11 @@
 "use client";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   Input,
   SearchableSelect,
   SearchableSelectOption,
+  Textarea,
 } from "../../../components/ui/field";
 import StatCard from "../../../components/ui/StatCard";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
@@ -14,6 +16,7 @@ import {
   listTrainingAlumniAllPages,
   createTrainingAlumniBatch,
   deleteTrainingAlumni,
+  updateTrainingAlumni,
   blacklistTrainingAlumniRow,
   getTrainingAlumniNikBlacklistStatus,
   formatTrainingAlumniBlacklistErrorMessage,
@@ -91,6 +94,119 @@ const importPelatihanFormSchema = z
     }
   });
 
+/** Form ubah peserta — selaras validasi backend admin */
+const editPesertaFormSchema = z
+  .object({
+    training_name: z.string().min(1, "Nama pelatihan wajib diisi"),
+    institution_name: z.string().min(1, "Nama lembaga wajib diisi"),
+    training_year: z.coerce
+      .number()
+      .int()
+      .min(1950)
+      .max(new Date().getFullYear() + 1),
+    start_date: z.string().min(1, "Tanggal mulai wajib diisi"),
+    end_date: z.string().min(1, "Tanggal selesai wajib diisi"),
+    full_name: z.string().min(1, "Nama wajib diisi"),
+    nik: z
+      .string()
+      .length(16, "NIK harus 16 digit")
+      .regex(/^\d+$/, "NIK hanya angka"),
+    gender: z.enum(["L", "P"], { message: "Jenis kelamin wajib diisi" }),
+    birth_place: z.string().min(1, "Tempat lahir wajib diisi"),
+    birth_date: z.string().min(1, "Tanggal lahir wajib diisi"),
+    last_education: z.string().min(1, "Pendidikan terakhir wajib diisi"),
+    email: z.string().email("Email tidak valid"),
+    phone: z
+      .string()
+      .min(10, "No. telp minimal 10 digit")
+      .max(20)
+      .regex(/^\d+$/, "No. telp hanya angka"),
+    address: z.string().min(1, "Alamat wajib diisi"),
+  })
+  .superRefine((data, ctx) => {
+    const ymd = /^\d{4}-\d{2}-\d{2}$/;
+    if (!ymd.test(data.start_date)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Format tanggal mulai tidak valid",
+        path: ["start_date"],
+      });
+    }
+    if (!ymd.test(data.end_date)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Format tanggal selesai tidak valid",
+        path: ["end_date"],
+      });
+    }
+    const bd = data.birth_date.trim().slice(0, 10);
+    if (!ymd.test(bd)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Format tanggal lahir tidak valid",
+        path: ["birth_date"],
+      });
+    }
+    const s = new Date(`${data.start_date}T12:00:00`);
+    const e = new Date(`${data.end_date}T12:00:00`);
+    if (!Number.isNaN(s.getTime()) && !Number.isNaN(e.getTime()) && e < s) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Tanggal selesai tidak boleh sebelum tanggal mulai",
+        path: ["end_date"],
+      });
+    }
+  });
+
+function toYmdInput(s?: string | null): string {
+  if (!s) return "";
+  const t = String(s).slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(t) ? t : "";
+}
+
+function buildEditFormFromRow(row: TrainingAlumniRow) {
+  return {
+    training_name: row.training_name ?? "",
+    institution_name: row.institution_name ?? "",
+    training_year: row.training_year,
+    start_date: toYmdInput(row.start_date),
+    end_date: toYmdInput(row.end_date),
+    full_name: row.full_name ?? "",
+    nik: (row.nik ?? "").replace(/\D/g, "").slice(0, 16),
+    gender: row.gender === "P" ? ("P" as const) : ("L" as const),
+    birth_place: row.birth_place ?? "",
+    birth_date: toYmdInput(row.birth_date),
+    last_education: row.last_education ?? "",
+    email: row.email ?? "",
+    phone: (row.phone ?? "").replace(/\D/g, ""),
+    address: row.address ?? "",
+  };
+}
+
+function emptyEditForm(): ReturnType<typeof buildEditFormFromRow> {
+  return {
+    training_name: "",
+    institution_name: "",
+    training_year: new Date().getFullYear(),
+    start_date: "",
+    end_date: "",
+    full_name: "",
+    nik: "",
+    gender: "L",
+    birth_place: "",
+    birth_date: "",
+    last_education: "",
+    email: "",
+    phone: "",
+    address: "",
+  };
+}
+
+const GENDER_OPTIONS: SearchableSelectOption[] = [
+  { value: "L", label: "Laki-laki" },
+  { value: "P", label: "Perempuan" },
+];
+
 function formatIdDate(s?: string | null): string {
   if (!s) return "—";
   const d = new Date(String(s).slice(0, 10) + "T12:00:00");
@@ -113,14 +229,24 @@ export default function DashboardPesertaLatihanPage() {
   const [filterTrainingName, setFilterTrainingName] = useState("");
   const [filterTrainingYear, setFilterTrainingYear] = useState("");
   const [importModalOpen, setImportModalOpen] = useState(false);
-  const [actionsMenuOpenId, setActionsMenuOpenId] = useState<string | null>(
-    null,
-  );
+  /** Menu di-portal ke body agar tidak terpotong overflow-x pada tabel */
+  const [actionsMenu, setActionsMenu] = useState<{
+    row: TrainingAlumniRow;
+    top: number;
+    left: number;
+  } | null>(null);
   const [importing, setImporting] = useState(false);
   const [blacklistModalOpen, setBlacklistModalOpen] = useState(false);
   const [blacklistRowId, setBlacklistRowId] = useState<string | null>(null);
   const [blacklistReason, setBlacklistReason] = useState("");
   const [blacklistSubmitting, setBlacklistSubmitting] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editRowId, setEditRowId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState(emptyEditForm);
+  const [editFormErrors, setEditFormErrors] = useState<Record<string, string>>(
+    {},
+  );
+  const [editSaving, setEditSaving] = useState(false);
   const excelInputRef = useRef<HTMLInputElement>(null);
   const excelDragDepth = useRef(0);
   const [excelDragActive, setExcelDragActive] = useState(false);
@@ -149,16 +275,24 @@ export default function DashboardPesertaLatihanPage() {
   }, []);
 
   useEffect(() => {
-    if (actionsMenuOpenId == null) return;
+    if (actionsMenu == null) return;
     const close = (e: MouseEvent) => {
       const t = e.target as HTMLElement;
-      if (!t.closest("[data-peserta-latihan-row-actions]")) {
-        setActionsMenuOpenId(null);
+      if (
+        !t.closest("[data-peserta-latihan-row-actions]") &&
+        !t.closest("[data-peserta-latihan-actions-menu]")
+      ) {
+        setActionsMenu(null);
       }
     };
+    const onScroll = () => setActionsMenu(null);
     document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, [actionsMenuOpenId]);
+    window.addEventListener("scroll", onScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      window.removeEventListener("scroll", onScroll, true);
+    };
+  }, [actionsMenu]);
 
   const canRead = dashboardPerms.includes("training_alumni.read");
   const canCreate = dashboardPerms.includes("training_alumni.create");
@@ -512,6 +646,67 @@ export default function DashboardPesertaLatihanPage() {
     setBlacklistModalOpen(true);
   };
 
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setEditRowId(null);
+    setEditForm(emptyEditForm());
+    setEditFormErrors({});
+  };
+
+  const handleOpenEdit = (row: TrainingAlumniRow) => {
+    setActionsMenu(null);
+    setEditRowId(row.id);
+    setEditForm(buildEditFormFromRow(row));
+    setEditFormErrors({});
+    setEditModalOpen(true);
+  };
+
+  const handleSubmitEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editRowId) return;
+    const parsed = editPesertaFormSchema.safeParse(editForm);
+    if (!parsed.success) {
+      const ne: Record<string, string> = {};
+      parsed.error.issues.forEach((err) => {
+        const p = err.path[0];
+        if (typeof p === "string") ne[p] = err.message;
+      });
+      setEditFormErrors(ne);
+      showError("Periksa kembali isian form");
+      return;
+    }
+    setEditFormErrors({});
+    setEditSaving(true);
+    try {
+      const d = parsed.data;
+      await updateTrainingAlumni(editRowId, {
+        training_name: d.training_name,
+        training_year: d.training_year,
+        institution_name: d.institution_name,
+        start_date: d.start_date.slice(0, 10),
+        end_date: d.end_date.slice(0, 10),
+        full_name: d.full_name,
+        nik: d.nik,
+        gender: d.gender,
+        birth_place: d.birth_place,
+        birth_date: d.birth_date.trim().slice(0, 10),
+        last_education: d.last_education,
+        email: d.email,
+        phone: d.phone,
+        address: d.address,
+      });
+      showSuccess("Data peserta latihan diperbarui");
+      closeEditModal();
+      void fetchRows();
+    } catch (err) {
+      showError(
+        err instanceof Error ? err.message : "Gagal menyimpan perubahan",
+      );
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   const handleDeleteRow = (row: TrainingAlumniRow) => {
     confirmDelete(
       `Hapus "${row.full_name}" dari rekap peserta latihan?`,
@@ -702,12 +897,24 @@ export default function DashboardPesertaLatihanPage() {
                               <button
                                 type="button"
                                 aria-label="Menu aksi"
-                                aria-expanded={actionsMenuOpenId === row.id}
-                                onClick={() =>
-                                  setActionsMenuOpenId((id) =>
-                                    id === row.id ? null : row.id,
-                                  )
-                                }
+                                aria-haspopup="menu"
+                                aria-expanded={actionsMenu?.row.id === row.id}
+                                onClick={(e) => {
+                                  const btn = e.currentTarget;
+                                  const rect = btn.getBoundingClientRect();
+                                  const MENU_W = 176;
+                                  setActionsMenu((cur) => {
+                                    if (cur?.row.id === row.id) return null;
+                                    return {
+                                      row,
+                                      top: rect.bottom + 4,
+                                      left: Math.min(
+                                        Math.max(8, rect.right - MENU_W),
+                                        window.innerWidth - MENU_W - 8,
+                                      ),
+                                    };
+                                  });
+                                }}
                                 className="p-2 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition"
                               >
                                 <i
@@ -715,66 +922,6 @@ export default function DashboardPesertaLatihanPage() {
                                   aria-hidden
                                 />
                               </button>
-                              {actionsMenuOpenId === row.id && (
-                                <ul
-                                  role="menu"
-                                  className="absolute right-0 top-full z-40 mt-1 min-w-[11rem] rounded-lg border border-gray-200 bg-white py-1 shadow-lg text-left"
-                                >
-                                  <li role="none">
-                                    <button
-                                      type="button"
-                                      role="menuitem"
-                                      className="w-full px-3 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
-                                      onClick={() => {
-                                        setActionsMenuOpenId(null);
-                                        handleDeleteRow(row);
-                                      }}
-                                    >
-                                      <i
-                                        className="ri-delete-bin-line text-base"
-                                        aria-hidden
-                                      />
-                                      Hapus
-                                    </button>
-                                  </li>
-                                  <li role="none">
-                                    <button
-                                      type="button"
-                                      role="menuitem"
-                                      disabled={
-                                        !row.candidate_id &&
-                                        (row.nik ?? "").replace(/\D/g, "")
-                                          .length === 0
-                                      }
-                                      title={
-                                        row.candidate_id ||
-                                        (row.nik ?? "").replace(/\D/g, "")
-                                          .length > 0
-                                          ? "Blacklist NIK ini selama 1 bulan"
-                                          : "Isi NIK pada baris ini, atau gunakan data dari pendaftaran pencaker"
-                                      }
-                                      className="w-full px-3 py-2 text-sm flex items-center gap-2 disabled:opacity-45 disabled:cursor-not-allowed hover:bg-gray-50 text-gray-900"
-                                      onClick={() => {
-                                        if (
-                                          !row.candidate_id &&
-                                          (row.nik ?? "").replace(/\D/g, "")
-                                            .length === 0
-                                        ) {
-                                          return;
-                                        }
-                                        setActionsMenuOpenId(null);
-                                        handleOpenBlacklist(row);
-                                      }}
-                                    >
-                                      <i
-                                        className="ri-forbid-line text-base text-gray-800"
-                                        aria-hidden
-                                      />
-                                      Blacklist
-                                    </button>
-                                  </li>
-                                </ul>
-                              )}
                             </div>
                           </TD>
                         )}
@@ -787,6 +934,86 @@ export default function DashboardPesertaLatihanPage() {
           </div>
         </div>
       </main>
+
+      {canCreate &&
+        actionsMenu &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <ul
+            data-peserta-latihan-actions-menu
+            role="menu"
+            className="fixed z-[80] min-w-[11rem] rounded-lg border border-gray-200 bg-white py-1 shadow-lg text-left"
+            style={{
+              top: actionsMenu.top,
+              left: actionsMenu.left,
+            }}
+          >
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                className="w-full px-3 py-2 text-sm text-gray-900 hover:bg-gray-50 flex items-center gap-2"
+                onClick={() => {
+                  const r = actionsMenu.row;
+                  handleOpenEdit(r);
+                }}
+              >
+                <i className="ri-pencil-line text-base" aria-hidden />
+                Ubah
+              </button>
+            </li>
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                className="w-full px-3 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
+                onClick={() => {
+                  const r = actionsMenu.row;
+                  setActionsMenu(null);
+                  handleDeleteRow(r);
+                }}
+              >
+                <i className="ri-delete-bin-line text-base" aria-hidden />
+                Hapus
+              </button>
+            </li>
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                disabled={
+                  !actionsMenu.row.candidate_id &&
+                  (actionsMenu.row.nik ?? "").replace(/\D/g, "").length === 0
+                }
+                title={
+                  actionsMenu.row.candidate_id ||
+                  (actionsMenu.row.nik ?? "").replace(/\D/g, "").length > 0
+                    ? "Blacklist NIK ini selama 1 bulan"
+                    : "Isi NIK pada baris ini, atau gunakan data dari pendaftaran pencaker"
+                }
+                className="w-full px-3 py-2 text-sm flex items-center gap-2 disabled:opacity-45 disabled:cursor-not-allowed hover:bg-gray-50 text-gray-900"
+                onClick={() => {
+                  const r = actionsMenu.row;
+                  if (
+                    !r.candidate_id &&
+                    (r.nik ?? "").replace(/\D/g, "").length === 0
+                  ) {
+                    return;
+                  }
+                  setActionsMenu(null);
+                  handleOpenBlacklist(r);
+                }}
+              >
+                <i
+                  className="ri-forbid-line text-base text-gray-800"
+                  aria-hidden
+                />
+                Blacklist
+              </button>
+            </li>
+          </ul>,
+          document.body,
+        )}
 
       {canCreate && (
         <Modal
@@ -1052,6 +1279,324 @@ export default function DashboardPesertaLatihanPage() {
               )}
             </div>
           </div>
+        </Modal>
+      )}
+
+      {canCreate && (
+        <Modal
+          open={editModalOpen}
+          onClose={closeEditModal}
+          title="Ubah peserta latihan"
+          size="lg"
+        >
+          <form onSubmit={handleSubmitEdit} className="space-y-4">
+            <div className="max-h-[min(72vh,560px)] overflow-y-auto pr-1 space-y-4">
+              <p className="text-sm text-gray-600">
+                Sesuaikan data pelatihan dan biodata peserta. NIK harus 16 digit
+                angka.
+              </p>
+              <Input
+                label="Nama pelatihan"
+                value={editForm.training_name}
+                onChange={(e) => {
+                  setEditForm((f) => ({
+                    ...f,
+                    training_name: e.target.value,
+                  }));
+                  if (editFormErrors.training_name) {
+                    setEditFormErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.training_name;
+                      return n;
+                    });
+                  }
+                }}
+                error={editFormErrors.training_name}
+                className="w-full"
+                required
+              />
+              <Input
+                label="Nama lembaga"
+                value={editForm.institution_name}
+                onChange={(e) => {
+                  setEditForm((f) => ({
+                    ...f,
+                    institution_name: e.target.value,
+                  }));
+                  if (editFormErrors.institution_name) {
+                    setEditFormErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.institution_name;
+                      return n;
+                    });
+                  }
+                }}
+                error={editFormErrors.institution_name}
+                className="w-full"
+                required
+              />
+              <Input
+                label="Tahun pelatihan"
+                type="number"
+                min={1950}
+                max={new Date().getFullYear() + 1}
+                value={editForm.training_year}
+                onChange={(e) => {
+                  setEditForm((f) => ({
+                    ...f,
+                    training_year: Number(e.target.value) || f.training_year,
+                  }));
+                  if (editFormErrors.training_year) {
+                    setEditFormErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.training_year;
+                      return n;
+                    });
+                  }
+                }}
+                error={editFormErrors.training_year}
+                className="w-full"
+                required
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Tanggal mulai"
+                  type="date"
+                  value={editForm.start_date}
+                  onChange={(e) => {
+                    setEditForm((f) => ({
+                      ...f,
+                      start_date: e.target.value,
+                    }));
+                    if (editFormErrors.start_date) {
+                      setEditFormErrors((prev) => {
+                        const n = { ...prev };
+                        delete n.start_date;
+                        return n;
+                      });
+                    }
+                  }}
+                  error={editFormErrors.start_date}
+                  className="w-full"
+                  required
+                />
+                <Input
+                  label="Tanggal selesai"
+                  type="date"
+                  value={editForm.end_date}
+                  onChange={(e) => {
+                    setEditForm((f) => ({
+                      ...f,
+                      end_date: e.target.value,
+                    }));
+                    if (editFormErrors.end_date) {
+                      setEditFormErrors((prev) => {
+                        const n = { ...prev };
+                        delete n.end_date;
+                        return n;
+                      });
+                    }
+                  }}
+                  error={editFormErrors.end_date}
+                  className="w-full"
+                  required
+                />
+              </div>
+              <Input
+                label="Nama lengkap"
+                value={editForm.full_name}
+                onChange={(e) => {
+                  setEditForm((f) => ({ ...f, full_name: e.target.value }));
+                  if (editFormErrors.full_name) {
+                    setEditFormErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.full_name;
+                      return n;
+                    });
+                  }
+                }}
+                error={editFormErrors.full_name}
+                className="w-full"
+                required
+              />
+              <Input
+                label="NIK"
+                inputMode="numeric"
+                maxLength={16}
+                value={editForm.nik}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, "").slice(0, 16);
+                  setEditForm((f) => ({ ...f, nik: v }));
+                  if (editFormErrors.nik) {
+                    setEditFormErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.nik;
+                      return n;
+                    });
+                  }
+                }}
+                error={editFormErrors.nik}
+                className="w-full"
+                required
+              />
+              <SearchableSelect
+                label="Jenis kelamin"
+                options={GENDER_OPTIONS}
+                value={editForm.gender}
+                onChange={(v) => {
+                  setEditForm((f) => ({
+                    ...f,
+                    gender: v === "P" ? "P" : "L",
+                  }));
+                  if (editFormErrors.gender) {
+                    setEditFormErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.gender;
+                      return n;
+                    });
+                  }
+                }}
+                error={editFormErrors.gender}
+                placeholder="Pilih jenis kelamin"
+                className="w-full"
+              />
+              <Input
+                label="Tempat lahir"
+                value={editForm.birth_place}
+                onChange={(e) => {
+                  setEditForm((f) => ({
+                    ...f,
+                    birth_place: e.target.value,
+                  }));
+                  if (editFormErrors.birth_place) {
+                    setEditFormErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.birth_place;
+                      return n;
+                    });
+                  }
+                }}
+                error={editFormErrors.birth_place}
+                className="w-full"
+                required
+              />
+              <Input
+                label="Tanggal lahir"
+                type="date"
+                value={editForm.birth_date}
+                onChange={(e) => {
+                  setEditForm((f) => ({
+                    ...f,
+                    birth_date: e.target.value,
+                  }));
+                  if (editFormErrors.birth_date) {
+                    setEditFormErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.birth_date;
+                      return n;
+                    });
+                  }
+                }}
+                error={editFormErrors.birth_date}
+                className="w-full"
+                required
+              />
+              <Input
+                label="Pendidikan terakhir"
+                value={editForm.last_education}
+                onChange={(e) => {
+                  setEditForm((f) => ({
+                    ...f,
+                    last_education: e.target.value,
+                  }));
+                  if (editFormErrors.last_education) {
+                    setEditFormErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.last_education;
+                      return n;
+                    });
+                  }
+                }}
+                error={editFormErrors.last_education}
+                className="w-full"
+                required
+              />
+              <Input
+                label="Email"
+                type="email"
+                value={editForm.email}
+                onChange={(e) => {
+                  setEditForm((f) => ({ ...f, email: e.target.value }));
+                  if (editFormErrors.email) {
+                    setEditFormErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.email;
+                      return n;
+                    });
+                  }
+                }}
+                error={editFormErrors.email}
+                className="w-full"
+                required
+              />
+              <Input
+                label="No. telepon"
+                inputMode="numeric"
+                value={editForm.phone}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, "");
+                  setEditForm((f) => ({ ...f, phone: v }));
+                  if (editFormErrors.phone) {
+                    setEditFormErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.phone;
+                      return n;
+                    });
+                  }
+                }}
+                error={editFormErrors.phone}
+                className="w-full"
+                required
+              />
+              <Textarea
+                label="Alamat"
+                rows={3}
+                value={editForm.address}
+                onChange={(e) => {
+                  setEditForm((f) => ({
+                    ...f,
+                    address: e.target.value,
+                  }));
+                  if (editFormErrors.address) {
+                    setEditFormErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.address;
+                      return n;
+                    });
+                  }
+                }}
+                error={editFormErrors.address}
+                className="w-full"
+                required
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={closeEditModal}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={editSaving}
+                className="px-4 py-2 text-white bg-primary rounded-lg hover:brightness-95 transition disabled:opacity-50"
+              >
+                {editSaving ? "Menyimpan…" : "Simpan perubahan"}
+              </button>
+            </div>
+          </form>
         </Modal>
       )}
 
