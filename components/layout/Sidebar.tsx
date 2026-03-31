@@ -121,6 +121,11 @@ export default function Sidebar({
       icon: "ri-book-open-line",
       path: "/dashboard/pelatihan",
     },
+    {
+      name: "Pendaftaran pelatihan",
+      icon: "ri-links-line",
+      path: "/dashboard/pendaftaran-pelatihan",
+    },
     // { name: "Pengaduan", icon: "ri-alert-line", path: "/dashboard/pengaduan" },
     { name: "Laporan", icon: "ri-file-chart-line", path: "/dashboard/laporan" },
     { name: "Berita", icon: "ri-newspaper-line", path: "/dashboard/berita" },
@@ -181,6 +186,8 @@ export default function Sidebar({
         return permissionCodes.includes("pengaturan.read");
       if (i.path === "/dashboard/pelatihan")
         return permissionCodes.includes("training_alumni.read");
+      if (i.path === "/dashboard/pendaftaran-pelatihan")
+        return permissionCodes.includes("training_alumni.read");
       if (i.path === "/dashboard/pengaduan")
         return permissionCodes.includes("pengaduan.read");
       if (i.path === "/dashboard/laporan")
@@ -214,7 +221,11 @@ export default function Sidebar({
         <nav className="px-2 pt-6 flex-1 overflow-y-auto">
           <ul className="space-y-1">
             {filteredItems.map((item) => {
-              const isActive = pathname === item.path;
+              const isActive =
+                pathname === item.path ||
+                (item.path !== "/dashboard" &&
+                  item.path !== "/" &&
+                  pathname.startsWith(`${item.path}/`));
               return (
                 <li key={item.name}>
                   <Link

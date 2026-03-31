@@ -23,7 +23,7 @@ export interface TrainingAlumniRow {
   birth_place?: string | null;
   birth_date?: string | null;
   candidate_id?: string | null;
-  source: "admin_manual" | "candidate_registration";
+  source: "admin_manual" | "candidate_registration" | "guest_registration";
   created_at?: string;
   profile_full_name?: string | null;
   profile_nik?: string | null;
