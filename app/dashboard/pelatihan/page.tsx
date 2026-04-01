@@ -30,7 +30,9 @@ import {
   buildNikYearSetFromRows,
 } from "../../../utils/training-alumni-nik-year";
 import {
+  buildTrainingAlumniImportValidationToastMessage,
   downloadTrainingAlumniTemplate,
+  formatIssueDisplay,
   parseTrainingAlumniExcel,
   type TrainingAlumniParsedInvalid,
   type TrainingAlumniParsedValid,
@@ -434,6 +436,7 @@ export default function DashboardPesertaLatihanPage() {
     }
   };
 
+  /** Toast ringkasan validasi hanya di `saveStagedExcel`; di sini cukup update panel. */
   const stageExcelFromFile = async (file: File | null | undefined) => {
     if (!file) return;
 
@@ -447,28 +450,21 @@ export default function DashboardPesertaLatihanPage() {
       }
 
       const { valid, invalid } = result;
+      const fileName = file.name || "berkas.xlsx";
 
       if (valid.length === 0) {
-        setExcelStaged(null);
-        const hint =
-          invalid.length > 0
-            ? invalid
-                .slice(0, 3)
-                .map((x) => `Baris ${x.rowNumber}: ${x.message}`)
-                .join(" · ")
-            : "";
-        showError(
-          hint
-            ? `Tidak ada baris valid. ${hint}${invalid.length > 3 ? " · …" : ""}`
-            : "Tidak ada baris data yang bisa diimpor",
-        );
+        if (invalid.length > 0) {
+          setExcelStaged({ valid: [], invalid, fileName });
+        } else {
+          setExcelStaged(null);
+        }
         return;
       }
 
       setExcelStaged({
         valid,
         invalid,
-        fileName: file.name || "berkas.xlsx",
+        fileName,
       });
     } catch (err) {
       console.error(err);
@@ -488,13 +484,30 @@ export default function DashboardPesertaLatihanPage() {
 
     const { valid, invalid } = excelStaged;
     if (valid.length === 0) {
-      showError("Tidak ada baris valid untuk disimpan");
+      if (invalid.length > 0) {
+        showError(buildTrainingAlumniImportValidationToastMessage(0, invalid), {
+          duration: 10_000,
+          style: {
+            whiteSpace: "pre-line",
+            maxWidth: "min(96vw, 440px)",
+          },
+        });
+      } else {
+        showError("Tidak ada baris valid untuk disimpan");
+      }
       return;
     }
 
     if (invalid.length > 0) {
       showError(
-        `Tidak dapat menyimpan: ada ${invalid.length} baris tidak valid di file. Perbaiki semua baris lalu unggah ulang.`,
+        buildTrainingAlumniImportValidationToastMessage(valid.length, invalid),
+        {
+          duration: 10_000,
+          style: {
+            whiteSpace: "pre-line",
+            maxWidth: "min(96vw, 440px)",
+          },
+        },
       );
       return;
     }
@@ -1211,40 +1224,91 @@ export default function DashboardPesertaLatihanPage() {
               {excelStaged && (
                 <div
                   role="status"
-                  className={`w-full max-w-lg rounded-md border px-3 py-2 text-xs sm:text-sm text-left ${
+                  className={`w-full max-w-xl rounded-md border px-3 py-2 text-xs sm:text-sm text-left ${
                     excelStaged.invalid.length > 0
                       ? "border-amber-300 bg-amber-50 text-amber-950"
                       : "border-emerald-300 bg-emerald-50/90 text-emerald-950"
                   }`}
                 >
-                  <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                    <i
-                      className={
-                        excelStaged.invalid.length > 0
-                          ? "ri-alert-line text-base text-amber-600 shrink-0"
-                          : "ri-checkbox-circle-line text-base text-emerald-600 shrink-0"
-                      }
-                      aria-hidden
-                    />
-                    <span className="font-mono break-all">
-                      {excelStaged.fileName}
-                    </span>
-                    <span className="text-gray-600">·</span>
-                    <span>
-                      {excelStaged.valid.length} baris
-                      {excelStaged.invalid.length > 0 ? (
-                        <>
-                          ,{" "}
-                          <strong className="text-amber-800">
-                            {excelStaged.invalid.length} error
-                          </strong>{" "}
-                          — unggah ulang
-                        </>
-                      ) : (
-                        " — Simpan atau Ganti file"
-                      )}
-                    </span>
-                  </p>
+                  <div className="space-y-2">
+                    <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                      <i
+                        className={
+                          excelStaged.invalid.length > 0
+                            ? "ri-alert-line text-base text-amber-600 shrink-0"
+                            : "ri-checkbox-circle-line text-base text-emerald-600 shrink-0"
+                        }
+                        aria-hidden
+                      />
+                      <span className="font-mono break-all">
+                        {excelStaged.fileName}
+                      </span>
+                      <span className="text-gray-600">·</span>
+                      <span>
+                        {excelStaged.valid.length} baris valid
+                        {excelStaged.invalid.length > 0 ? (
+                          <>
+                            ,{" "}
+                            <strong className="text-amber-800">
+                              {excelStaged.invalid.length} baris error
+                            </strong>
+                            {excelStaged.valid.length === 0 ? (
+                              <>
+                                {" "}
+                                — tidak bisa disimpan sampai ada data yang benar
+                              </>
+                            ) : (
+                              <> — perbaiki baris error lalu unggah ulang</>
+                            )}
+                          </>
+                        ) : (
+                          " — Simpan atau Ganti file"
+                        )}
+                      </span>
+                    </p>
+                    {excelStaged.invalid.length > 0 ? (
+                      <>
+                        <p className="text-[11px] sm:text-xs text-amber-900/85 leading-snug">
+                          Nomor baris mengikuti baris di Excel (termasuk
+                          header). Scroll daftar jika banyak error.
+                        </p>
+                        <ul
+                          className="max-h-[min(50vh,26rem)] overflow-y-auto rounded border border-amber-200/80 bg-white/60 px-2 py-1.5 text-[11px] sm:text-xs space-y-1.5 list-none"
+                          aria-label="Rincian baris Excel yang bermasalah"
+                        >
+                          {excelStaged.invalid.map((inv) => (
+                            <li
+                              key={inv.rowNumber}
+                              className="border-b border-amber-100/80 pb-1.5 last:border-0 last:pb-0"
+                            >
+                              <span className="font-semibold text-amber-900">
+                                Baris {inv.rowNumber}
+                              </span>
+                              <span className="text-amber-800/90">
+                                {" "}
+                                — kolom:{" "}
+                                {[
+                                  ...new Set(
+                                    inv.issues.map((i) => i.fieldLabel),
+                                  ),
+                                ].join(", ")}
+                              </span>
+                              <ul className="mt-0.5 pl-3 list-disc space-y-0.5 text-amber-900/90">
+                                {inv.issues.map((issue, idx) => (
+                                  <li key={`${inv.rowNumber}-${idx}`}>
+                                    {formatIssueDisplay(
+                                      issue.fieldLabel,
+                                      issue.message,
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
               )}
             </div>
@@ -1261,7 +1325,16 @@ export default function DashboardPesertaLatihanPage() {
                   </button>
                   <button
                     type="button"
-                    disabled={importing || excelParsing}
+                    disabled={
+                      importing ||
+                      excelParsing ||
+                      excelStaged.valid.length === 0
+                    }
+                    title={
+                      excelStaged.valid.length === 0
+                        ? "Tidak ada baris yang lolos validasi"
+                        : undefined
+                    }
                     onClick={() => void saveStagedExcel()}
                     className="px-4 py-2 text-white bg-primary rounded-lg hover:brightness-90 transition disabled:opacity-50"
                   >

@@ -36,6 +36,28 @@ const FIELD_KEYS: ExcelFieldKey[] = [
   "last_education",
 ];
 
+/** Label kolom (sesuai template) untuk pesan error impor */
+export const TRAINING_ALUMNI_EXCEL_FIELD_LABELS: Record<ExcelFieldKey, string> =
+  {
+    full_name: "Nama",
+    nik: "NIK",
+    gender: "Jenis kelamin",
+    birth_place: "Tempat lahir",
+    birth_date: "Tanggal lahir",
+    email: "Email",
+    phone: "No. HP",
+    address: "Alamat",
+    last_education: "Pendidikan terakhir",
+  };
+
+function fieldLabelFromZodPath(path: readonly PropertyKey[]): string {
+  const head = path[0];
+  if (typeof head === "string" && FIELD_KEYS.includes(head as ExcelFieldKey)) {
+    return TRAINING_ALUMNI_EXCEL_FIELD_LABELS[head as ExcelFieldKey];
+  }
+  return "Data";
+}
+
 /** Judul kolom template (baris header) → field API */
 const HEADER_ALIASES: Record<string, ExcelFieldKey | null> = {
   no: null,
@@ -245,7 +267,7 @@ const genderFromExcelSchema = z.preprocess(
     return v;
   },
   z.enum(["L", "P"], {
-    message: "Jenis kelamin: L, P, Laki-laki, atau Perempuan",
+    message: "Isi L, P, Laki-laki, atau Perempuan",
   }),
 );
 
@@ -288,10 +310,98 @@ export type TrainingAlumniParsedValid = {
   data: TrainingAlumniExcelRowData;
 };
 
-export type TrainingAlumniParsedInvalid = {
-  rowNumber: number;
+export type TrainingAlumniParsedInvalidIssue = {
+  /** Kolom di Excel (judul template) */
+  fieldLabel: string;
   message: string;
 };
+
+export type TrainingAlumniParsedInvalid = {
+  rowNumber: number;
+  issues: TrainingAlumniParsedInvalidIssue[];
+};
+
+/** Menghindari "Jenis kelamin: Jenis kelamin: …" jika pesan Zod sudah memuat nama kolom */
+export function stripDuplicateFieldPrefix(
+  fieldLabel: string,
+  message: string,
+): string {
+  const m = message.trim();
+  const prefix = `${fieldLabel.trim()}:`;
+  if (
+    m.length >= prefix.length &&
+    m.toLowerCase().startsWith(prefix.toLowerCase())
+  ) {
+    return m.slice(prefix.length).trim();
+  }
+  return m;
+}
+
+/** Teks satu issue untuk panel / baris panjang */
+export function formatIssueDisplay(
+  fieldLabel: string,
+  message: string,
+): string {
+  const trimmed = message.trim();
+  const rest = stripDuplicateFieldPrefix(fieldLabel, trimmed);
+  if (rest === trimmed) {
+    return `${fieldLabel}: ${message}`;
+  }
+  return rest ? `${fieldLabel}: ${rest}` : fieldLabel;
+}
+
+/** Satu baris ringkasan (legacy / preflight); prefer `buildTrainingAlumniImportValidationToastMessage` untuk toast */
+export function formatTrainingAlumniInvalidRowLine(
+  inv: TrainingAlumniParsedInvalid,
+): string {
+  const detail = inv.issues
+    .map((i) => formatIssueDisplay(i.fieldLabel, i.message))
+    .join(" · ");
+  return `Baris ${inv.rowNumber}: ${detail}`;
+}
+
+/**
+ * Ringkasan toast: ringkas, baris per contoh, skalabel untuk banyak error.
+ * Detail lengkap ditampilkan di panel impor (scroll).
+ */
+export function buildTrainingAlumniImportValidationToastMessage(
+  validCount: number,
+  invalid: TrainingAlumniParsedInvalid[],
+  opts?: { maxSampleRows?: number },
+): string {
+  const maxSampleRows = opts?.maxSampleRows ?? 5;
+  const totalRows = validCount + invalid.length;
+  const nBad = invalid.length;
+  const lines: string[] = [];
+
+  if (validCount === 0 && nBad > 0) {
+    lines.push("Tidak ada baris yang lolos validasi.");
+    lines.push(`${nBad} baris bermasalah dari ${totalRows} baris data.`);
+  } else if (validCount > 0 && nBad > 0) {
+    lines.push("Ada baris yang tidak valid dalam file.");
+    lines.push(
+      `${validCount} baris valid · ${nBad} baris bermasalah (dari ${totalRows} baris data).`,
+    );
+  }
+
+  if (nBad > 0) {
+    lines.push("");
+    lines.push(
+      `Contoh (${Math.min(maxSampleRows, nBad)} pertama) — nomor baris Excel & kolom:`,
+    );
+    invalid.slice(0, maxSampleRows).forEach((inv) => {
+      const cols = [...new Set(inv.issues.map((i) => i.fieldLabel))].join(", ");
+      lines.push(`  • Baris ${inv.rowNumber} — ${cols}`);
+    });
+    if (nBad > maxSampleRows) {
+      lines.push(
+        `  … dan ${nBad - maxSampleRows} baris lainnya — scroll daftar di panel impor.`,
+      );
+    }
+  }
+
+  return lines.join("\n");
+}
 
 export type ParseTrainingAlumniExcelResult =
   | {
@@ -379,10 +489,22 @@ export async function parseTrainingAlumniExcel(
     const payload = rowToPayload(row, colMap);
     const parsed = schema.safeParse(payload);
     if (!parsed.success) {
-      const first = parsed.error.issues[0];
+      const seen = new Set<string>();
+      const issues: TrainingAlumniParsedInvalidIssue[] = [];
+      for (const issue of parsed.error.issues) {
+        const fieldLabel = fieldLabelFromZodPath(issue.path);
+        const message = issue.message || "Data tidak valid";
+        const key = `${fieldLabel}\0${message}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        issues.push({ fieldLabel, message });
+      }
+      if (issues.length === 0) {
+        issues.push({ fieldLabel: "Data", message: "Data tidak valid" });
+      }
       invalid.push({
         rowNumber,
-        message: first?.message ?? "Data tidak valid",
+        issues,
       });
       continue;
     }

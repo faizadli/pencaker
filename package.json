@@ -9,6 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "rebuild:template-alumni": "node scripts/rebuild-template-alumni-xlsx.cjs",
+    "generate:sample-impor-alumni": "node scripts/generate-sample-impor-alumni-xlsx.cjs",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
     "prepare": "husky"

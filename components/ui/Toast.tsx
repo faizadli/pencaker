@@ -1,7 +1,7 @@
 "use client";
 import React, { createContext, useContext, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Toaster, toast } from "react-hot-toast";
+import { Toaster, toast, type ToastOptions } from "react-hot-toast";
 
 type ToastType = "success" | "error";
 
@@ -13,7 +13,7 @@ type ConfirmDeleteFn = (
 type ToastContextValue = {
   show: (message: string, type?: ToastType) => void;
   showSuccess: (message: string) => void;
-  showError: (message: string) => void;
+  showError: (message: string, toastOptions?: ToastOptions) => void;
   confirmDelete: ConfirmDeleteFn;
 };
 
@@ -40,7 +40,11 @@ export default function ToastProvider({
       show: (message, type = "success") =>
         type === "success" ? toast.success(message) : toast.error(message),
       showSuccess: (message) => toast.success(message),
-      showError: (message) => toast.error(message),
+      showError: (message, toastOptions) =>
+        toast.error(message, {
+          duration: 4000,
+          ...toastOptions,
+        }),
       confirmDelete: (message, onConfirm) => {
         setConfirmState({ message, onConfirm });
       },
