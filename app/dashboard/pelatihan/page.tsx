@@ -793,7 +793,8 @@ export default function DashboardPesertaLatihanPage() {
             </h1>
             <p className="text-sm text-gray-500 mt-1">
               Isi data pelatihan di form, unggah Excel berisi peserta, lalu
-              simpan.
+              simpan. Satu NIK tidak boleh diduplikasi untuk tahun pelatihan
+              yang sama (nama pelatihan boleh berbeda).
             </p>
           </div>
 

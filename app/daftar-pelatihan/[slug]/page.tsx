@@ -232,7 +232,10 @@ export default function DaftarPelatihanGuestPage() {
           className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 space-y-4"
         >
           <p className="text-xs text-gray-500">
-            Isi data berikut tanpa perlu login. Pastikan NIK sesuai KTP.
+            Isi data berikut tanpa perlu login. Pastikan NIK sesuai KTP. Satu
+            NIK hanya dapat mendaftar satu kali per tahun kalender untuk semua
+            program pelatihan (tidak bisa mendaftar dua program berbeda dalam
+            tahun yang sama).
           </p>
           <Input
             label="Nama lengkap"
