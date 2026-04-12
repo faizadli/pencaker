@@ -34,9 +34,12 @@ function readDashboardPermissions(): string[] {
 }
 
 function formatIdDate(s?: string | null): string {
-  if (!s) return "—";
-  const d = new Date(String(s).slice(0, 10) + "T12:00:00");
-  if (Number.isNaN(d.getTime())) return String(s);
+  const raw = String(s ?? "")
+    .trim()
+    .slice(0, 10);
+  if (!raw) return "—";
+  const d = new Date(`${raw}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return raw;
   return d.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "short",
@@ -182,11 +185,21 @@ export default function PendaftaranPelatihanDetailPage() {
             {campaign.training_name}
           </h1>
           <p className="text-sm text-gray-600 mt-1">
-            {campaign.institution_name}
+            {campaign.institution_name?.trim()
+              ? campaign.institution_name
+              : "—"}
           </p>
           <p className="text-sm text-gray-500">
-            Periode pelatihan: {formatIdDate(campaign.start_date)} –{" "}
-            {formatIdDate(campaign.end_date)}
+            {campaign.start_date || campaign.end_date ? (
+              <>
+                Periode pendaftaran (WIB): {formatIdDate(campaign.start_date)} –{" "}
+                {formatIdDate(campaign.end_date)}
+              </>
+            ) : (
+              <>
+                Periode pendaftaran: belum ditetapkan (link tamu selalu terbuka)
+              </>
+            )}
           </p>
         </div>
 
@@ -211,9 +224,8 @@ export default function PendaftaranPelatihanDetailPage() {
         <div className="mb-4">
           <h2 className="text-lg font-bold text-primary">Pengajuan masuk</h2>
           <p className="text-sm text-gray-500">
-            Pilih <strong>Diterima</strong> untuk memindahkan ke halaman
-            Pelatihan (rekap alumni). <strong>Ditolak</strong> menandai
-            pengajuan tanpa memindahkan data.
+            <strong>Terima</strong> memindahkan ke rekap pelatihan.{" "}
+            <strong>Tolak</strong> menandai pengajuan tanpa memindahkan data.
           </p>
         </div>
 
@@ -230,7 +242,9 @@ export default function PendaftaranPelatihanDetailPage() {
                 <TH>Pendidikan</TH>
                 <TH className="max-w-[10rem]">Alamat</TH>
                 <TH>Status</TH>
-                {canCreate && <TH className="w-40">Aksi</TH>}
+                {canCreate && (
+                  <TH className="w-36 text-right whitespace-nowrap">Aksi</TH>
+                )}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -285,9 +299,9 @@ export default function PendaftaranPelatihanDetailPage() {
                       )}
                     </TD>
                     {canCreate && (
-                      <TD>
+                      <TD className="text-right align-top">
                         {a.status === "pending" ? (
-                          <div className="flex flex-wrap gap-1">
+                          <div className="flex flex-wrap items-center justify-end gap-1.5">
                             <button
                               type="button"
                               disabled={busyId === a.id}
@@ -306,7 +320,7 @@ export default function PendaftaranPelatihanDetailPage() {
                             </button>
                           </div>
                         ) : (
-                          "—"
+                          <span className="text-gray-400 text-sm">—</span>
                         )}
                       </TD>
                     )}

@@ -9,11 +9,11 @@ function authHeader(): Record<string, string> {
 export type TrainingRegistrationCampaign = {
   id: string;
   training_name: string;
-  institution_name: string;
-  /** YYYY-MM-DD */
-  start_date: string;
-  /** YYYY-MM-DD */
-  end_date: string;
+  institution_name: string | null;
+  /** YYYY-MM-DD atau null jika belum diatur */
+  start_date: string | null;
+  /** YYYY-MM-DD atau null jika belum diatur */
+  end_date: string | null;
   public_slug: string;
   created_by: string | null;
   created_at?: string;
@@ -48,9 +48,9 @@ export async function listTrainingRegistrationCampaigns(): Promise<{
 
 export async function createTrainingRegistrationCampaign(body: {
   training_name: string;
-  institution_name: string;
-  start_date: string;
-  end_date: string;
+  institution_name?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
 }): Promise<{ data: TrainingRegistrationCampaign }> {
   const resp = await fetch(`${BASE}/api/training-registration-campaigns`, {
     method: "POST",
@@ -76,6 +76,48 @@ export async function getTrainingRegistrationCampaign(id: string): Promise<{
   );
   if (!resp.ok) throw new Error("Gagal memuat data pendaftaran");
   return resp.json() as Promise<{ data: TrainingRegistrationCampaign }>;
+}
+
+export async function updateTrainingRegistrationCampaign(
+  id: string,
+  body: {
+    training_name: string;
+    institution_name?: string | null;
+    start_date?: string | null;
+    end_date?: string | null;
+  },
+): Promise<{ data: TrainingRegistrationCampaign }> {
+  const resp = await fetch(
+    `${BASE}/api/training-registration-campaigns/${encodeURIComponent(id)}`,
+    {
+      method: "PATCH",
+      headers: { ...authHeader(), "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message || "Gagal memperbarui pendaftaran",
+    );
+  }
+  return resp.json() as Promise<{ data: TrainingRegistrationCampaign }>;
+}
+
+export async function deleteTrainingRegistrationCampaign(id: string): Promise<{
+  message?: string;
+}> {
+  const resp = await fetch(
+    `${BASE}/api/training-registration-campaigns/${encodeURIComponent(id)}`,
+    { method: "DELETE", headers: { ...authHeader() } },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message || "Gagal menghapus pendaftaran",
+    );
+  }
+  return resp.json() as Promise<{ message?: string }>;
 }
 
 export async function listTrainingRegistrationApplications(
@@ -123,20 +165,72 @@ export async function rejectTrainingRegistrationApplication(
   return resp.json() as Promise<{ message?: string }>;
 }
 
+export async function updateTrainingRegistrationApplication(
+  campaignId: string,
+  applicationId: string,
+  body: {
+    full_name: string;
+    nik: string;
+    gender: "L" | "P";
+    email?: string;
+    birth_place: string;
+    birth_date: string;
+    address: string;
+    phone: string;
+    last_education: string;
+  },
+): Promise<{ data: TrainingRegistrationApplication }> {
+  const resp = await fetch(
+    `${BASE}/api/training-registration-campaigns/${encodeURIComponent(campaignId)}/applications/${encodeURIComponent(applicationId)}`,
+    {
+      method: "PATCH",
+      headers: { ...authHeader(), "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message || "Gagal memperbarui pengajuan",
+    );
+  }
+  return resp.json() as Promise<{ data: TrainingRegistrationApplication }>;
+}
+
+export async function deleteTrainingRegistrationApplication(
+  campaignId: string,
+  applicationId: string,
+): Promise<{ message?: string }> {
+  const resp = await fetch(
+    `${BASE}/api/training-registration-campaigns/${encodeURIComponent(campaignId)}/applications/${encodeURIComponent(applicationId)}`,
+    { method: "DELETE", headers: { ...authHeader() } },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message || "Gagal menghapus pengajuan",
+    );
+  }
+  return resp.json() as Promise<{ message?: string }>;
+}
+
 /** Publik — tanpa token */
+export type PublicTrainingRegistrationCampaignPayload = Pick<
+  TrainingRegistrationCampaign,
+  | "id"
+  | "training_name"
+  | "institution_name"
+  | "start_date"
+  | "end_date"
+  | "public_slug"
+> & {
+  registration_open: boolean;
+  registration_period_status: "upcoming" | "open" | "closed";
+};
+
 export async function getPublicTrainingRegistrationCampaign(
   slug: string,
-): Promise<{
-  data: Pick<
-    TrainingRegistrationCampaign,
-    | "id"
-    | "training_name"
-    | "institution_name"
-    | "start_date"
-    | "end_date"
-    | "public_slug"
-  >;
-}> {
+): Promise<{ data: PublicTrainingRegistrationCampaignPayload }> {
   const resp = await fetch(
     `${BASE}/api/public/training-registration/${encodeURIComponent(slug)}`,
   );
@@ -147,15 +241,7 @@ export async function getPublicTrainingRegistrationCampaign(
     );
   }
   return resp.json() as Promise<{
-    data: Pick<
-      TrainingRegistrationCampaign,
-      | "id"
-      | "training_name"
-      | "institution_name"
-      | "start_date"
-      | "end_date"
-      | "public_slug"
-    >;
+    data: PublicTrainingRegistrationCampaignPayload;
   }>;
 }
 

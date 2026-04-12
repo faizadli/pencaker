@@ -20,9 +20,12 @@ import {
 import {
   listTrainingRegistrationCampaigns,
   createTrainingRegistrationCampaign,
+  updateTrainingRegistrationCampaign,
+  deleteTrainingRegistrationCampaign,
   buildGuestRegistrationUrl,
   type TrainingRegistrationCampaign,
 } from "../../../services/training-registration";
+import { ActionMenu } from "../../../components/ui/ActionMenu";
 
 function readDashboardPermissions(): string[] {
   if (typeof window === "undefined") return [];
@@ -34,14 +37,13 @@ function readDashboardPermissions(): string[] {
   }
 }
 
-function todayYmd(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function formatIdDate(s: string): string {
-  const t = String(s).slice(0, 10);
-  const d = new Date(`${t}T12:00:00`);
-  if (Number.isNaN(d.getTime())) return s;
+function formatIdDate(s?: string | null): string {
+  const raw = String(s ?? "")
+    .trim()
+    .slice(0, 10);
+  if (!raw) return "—";
+  const d = new Date(`${raw}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return raw;
   return d.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "short",
@@ -52,36 +54,63 @@ function formatIdDate(s: string): string {
 const createSchema = z
   .object({
     training_name: z.string().min(1, "Nama pelatihan wajib diisi"),
-    institution_name: z.string().min(1, "Nama lembaga wajib diisi"),
-    start_date: z.string().min(1, "Tanggal mulai wajib diisi"),
-    end_date: z.string().min(1, "Tanggal selesai wajib diisi"),
+    institution_name: z.string().optional(),
+    start_date: z.string().optional(),
+    end_date: z.string().optional(),
   })
   .superRefine((d, ctx) => {
+    const start = (d.start_date ?? "").trim();
+    const end = (d.end_date ?? "").trim();
+    const hasS = start.length > 0;
+    const hasE = end.length > 0;
+    if (hasS !== hasE) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "Lengkapi tanggal mulai dan akhir periode, atau kosongkan keduanya",
+        path: ["end_date"],
+      });
+      return;
+    }
     const ymd = /^\d{4}-\d{2}-\d{2}$/;
-    if (!ymd.test(d.start_date)) {
+    if (hasS && !ymd.test(start)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Format tanggal mulai tidak valid",
         path: ["start_date"],
       });
     }
-    if (!ymd.test(d.end_date)) {
+    if (hasE && !ymd.test(end)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Format tanggal selesai tidak valid",
         path: ["end_date"],
       });
     }
-    const s = new Date(`${d.start_date}T12:00:00`);
-    const e = new Date(`${d.end_date}T12:00:00`);
-    if (!Number.isNaN(s.getTime()) && !Number.isNaN(e.getTime()) && e < s) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Tanggal selesai tidak boleh sebelum tanggal mulai",
-        path: ["end_date"],
-      });
+    if (hasS && hasE && ymd.test(start) && ymd.test(end)) {
+      const s = new Date(`${start}T12:00:00`);
+      const e = new Date(`${end}T12:00:00`);
+      if (!Number.isNaN(s.getTime()) && !Number.isNaN(e.getTime()) && e < s) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Tanggal selesai tidak boleh sebelum tanggal mulai",
+          path: ["end_date"],
+        });
+      }
     }
   });
+
+function campaignApiPayload(input: z.infer<typeof createSchema>) {
+  const start = (input.start_date ?? "").trim().slice(0, 10);
+  const end = (input.end_date ?? "").trim().slice(0, 10);
+  const inst = (input.institution_name ?? "").trim();
+  return {
+    training_name: input.training_name.trim(),
+    institution_name: inst === "" ? null : inst,
+    start_date: start === "" ? null : start,
+    end_date: end === "" ? null : end,
+  };
+}
 
 export default function PendaftaranPelatihanPage() {
   const router = useRouter();
@@ -93,10 +122,20 @@ export default function PendaftaranPelatihanPage() {
   const [form, setForm] = useState({
     training_name: "",
     institution_name: "",
-    start_date: todayYmd(),
-    end_date: todayYmd(),
+    start_date: "",
+    end_date: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [editTarget, setEditTarget] =
+    useState<TrainingRegistrationCampaign | null>(null);
+  const [editForm, setEditForm] = useState({
+    training_name: "",
+    institution_name: "",
+    start_date: "",
+    end_date: "",
+  });
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+  const [savingEdit, setSavingEdit] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [dashboardPerms, setDashboardPerms] = useState<string[]>(
     readDashboardPermissions,
@@ -111,7 +150,7 @@ export default function PendaftaranPelatihanPage() {
         `${formatIdDate(r.start_date)} ${formatIdDate(r.end_date)}`.toLowerCase();
       return (
         r.training_name.toLowerCase().includes(q) ||
-        r.institution_name.toLowerCase().includes(q) ||
+        (r.institution_name ?? "").toLowerCase().includes(q) ||
         r.public_slug.toLowerCase().includes(q) ||
         link.includes(q) ||
         periode.includes(q) ||
@@ -150,15 +189,78 @@ export default function PendaftaranPelatihanPage() {
   }, [fetchRows]);
 
   const openModal = () => {
-    const t = todayYmd();
     setForm({
       training_name: "",
       institution_name: "",
-      start_date: t,
-      end_date: t,
+      start_date: "",
+      end_date: "",
     });
     setErrors({});
     setModalOpen(true);
+  };
+
+  const toYmd = (v: string | null | undefined) =>
+    String(v ?? "")
+      .trim()
+      .slice(0, 10);
+
+  const openEditModal = (r: TrainingRegistrationCampaign) => {
+    setEditTarget(r);
+    setEditForm({
+      training_name: r.training_name,
+      institution_name: r.institution_name ?? "",
+      start_date: toYmd(r.start_date),
+      end_date: toYmd(r.end_date),
+    });
+    setEditErrors({});
+  };
+
+  const closeEditModal = () => {
+    setEditTarget(null);
+    setEditErrors({});
+  };
+
+  const handleUpdateCampaign = async () => {
+    if (!editTarget) return;
+    const parsed = createSchema.safeParse(editForm);
+    if (!parsed.success) {
+      const ne: Record<string, string> = {};
+      parsed.error.issues.forEach((err) => {
+        const p = err.path[0];
+        if (typeof p === "string") ne[p] = err.message;
+      });
+      setEditErrors(ne);
+      showError("Periksa isian form");
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      await updateTrainingRegistrationCampaign(
+        editTarget.id,
+        campaignApiPayload(parsed.data),
+      );
+      showSuccess("Program pendaftaran diperbarui");
+      closeEditModal();
+      await fetchRows();
+    } catch (e) {
+      showError(e instanceof Error ? e.message : "Gagal menyimpan");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDeleteCampaign = async (r: TrainingRegistrationCampaign) => {
+    const ok = window.confirm(
+      `Hapus program "${r.training_name}" beserta semua pengajuan di dalamnya? Tindakan ini tidak dapat dibatalkan.`,
+    );
+    if (!ok) return;
+    try {
+      await deleteTrainingRegistrationCampaign(r.id);
+      showSuccess("Program pendaftaran dihapus");
+      await fetchRows();
+    } catch (e) {
+      showError(e instanceof Error ? e.message : "Gagal menghapus");
+    }
   };
 
   const handleCreate = async () => {
@@ -175,7 +277,9 @@ export default function PendaftaranPelatihanPage() {
     }
     setSaving(true);
     try {
-      const res = await createTrainingRegistrationCampaign(parsed.data);
+      const res = await createTrainingRegistrationCampaign(
+        campaignApiPayload(parsed.data),
+      );
       showSuccess("Pendaftaran pelatihan dibuat. Bagikan link untuk tamu.");
       setModalOpen(false);
       router.push(`/dashboard/pendaftaran-pelatihan/${res.data.id}`);
@@ -273,9 +377,9 @@ export default function PendaftaranPelatihanPage() {
                 <TableRow>
                   <TH>Nama pelatihan</TH>
                   <TH>Lembaga</TH>
-                  <TH>Periode pelatihan</TH>
+                  <TH>Periode pendaftaran</TH>
                   <TH>Link tamu</TH>
-                  <TH className="w-32">Aksi</TH>
+                  <TH className="w-14 text-right">Aksi</TH>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -296,7 +400,9 @@ export default function PendaftaranPelatihanPage() {
                   filteredRows.map((r) => (
                     <TableRow key={r.id}>
                       <TD className="font-medium">{r.training_name}</TD>
-                      <TD>{r.institution_name}</TD>
+                      <TD>
+                        {r.institution_name?.trim() ? r.institution_name : "—"}
+                      </TD>
                       <TD className="text-sm whitespace-nowrap">
                         {formatIdDate(r.start_date)} –{" "}
                         {formatIdDate(r.end_date)}
@@ -306,13 +412,45 @@ export default function PendaftaranPelatihanPage() {
                           {buildGuestRegistrationUrl(r.public_slug)}
                         </span>
                       </TD>
-                      <TD>
-                        <Link
-                          href={`/dashboard/pendaftaran-pelatihan/${r.id}`}
-                          className="text-primary text-sm font-medium hover:underline"
-                        >
-                          Kelola
-                        </Link>
+                      <TD className="text-right">
+                        {canCreate ? (
+                          <ActionMenu
+                            ariaLabel={`Aksi untuk ${r.training_name}`}
+                            items={[
+                              {
+                                id: "detail",
+                                label: "Buka detail",
+                                icon: "ri-external-link-line",
+                                onClick: () => {
+                                  router.push(
+                                    `/dashboard/pendaftaran-pelatihan/${r.id}`,
+                                  );
+                                },
+                              },
+                              { type: "divider" },
+                              {
+                                id: "edit",
+                                label: "Ubah program",
+                                icon: "ri-pencil-line",
+                                onClick: () => openEditModal(r),
+                              },
+                              {
+                                id: "delete",
+                                label: "Hapus program",
+                                icon: "ri-delete-bin-line",
+                                danger: true,
+                                onClick: () => handleDeleteCampaign(r),
+                              },
+                            ]}
+                          />
+                        ) : (
+                          <Link
+                            href={`/dashboard/pendaftaran-pelatihan/${r.id}`}
+                            className="text-primary text-sm font-medium hover:underline"
+                          >
+                            Detail
+                          </Link>
+                        )}
                       </TD>
                     </TableRow>
                   ))
@@ -322,6 +460,110 @@ export default function PendaftaranPelatihanPage() {
           </div>
         </div>
       </main>
+
+      {canCreate && editTarget && (
+        <Modal
+          open
+          onClose={closeEditModal}
+          title="Ubah program pendaftaran"
+          size="md"
+        >
+          <div className="space-y-4">
+            <Input
+              label="Nama pelatihan"
+              value={editForm.training_name}
+              onChange={(e) => {
+                setEditForm((f) => ({ ...f, training_name: e.target.value }));
+                if (editErrors.training_name) {
+                  setEditErrors((s) => {
+                    const n = { ...s };
+                    delete n.training_name;
+                    return n;
+                  });
+                }
+              }}
+              error={editErrors.training_name}
+              required
+            />
+            <Input
+              label="Nama lembaga (opsional)"
+              required={false}
+              value={editForm.institution_name}
+              onChange={(e) => {
+                setEditForm((f) => ({
+                  ...f,
+                  institution_name: e.target.value,
+                }));
+                if (editErrors.institution_name) {
+                  setEditErrors((s) => {
+                    const n = { ...s };
+                    delete n.institution_name;
+                    return n;
+                  });
+                }
+              }}
+              error={editErrors.institution_name}
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="Tanggal mulai periode (opsional)"
+                type="date"
+                required={false}
+                value={editForm.start_date}
+                onChange={(e) => {
+                  setEditForm((f) => ({ ...f, start_date: e.target.value }));
+                  if (editErrors.start_date) {
+                    setEditErrors((s) => {
+                      const n = { ...s };
+                      delete n.start_date;
+                      return n;
+                    });
+                  }
+                }}
+                error={editErrors.start_date}
+              />
+              <Input
+                label="Tanggal akhir periode (opsional)"
+                type="date"
+                required={false}
+                value={editForm.end_date}
+                onChange={(e) => {
+                  setEditForm((f) => ({ ...f, end_date: e.target.value }));
+                  if (editErrors.end_date) {
+                    setEditErrors((s) => {
+                      const n = { ...s };
+                      delete n.end_date;
+                      return n;
+                    });
+                  }
+                }}
+                error={editErrors.end_date}
+              />
+            </div>
+            <p className="text-xs text-gray-500">
+              Kosongkan tanggal jika belum ada periode; bila diisi, kedua
+              tanggal wajib lengkap. Tanpa periode, link tamu tetap aktif (WIB).
+            </p>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={closeEditModal}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={savingEdit}
+                onClick={() => void handleUpdateCampaign()}
+                className="px-4 py-2 text-white bg-primary rounded-lg hover:brightness-95 disabled:opacity-50"
+              >
+                {savingEdit ? "Menyimpan…" : "Simpan"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {canCreate && (
         <Modal
@@ -348,7 +590,8 @@ export default function PendaftaranPelatihanPage() {
               required
             />
             <Input
-              label="Nama lembaga"
+              label="Nama lembaga (opsional)"
+              required={false}
               value={form.institution_name}
               onChange={(e) => {
                 setForm((f) => ({ ...f, institution_name: e.target.value }));
@@ -361,12 +604,12 @@ export default function PendaftaranPelatihanPage() {
                 }
               }}
               error={errors.institution_name}
-              required
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="Tanggal mulai pelatihan"
+                label="Tanggal mulai periode (opsional)"
                 type="date"
+                required={false}
                 value={form.start_date}
                 onChange={(e) => {
                   setForm((f) => ({
@@ -382,11 +625,11 @@ export default function PendaftaranPelatihanPage() {
                   }
                 }}
                 error={errors.start_date}
-                required
               />
               <Input
-                label="Tanggal selesai pelatihan"
+                label="Tanggal akhir periode (opsional)"
                 type="date"
+                required={false}
                 value={form.end_date}
                 onChange={(e) => {
                   setForm((f) => ({
@@ -402,12 +645,12 @@ export default function PendaftaranPelatihanPage() {
                   }
                 }}
                 error={errors.end_date}
-                required
               />
             </div>
             <p className="text-xs text-gray-500">
-              Default tanggal mengikuti hari ini; sesuaikan jika periode
-              pelatihan berbeda.
+              Hanya nama pelatihan yang wajib. Periode kosong = link tamu selalu
+              bisa diisi (tanpa batas tanggal, WIB). Jika mengisi tanggal, isi
+              keduanya.
             </p>
             <div className="flex justify-end gap-3 pt-2">
               <button

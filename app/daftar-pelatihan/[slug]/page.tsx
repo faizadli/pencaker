@@ -17,10 +17,13 @@ import {
   submitPublicTrainingRegistration,
 } from "../../../services/training-registration";
 
-function formatIdDate(s: string): string {
-  const t = String(s).slice(0, 10);
-  const d = new Date(`${t}T12:00:00`);
-  if (Number.isNaN(d.getTime())) return s;
+function formatIdDate(s?: string | null): string {
+  const raw = String(s ?? "")
+    .trim()
+    .slice(0, 10);
+  if (!raw) return "—";
+  const d = new Date(`${raw}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return raw;
   return d.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "short",
@@ -81,6 +84,8 @@ export default function DaftarPelatihanGuestPage() {
     institution_name: string;
     start_date: string;
     end_date: string;
+    registration_open: boolean;
+    registration_period_status: "upcoming" | "open" | "closed";
   } | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -111,9 +116,11 @@ export default function DaftarPelatihanGuestPage() {
         if (cancelled) return;
         setMeta({
           training_name: res.data.training_name,
-          institution_name: res.data.institution_name,
-          start_date: res.data.start_date,
-          end_date: res.data.end_date,
+          institution_name: res.data.institution_name ?? "",
+          start_date: res.data.start_date ?? "",
+          end_date: res.data.end_date ?? "",
+          registration_open: res.data.registration_open,
+          registration_period_status: res.data.registration_period_status,
         });
       } catch {
         if (!cancelled) setNotFound(true);
@@ -128,6 +135,14 @@ export default function DaftarPelatihanGuestPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!meta?.registration_open) {
+      showError(
+        meta?.registration_period_status === "upcoming"
+          ? "Pendaftaran belum dibuka"
+          : "Pendaftaran sudah ditutup",
+      );
+      return;
+    }
     const parsed = guestFormSchema.safeParse(form);
     if (!parsed.success) {
       const ne: Record<string, string> = {};
@@ -220,177 +235,209 @@ export default function DaftarPelatihanGuestPage() {
           <p className="text-lg font-semibold text-gray-800 mt-2">
             {meta.training_name}
           </p>
-          <p className="text-sm text-gray-600">{meta.institution_name}</p>
+          {meta.institution_name?.trim() ? (
+            <p className="text-sm text-gray-600">{meta.institution_name}</p>
+          ) : null}
           <p className="text-sm text-gray-500 mt-1">
-            Periode: {formatIdDate(meta.start_date)} –{" "}
-            {formatIdDate(meta.end_date)}
+            {meta.start_date || meta.end_date ? (
+              <>
+                Periode pendaftaran (WIB): {formatIdDate(meta.start_date)} –{" "}
+                {formatIdDate(meta.end_date)}
+              </>
+            ) : (
+              <>Tanpa batas periode tanggal (WIB)</>
+            )}
           </p>
         </div>
 
+        {!meta.registration_open && (
+          <div
+            className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+            role="status"
+          >
+            {meta.registration_period_status === "upcoming" ? (
+              <p>
+                Pendaftaran belum dibuka. Form dapat diisi mulai tanggal{" "}
+                <strong>{formatIdDate(meta.start_date)}</strong> (WIB).
+              </p>
+            ) : (
+              <p>
+                Pendaftaran sudah ditutup. Batas akhir pengisian form adalah{" "}
+                <strong>{formatIdDate(meta.end_date)}</strong> (WIB).
+              </p>
+            )}
+          </div>
+        )}
+
         <form
           onSubmit={(e) => void handleSubmit(e)}
-          className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 space-y-4"
+          className="bg-white rounded-2xl shadow-md border border-gray-200 p-6"
         >
-          <p className="text-xs text-gray-500">
-            Isi data berikut tanpa perlu login. Pastikan NIK sesuai KTP. Satu
-            NIK hanya dapat mendaftar satu kali per tahun kalender untuk semua
-            program pelatihan (tidak bisa mendaftar dua program berbeda dalam
-            tahun yang sama).
-          </p>
-          <Input
-            label="Nama lengkap"
-            value={form.full_name}
-            onChange={(e) => {
-              setForm((f) => ({ ...f, full_name: e.target.value }));
-              if (errors.full_name) {
-                setErrors((s) => {
-                  const n = { ...s };
-                  delete n.full_name;
-                  return n;
-                });
-              }
-            }}
-            error={errors.full_name}
-            required
-          />
-          <Input
-            label="NIK"
-            inputMode="numeric"
-            maxLength={16}
-            value={form.nik}
-            onChange={(e) => {
-              const v = e.target.value.replace(/\D/g, "").slice(0, 16);
-              setForm((f) => ({ ...f, nik: v }));
-              if (errors.nik) {
-                setErrors((s) => {
-                  const n = { ...s };
-                  delete n.nik;
-                  return n;
-                });
-              }
-            }}
-            error={errors.nik}
-            required
-          />
-          <SearchableSelect
-            label="Jenis kelamin"
-            options={GENDER_OPTIONS}
-            value={form.gender}
-            onChange={(v) =>
-              setForm((f) => ({ ...f, gender: v === "P" ? "P" : "L" }))
-            }
-            error={errors.gender}
-            placeholder="Pilih"
-            className="w-full"
-          />
-          <Input
-            label="Email (opsional)"
-            type="email"
-            required={false}
-            value={form.email}
-            onChange={(e) => {
-              setForm((f) => ({ ...f, email: e.target.value }));
-              if (errors.email) {
-                setErrors((s) => {
-                  const n = { ...s };
-                  delete n.email;
-                  return n;
-                });
-              }
-            }}
-            error={errors.email}
-          />
-          <Input
-            label="Tempat lahir"
-            value={form.birth_place}
-            onChange={(e) => {
-              setForm((f) => ({ ...f, birth_place: e.target.value }));
-              if (errors.birth_place) {
-                setErrors((s) => {
-                  const n = { ...s };
-                  delete n.birth_place;
-                  return n;
-                });
-              }
-            }}
-            error={errors.birth_place}
-            required
-          />
-          <Input
-            label="Tanggal lahir"
-            type="date"
-            value={form.birth_date}
-            onChange={(e) => {
-              setForm((f) => ({ ...f, birth_date: e.target.value }));
-              if (errors.birth_date) {
-                setErrors((s) => {
-                  const n = { ...s };
-                  delete n.birth_date;
-                  return n;
-                });
-              }
-            }}
-            error={errors.birth_date}
-            required
-          />
-          <Textarea
-            label="Alamat"
-            rows={3}
-            value={form.address}
-            onChange={(e) => {
-              setForm((f) => ({ ...f, address: e.target.value }));
-              if (errors.address) {
-                setErrors((s) => {
-                  const n = { ...s };
-                  delete n.address;
-                  return n;
-                });
-              }
-            }}
-            error={errors.address}
-            required
-          />
-          <Input
-            label="No. HP"
-            inputMode="numeric"
-            value={form.phone}
-            onChange={(e) => {
-              const v = e.target.value.replace(/\D/g, "");
-              setForm((f) => ({ ...f, phone: v }));
-              if (errors.phone) {
-                setErrors((s) => {
-                  const n = { ...s };
-                  delete n.phone;
-                  return n;
-                });
-              }
-            }}
-            error={errors.phone}
-            required
-          />
-          <Input
-            label="Pendidikan terakhir"
-            value={form.last_education}
-            onChange={(e) => {
-              setForm((f) => ({ ...f, last_education: e.target.value }));
-              if (errors.last_education) {
-                setErrors((s) => {
-                  const n = { ...s };
-                  delete n.last_education;
-                  return n;
-                });
-              }
-            }}
-            error={errors.last_education}
-            required
-          />
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full py-3 rounded-xl bg-primary text-white font-medium hover:brightness-95 disabled:opacity-50 transition"
+          <fieldset
+            disabled={!meta.registration_open}
+            className="min-w-0 space-y-4 border-0 p-0 m-0 disabled:opacity-60"
           >
-            {submitting ? "Mengirim…" : "Kirim pendaftaran"}
-          </button>
+            <p className="text-xs text-gray-500">
+              Isi data berikut tanpa perlu login. Pastikan NIK sesuai KTP. Satu
+              NIK hanya dapat mendaftar satu kali per tahun kalender untuk semua
+              program pelatihan (tidak bisa mendaftar dua program berbeda dalam
+              tahun yang sama).
+            </p>
+            <Input
+              label="Nama lengkap"
+              value={form.full_name}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, full_name: e.target.value }));
+                if (errors.full_name) {
+                  setErrors((s) => {
+                    const n = { ...s };
+                    delete n.full_name;
+                    return n;
+                  });
+                }
+              }}
+              error={errors.full_name}
+              required
+            />
+            <Input
+              label="NIK"
+              inputMode="numeric"
+              maxLength={16}
+              value={form.nik}
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, "").slice(0, 16);
+                setForm((f) => ({ ...f, nik: v }));
+                if (errors.nik) {
+                  setErrors((s) => {
+                    const n = { ...s };
+                    delete n.nik;
+                    return n;
+                  });
+                }
+              }}
+              error={errors.nik}
+              required
+            />
+            <SearchableSelect
+              label="Jenis kelamin"
+              options={GENDER_OPTIONS}
+              value={form.gender}
+              onChange={(v) =>
+                setForm((f) => ({ ...f, gender: v === "P" ? "P" : "L" }))
+              }
+              error={errors.gender}
+              placeholder="Pilih"
+              className="w-full"
+            />
+            <Input
+              label="Email (opsional)"
+              type="email"
+              required={false}
+              value={form.email}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, email: e.target.value }));
+                if (errors.email) {
+                  setErrors((s) => {
+                    const n = { ...s };
+                    delete n.email;
+                    return n;
+                  });
+                }
+              }}
+              error={errors.email}
+            />
+            <Input
+              label="Tempat lahir"
+              value={form.birth_place}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, birth_place: e.target.value }));
+                if (errors.birth_place) {
+                  setErrors((s) => {
+                    const n = { ...s };
+                    delete n.birth_place;
+                    return n;
+                  });
+                }
+              }}
+              error={errors.birth_place}
+              required
+            />
+            <Input
+              label="Tanggal lahir"
+              type="date"
+              value={form.birth_date}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, birth_date: e.target.value }));
+                if (errors.birth_date) {
+                  setErrors((s) => {
+                    const n = { ...s };
+                    delete n.birth_date;
+                    return n;
+                  });
+                }
+              }}
+              error={errors.birth_date}
+              required
+            />
+            <Textarea
+              label="Alamat"
+              rows={3}
+              value={form.address}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, address: e.target.value }));
+                if (errors.address) {
+                  setErrors((s) => {
+                    const n = { ...s };
+                    delete n.address;
+                    return n;
+                  });
+                }
+              }}
+              error={errors.address}
+              required
+            />
+            <Input
+              label="No. HP"
+              inputMode="numeric"
+              value={form.phone}
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, "");
+                setForm((f) => ({ ...f, phone: v }));
+                if (errors.phone) {
+                  setErrors((s) => {
+                    const n = { ...s };
+                    delete n.phone;
+                    return n;
+                  });
+                }
+              }}
+              error={errors.phone}
+              required
+            />
+            <Input
+              label="Pendidikan terakhir"
+              value={form.last_education}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, last_education: e.target.value }));
+                if (errors.last_education) {
+                  setErrors((s) => {
+                    const n = { ...s };
+                    delete n.last_education;
+                    return n;
+                  });
+                }
+              }}
+              error={errors.last_education}
+              required
+            />
+            <button
+              type="submit"
+              disabled={submitting || !meta.registration_open}
+              className="w-full py-3 rounded-xl bg-primary text-white font-medium hover:brightness-95 disabled:opacity-50 transition"
+            >
+              {submitting ? "Mengirim…" : "Kirim pendaftaran"}
+            </button>
+          </fieldset>
         </form>
       </div>
     </div>
