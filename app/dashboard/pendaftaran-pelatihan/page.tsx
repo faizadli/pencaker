@@ -21,6 +21,7 @@ import {
   listTrainingRegistrationCampaigns,
   createTrainingRegistrationCampaign,
   updateTrainingRegistrationCampaign,
+  setTrainingRegistrationGuestPanelPassword,
   deleteTrainingRegistrationCampaign,
   buildGuestRegistrationUrl,
   type TrainingRegistrationCampaign,
@@ -244,10 +245,18 @@ export default function PendaftaranPelatihanPage() {
     setSavingEdit(true);
     try {
       const base = campaignApiPayload(parsed.data);
-      await updateTrainingRegistrationCampaign(editTarget.id, {
-        ...base,
-        ...(pwd.length >= 8 ? { guest_panel_password: pwd } : {}),
-      });
+      await updateTrainingRegistrationCampaign(editTarget.id, base);
+      if (pwd.length >= 8) {
+        await setTrainingRegistrationGuestPanelPassword(editTarget.id, pwd);
+        try {
+          sessionStorage.setItem(
+            `tr_panel_pwd_display_${editTarget.id}`,
+            pwd,
+          );
+        } catch {
+          /* ignore */
+        }
+      }
       showSuccess("Program pendaftaran diperbarui");
       closeEditModal();
       await fetchRows();

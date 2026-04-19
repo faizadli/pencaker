@@ -117,6 +117,28 @@ export async function updateTrainingRegistrationCampaign(
   return resp.json() as Promise<{ data: TrainingRegistrationCampaign }>;
 }
 
+/** Hanya mengatur ulang kata sandi panel panitia (disarankan untuk penyimpanan yang andal). */
+export async function setTrainingRegistrationGuestPanelPassword(
+  id: string,
+  guestPanelPassword: string,
+): Promise<{ data: TrainingRegistrationCampaign }> {
+  const resp = await fetch(
+    `${BASE}/api/training-registration-campaigns/${encodeURIComponent(id)}/guest-panel-password`,
+    {
+      method: "PATCH",
+      headers: { ...authHeader(), "Content-Type": "application/json" },
+      body: JSON.stringify({ guest_panel_password: guestPanelPassword }),
+    },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message || "Gagal menyimpan kata sandi panel",
+    );
+  }
+  return resp.json() as Promise<{ data: TrainingRegistrationCampaign }>;
+}
+
 export async function setTrainingRegistrationEnabled(
   id: string,
   registrationEnabled: boolean,

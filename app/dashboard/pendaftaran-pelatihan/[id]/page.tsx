@@ -26,7 +26,7 @@ import {
   bulkDeleteTrainingRegistrationApplications,
   buildGuestRegistrationUrl,
   buildGuestPanelUrl,
-  updateTrainingRegistrationCampaign,
+  setTrainingRegistrationGuestPanelPassword,
   type BulkApplicationActionResult,
   type TrainingRegistrationCampaign,
   type TrainingRegistrationApplication,
@@ -115,6 +115,8 @@ export default function PendaftaranPelatihanDetailPage() {
   const [oneTimePwd, setOneTimePwd] = useState("");
   const [newPanelPwd, setNewPanelPwd] = useState("");
   const [savingPanelPwd, setSavingPanelPwd] = useState(false);
+  /** Sandi panel yang dikenal di browser ini (sessionStorage), bukan dari server. */
+  const [panelPwdDisplay, setPanelPwdDisplay] = useState("");
   const [dashboardPerms] = useState<string[]>(readDashboardPermissions);
 
   const canRead = dashboardPerms.includes("training_alumni.read");
@@ -156,12 +158,25 @@ export default function PendaftaranPelatihanDetailPage() {
 
   useEffect(() => {
     if (!id || typeof window === "undefined") return;
-    const k = `tr_panel_pwd_once_${id}`;
-    const v = sessionStorage.getItem(k);
-    if (v) {
-      setOneTimePwd(v);
+    const kOnce = `tr_panel_pwd_once_${id}`;
+    const fromCreate = sessionStorage.getItem(kOnce);
+    if (fromCreate) {
+      setOneTimePwd(fromCreate);
       setOneTimePwdModalOpen(true);
-      sessionStorage.removeItem(k);
+      try {
+        sessionStorage.setItem(`tr_panel_pwd_display_${id}`, fromCreate);
+      } catch {
+        /* ignore */
+      }
+      setPanelPwdDisplay(fromCreate);
+      sessionStorage.removeItem(kOnce);
+      return;
+    }
+    try {
+      const stored = sessionStorage.getItem(`tr_panel_pwd_display_${id}`);
+      if (stored) setPanelPwdDisplay(stored);
+    } catch {
+      /* ignore */
     }
   }, [id]);
 
@@ -265,13 +280,13 @@ export default function PendaftaranPelatihanDetailPage() {
     }
     setSavingPanelPwd(true);
     try {
-      await updateTrainingRegistrationCampaign(campaign.id, {
-        training_name: campaign.training_name,
-        institution_name: campaign.institution_name,
-        start_date: campaign.start_date,
-        end_date: campaign.end_date,
-        guest_panel_password: p,
-      });
+      await setTrainingRegistrationGuestPanelPassword(campaign.id, p);
+      try {
+        sessionStorage.setItem(`tr_panel_pwd_display_${campaign.id}`, p);
+      } catch {
+        /* ignore */
+      }
+      setPanelPwdDisplay(p);
       setNewPanelPwd("");
       showSuccess("Kata sandi panel panitia diperbarui");
       await load();
@@ -280,6 +295,26 @@ export default function PendaftaranPelatihanDetailPage() {
     } finally {
       setSavingPanelPwd(false);
     }
+  };
+
+  const copyPanelPasswordDisplay = async () => {
+    if (!panelPwdDisplay) return;
+    try {
+      await navigator.clipboard.writeText(panelPwdDisplay);
+      showSuccess("Kata sandi disalin");
+    } catch {
+      showError("Gagal menyalin");
+    }
+  };
+
+  const clearPanelPasswordDisplay = () => {
+    if (!id) return;
+    try {
+      sessionStorage.removeItem(`tr_panel_pwd_display_${id}`);
+    } catch {
+      /* ignore */
+    }
+    setPanelPwdDisplay("");
   };
 
   const handleToggleRegistration = async (next: boolean) => {
@@ -618,6 +653,36 @@ export default function PendaftaranPelatihanDetailPage() {
               Salin link panel
             </button>
           </div>
+          {panelPwdDisplay && canCreate && (
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-2.5">
+              <p className="text-xs font-medium text-amber-950">
+                Kata sandi panel (aktif di perangkat ini)
+              </p>
+              <p className="text-[11px] text-amber-900/80 mt-0.5 mb-2">
+                Hanya disimpan di browser Anda agar tidak lupa; server hanya
+                menyimpan hash. Jangan bagikan layar publik.
+              </p>
+              <code className="text-xs font-mono block break-all bg-white/80 border border-amber-100 rounded px-2 py-1.5">
+                {panelPwdDisplay}
+              </code>
+              <div className="flex flex-wrap gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={() => void copyPanelPasswordDisplay()}
+                  className="text-xs px-3 py-1.5 rounded-md bg-amber-800 text-white hover:bg-amber-900"
+                >
+                  Salin sandi
+                </button>
+                <button
+                  type="button"
+                  onClick={() => clearPanelPasswordDisplay()}
+                  className="text-xs px-3 py-1.5 rounded-md border border-amber-300 text-amber-950 hover:bg-amber-100/80"
+                >
+                  Sembunyikan dari halaman ini
+                </button>
+              </div>
+            </div>
+          )}
           <p className="text-xs text-gray-600 mb-3">
             Status sandi:{" "}
             {campaign.guest_panel_password_configured ? (
