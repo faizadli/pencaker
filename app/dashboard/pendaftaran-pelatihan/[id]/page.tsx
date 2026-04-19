@@ -28,6 +28,7 @@ import {
   type TrainingRegistrationCampaign,
   type TrainingRegistrationApplication,
 } from "../../../../services/training-registration";
+import { exportTrainingRegistrationApplicationsXlsx } from "../../../../utils/export-training-registration-applications";
 
 function readDashboardPermissions(): string[] {
   if (typeof window === "undefined") return [];
@@ -106,6 +107,7 @@ export default function PendaftaranPelatihanDetailPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [exportingExcel, setExportingExcel] = useState(false);
   const [dashboardPerms] = useState<string[]>(readDashboardPermissions);
 
   const canRead = dashboardPerms.includes("training_alumni.read");
@@ -274,6 +276,28 @@ export default function PendaftaranPelatihanDetailPage() {
       showError(e instanceof Error ? e.message : "Gagal menolak");
     } finally {
       setBusyId(null);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    if (!campaign || filteredApplications.length === 0) {
+      showError("Tidak ada data untuk diekspor");
+      return;
+    }
+    setExportingExcel(true);
+    try {
+      await exportTrainingRegistrationApplicationsXlsx(filteredApplications, {
+        campaignName: campaign.training_name,
+        idSuffix: id,
+      });
+      showSuccess(
+        `Berhasil mengunduh ${filteredApplications.length} baris (sesuai filter)`,
+      );
+    } catch (e) {
+      console.error(e);
+      showError("Gagal mengekspor Excel");
+    } finally {
+      setExportingExcel(false);
     }
   };
 
@@ -471,7 +495,7 @@ export default function PendaftaranPelatihanDetailPage() {
         </div>
 
         <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200">
-          <div className="flex flex-col sm:flex-row gap-3 mb-3">
+          <div className="flex flex-col lg:flex-row gap-3 mb-3 lg:items-end">
             <div className="flex-1 min-w-0">
               <Input
                 icon="ri-search-line"
@@ -499,6 +523,22 @@ export default function PendaftaranPelatihanDetailPage() {
               className="w-full sm:w-56"
               placeholder="Filter status"
             />
+            {canRead && (
+              <button
+                type="button"
+                disabled={
+                  exportingExcel ||
+                  applications.length === 0 ||
+                  filteredApplications.length === 0
+                }
+                onClick={() => void handleExportExcel()}
+                title="Mengekspor baris yang tampil sesuai pencarian dan filter status"
+                className="px-4 py-2.5 w-full sm:w-auto shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-sm font-medium hover:bg-emerald-100 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <i className="ri-file-excel-2-line text-lg" aria-hidden />
+                {exportingExcel ? "Menyiapkan…" : "Export Excel"}
+              </button>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">

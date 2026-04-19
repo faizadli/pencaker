@@ -115,13 +115,15 @@ export default function DaftarPelatihanGuestPage() {
       try {
         const res = await getPublicTrainingRegistrationCampaign(slug);
         if (cancelled) return;
+        const enabled =
+          res.data.registration_enabled === false ? false : true;
         setMeta({
           training_name: res.data.training_name,
           institution_name: res.data.institution_name ?? "",
           start_date: res.data.start_date ?? "",
           end_date: res.data.end_date ?? "",
-          registration_open: res.data.registration_open,
-          registration_enabled: res.data.registration_enabled ?? true,
+          registration_open: Boolean(res.data.registration_open),
+          registration_enabled: enabled,
           registration_period_status: res.data.registration_period_status,
         });
       } catch {
@@ -229,6 +231,63 @@ export default function DaftarPelatihanGuestPage() {
     );
   }
 
+  const guestRegistrationAvailable =
+    meta.registration_open === true &&
+    meta.registration_period_status === "open" &&
+    meta.registration_enabled !== false;
+
+  if (!guestRegistrationAvailable) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center">
+            <i
+              className="ri-door-closed-line text-3xl text-amber-800"
+              aria-hidden
+            />
+          </div>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">
+            Pendaftaran tidak tersedia
+          </h1>
+          <p className="text-lg font-semibold text-primary mb-3">
+            {meta.training_name}
+          </p>
+          {meta.institution_name?.trim() ? (
+            <p className="text-sm text-gray-600 mb-4">{meta.institution_name}</p>
+          ) : null}
+          <div
+            className="text-left rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 mb-6"
+            role="status"
+          >
+            {!meta.registration_enabled ? (
+              <p>
+                Pendaftaran untuk pelatihan ini sedang{" "}
+                <strong>ditutup sementara</strong> oleh penyelenggara. Silakan
+                hubungi penyelenggara jika Anda memerlukan informasi lebih lanjut.
+              </p>
+            ) : meta.registration_period_status === "upcoming" ? (
+              <p>
+                Pendaftaran belum dibuka. Form dapat diisi mulai tanggal{" "}
+                <strong>{formatIdDate(meta.start_date)}</strong> (WIB).
+              </p>
+            ) : (
+              <p>
+                Pendaftaran sudah ditutup. Batas akhir pengisian form adalah{" "}
+                <strong>{formatIdDate(meta.end_date)}</strong> (WIB).
+              </p>
+            )}
+          </div>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center w-full py-3 rounded-xl bg-primary text-white font-medium hover:brightness-95 transition"
+          >
+            Kembali ke beranda
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-lg mx-auto">
@@ -254,39 +313,11 @@ export default function DaftarPelatihanGuestPage() {
           </p>
         </div>
 
-        {!meta.registration_open && (
-          <div
-            className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
-            role="status"
-          >
-            {!meta.registration_enabled ? (
-              <p>
-                Pendaftaran untuk pelatihan ini sedang{" "}
-                <strong>ditutup sementara</strong> oleh admin. Silakan coba lagi
-                nanti atau hubungi penyelenggara untuk informasi lebih lanjut.
-              </p>
-            ) : meta.registration_period_status === "upcoming" ? (
-              <p>
-                Pendaftaran belum dibuka. Form dapat diisi mulai tanggal{" "}
-                <strong>{formatIdDate(meta.start_date)}</strong> (WIB).
-              </p>
-            ) : (
-              <p>
-                Pendaftaran sudah ditutup. Batas akhir pengisian form adalah{" "}
-                <strong>{formatIdDate(meta.end_date)}</strong> (WIB).
-              </p>
-            )}
-          </div>
-        )}
-
         <form
           onSubmit={(e) => void handleSubmit(e)}
           className="bg-white rounded-2xl shadow-md border border-gray-200 p-6"
         >
-          <fieldset
-            disabled={!meta.registration_open}
-            className="min-w-0 space-y-4 border-0 p-0 m-0 disabled:opacity-60"
-          >
+          <fieldset className="min-w-0 space-y-4 border-0 p-0 m-0">
             <p className="text-xs text-gray-500">
               Isi data berikut tanpa perlu login. Pastikan NIK sesuai KTP. NIK
               yang pernah tercatat sebagai alumni pelatihan tidak dapat
@@ -441,7 +472,7 @@ export default function DaftarPelatihanGuestPage() {
             />
             <button
               type="submit"
-              disabled={submitting || !meta.registration_open}
+              disabled={submitting}
               className="w-full py-3 rounded-xl bg-primary text-white font-medium hover:brightness-95 disabled:opacity-50 transition"
             >
               {submitting ? "Mengirim…" : "Kirim pendaftaran"}
