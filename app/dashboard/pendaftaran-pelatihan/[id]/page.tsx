@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import FullPageLoading from "../../../../components/ui/FullPageLoading";
+import Modal from "../../../../components/ui/Modal";
 import { useToast } from "../../../../components/ui/Toast";
 import { Input, SearchableSelect } from "../../../../components/ui/field";
 import {
@@ -24,6 +25,8 @@ import {
   bulkRejectTrainingRegistrationApplications,
   bulkDeleteTrainingRegistrationApplications,
   buildGuestRegistrationUrl,
+  buildGuestPanelUrl,
+  updateTrainingRegistrationCampaign,
   type BulkApplicationActionResult,
   type TrainingRegistrationCampaign,
   type TrainingRegistrationApplication,
@@ -108,6 +111,10 @@ export default function PendaftaranPelatihanDetailPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [exportingExcel, setExportingExcel] = useState(false);
+  const [oneTimePwdModalOpen, setOneTimePwdModalOpen] = useState(false);
+  const [oneTimePwd, setOneTimePwd] = useState("");
+  const [newPanelPwd, setNewPanelPwd] = useState("");
+  const [savingPanelPwd, setSavingPanelPwd] = useState(false);
   const [dashboardPerms] = useState<string[]>(readDashboardPermissions);
 
   const canRead = dashboardPerms.includes("training_alumni.read");
@@ -146,6 +153,17 @@ export default function PendaftaranPelatihanDetailPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!id || typeof window === "undefined") return;
+    const k = `tr_panel_pwd_once_${id}`;
+    const v = sessionStorage.getItem(k);
+    if (v) {
+      setOneTimePwd(v);
+      setOneTimePwdModalOpen(true);
+      sessionStorage.removeItem(k);
+    }
+  }, [id]);
 
   const registrationEnabled = campaign
     ? normalizeEnabled(campaign.registration_enabled)
@@ -224,6 +242,43 @@ export default function PendaftaranPelatihanDetailPage() {
       showSuccess("Link disalin ke papan klip");
     } catch {
       showError("Gagal menyalin link");
+    }
+  };
+
+  const copyPanelLink = async () => {
+    if (!campaign) return;
+    const url = buildGuestPanelUrl(campaign.public_slug);
+    try {
+      await navigator.clipboard.writeText(url);
+      showSuccess("Link panel panitia disalin");
+    } catch {
+      showError("Gagal menyalin link");
+    }
+  };
+
+  const handleSavePanelPassword = async () => {
+    if (!campaign || !canCreate) return;
+    const p = newPanelPwd.trim();
+    if (p.length < 8) {
+      showError("Kata sandi minimal 8 karakter");
+      return;
+    }
+    setSavingPanelPwd(true);
+    try {
+      await updateTrainingRegistrationCampaign(campaign.id, {
+        training_name: campaign.training_name,
+        institution_name: campaign.institution_name,
+        start_date: campaign.start_date,
+        end_date: campaign.end_date,
+        guest_panel_password: p,
+      });
+      setNewPanelPwd("");
+      showSuccess("Kata sandi panel panitia diperbarui");
+      await load();
+    } catch (e) {
+      showError(e instanceof Error ? e.message : "Gagal menyimpan");
+    } finally {
+      setSavingPanelPwd(false);
     }
   };
 
@@ -349,29 +404,83 @@ export default function PendaftaranPelatihanDetailPage() {
     );
   }
 
+  const oneTimePwdModalEl = (
+    <Modal
+      open={oneTimePwdModalOpen}
+      onClose={() => setOneTimePwdModalOpen(false)}
+      title="Simpan kata sandi panel panitia"
+      size="md"
+    >
+      <div className="space-y-3 text-sm text-gray-700">
+        <p>
+          Program baru dibuat. Gunakan kata sandi berikut untuk membuka halaman
+          publik kelola pendaftar (bukan dashboard admin):
+        </p>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 font-mono text-base font-semibold text-amber-950 break-all">
+          {oneTimePwd}
+        </div>
+        {campaign ? (
+          <p className="text-xs text-gray-600 break-all">
+            Link panel:{" "}
+            <span className="font-medium text-primary">
+              {buildGuestPanelUrl(campaign.public_slug)}
+            </span>
+          </p>
+        ) : null}
+        <p className="text-xs text-gray-500">
+          Sandi ini tidak ditampilkan lagi. Anda dapat mengubahnya kapan saja
+          di halaman ini atau lewat &quot;Ubah program&quot; pada daftar
+          pendaftaran.
+        </p>
+        <div className="flex justify-end pt-2">
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(oneTimePwd);
+                showSuccess("Kata sandi disalin");
+              } catch {
+                showError("Gagal menyalin");
+              }
+            }}
+            className="px-4 py-2 text-sm rounded-lg bg-primary text-white hover:brightness-95"
+          >
+            Salin sandi
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+
   if (loading) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          <FullPageLoading isSection />
-        </div>
-      </main>
+      <>
+        <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+          <div className="px-4 sm:px-6">
+            <FullPageLoading isSection />
+          </div>
+        </main>
+        {oneTimePwdModalEl}
+      </>
     );
   }
 
   if (!campaign) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          <p className="text-gray-600">Data tidak ditemukan.</p>
-          <Link
-            href="/dashboard/pendaftaran-pelatihan"
-            className="text-primary text-sm mt-2 inline-block"
-          >
-            ← Kembali
-          </Link>
-        </div>
-      </main>
+      <>
+        <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+          <div className="px-4 sm:px-6">
+            <p className="text-gray-600">Data tidak ditemukan.</p>
+            <Link
+              href="/dashboard/pendaftaran-pelatihan"
+              className="text-primary text-sm mt-2 inline-block"
+            >
+              ← Kembali
+            </Link>
+          </div>
+        </main>
+        {oneTimePwdModalEl}
+      </>
     );
   }
 
@@ -379,6 +488,7 @@ export default function PendaftaranPelatihanDetailPage() {
     "px-3 py-1.5 text-xs rounded-lg transition disabled:opacity-50 flex items-center gap-1.5";
 
   return (
+    <>
     <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
       <div className="px-4 sm:px-6">
         <Link
@@ -483,6 +593,63 @@ export default function PendaftaranPelatihanDetailPage() {
               </div>
             )}
           </div>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
+          <p className="text-sm font-medium text-primary mb-2">
+            Panel panitia (publik, tanpa akun dashboard)
+          </p>
+          <p className="text-xs text-gray-600 mb-3">
+            Panitia dapat melihat daftar pendaftar, mengekspor Excel, dan
+            menerima/menolak pengajuan dengan{" "}
+            <strong>kata sandi khusus</strong>. Sandi dibuat otomatis saat
+            program ini dibuat; simpan dengan aman atau ubah di bawah / dari
+            menu ubah program.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center mb-4">
+            <code className="text-xs bg-gray-50 border rounded-lg px-3 py-2 break-all flex-1">
+              {buildGuestPanelUrl(campaign.public_slug)}
+            </code>
+            <button
+              type="button"
+              onClick={() => void copyPanelLink()}
+              className="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:brightness-95 shrink-0"
+            >
+              Salin link panel
+            </button>
+          </div>
+          <p className="text-xs text-gray-600 mb-3">
+            Status sandi:{" "}
+            {campaign.guest_panel_password_configured ? (
+              <span className="text-emerald-700 font-medium">Sudah diatur</span>
+            ) : (
+              <span className="text-amber-800 font-medium">
+                Belum diatur — gunakan &quot;Ubah program&quot; atau isi sandi
+                baru di bawah
+              </span>
+            )}
+          </p>
+          {canCreate && (
+            <div className="border-t border-gray-100 pt-3 mt-1 space-y-2">
+              <Input
+                label="Ubah kata sandi panel"
+                type="password"
+                autoComplete="new-password"
+                required={false}
+                value={newPanelPwd}
+                onChange={(e) => setNewPanelPwd(e.target.value)}
+                hint="Minimal 8 karakter. Diberikan kepada panitia yang mengelola link di atas."
+              />
+              <button
+                type="button"
+                disabled={savingPanelPwd || newPanelPwd.trim().length < 8}
+                onClick={() => void handleSavePanelPassword()}
+                className="px-4 py-2 text-sm rounded-lg bg-gray-900 text-white hover:bg-black disabled:opacity-50"
+              >
+                {savingPanelPwd ? "Menyimpan…" : "Simpan sandi baru"}
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="mb-4">
@@ -750,5 +917,7 @@ export default function PendaftaranPelatihanDetailPage() {
         </div>
       </div>
     </main>
+    {oneTimePwdModalEl}
+    </>
   );
 }

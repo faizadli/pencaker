@@ -16,6 +16,8 @@ export type TrainingRegistrationCampaign = {
   end_date: string | null;
   /** Toggle manual admin: 1 = terbuka, 0 = ditutup paksa. */
   registration_enabled?: boolean | number | null;
+  /** Panel publik kelola pendaftar: ada kata sandi yang diatur. */
+  guest_panel_password_configured?: boolean;
   public_slug: string;
   created_by: string | null;
   created_at?: string;
@@ -53,7 +55,11 @@ export async function createTrainingRegistrationCampaign(body: {
   institution_name?: string | null;
   start_date?: string | null;
   end_date?: string | null;
-}): Promise<{ data: TrainingRegistrationCampaign }> {
+}): Promise<{
+  data: TrainingRegistrationCampaign;
+  /** Hanya dikembalikan sekali saat pembuatan — simpan untuk panel panitia. */
+  guest_panel_password?: string;
+}> {
   const resp = await fetch(`${BASE}/api/training-registration-campaigns`, {
     method: "POST",
     headers: { ...authHeader(), "Content-Type": "application/json" },
@@ -66,7 +72,10 @@ export async function createTrainingRegistrationCampaign(body: {
         "Gagal membuat pendaftaran pelatihan",
     );
   }
-  return resp.json() as Promise<{ data: TrainingRegistrationCampaign }>;
+  return resp.json() as Promise<{
+    data: TrainingRegistrationCampaign;
+    guest_panel_password?: string;
+  }>;
 }
 
 export async function getTrainingRegistrationCampaign(id: string): Promise<{
@@ -87,6 +96,8 @@ export async function updateTrainingRegistrationCampaign(
     institution_name?: string | null;
     start_date?: string | null;
     end_date?: string | null;
+    /** Jika diisi (min. 8 karakter), mengganti kata sandi panel panitia publik. */
+    guest_panel_password?: string;
   },
 ): Promise<{ data: TrainingRegistrationCampaign }> {
   const resp = await fetch(
@@ -353,4 +364,133 @@ export async function submitPublicTrainingRegistration(
 export function buildGuestRegistrationUrl(publicSlug: string): string {
   if (typeof window === "undefined") return `/daftar-pelatihan/${publicSlug}`;
   return `${window.location.origin}/daftar-pelatihan/${publicSlug}`;
+}
+
+/** Halaman publik kelola pendaftar (perlu kata sandi panel). */
+export function buildGuestPanelUrl(publicSlug: string): string {
+  if (typeof window === "undefined")
+    return `/daftar-pelatihan/${publicSlug}/panitia`;
+  return `${window.location.origin}/daftar-pelatihan/${publicSlug}/panitia`;
+}
+
+function guestPanelAuthHeader(token: string): Record<string, string> {
+  return { Authorization: `Bearer ${token}` };
+}
+
+export async function trainingRegistrationGuestLogin(
+  slug: string,
+  password: string,
+): Promise<{ token: string; expires_in: number }> {
+  const resp = await fetch(
+    `${BASE}/api/public/training-registration/${encodeURIComponent(slug)}/guest-auth`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message || "Gagal masuk",
+    );
+  }
+  return resp.json() as Promise<{ token: string; expires_in: number }>;
+}
+
+export async function listGuestTrainingRegistrationApplications(
+  slug: string,
+  token: string,
+): Promise<{ data: TrainingRegistrationApplication[] }> {
+  const resp = await fetch(
+    `${BASE}/api/public/training-registration/${encodeURIComponent(slug)}/guest/applications`,
+    { headers: guestPanelAuthHeader(token) },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message || "Gagal memuat pendaftar",
+    );
+  }
+  return resp.json() as Promise<{ data: TrainingRegistrationApplication[] }>;
+}
+
+export async function guestAcceptTrainingRegistrationApplication(
+  slug: string,
+  token: string,
+  applicationId: string,
+): Promise<{ message?: string }> {
+  const resp = await fetch(
+    `${BASE}/api/public/training-registration/${encodeURIComponent(slug)}/guest/applications/${encodeURIComponent(applicationId)}/accept`,
+    { method: "POST", headers: guestPanelAuthHeader(token) },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message || "Gagal menerima",
+    );
+  }
+  return resp.json() as Promise<{ message?: string }>;
+}
+
+export async function guestRejectTrainingRegistrationApplication(
+  slug: string,
+  token: string,
+  applicationId: string,
+): Promise<{ message?: string }> {
+  const resp = await fetch(
+    `${BASE}/api/public/training-registration/${encodeURIComponent(slug)}/guest/applications/${encodeURIComponent(applicationId)}/reject`,
+    { method: "POST", headers: guestPanelAuthHeader(token) },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message || "Gagal menolak",
+    );
+  }
+  return resp.json() as Promise<{ message?: string }>;
+}
+
+export async function guestBulkAcceptTrainingRegistrationApplications(
+  slug: string,
+  token: string,
+  ids: string[],
+): Promise<BulkApplicationActionResult> {
+  const resp = await fetch(
+    `${BASE}/api/public/training-registration/${encodeURIComponent(slug)}/guest/applications/bulk-accept`,
+    {
+      method: "POST",
+      headers: { ...guestPanelAuthHeader(token), "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message || "Gagal memproses",
+    );
+  }
+  return resp.json() as Promise<BulkApplicationActionResult>;
+}
+
+export async function guestBulkRejectTrainingRegistrationApplications(
+  slug: string,
+  token: string,
+  ids: string[],
+): Promise<BulkApplicationActionResult> {
+  const resp = await fetch(
+    `${BASE}/api/public/training-registration/${encodeURIComponent(slug)}/guest/applications/bulk-reject`,
+    {
+      method: "POST",
+      headers: { ...guestPanelAuthHeader(token), "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message || "Gagal memproses",
+    );
+  }
+  return resp.json() as Promise<BulkApplicationActionResult>;
 }

@@ -133,6 +133,8 @@ export default function PendaftaranPelatihanPage() {
     institution_name: "",
     start_date: "",
     end_date: "",
+    /** Baru diisi jika ingin mengganti sandi panel panitia (min. 8 karakter). */
+    guest_panel_password: "",
   });
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
   const [savingEdit, setSavingEdit] = useState(false);
@@ -211,6 +213,7 @@ export default function PendaftaranPelatihanPage() {
       institution_name: r.institution_name ?? "",
       start_date: toYmd(r.start_date),
       end_date: toYmd(r.end_date),
+      guest_panel_password: "",
     });
     setEditErrors({});
   };
@@ -233,12 +236,18 @@ export default function PendaftaranPelatihanPage() {
       showError("Periksa isian form");
       return;
     }
+    const pwd = editForm.guest_panel_password.trim();
+    if (pwd.length > 0 && pwd.length < 8) {
+      showError("Kata sandi panel panitia minimal 8 karakter (atau kosongkan)");
+      return;
+    }
     setSavingEdit(true);
     try {
-      await updateTrainingRegistrationCampaign(
-        editTarget.id,
-        campaignApiPayload(parsed.data),
-      );
+      const base = campaignApiPayload(parsed.data);
+      await updateTrainingRegistrationCampaign(editTarget.id, {
+        ...base,
+        ...(pwd.length >= 8 ? { guest_panel_password: pwd } : {}),
+      });
       showSuccess("Program pendaftaran diperbarui");
       closeEditModal();
       await fetchRows();
@@ -280,6 +289,16 @@ export default function PendaftaranPelatihanPage() {
       const res = await createTrainingRegistrationCampaign(
         campaignApiPayload(parsed.data),
       );
+      if (res.guest_panel_password && typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem(
+            `tr_panel_pwd_once_${res.data.id}`,
+            res.guest_panel_password,
+          );
+        } catch {
+          /* ignore */
+        }
+      }
       showSuccess("Pendaftaran pelatihan dibuat. Bagikan link untuk tamu.");
       setModalOpen(false);
       router.push(`/dashboard/pendaftaran-pelatihan/${res.data.id}`);
@@ -544,6 +563,20 @@ export default function PendaftaranPelatihanPage() {
               Kosongkan tanggal jika belum ada periode; bila diisi, kedua
               tanggal wajib lengkap. Tanpa periode, link tamu tetap aktif (WIB).
             </p>
+            <Input
+              label="Kata sandi panel panitia (opsional)"
+              type="password"
+              autoComplete="new-password"
+              required={false}
+              value={editForm.guest_panel_password}
+              onChange={(e) =>
+                setEditForm((f) => ({
+                  ...f,
+                  guest_panel_password: e.target.value,
+                }))
+              }
+              hint="Isi hanya jika ingin mengganti sandi untuk halaman publik kelola pendaftar. Minimal 8 karakter."
+            />
             <div className="flex justify-end gap-3 pt-2">
               <button
                 type="button"

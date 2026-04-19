@@ -470,6 +470,14 @@ export default function DaftarPelatihanGuestPage() {
               error={errors.last_education}
               required
             />
+            <p className="text-xs text-center">
+              <Link
+                href={`/daftar-pelatihan/${slug}/panitia`}
+                className="text-primary hover:underline"
+              >
+                Panel panitia — kelola pendaftar
+              </Link>
+            </p>
             <button
               type="submit"
               disabled={submitting}
