@@ -117,7 +117,11 @@ export async function updateTrainingRegistrationCampaign(
   return resp.json() as Promise<{ data: TrainingRegistrationCampaign }>;
 }
 
-/** Hanya mengatur ulang kata sandi panel panitia (disarankan untuk penyimpanan yang andal). */
+/**
+ * Mengatur ulang kata sandi panel panitia.
+ * Memakai endpoint khusus bila tersedia; jika server mengembalikan 404 (API belum di-deploy),
+ * fallback ke PATCH kampanye lengkap dengan guest_panel_password.
+ */
 export async function setTrainingRegistrationGuestPanelPassword(
   id: string,
   guestPanelPassword: string,
@@ -130,13 +134,24 @@ export async function setTrainingRegistrationGuestPanelPassword(
       body: JSON.stringify({ guest_panel_password: guestPanelPassword }),
     },
   );
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error(
-      (err as { message?: string }).message || "Gagal menyimpan kata sandi panel",
-    );
+  if (resp.ok) {
+    return resp.json() as Promise<{ data: TrainingRegistrationCampaign }>;
   }
-  return resp.json() as Promise<{ data: TrainingRegistrationCampaign }>;
+  if (resp.status === 404) {
+    const current = await getTrainingRegistrationCampaign(id);
+    const c = current.data;
+    return updateTrainingRegistrationCampaign(id, {
+      training_name: c.training_name,
+      institution_name: c.institution_name,
+      start_date: c.start_date,
+      end_date: c.end_date,
+      guest_panel_password: guestPanelPassword,
+    });
+  }
+  const err = await resp.json().catch(() => ({}));
+  throw new Error(
+    (err as { message?: string }).message || "Gagal menyimpan kata sandi panel",
+  );
 }
 
 export async function setTrainingRegistrationEnabled(
