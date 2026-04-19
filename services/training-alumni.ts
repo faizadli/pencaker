@@ -205,6 +205,59 @@ export async function updateTrainingAlumni(
   return resp.json();
 }
 
+export interface UpdateTrainingAlumniGroupRequest {
+  training_name: string;
+  training_year: number;
+  new_training_name: string;
+  new_training_year: number;
+  new_institution_name: string;
+  /** YYYY-MM-DD */
+  new_start_date: string;
+  /** YYYY-MM-DD */
+  new_end_date: string;
+}
+
+/** Edit metadata seluruh alumni di grup pelatihan (nama + tahun). */
+export async function updateTrainingAlumniGroup(
+  body: UpdateTrainingAlumniGroupRequest,
+) {
+  const resp = await fetch(`${BASE}/api/training-alumni/groups`, {
+    method: "PUT",
+    headers: { ...authHeader(), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message ||
+        "Gagal memperbarui data pelatihan",
+    );
+  }
+  return resp.json() as Promise<{ message: string; count: number }>;
+}
+
+/** Hapus seluruh alumni untuk sebuah pelatihan (nama + tahun). */
+export async function deleteTrainingAlumniGroup(params: {
+  training_name: string;
+  training_year: number;
+}) {
+  const q = new URLSearchParams({
+    training_name: params.training_name,
+    training_year: String(params.training_year),
+  });
+  const resp = await fetch(`${BASE}/api/training-alumni/groups?${q.toString()}`, {
+    method: "DELETE",
+    headers: { ...authHeader() },
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message || "Gagal menghapus data pelatihan",
+    );
+  }
+  return resp.json() as Promise<{ message: string; count: number }>;
+}
+
 export async function deleteTrainingAlumni(id: string) {
   const resp = await fetch(
     `${BASE}/api/training-alumni/${encodeURIComponent(id)}`,

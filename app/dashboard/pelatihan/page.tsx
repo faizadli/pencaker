@@ -16,7 +16,9 @@ import {
   listTrainingAlumniAllPages,
   createTrainingAlumniBatch,
   deleteTrainingAlumni,
+  deleteTrainingAlumniGroup,
   updateTrainingAlumni,
+  updateTrainingAlumniGroup,
   blacklistTrainingAlumniRow,
   getTrainingAlumniNikBlacklistStatus,
   formatTrainingAlumniBlacklistErrorMessage,
@@ -58,6 +60,46 @@ function readDashboardPermissions(): string[] {
 }
 
 const importPelatihanFormSchema = z
+  .object({
+    training_name: z.string().min(1, "Nama pelatihan wajib diisi"),
+    institution_name: z.string().min(1, "Nama lembaga wajib diisi"),
+    training_year: z.coerce
+      .number()
+      .int()
+      .min(1950)
+      .max(new Date().getFullYear() + 1),
+    start_date: z.string().min(1, "Tanggal mulai wajib diisi"),
+    end_date: z.string().min(1, "Tanggal selesai wajib diisi"),
+  })
+  .superRefine((data, ctx) => {
+    const ymd = /^\d{4}-\d{2}-\d{2}$/;
+    if (!ymd.test(data.start_date)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Format tanggal mulai tidak valid",
+        path: ["start_date"],
+      });
+    }
+    if (!ymd.test(data.end_date)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Format tanggal selesai tidak valid",
+        path: ["end_date"],
+      });
+    }
+    const s = new Date(`${data.start_date}T12:00:00`);
+    const e = new Date(`${data.end_date}T12:00:00`);
+    if (!Number.isNaN(s.getTime()) && !Number.isNaN(e.getTime()) && e < s) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Tanggal selesai tidak boleh sebelum tanggal mulai",
+        path: ["end_date"],
+      });
+    }
+  });
+
+/** Form ubah metadata seluruh grup pelatihan (bulk). */
+const editGroupFormSchema = z
   .object({
     training_name: z.string().min(1, "Nama pelatihan wajib diisi"),
     institution_name: z.string().min(1, "Nama lembaga wajib diisi"),
@@ -249,6 +291,19 @@ export default function DashboardPesertaLatihanPage() {
     {},
   );
   const [editSaving, setEditSaving] = useState(false);
+  const [groupEditModalOpen, setGroupEditModalOpen] = useState(false);
+  const [groupEditForm, setGroupEditForm] = useState({
+    training_name: "",
+    institution_name: "",
+    training_year: new Date().getFullYear(),
+    start_date: "",
+    end_date: "",
+  });
+  const [groupEditFormErrors, setGroupEditFormErrors] = useState<
+    Record<string, string>
+  >({});
+  const [groupEditSaving, setGroupEditSaving] = useState(false);
+  const [groupDeleting, setGroupDeleting] = useState(false);
   const excelInputRef = useRef<HTMLInputElement>(null);
   const excelDragDepth = useRef(0);
   const [excelDragActive, setExcelDragActive] = useState(false);
@@ -735,6 +790,133 @@ export default function DashboardPesertaLatihanPage() {
     );
   };
 
+  const currentGroupRow = rows[0] ?? null;
+
+  const openGroupEditModal = () => {
+    const baseName = filterTrainingName.trim();
+    const baseYear = Number(filterTrainingYear);
+    if (!baseName || Number.isNaN(baseYear)) {
+      showError("Pilih nama pelatihan dan tahun terlebih dahulu");
+      return;
+    }
+    setGroupEditForm({
+      training_name: baseName,
+      institution_name: currentGroupRow?.institution_name ?? "",
+      training_year: baseYear,
+      start_date: toYmdInput(currentGroupRow?.start_date),
+      end_date: toYmdInput(currentGroupRow?.end_date),
+    });
+    setGroupEditFormErrors({});
+    setGroupEditModalOpen(true);
+  };
+
+  const closeGroupEditModal = () => {
+    setGroupEditModalOpen(false);
+    setGroupEditFormErrors({});
+  };
+
+  const handleSubmitGroupEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const baseName = filterTrainingName.trim();
+    const baseYear = Number(filterTrainingYear);
+    if (!baseName || Number.isNaN(baseYear)) {
+      showError("Pilih nama pelatihan dan tahun terlebih dahulu");
+      return;
+    }
+    const parsed = editGroupFormSchema.safeParse(groupEditForm);
+    if (!parsed.success) {
+      const ne: Record<string, string> = {};
+      parsed.error.issues.forEach((err) => {
+        const p = err.path[0];
+        if (typeof p === "string") ne[p] = err.message;
+      });
+      setGroupEditFormErrors(ne);
+      showError("Periksa kembali isian form");
+      return;
+    }
+    setGroupEditFormErrors({});
+    setGroupEditSaving(true);
+    try {
+      const d = parsed.data;
+      const res = await updateTrainingAlumniGroup({
+        training_name: baseName,
+        training_year: baseYear,
+        new_training_name: d.training_name,
+        new_training_year: d.training_year,
+        new_institution_name: d.institution_name,
+        new_start_date: d.start_date.slice(0, 10),
+        new_end_date: d.end_date.slice(0, 10),
+      });
+      showSuccess(
+        `Data pelatihan diperbarui (${res.count ?? 0} peserta terdampak)`,
+      );
+      closeGroupEditModal();
+      try {
+        const opt = await getTrainingAlumniDistinctOptions();
+        setDistinctOptions(opt);
+      } catch {
+        /* non-kritis */
+      }
+      setFilterTrainingName(d.training_name);
+      setFilterTrainingYear(String(d.training_year));
+    } catch (err) {
+      showError(
+        err instanceof Error ? err.message : "Gagal memperbarui pelatihan",
+      );
+    } finally {
+      setGroupEditSaving(false);
+    }
+  };
+
+  const handleDeleteGroup = () => {
+    const baseName = filterTrainingName.trim();
+    const baseYear = Number(filterTrainingYear);
+    if (!baseName || Number.isNaN(baseYear)) {
+      showError("Pilih nama pelatihan dan tahun terlebih dahulu");
+      return;
+    }
+    const count = total || rows.length;
+    confirmDelete(
+      `Hapus pelatihan "${baseName}" (${baseYear}) beserta ${count} peserta terkait? Tindakan ini tidak dapat dibatalkan.`,
+      async () => {
+        setGroupDeleting(true);
+        try {
+          const res = await deleteTrainingAlumniGroup({
+            training_name: baseName,
+            training_year: baseYear,
+          });
+          showSuccess(
+            `Pelatihan dihapus (${res.count ?? 0} peserta dihapus)`,
+          );
+          try {
+            const opt = await getTrainingAlumniDistinctOptions();
+            setDistinctOptions(opt);
+            if (opt.latest) {
+              setFilterTrainingName(opt.latest.training_name);
+              setFilterTrainingYear(String(opt.latest.training_year));
+            } else {
+              setFilterTrainingName("");
+              setFilterTrainingYear("");
+              setRows([]);
+              setTotal(0);
+            }
+          } catch {
+            setFilterTrainingName("");
+            setFilterTrainingYear("");
+            setRows([]);
+            setTotal(0);
+          }
+        } catch (err) {
+          showError(
+            err instanceof Error ? err.message : "Gagal menghapus pelatihan",
+          );
+        } finally {
+          setGroupDeleting(false);
+        }
+      },
+    );
+  };
+
   const handleSubmitBlacklist = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!blacklistRowId) return;
@@ -845,6 +1027,57 @@ export default function DashboardPesertaLatihanPage() {
                 </button>
               )}
             </div>
+            {canCreate && filterTrainingName && filterTrainingYear && (
+              <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50/80 px-3 py-2">
+                <div className="text-sm text-gray-700 min-w-0">
+                  <span className="text-gray-500">Kelola pelatihan: </span>
+                  <strong className="text-primary break-words">
+                    {filterTrainingName}
+                  </strong>{" "}
+                  <span className="text-gray-500">({filterTrainingYear})</span>
+                  {rows.length > 0 && (
+                    <span className="text-gray-500">
+                      {" · "}
+                      {total} peserta
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={openGroupEditModal}
+                    disabled={
+                      groupEditSaving || groupDeleting || rows.length === 0
+                    }
+                    title={
+                      rows.length === 0
+                        ? "Belum ada data pelatihan ini"
+                        : "Ubah metadata pelatihan untuk seluruh peserta"
+                    }
+                    className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-800 hover:bg-gray-50 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <i className="ri-pencil-line" aria-hidden />
+                    Ubah pelatihan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteGroup}
+                    disabled={
+                      groupEditSaving || groupDeleting || rows.length === 0
+                    }
+                    title={
+                      rows.length === 0
+                        ? "Belum ada data pelatihan ini"
+                        : "Hapus seluruh data peserta pelatihan ini"
+                    }
+                    className="px-3 py-2 text-sm rounded-lg border border-red-200 bg-white text-red-700 hover:bg-red-50 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <i className="ri-delete-bin-line" aria-hidden />
+                    {groupDeleting ? "Menghapus…" : "Hapus pelatihan"}
+                  </button>
+                </div>
+              </div>
+            )}
             {listLoading ? (
               <FullPageLoading isSection />
             ) : (
@@ -1668,6 +1901,150 @@ export default function DashboardPesertaLatihanPage() {
                 className="px-4 py-2 text-white bg-primary rounded-lg hover:brightness-95 transition disabled:opacity-50"
               >
                 {editSaving ? "Menyimpan…" : "Simpan perubahan"}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {canCreate && (
+        <Modal
+          open={groupEditModalOpen}
+          onClose={closeGroupEditModal}
+          title="Ubah data pelatihan (seluruh peserta)"
+          size="lg"
+        >
+          <form onSubmit={handleSubmitGroupEdit} className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Perubahan ini akan berlaku untuk <strong>semua peserta</strong>{" "}
+              dalam pelatihan{" "}
+              <strong>
+                {filterTrainingName} ({filterTrainingYear})
+              </strong>
+              . Jika nama pelatihan atau tahun diubah, gabungan NIK + tahun
+              harus tetap unik.
+            </p>
+            <Input
+              label="Nama pelatihan"
+              value={groupEditForm.training_name}
+              onChange={(e) => {
+                setGroupEditForm((f) => ({
+                  ...f,
+                  training_name: e.target.value,
+                }));
+                if (groupEditFormErrors.training_name) {
+                  setGroupEditFormErrors((prev) => {
+                    const n = { ...prev };
+                    delete n.training_name;
+                    return n;
+                  });
+                }
+              }}
+              error={groupEditFormErrors.training_name}
+              className="w-full"
+              required
+            />
+            <Input
+              label="Nama lembaga"
+              value={groupEditForm.institution_name}
+              onChange={(e) => {
+                setGroupEditForm((f) => ({
+                  ...f,
+                  institution_name: e.target.value,
+                }));
+                if (groupEditFormErrors.institution_name) {
+                  setGroupEditFormErrors((prev) => {
+                    const n = { ...prev };
+                    delete n.institution_name;
+                    return n;
+                  });
+                }
+              }}
+              error={groupEditFormErrors.institution_name}
+              className="w-full"
+              required
+            />
+            <Input
+              label="Tahun pelatihan"
+              type="number"
+              min={1950}
+              max={new Date().getFullYear() + 1}
+              value={groupEditForm.training_year}
+              onChange={(e) => {
+                setGroupEditForm((f) => ({
+                  ...f,
+                  training_year: Number(e.target.value) || f.training_year,
+                }));
+                if (groupEditFormErrors.training_year) {
+                  setGroupEditFormErrors((prev) => {
+                    const n = { ...prev };
+                    delete n.training_year;
+                    return n;
+                  });
+                }
+              }}
+              error={groupEditFormErrors.training_year}
+              className="w-full"
+              required
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Tanggal mulai"
+                type="date"
+                value={groupEditForm.start_date}
+                onChange={(e) => {
+                  setGroupEditForm((f) => ({
+                    ...f,
+                    start_date: e.target.value,
+                  }));
+                  if (groupEditFormErrors.start_date) {
+                    setGroupEditFormErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.start_date;
+                      return n;
+                    });
+                  }
+                }}
+                error={groupEditFormErrors.start_date}
+                className="w-full"
+                required
+              />
+              <Input
+                label="Tanggal selesai"
+                type="date"
+                value={groupEditForm.end_date}
+                onChange={(e) => {
+                  setGroupEditForm((f) => ({
+                    ...f,
+                    end_date: e.target.value,
+                  }));
+                  if (groupEditFormErrors.end_date) {
+                    setGroupEditFormErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.end_date;
+                      return n;
+                    });
+                  }
+                }}
+                error={groupEditFormErrors.end_date}
+                className="w-full"
+                required
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={closeGroupEditModal}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={groupEditSaving}
+                className="px-4 py-2 text-white bg-primary rounded-lg hover:brightness-95 transition disabled:opacity-50"
+              >
+                {groupEditSaving ? "Menyimpan…" : "Simpan perubahan"}
               </button>
             </div>
           </form>

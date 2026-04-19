@@ -85,6 +85,7 @@ export default function DaftarPelatihanGuestPage() {
     start_date: string;
     end_date: string;
     registration_open: boolean;
+    registration_enabled: boolean;
     registration_period_status: "upcoming" | "open" | "closed";
   } | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -120,6 +121,7 @@ export default function DaftarPelatihanGuestPage() {
           start_date: res.data.start_date ?? "",
           end_date: res.data.end_date ?? "",
           registration_open: res.data.registration_open,
+          registration_enabled: res.data.registration_enabled ?? true,
           registration_period_status: res.data.registration_period_status,
         });
       } catch {
@@ -137,9 +139,11 @@ export default function DaftarPelatihanGuestPage() {
     e.preventDefault();
     if (!meta?.registration_open) {
       showError(
-        meta?.registration_period_status === "upcoming"
-          ? "Pendaftaran belum dibuka"
-          : "Pendaftaran sudah ditutup",
+        meta && !meta.registration_enabled
+          ? "Pendaftaran sedang ditutup oleh admin"
+          : meta?.registration_period_status === "upcoming"
+            ? "Pendaftaran belum dibuka"
+            : "Pendaftaran sudah ditutup",
       );
       return;
     }
@@ -255,7 +259,13 @@ export default function DaftarPelatihanGuestPage() {
             className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
             role="status"
           >
-            {meta.registration_period_status === "upcoming" ? (
+            {!meta.registration_enabled ? (
+              <p>
+                Pendaftaran untuk pelatihan ini sedang{" "}
+                <strong>ditutup sementara</strong> oleh admin. Silakan coba lagi
+                nanti atau hubungi penyelenggara untuk informasi lebih lanjut.
+              </p>
+            ) : meta.registration_period_status === "upcoming" ? (
               <p>
                 Pendaftaran belum dibuka. Form dapat diisi mulai tanggal{" "}
                 <strong>{formatIdDate(meta.start_date)}</strong> (WIB).
@@ -278,10 +288,9 @@ export default function DaftarPelatihanGuestPage() {
             className="min-w-0 space-y-4 border-0 p-0 m-0 disabled:opacity-60"
           >
             <p className="text-xs text-gray-500">
-              Isi data berikut tanpa perlu login. Pastikan NIK sesuai KTP. Satu
-              NIK hanya dapat mendaftar satu kali per tahun kalender untuk semua
-              program pelatihan (tidak bisa mendaftar dua program berbeda dalam
-              tahun yang sama).
+              Isi data berikut tanpa perlu login. Pastikan NIK sesuai KTP. NIK
+              yang pernah tercatat sebagai alumni pelatihan tidak dapat
+              mendaftar kembali.
             </p>
             <Input
               label="Nama lengkap"

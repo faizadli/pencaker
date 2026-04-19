@@ -14,6 +14,8 @@ export type TrainingRegistrationCampaign = {
   start_date: string | null;
   /** YYYY-MM-DD atau null jika belum diatur */
   end_date: string | null;
+  /** Toggle manual admin: 1 = terbuka, 0 = ditutup paksa. */
+  registration_enabled?: boolean | number | null;
   public_slug: string;
   created_by: string | null;
   created_at?: string;
@@ -99,6 +101,28 @@ export async function updateTrainingRegistrationCampaign(
     const err = await resp.json().catch(() => ({}));
     throw new Error(
       (err as { message?: string }).message || "Gagal memperbarui pendaftaran",
+    );
+  }
+  return resp.json() as Promise<{ data: TrainingRegistrationCampaign }>;
+}
+
+export async function setTrainingRegistrationEnabled(
+  id: string,
+  registrationEnabled: boolean,
+): Promise<{ data: TrainingRegistrationCampaign }> {
+  const resp = await fetch(
+    `${BASE}/api/training-registration-campaigns/${encodeURIComponent(id)}/toggle-registration`,
+    {
+      method: "PATCH",
+      headers: { ...authHeader(), "Content-Type": "application/json" },
+      body: JSON.stringify({ registration_enabled: registrationEnabled }),
+    },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message ||
+        "Gagal memperbarui status pendaftaran",
     );
   }
   return resp.json() as Promise<{ data: TrainingRegistrationCampaign }>;
@@ -214,6 +238,55 @@ export async function deleteTrainingRegistrationApplication(
   return resp.json() as Promise<{ message?: string }>;
 }
 
+export type BulkApplicationActionResult = {
+  message: string;
+  succeeded: string[];
+  failed: Array<{ id: string; message: string }>;
+};
+
+async function postBulkApplicationAction(
+  campaignId: string,
+  action: "bulk-accept" | "bulk-reject" | "bulk-delete",
+  ids: string[],
+): Promise<BulkApplicationActionResult> {
+  const resp = await fetch(
+    `${BASE}/api/training-registration-campaigns/${encodeURIComponent(campaignId)}/applications/${action}`,
+    {
+      method: "POST",
+      headers: { ...authHeader(), "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message || "Gagal memproses aksi bulk",
+    );
+  }
+  return resp.json() as Promise<BulkApplicationActionResult>;
+}
+
+export function bulkAcceptTrainingRegistrationApplications(
+  campaignId: string,
+  ids: string[],
+) {
+  return postBulkApplicationAction(campaignId, "bulk-accept", ids);
+}
+
+export function bulkRejectTrainingRegistrationApplications(
+  campaignId: string,
+  ids: string[],
+) {
+  return postBulkApplicationAction(campaignId, "bulk-reject", ids);
+}
+
+export function bulkDeleteTrainingRegistrationApplications(
+  campaignId: string,
+  ids: string[],
+) {
+  return postBulkApplicationAction(campaignId, "bulk-delete", ids);
+}
+
 /** Publik — tanpa token */
 export type PublicTrainingRegistrationCampaignPayload = Pick<
   TrainingRegistrationCampaign,
@@ -226,6 +299,7 @@ export type PublicTrainingRegistrationCampaignPayload = Pick<
 > & {
   registration_open: boolean;
   registration_period_status: "upcoming" | "open" | "closed";
+  registration_enabled: boolean;
 };
 
 export async function getPublicTrainingRegistrationCampaign(
