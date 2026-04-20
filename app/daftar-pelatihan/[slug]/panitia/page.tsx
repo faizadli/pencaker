@@ -22,7 +22,9 @@ import {
   guestRejectTrainingRegistrationApplication,
   guestBulkAcceptTrainingRegistrationApplications,
   guestBulkRejectTrainingRegistrationApplications,
+  guestSetTrainingRegistrationEnabled,
   type BulkApplicationActionResult,
+  type PublicTrainingRegistrationCampaignPayload,
   type TrainingRegistrationApplication,
 } from "../../../../services/training-registration";
 import { exportTrainingRegistrationApplicationsXlsx } from "../../../../utils/export-training-registration-applications";
@@ -52,6 +54,16 @@ const STATUS_FILTER_OPTIONS = [
   { value: "rejected", label: "Ditolak" },
 ];
 
+function normalizeEnabled(
+  v: PublicTrainingRegistrationCampaignPayload["registration_enabled"],
+): boolean {
+  if (v == null) return true;
+  if (typeof v === "boolean") return v;
+  if (typeof v === "number") return v !== 0;
+  const s = String(v).trim().toLowerCase();
+  return !(s === "0" || s === "false" || s === "no" || s === "off");
+}
+
 function formatBulkResultMessage(
   action: "accept" | "reject",
   res: BulkApplicationActionResult,
@@ -75,7 +87,8 @@ export default function DaftarPelatihanPanitiaPage() {
 
   const [bootLoading, setBootLoading] = useState(true);
   const [metaError, setMetaError] = useState(false);
-  const [trainingTitle, setTrainingTitle] = useState("");
+  const [campaignMeta, setCampaignMeta] =
+    useState<PublicTrainingRegistrationCampaignPayload | null>(null);
 
   const [token, setToken] = useState<string | null>(null);
   const [passwordInput, setPasswordInput] = useState("");
@@ -87,6 +100,7 @@ export default function DaftarPelatihanPanitiaPage() {
   const [listLoading, setListLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [togglingRegistration, setTogglingRegistration] = useState(false);
   const [exportingExcel, setExportingExcel] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
@@ -109,7 +123,7 @@ export default function DaftarPelatihanPanitiaPage() {
       try {
         const res = await getPublicTrainingRegistrationCampaign(slug);
         if (cancelled) return;
-        setTrainingTitle(res.data.training_name);
+        setCampaignMeta(res.data);
       } catch {
         if (!cancelled) setMetaError(true);
       } finally {
@@ -155,6 +169,26 @@ export default function DaftarPelatihanPanitiaPage() {
     if (token) void loadApplications();
   }, [token, loadApplications]);
 
+  useEffect(() => {
+    if (!slug || !token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await getPublicTrainingRegistrationCampaign(slug);
+        if (!cancelled) setCampaignMeta(res.data);
+      } catch {
+        /* tetap pakai meta dari boot */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, token]);
+
+  const registrationEnabled = campaignMeta
+    ? normalizeEnabled(campaignMeta.registration_enabled)
+    : true;
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const pwd = passwordInput.trim();
@@ -178,6 +212,24 @@ export default function DaftarPelatihanPanitiaPage() {
     setToken(null);
     setApplications([]);
     setSelectedIds(new Set());
+  };
+
+  const handleToggleRegistration = async (next: boolean) => {
+    if (!slug || !token || !campaignMeta) return;
+    setTogglingRegistration(true);
+    try {
+      const res = await guestSetTrainingRegistrationEnabled(slug, token, next);
+      setCampaignMeta(res.data);
+      showSuccess(
+        next ? "Pendaftaran dibuka kembali" : "Pendaftaran ditutup",
+      );
+    } catch (e) {
+      showError(
+        e instanceof Error ? e.message : "Gagal memperbarui status pendaftaran",
+      );
+    } finally {
+      setTogglingRegistration(false);
+    }
   };
 
   const filteredApplications = useMemo(() => {
@@ -253,7 +305,7 @@ export default function DaftarPelatihanPanitiaPage() {
     setExportingExcel(true);
     try {
       await exportTrainingRegistrationApplicationsXlsx(filteredApplications, {
-        campaignName: trainingTitle || "pelatihan",
+        campaignName: campaignMeta?.training_name || "pelatihan",
         idSuffix: `${slug}-panitia`,
       });
       showSuccess(
@@ -366,7 +418,7 @@ export default function DaftarPelatihanPanitiaPage() {
             Panel panitia
           </h1>
           <p className="text-center text-gray-700 font-medium mb-1">
-            {trainingTitle || "Pelatihan"}
+            {campaignMeta?.training_name || "Pelatihan"}
           </p>
           <p className="text-center text-sm text-gray-500 mb-6">
             Masukkan kata sandi yang diberikan penyelenggara untuk melihat dan
@@ -413,7 +465,7 @@ export default function DaftarPelatihanPanitiaPage() {
               Kelola pendaftar
             </h1>
             <p className="text-lg font-semibold text-gray-900 mt-1">
-              {trainingTitle}
+              {campaignMeta?.training_name ?? "—"}
             </p>
             <p className="text-sm text-gray-500 mt-1">
               Terima atau tolak pengajuan. Data yang diterima masuk ke rekap
@@ -436,6 +488,83 @@ export default function DaftarPelatihanPanitiaPage() {
             </Link>
           </div>
         </div>
+
+        {campaignMeta && (
+          <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-primary">
+                  Status pendaftaran tamu
+                </p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {registrationEnabled
+                    ? "Form tamu bisa diisi (selama dalam periode yang berlaku)."
+                    : "Form tamu sedang ditutup — pengunjung tidak dapat mengirim pendaftaran baru."}
+                </p>
+                <p className="text-xs text-gray-500 mt-3">
+                  {campaignMeta.start_date || campaignMeta.end_date ? (
+                    <>
+                      Periode pendaftaran (WIB):{" "}
+                      {formatIdDate(campaignMeta.start_date)} –{" "}
+                      {formatIdDate(campaignMeta.end_date)}
+                    </>
+                  ) : (
+                    <>
+                      Periode: belum ditetapkan (tanpa tanggal, akses form
+                      mengikuti toggle di atas).
+                    </>
+                  )}
+                </p>
+              </div>
+              <div className="sm:w-72 shrink-0 bg-gray-50/60 border border-gray-200 rounded-lg p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900">
+                      Buka / tutup
+                    </p>
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      Sama seperti di dashboard admin.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={registrationEnabled}
+                    aria-label="Toggle buka/tutup pendaftaran"
+                    disabled={togglingRegistration}
+                    onClick={() =>
+                      void handleToggleRegistration(!registrationEnabled)
+                    }
+                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition disabled:opacity-60 ${
+                      registrationEnabled ? "bg-emerald-500" : "bg-gray-300"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${
+                        registrationEnabled
+                          ? "translate-x-5"
+                          : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  {registrationEnabled ? (
+                    <span className="inline-flex items-center gap-1 text-emerald-700 font-medium">
+                      <i className="ri-checkbox-circle-line" aria-hidden />
+                      Terbuka
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-gray-700 font-medium">
+                      <i className="ri-forbid-line" aria-hidden />
+                      Ditutup
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200">
           <div className="flex flex-col lg:flex-row gap-3 mb-3 lg:items-end">

@@ -531,3 +531,27 @@ export async function guestBulkRejectTrainingRegistrationApplications(
   }
   return resp.json() as Promise<BulkApplicationActionResult>;
 }
+
+/** Panel panitia: buka/tutup pendaftaran tamu (Bearer JWT panel). */
+export async function guestSetTrainingRegistrationEnabled(
+  slug: string,
+  token: string,
+  registrationEnabled: boolean,
+): Promise<{ data: PublicTrainingRegistrationCampaignPayload }> {
+  const resp = await fetch(
+    `${BASE}/api/public/training-registration/${encodeURIComponent(slug)}/guest/toggle-registration`,
+    {
+      method: "PATCH",
+      headers: { ...guestPanelAuthHeader(token), "Content-Type": "application/json" },
+      body: JSON.stringify({ registration_enabled: registrationEnabled }),
+    },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message ||
+        "Gagal memperbarui status pendaftaran",
+    );
+  }
+  return resp.json() as Promise<{ data: PublicTrainingRegistrationCampaignPayload }>;
+}
