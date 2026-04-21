@@ -237,6 +237,24 @@ export async function rejectTrainingRegistrationApplication(
   return resp.json() as Promise<{ message?: string }>;
 }
 
+export async function reopenTrainingRegistrationApplicationToPending(
+  campaignId: string,
+  applicationId: string,
+): Promise<{ message?: string }> {
+  const resp = await fetch(
+    `${BASE}/api/training-registration-campaigns/${encodeURIComponent(campaignId)}/applications/${encodeURIComponent(applicationId)}/reopen`,
+    { method: "POST", headers: { ...authHeader() } },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message ||
+        "Gagal mengembalikan pengajuan ke menunggu",
+    );
+  }
+  return resp.json() as Promise<{ message?: string }>;
+}
+
 export async function updateTrainingRegistrationApplication(
   campaignId: string,
   applicationId: string,
@@ -483,6 +501,25 @@ export async function guestRejectTrainingRegistrationApplication(
     const err = await resp.json().catch(() => ({}));
     throw new Error(
       (err as { message?: string }).message || "Gagal menolak",
+    );
+  }
+  return resp.json() as Promise<{ message?: string }>;
+}
+
+export async function guestReopenTrainingRegistrationApplicationToPending(
+  slug: string,
+  token: string,
+  applicationId: string,
+): Promise<{ message?: string }> {
+  const resp = await fetch(
+    `${BASE}/api/public/training-registration/${encodeURIComponent(slug)}/guest/applications/${encodeURIComponent(applicationId)}/reopen`,
+    { method: "POST", headers: guestPanelAuthHeader(token) },
+  );
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(
+      (err as { message?: string }).message ||
+        "Gagal mengembalikan ke menunggu",
     );
   }
   return resp.json() as Promise<{ message?: string }>;

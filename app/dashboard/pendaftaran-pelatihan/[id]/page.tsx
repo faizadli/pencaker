@@ -20,6 +20,7 @@ import {
   listTrainingRegistrationApplications,
   acceptTrainingRegistrationApplication,
   rejectTrainingRegistrationApplication,
+  reopenTrainingRegistrationApplicationToPending,
   setTrainingRegistrationEnabled,
   bulkAcceptTrainingRegistrationApplications,
   bulkRejectTrainingRegistrationApplications,
@@ -355,7 +356,13 @@ export default function PendaftaranPelatihanDetailPage() {
 
   const handleReject = async (app: TrainingRegistrationApplication) => {
     if (!canCreate) return;
-    const ok = window.confirm(`Tolak pengajuan "${app.full_name}"?`);
+    const warnAccepted =
+      app.status === "accepted"
+        ? " Peserta akan dihapus dari rekap pelatihan."
+        : "";
+    const ok = window.confirm(
+      `Tolak pengajuan "${app.full_name}"?${warnAccepted}`,
+    );
     if (!ok) return;
     setBusyId(app.id);
     try {
@@ -364,6 +371,28 @@ export default function PendaftaranPelatihanDetailPage() {
       await load();
     } catch (e) {
       showError(e instanceof Error ? e.message : "Gagal menolak");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleReopenToPending = async (app: TrainingRegistrationApplication) => {
+    if (!canCreate) return;
+    const warnAccepted =
+      app.status === "accepted"
+        ? " Peserta akan dihapus dari rekap pelatihan."
+        : "";
+    const ok = window.confirm(
+      `Kembalikan pengajuan "${app.full_name}" ke status menunggu?${warnAccepted}`,
+    );
+    if (!ok) return;
+    setBusyId(app.id);
+    try {
+      await reopenTrainingRegistrationApplicationToPending(id, app.id);
+      showSuccess("Pengajuan dikembalikan ke menunggu");
+      await load();
+    } catch (e) {
+      showError(e instanceof Error ? e.message : "Gagal memperbarui status");
     } finally {
       setBusyId(null);
     }
@@ -721,7 +750,9 @@ export default function PendaftaranPelatihanDetailPage() {
           <h2 className="text-lg font-bold text-primary">Pengajuan masuk</h2>
           <p className="text-sm text-gray-500">
             <strong>Terima</strong> memindahkan ke rekap pelatihan.{" "}
-            <strong>Tolak</strong> menandai pengajuan tanpa memindahkan data.
+            <strong>Tolak</strong> menandai ditolak (dari yang diterima: hapus dari
+            rekap). <strong>Buka lagi</strong> mengembalikan ke menunggu agar bisa
+            diproses ulang.
             Gunakan checkbox untuk aksi massal.
           </p>
         </div>
@@ -967,8 +998,44 @@ export default function PendaftaranPelatihanDetailPage() {
                                   Tolak
                                 </button>
                               </div>
+                            ) : a.status === "accepted" ? (
+                              <div className="flex flex-wrap items-center justify-end gap-1.5">
+                                <button
+                                  type="button"
+                                  disabled={busyId === a.id || bulkBusy}
+                                  onClick={() => void handleReject(a)}
+                                  className="px-2 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:opacity-50"
+                                >
+                                  {busyId === a.id ? "…" : "Tolak"}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={busyId === a.id || bulkBusy}
+                                  onClick={() => void handleReopenToPending(a)}
+                                  className="px-2 py-1 text-xs bg-amber-100 text-amber-900 rounded hover:bg-amber-200 disabled:opacity-50"
+                                >
+                                  Buka lagi
+                                </button>
+                              </div>
                             ) : (
-                              <span className="text-gray-400 text-sm">—</span>
+                              <div className="flex flex-wrap items-center justify-end gap-1.5">
+                                <button
+                                  type="button"
+                                  disabled={busyId === a.id || bulkBusy}
+                                  onClick={() => void handleAccept(a)}
+                                  className="px-2 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50"
+                                >
+                                  {busyId === a.id ? "…" : "Terima"}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={busyId === a.id || bulkBusy}
+                                  onClick={() => void handleReopenToPending(a)}
+                                  className="px-2 py-1 text-xs bg-amber-100 text-amber-900 rounded hover:bg-amber-200 disabled:opacity-50"
+                                >
+                                  Buka lagi
+                                </button>
+                              </div>
                             )}
                           </TD>
                         )}
