@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Input,
   SearchableSelect,
@@ -18,6 +18,7 @@ import {
   getAk1Document,
   upsertAk1Document,
   verifyAk1,
+  getNextAk1NoUrut,
   listAk1Documents,
   presignUpload,
   presignDownload,
@@ -813,12 +814,29 @@ export default function Ak1Page() {
         const mm = String(bd.getMonth() + 1).padStart(2, "0");
         const yy = String(bd.getFullYear()).slice(-2);
         const first4 = String(nik).slice(0, 4);
-        const five = String(noUrut).padStart(5, "0").slice(0, 5);
+        const n = parseInt(String(noUrut).replace(/\D/g, "") || "0", 10);
+        const five = String(n).padStart(5, "0").slice(-5);
         return `${first4}${five}${dd}${mm}${yy}`;
       }
     }
     return "";
   }, [genCandidate, genMeta.no_urut_pendaftaran]);
+
+  const ensureGenNoUrut = useCallback(async (doc: Ak1Document | null) => {
+    let noUrut = doc?.no_urut_pendaftaran ? String(doc.no_urut_pendaftaran) : "";
+    if (!noUrut) {
+      try {
+        const nResp = await getNextAk1NoUrut();
+        noUrut = String(nResp?.data?.no_urut_pendaftaran || "");
+      } catch {
+        noUrut = "";
+      }
+    }
+    if (noUrut) {
+      setGenMeta((prev) => ({ ...prev, no_urut_pendaftaran: noUrut }));
+    }
+  }, []);
+
   const [genUser, setGenUser] = useState<{
     id?: string;
     email?: string;
@@ -3011,6 +3029,10 @@ export default function Ak1Page() {
                                             r.candidate_id,
                                           );
                                           setGenDocDetail(d.data || null);
+                                          await ensureGenNoUrut(
+                                            (d.data as Ak1Document | null) ??
+                                              null,
+                                          );
                                           try {
                                             const rawPhoto = (() => {
                                               const env = d as {
@@ -3480,6 +3502,10 @@ export default function Ak1Page() {
                                               r.candidate_id,
                                             );
                                             setGenDocDetail(d.data || null);
+                                            await ensureGenNoUrut(
+                                              (d.data as Ak1Document | null) ??
+                                                null,
+                                            );
                                             try {
                                               const rawPhoto = (() => {
                                                 const env = d as {
@@ -3888,6 +3914,10 @@ export default function Ak1Page() {
                                           r.candidate_id,
                                         );
                                         setGenDocDetail(d.data || null);
+                                        await ensureGenNoUrut(
+                                          (d.data as Ak1Document | null) ??
+                                            null,
+                                        );
                                       } catch {}
                                     } catch {
                                     } finally {
@@ -4152,20 +4182,18 @@ export default function Ak1Page() {
             <div>
               <div className="mb-4">
                 <label className="text-sm text-gray-700">
-                  No Urut Pendaftaran
+                  No urut pendaftaran (otomatis)
                   <Input
                     type="text"
-                    className="mt-1 w-full"
+                    readOnly
+                    className="mt-1 w-full bg-gray-50 cursor-not-allowed"
                     value={genMeta.no_urut_pendaftaran || ""}
-                    onChange={(e) =>
-                      setGenMeta({
-                        ...genMeta,
-                        no_urut_pendaftaran: (e.target as HTMLInputElement)
-                          .value,
-                      })
-                    }
                   />
                 </label>
+                <p className="mt-1 text-xs text-gray-500">
+                  Nomor diurutkan otomatis (1, 2, 3, …). Jika kartu sudah punya
+                  nomor, nilai yang tersimpan dipakai lagi.
+                </p>
               </div>
               <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
                 {templates.map((t) => (

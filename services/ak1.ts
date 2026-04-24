@@ -201,6 +201,15 @@ export async function verifyAk1(payload: {
   return resp.json();
 }
 
+/** Pratinjau nomor urut berikutnya (MAX+1); verifikasi tanpa mengirim no_urut akan mengalokasikan atomik di server. */
+export async function getNextAk1NoUrut() {
+  const resp = await fetch(`${BASE}/api/profile/candidate/ak1/next-no-urut`, {
+    headers: { ...authHeader() },
+  });
+  if (!resp.ok) throw new Error("Gagal mengambil nomor urut AK1");
+  return resp.json() as Promise<{ data?: { no_urut_pendaftaran?: string } }>;
+}
+
 export async function listAk1Documents() {
   const resp = await fetch(`${BASE}/api/profile/candidate/ak1/documents`, {
     headers: { ...authHeader() },

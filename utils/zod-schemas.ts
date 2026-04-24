@@ -290,13 +290,13 @@ export const ak1CardSchema = z.object({
     }, "Nomor Pendaftaran harus 18 digit angka"),
 });
 
-// Validation for "No Urut Pendaftaran" (exactly 8 digits)
+// No urut: angka saja (diisi otomatis dari server / disimpan 8 digit dengan nol di depan)
 export const ak1NoUrutSchema = z.object({
   no_urut_pendaftaran: z
     .string()
-    .min(1, "No Urut Pendaftaran wajib diisi")
+    .min(1, "Nomor urut belum tersedia. Tutup modal dan coba lagi.")
     .regex(/^\d+$/, "No Urut hanya boleh angka")
-    .length(8, "No Urut harus 8 digit"),
+    .max(16, "No Urut terlalu panjang"),
 });
 
 // Company Schemas
