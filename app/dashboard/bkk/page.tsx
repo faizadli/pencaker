@@ -227,18 +227,18 @@ export default function BkkPage() {
     switch (status) {
       case "Publikasi":
       case "Aktif":
-        return "bg-green-100 text-green-800";
+        return "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/80";
       case "Draft":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80";
     }
   };
 
   if (loading) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
           <FullPageLoading isSection />
         </div>
       </main>
@@ -247,44 +247,63 @@ export default function BkkPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">
-              Bursa Kerja Khusus (BKK)
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Kelola daftar BKK yang terdaftar
-            </p>
-          </div>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full space-y-8">
+          <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+            <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+            <div className="p-6 sm:p-8">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Data BKK
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                Bursa Kerja Khusus
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+                Kelola daftar BKK yang terdaftar, status publikasi, dan
+                informasi kontaknya dalam satu halaman.
+              </p>
+            </div>
+          </header>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard
-              title="Total BKK"
-              value={bkkList.length}
-              change=""
-              color="var(--color-primary)"
-              icon="ri-building-2-line"
-            />
-            <StatCard
-              title="Terpublikasi"
-              value={bkkList.filter((f) => f.status === "Publikasi").length}
-              change=""
-              color="#10b981"
-              icon="ri-checkbox-circle-line"
-            />
-            <StatCard
-              title="Draft"
-              value={bkkList.filter((f) => f.status === "Draft").length}
-              change=""
-              color="#f59e0b"
-              icon="ri-file-edit-line"
-            />
-          </div>
+          <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+            <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                  Ringkasan data
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Angka mengikuti data yang tersedia di halaman ini.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+              <StatCard
+                title="Total BKK"
+                value={bkkList.length}
+                change="Data terdaftar"
+                color="var(--color-primary)"
+                icon="ri-building-2-line"
+              />
+              <StatCard
+                title="Terpublikasi"
+                value={bkkList.filter((f) => f.status === "Publikasi").length}
+                change="Tampil di publik"
+                color="#10b981"
+                icon="ri-checkbox-circle-line"
+              />
+              <StatCard
+                title="Draft"
+                value={bkkList.filter((f) => f.status === "Draft").length}
+                change="Belum dipublikasikan"
+                color="#f59e0b"
+                icon="ri-file-edit-line"
+              />
+            </div>
+          </section>
 
-          <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-950/[0.02] sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
+              <div className="min-w-0 flex-1">
                 <Input
                   icon="ri-search-line"
                   type="text"
@@ -294,7 +313,7 @@ export default function BkkPage() {
                   className="w-full py-3"
                 />
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 items-stretch">
+              <div className="flex flex-col items-stretch gap-2 sm:flex-row">
                 <SegmentedToggle
                   value={viewMode}
                   onChange={(v) => setViewMode(v as "grid" | "table")}
@@ -305,8 +324,9 @@ export default function BkkPage() {
                   className="w-full sm:w-[11rem]"
                 />
                 <button
+                  type="button"
                   onClick={handleAdd}
-                  className="px-4 py-3 h-full w-full sm:w-[11rem] bg-primary text-white rounded-xl hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center"
+                  className="flex h-full w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-primary-dark)] motion-safe:hover:shadow sm:w-[11rem]"
                 >
                   + Tambah
                 </button>
@@ -314,153 +334,160 @@ export default function BkkPage() {
             </div>
           </div>
 
-          {viewMode === "grid" ? (
-            <CardGrid>
-              {filteredBkk.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
-                >
-                  <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-3 min-w-0">
+          {filteredBkk.length > 0 ? (
+            viewMode === "grid" ? (
+              <CardGrid className="gap-5 xl:grid-cols-3">
+                {filteredBkk.map((item) => (
+                  <div
+                    key={item.id}
+                    className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02] transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none"
+                  >
+                    <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50/95 to-white p-4">
+                      <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <h3 className="font-bold text-primary text-sm leading-tight truncate">
+                          <h3 className="truncate text-sm font-bold leading-tight text-slate-900">
                             {item.nama}
                           </h3>
-                          <p className="text-xs text-gray-500 truncate">
+                          <p className="truncate text-xs text-slate-500">
                             {item.website || "-"}
                           </p>
                         </div>
-                      </div>
-                      <span
-                        className={`px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0 ${getStatusColor(item.status)}`}
-                      >
-                        {item.status}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-4 space-y-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <i className="ri-map-pin-line text-gray-500"></i>
-                      <span className="text-gray-500 truncate line-clamp-2">
-                        {item.alamat || "-"}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <i className="ri-global-line text-gray-500"></i>
-                      <span className="text-gray-500 truncate">
-                        {item.website ? (
-                          <a
-                            href={item.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:text-primary hover:underline"
-                          >
-                            {item.website}
-                          </a>
-                        ) : (
-                          "-"
-                        )}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-4 border-t border-gray-200">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="flex-1 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center justify-center"
-                      >
-                        <i className="ri-pencil-line mr-1"></i>
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="px-3 py-2 text-sm border border-red-200 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition flex items-center justify-center"
-                        title="Hapus"
-                      >
-                        <i className="ri-delete-bin-line"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {filteredBkk.length === 0 && (
-                <div className="col-span-full text-center py-12 text-gray-500 bg-gray-50 rounded-lg border border-dashed">
-                  <i className="ri-building-2-line text-3xl mb-2 block text-gray-400"></i>
-                  Belum ada data BKK
-                </div>
-              )}
-            </CardGrid>
-          ) : (
-            <Card className="overflow-hidden">
-              <Table className="hidden sm:block">
-                <TableHead>
-                  <tr>
-                    <TH>Nama BKK</TH>
-                    <TH>Alamat</TH>
-                    <TH>Status</TH>
-                    <TH>Aksi</TH>
-                  </tr>
-                </TableHead>
-                <TableBody>
-                  {filteredBkk.map((item) => (
-                    <TableRow key={item.id}>
-                      <TD>
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {item.nama}
-                          </p>
-                          <p className="text-xs text-gray-600">
-                            {item.website || "-"}
-                          </p>
-                        </div>
-                      </TD>
-                      <TD className="text-gray-900 max-w-xs truncate">
-                        {item.alamat || "-"}
-                      </TD>
-                      <TD>
                         <span
-                          className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}
+                          className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-semibold sm:py-1 sm:text-xs ${getStatusColor(item.status)}`}
                         >
                           {item.status}
                         </span>
-                      </TD>
-                      <TD>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEdit(item)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition"
-                            title="Edit"
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 p-4">
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <i className="ri-map-pin-line shrink-0 text-slate-400" />
+                        <span className="line-clamp-2">
+                          {item.alamat || "-"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <i className="ri-global-line shrink-0 text-slate-400" />
+                        <span className="truncate">
+                          {item.website ? (
+                            <a
+                              href={item.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:text-primary hover:underline"
+                            >
+                              {item.website}
+                            </a>
+                          ) : (
+                            "-"
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-slate-100 bg-slate-50/50 p-4">
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(item)}
+                          className="flex flex-1 items-center justify-center rounded-xl bg-primary px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[var(--color-primary-dark)]"
+                        >
+                          <i className="ri-pencil-line mr-1.5" />
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(item.id)}
+                          className="flex items-center justify-center rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-red-600 shadow-sm ring-1 ring-red-200 transition hover:bg-red-50"
+                          title="Hapus"
+                        >
+                          <i className="ri-delete-bin-line" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardGrid>
+            ) : (
+              <Card className="overflow-hidden !rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02] [&>div]:!p-0">
+                <Table className="hidden sm:block">
+                  <TableHead>
+                    <tr>
+                      <TH>Nama BKK</TH>
+                      <TH>Alamat</TH>
+                      <TH>Status</TH>
+                      <TH>Aksi</TH>
+                    </tr>
+                  </TableHead>
+                  <TableBody>
+                    {filteredBkk.map((item) => (
+                      <TableRow key={item.id}>
+                        <TD>
+                          <div>
+                            <p className="font-medium text-slate-900">
+                              {item.nama}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {item.website || "-"}
+                            </p>
+                          </div>
+                        </TD>
+                        <TD className="max-w-xs truncate text-slate-700">
+                          {item.alamat || "-"}
+                        </TD>
+                        <TD>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusColor(item.status)}`}
                           >
-                            <i className="ri-pencil-line"></i>
-                          </button>
-                          <button
-                            onClick={() => handleDelete(item.id)}
-                            className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
-                            title="Hapus"
-                          >
-                            <i className="ri-delete-bin-line"></i>
-                          </button>
-                        </div>
-                      </TD>
-                    </TableRow>
-                  ))}
-                  {filteredBkk.length === 0 && (
-                    <TableRow>
-                      <TD
-                        colSpan={4}
-                        className="text-center py-8 text-gray-500"
-                      >
-                        Tidak ada data BKK ditemukan
-                      </TD>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </Card>
+                            {item.status}
+                          </span>
+                        </TD>
+                        <TD>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleEdit(item)}
+                              className="landing-focus rounded-lg p-2 text-primary transition hover:bg-primary/10"
+                              title="Edit"
+                            >
+                              <i className="ri-pencil-line" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(item.id)}
+                              className="landing-focus rounded-lg p-2 text-red-600 transition hover:bg-red-50"
+                              title="Hapus"
+                            >
+                              <i className="ri-delete-bin-line" />
+                            </button>
+                          </div>
+                        </TD>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
+            )
+          ) : (
+            <div className="rounded-2xl border border-slate-200/90 bg-white py-12 text-center shadow-sm ring-1 ring-slate-950/[0.02]">
+              <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                <i className="ri-building-2-line text-3xl leading-none" />
+              </span>
+              <h3 className="text-lg font-semibold text-slate-900">
+                Tidak ada data BKK ditemukan
+              </h3>
+              <p className="mx-auto mt-2 max-w-md px-4 text-sm text-slate-600">
+                Coba ubah kata kunci pencarian atau tambahkan data baru.
+              </p>
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                className="mt-6 inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-primary-dark)]"
+              >
+                Reset pencarian
+              </button>
+            </div>
           )}
         </div>
       </main>
@@ -506,7 +533,7 @@ export default function BkkPage() {
             placeholder="https://..."
           />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-1 block text-sm font-medium text-slate-700">
               Status Publikasi
             </label>
             <div className="flex gap-4">
@@ -540,17 +567,19 @@ export default function BkkPage() {
           </div>
           <div className="flex justify-end gap-2 mt-6">
             <button
+              type="button"
               onClick={() => {
                 setContentModal(false);
                 setEditBkk(null);
               }}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              className="rounded-lg px-4 py-2 text-slate-600 transition hover:bg-slate-100"
             >
               Batal
             </button>
             <button
+              type="button"
               onClick={handleSave}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+              className="rounded-lg bg-primary px-4 py-2 text-white transition hover:bg-[var(--color-primary-dark)]"
             >
               Simpan
             </button>
