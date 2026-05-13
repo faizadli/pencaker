@@ -643,209 +643,217 @@ export default function PencakerPage() {
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TH>Nama / NIK</TH>
-                        <TH>TTL / Umur</TH>
-                        <TH>Pendidikan</TH>
-                        <TH>Kontak</TH>
-                        <TH>Status AK1</TH>
-                        <TH className="text-right">Aksi</TH>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {paginatedPencakers.length === 0 ? (
-                        <TableRow>
-                          <TD
-                            colSpan={6}
-                            className="py-10 text-center text-sm text-slate-500"
-                          >
-                            Tidak ada data ditemukan
-                          </TD>
-                        </TableRow>
-                      ) : (
-                        paginatedPencakers.map((p) => {
-                          const pTyped = p as Pencaker & {
-                            birthdate?: string;
-                            createdAt?: string;
-                            statusPerkawinan?: string;
-                            jurusan?: string;
-                          };
-                          const birthDate = pTyped.birthdate
-                            ? new Date(pTyped.birthdate)
-                            : null;
-                          const age = birthDate
-                            ? Math.abs(
-                                new Date(
-                                  Date.now() - birthDate.getTime(),
-                                ).getUTCFullYear() - 1970,
-                              )
-                            : "-";
+              {filteredPencakers.length > 0 ? (
+                <>
+                  <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TH>Nama / NIK</TH>
+                            <TH>TTL / Umur</TH>
+                            <TH>Pendidikan</TH>
+                            <TH>Kontak</TH>
+                            <TH>Status AK1</TH>
+                            <TH className="text-right">Aksi</TH>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {paginatedPencakers.map((p) => {
+                            const pTyped = p as Pencaker & {
+                              birthdate?: string;
+                              createdAt?: string;
+                              statusPerkawinan?: string;
+                              jurusan?: string;
+                            };
+                            const birthDate = pTyped.birthdate
+                              ? new Date(pTyped.birthdate)
+                              : null;
+                            const age = birthDate
+                              ? Math.abs(
+                                  new Date(
+                                    Date.now() - birthDate.getTime(),
+                                  ).getUTCFullYear() - 1970,
+                                )
+                              : "-";
 
-                          return (
-                            <TableRow key={p.id}>
-                              <TD>
-                                <div className="flex items-center gap-3">
-                                  <Image
-                                    src={p.foto}
-                                    alt={p.nama}
-                                    width={40}
-                                    height={40}
-                                    className="w-10 h-10 rounded-full object-cover"
-                                  />
-                                  <div>
-                                    <div className="font-medium text-slate-900">
-                                      {p.nama}
-                                    </div>
-                                    <div className="text-xs text-slate-500">
-                                      {p.nik}
+                            return (
+                              <TableRow key={p.id}>
+                                <TD>
+                                  <div className="flex items-center gap-3">
+                                    <Image
+                                      src={p.foto}
+                                      alt={p.nama}
+                                      width={40}
+                                      height={40}
+                                      className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                    <div>
+                                      <div className="font-medium text-slate-900">
+                                        {p.nama}
+                                      </div>
+                                      <div className="text-xs text-slate-500">
+                                        {p.nik}
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              </TD>
-                              <TD>
-                                <div className="text-sm text-slate-900">
-                                  {p.ttl}
-                                </div>
-                                <div className="text-xs text-slate-500">
-                                  {age} Tahun
-                                </div>
-                              </TD>
-                              <TD>
-                                <div className="text-sm text-slate-900">
-                                  {p.pendidikan}
-                                </div>
-                                {/* <div className="text-xs text-gray-500">{pTyped.jurusan || "-"}</div> */}
-                              </TD>
-                              <TD>
-                                <div className="text-sm text-slate-900">
-                                  {p.telepon}
-                                </div>
-                                <div className="text-xs text-slate-500">
-                                  {p.email}
-                                </div>
-                              </TD>
-                              <TD>
-                                <span
-                                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-                                    p.ak1Status === "Terverifikasi"
-                                      ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/80"
-                                      : p.ak1Status === "Ditolak"
-                                        ? "bg-red-100 text-red-800 ring-1 ring-red-200/80"
-                                        : "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80"
-                                  }`}
-                                >
-                                  {p.ak1Status}
-                                </span>
-                              </TD>
-                              <TD className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Link
-                                    href={`/dashboard/pencaker/${p.id}`}
-                                    className="landing-focus flex items-center justify-center rounded-lg p-2 text-primary transition hover:bg-primary/10"
-                                    title="Detail"
+                                </TD>
+                                <TD>
+                                  <div className="text-sm text-slate-900">
+                                    {p.ttl}
+                                  </div>
+                                  <div className="text-xs text-slate-500">
+                                    {age} Tahun
+                                  </div>
+                                </TD>
+                                <TD>
+                                  <div className="text-sm text-slate-900">
+                                    {p.pendidikan}
+                                  </div>
+                                  {/* <div className="text-xs text-gray-500">{pTyped.jurusan || "-"}</div> */}
+                                </TD>
+                                <TD>
+                                  <div className="text-sm text-slate-900">
+                                    {p.telepon}
+                                  </div>
+                                  <div className="text-xs text-slate-500">
+                                    {p.email}
+                                  </div>
+                                </TD>
+                                <TD>
+                                  <span
+                                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                                      p.ak1Status === "Terverifikasi"
+                                        ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/80"
+                                        : p.ak1Status === "Ditolak"
+                                          ? "bg-red-100 text-red-800 ring-1 ring-red-200/80"
+                                          : "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80"
+                                    }`}
                                   >
-                                    <i className="ri-eye-line" />
-                                  </Link>
-                                  {permissions.includes("pencaker.update") && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setEditingCandidateId(p.id);
-                                        const src = rawCandidates.find(
-                                          (c) => c.id === p.id,
-                                        );
-                                        if (src) {
-                                          // Find matching education
-                                          let matchedEdu =
-                                            src.last_education || "";
-                                          const foundEdu =
-                                            educationOptions.find(
-                                              (o) =>
-                                                o.value === matchedEdu ||
-                                                o.label === matchedEdu ||
-                                                o.value.toLowerCase() ===
-                                                  String(
-                                                    matchedEdu,
-                                                  ).toLowerCase() ||
-                                                o.label.toLowerCase() ===
-                                                  String(
-                                                    matchedEdu,
-                                                  ).toLowerCase(),
-                                            );
-                                          if (foundEdu)
-                                            matchedEdu = foundEdu.value;
-
-                                          setFormCandidate({
-                                            user_id: src.user_id,
-                                            full_name: src.full_name || "",
-                                            birthdate: src.birthdate || "",
-                                            place_of_birth:
-                                              src.place_of_birth || "",
-                                            nik: src.nik || "",
-                                            kecamatan: src.kecamatan || "",
-                                            kelurahan: src.kelurahan || "",
-                                            address: src.address || "",
-                                            postal_code: src.postal_code || "",
-                                            gender: src.gender || "",
-                                            no_handphone:
-                                              src.no_handphone || "",
-                                            photo_profile:
-                                              src.photo_profile || "",
-                                            last_education: matchedEdu,
-                                            graduation_year: Number(
-                                              src.graduation_year || 0,
-                                            ),
-                                            status_perkawinan:
-                                              src.status_perkawinan || "",
-                                            cv_file: src.cv_file || undefined,
-                                            resume_text: src.resume_text || "",
-                                            dis_kondisi: src.dis_kondisi || "",
-                                            agama: src.agama || "",
-                                          });
-                                          if (
-                                            src.resume_text &&
-                                            src.resume_text.trim().length > 0
-                                          ) {
-                                            setResumeType("text");
-                                          } else {
-                                            setResumeType("file");
-                                          }
-                                        }
-                                        setShowFormModal(true);
-                                      }}
-                                      className="landing-focus flex items-center justify-center rounded-lg p-2 text-slate-600 transition hover:bg-primary/10 hover:text-primary"
-                                      title="Edit"
+                                    {p.ak1Status}
+                                  </span>
+                                </TD>
+                                <TD className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <Link
+                                      href={`/dashboard/pencaker/${p.id}`}
+                                      className="landing-focus flex items-center justify-center rounded-lg p-2 text-primary transition hover:bg-primary/10"
+                                      title="Detail"
                                     >
-                                      <i className="ri-pencil-line" />
-                                    </button>
-                                  )}
-                                </div>
-                              </TD>
-                            </TableRow>
-                          );
-                        })
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
+                                      <i className="ri-eye-line" />
+                                    </Link>
+                                    {permissions.includes(
+                                      "pencaker.update",
+                                    ) && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setEditingCandidateId(p.id);
+                                          const src = rawCandidates.find(
+                                            (c) => c.id === p.id,
+                                          );
+                                          if (src) {
+                                            // Find matching education
+                                            let matchedEdu =
+                                              src.last_education || "";
+                                            const foundEdu =
+                                              educationOptions.find(
+                                                (o) =>
+                                                  o.value === matchedEdu ||
+                                                  o.label === matchedEdu ||
+                                                  o.value.toLowerCase() ===
+                                                    String(
+                                                      matchedEdu,
+                                                    ).toLowerCase() ||
+                                                  o.label.toLowerCase() ===
+                                                    String(
+                                                      matchedEdu,
+                                                    ).toLowerCase(),
+                                              );
+                                            if (foundEdu)
+                                              matchedEdu = foundEdu.value;
 
-              <div className="mt-2">
-                <Pagination
-                  page={page}
-                  pageSize={pageSize}
-                  total={filteredPencakers.length}
-                  onPageChange={setPage}
-                  onPageSizeChange={(s) => {
-                    setPageSize(s);
-                    setPage(1);
+                                            setFormCandidate({
+                                              user_id: src.user_id,
+                                              full_name: src.full_name || "",
+                                              birthdate: src.birthdate || "",
+                                              place_of_birth:
+                                                src.place_of_birth || "",
+                                              nik: src.nik || "",
+                                              kecamatan: src.kecamatan || "",
+                                              kelurahan: src.kelurahan || "",
+                                              address: src.address || "",
+                                              postal_code:
+                                                src.postal_code || "",
+                                              gender: src.gender || "",
+                                              no_handphone:
+                                                src.no_handphone || "",
+                                              photo_profile:
+                                                src.photo_profile || "",
+                                              last_education: matchedEdu,
+                                              graduation_year: Number(
+                                                src.graduation_year || 0,
+                                              ),
+                                              status_perkawinan:
+                                                src.status_perkawinan || "",
+                                              cv_file: src.cv_file || undefined,
+                                              resume_text:
+                                                src.resume_text || "",
+                                              dis_kondisi:
+                                                src.dis_kondisi || "",
+                                              agama: src.agama || "",
+                                            });
+                                            if (
+                                              src.resume_text &&
+                                              src.resume_text.trim().length > 0
+                                            ) {
+                                              setResumeType("text");
+                                            } else {
+                                              setResumeType("file");
+                                            }
+                                          }
+                                          setShowFormModal(true);
+                                        }}
+                                        className="landing-focus flex items-center justify-center rounded-lg p-2 text-slate-600 transition hover:bg-primary/10 hover:text-primary"
+                                        title="Edit"
+                                      >
+                                        <i className="ri-pencil-line" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </TD>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+
+                  <div className="mt-2">
+                    <Pagination
+                      page={page}
+                      pageSize={pageSize}
+                      total={filteredPencakers.length}
+                      onPageChange={setPage}
+                      onPageSizeChange={(s) => {
+                        setPageSize(s);
+                        setPage(1);
+                      }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <EmptyState
+                  icon="ri-search-line"
+                  title="Tidak ada data ditemukan"
+                  description="Coba ubah kata kunci pencarian atau filter"
+                  onReset={() => {
+                    setSearchTerm("");
                   }}
+                  resetLabel="Reset Pencarian"
                 />
-              </div>
+              )}
             </div>
 
             {/* Sidebar Filter */}
@@ -966,18 +974,6 @@ export default function PencakerPage() {
               </div>
             </aside>
           </div>
-
-          {filteredPencakers.length === 0 && (
-            <EmptyState
-              icon="ri-search-line"
-              title="Tidak ada data ditemukan"
-              description="Coba ubah kata kunci pencarian atau filter"
-              onReset={() => {
-                setSearchTerm("");
-              }}
-              resetLabel="Reset Pencarian"
-            />
-          )}
 
           <Modal
             open={showFormModal}

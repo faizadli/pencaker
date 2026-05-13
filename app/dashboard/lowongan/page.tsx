@@ -1047,270 +1047,337 @@ export default function LowonganPage() {
             </div>
           </Modal>
 
-          {viewMode === "grid" ? (
-            <CardGrid className="gap-5 xl:grid-cols-3">
-              {paginatedLowongan.map((job, idx) => (
-                <div
-                  key={`${job.id || `${job.companyId}-${job.posisi}-${job.quota}`}-${job.status}-${idx}`}
-                  className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02] transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none"
-                >
-                  <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50/95 to-white p-4">
-                    <div className="mb-2 flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h3 className="text-sm font-bold leading-tight text-slate-900">
-                          {job.posisi}
-                        </h3>
-                        <p className="text-xs text-slate-500">
-                          {job.perusahaan}
-                        </p>
-                      </div>
-                      <span
-                        className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-semibold sm:py-1 sm:text-xs ${getStatusColor(job.status)}`}
-                      >
-                        {job.status}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getTipeColor(job.tipe as UITipe)}`}
-                      >
-                        {job.tipe}
-                      </span>
-                      <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
-                        {job.lokasi}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 p-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">Tayang</span>
-                      <span className="font-medium text-slate-900">
-                        {job.tanggalTayang}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">Kuota</span>
-                      <span className="font-medium tabular-nums text-slate-900">
-                        {job.quota} orang ({job.gender})
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-slate-100 bg-slate-50/60 p-4">
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div>
-                        <p className="text-lg font-bold tabular-nums text-primary">
-                          {appCounts[job.id]?.total ?? 0}
-                        </p>
-                        <p className="text-xs text-slate-500">Pelamar</p>
-                      </div>
-                      <div>
-                        <p className="text-lg font-bold tabular-nums text-primary">
-                          {appCounts[job.id]?.processed ?? 0}
-                        </p>
-                        <p className="text-xs text-slate-500">Diproses</p>
-                      </div>
-                      <div>
-                        <p className="text-lg font-bold tabular-nums text-primary">
-                          {appCounts[job.id]?.approved ?? 0}
-                        </p>
-                        <p className="text-xs text-slate-500">Diterima</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-slate-100 bg-slate-50/50 p-4">
-                    <div className="flex flex-wrap gap-2">
-                      <Link
-                        href={`/dashboard/lowongan/${job.id}`}
-                        className={`landing-focus flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
-                          job.status === "Menunggu Verifikasi"
-                            ? "bg-amber-500 hover:bg-amber-600"
-                            : "bg-primary hover:bg-[var(--color-primary-dark)]"
-                        }`}
-                      >
-                        <i className="ri-eye-line" />
-                        <span className="truncate">
-                          {job.status === "Menunggu Verifikasi"
-                            ? "Review & Konfirmasi"
-                            : "Detail"}
-                        </span>
-                      </Link>
-                      {job.status !== "Menunggu Verifikasi" && (
-                        <Link
-                          href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`}
-                          className="landing-focus flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
-                          title="Pelamar"
-                        >
-                          <i className="ri-user-search-line" />
-                          <span className="truncate">Pelamar</span>
-                        </Link>
-                      )}
-                      {canEdit && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingId(String(job.id));
-                            const raw = lowonganList.find(
-                              (j) => String(j.id) === String(job.id),
-                            );
-
-                            // Find matching category
-                            let matchedCategory = raw?.category || job.sektor;
-                            if (matchedCategory)
-                              matchedCategory = String(matchedCategory);
-
-                            const foundCat = categoryOptions.find(
-                              (o) =>
-                                o.value === matchedCategory ||
-                                o.label === matchedCategory ||
-                                o.value.toLowerCase() ===
-                                  matchedCategory.toLowerCase() ||
-                                o.label.toLowerCase() ===
-                                  matchedCategory.toLowerCase(),
-                            );
-                            if (foundCat) matchedCategory = foundCat.value;
-
-                            // Find matching education
-                            let matchedEdu =
-                              raw?.education_required || job.education_required;
-                            if (matchedEdu) matchedEdu = String(matchedEdu);
-
-                            let foundEdu = educationOptions.find(
-                              (o) =>
-                                o.value === matchedEdu ||
-                                o.label === matchedEdu ||
-                                o.value.toLowerCase() ===
-                                  matchedEdu.toLowerCase() ||
-                                o.label.toLowerCase() ===
-                                  matchedEdu.toLowerCase(),
-                            );
-
-                            if (
-                              !foundEdu &&
-                              matchedEdu &&
-                              educationGroups.length > 0
-                            ) {
-                              for (const g of educationGroups) {
-                                if (g.items) {
-                                  const item = g.items.find(
-                                    (i) => String(i.id) === matchedEdu,
-                                  );
-                                  if (item) {
-                                    const name = item.name;
-                                    foundEdu = educationOptions.find(
-                                      (o) => o.value === name,
-                                    );
-                                    break;
-                                  }
-                                }
-                              }
-                            }
-
-                            if (foundEdu) {
-                              matchedEdu = foundEdu.value;
-                            }
-
-                            setNewJob({
-                              posisi: raw?.job_title || job.posisi,
-                              position_id: raw?.position_id
-                                ? String(raw.position_id)
-                                : "",
-                              company_id: raw?.company_id
-                                ? String(raw.company_id)
-                                : job.companyId
-                                  ? String(job.companyId)
-                                  : "",
-                              sektor: matchedCategory,
-                              tipe: job.tipe as UITipe,
-                              gender: raw?.gender || "L/P",
-                              quota: raw?.quota || 1,
-                              deskripsi: raw?.job_description || job.deskripsi,
-                              experience_required:
-                                raw?.experience_required ||
-                                job.experience_required,
-                              education_required: matchedEdu,
-                              skills_required:
-                                raw?.skills_required || job.skills_required,
-                              min_salary:
-                                typeof raw?.min_salary === "number"
-                                  ? raw!.min_salary
-                                  : 0,
-                              max_salary:
-                                typeof raw?.max_salary === "number"
-                                  ? raw!.max_salary
-                                  : 0,
-                              work_setup: raw?.work_setup || job.lokasi,
-                            });
-                            setShowForm(true);
-                          }}
-                          className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
-                          title="Edit"
-                        >
-                          <i className="ri-edit-line" />
-                          <span className="truncate">Edit</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </CardGrid>
-          ) : (
-            <Card className="overflow-hidden !rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02] [&>div]:!p-0">
-              <Table className="hidden sm:block">
-                <TableHead>
-                  <tr>
-                    <TH>Posisi</TH>
-                    <TH>Perusahaan</TH>
-                    <TH>Lokasi</TH>
-                    <TH>Status</TH>
-                    <TH>Pelamar</TH>
-                    <TH>Aksi</TH>
-                  </tr>
-                </TableHead>
-                <TableBody>
+          {filteredLowongan.length > 0 ? (
+            <>
+              {viewMode === "grid" ? (
+                <CardGrid className="gap-5 xl:grid-cols-3">
                   {paginatedLowongan.map((job, idx) => (
-                    <TableRow
+                    <div
                       key={`${job.id || `${job.companyId}-${job.posisi}-${job.quota}`}-${job.status}-${idx}`}
+                      className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02] transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none"
                     >
-                      <TD>
-                        <div>
-                          <span className="font-medium text-slate-900">
-                            {job.posisi}
+                      <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50/95 to-white p-4">
+                        <div className="mb-2 flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h3 className="text-sm font-bold leading-tight text-slate-900">
+                              {job.posisi}
+                            </h3>
+                            <p className="text-xs text-slate-500">
+                              {job.perusahaan}
+                            </p>
+                          </div>
+                          <span
+                            className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-semibold sm:py-1 sm:text-xs ${getStatusColor(job.status)}`}
+                          >
+                            {job.status}
                           </span>
-                          <p className="text-xs text-slate-500">{job.tipe}</p>
                         </div>
-                      </TD>
-                      <TD className="text-slate-700">{job.perusahaan}</TD>
-                      <TD>
-                        <span className="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
-                          {job.lokasi}
-                        </span>
-                      </TD>
-                      <TD>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusColor(job.status)}`}
-                        >
-                          {job.status}
-                        </span>
-                      </TD>
-                      <TD>
-                        <div className="text-center">
-                          <p className="font-bold tabular-nums text-primary">
-                            {appCounts[job.id]?.total ?? 0}
-                          </p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getTipeColor(job.tipe as UITipe)}`}
+                          >
+                            {job.tipe}
+                          </span>
+                          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                            {job.lokasi}
+                          </span>
                         </div>
-                      </TD>
-                      <TD>
+                      </div>
+
+                      <div className="space-y-3 p-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-600">Tayang</span>
+                          <span className="font-medium text-slate-900">
+                            {job.tanggalTayang}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-600">Kuota</span>
+                          <span className="font-medium tabular-nums text-slate-900">
+                            {job.quota} orang ({job.gender})
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-slate-100 bg-slate-50/60 p-4">
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div>
+                            <p className="text-lg font-bold tabular-nums text-primary">
+                              {appCounts[job.id]?.total ?? 0}
+                            </p>
+                            <p className="text-xs text-slate-500">Pelamar</p>
+                          </div>
+                          <div>
+                            <p className="text-lg font-bold tabular-nums text-primary">
+                              {appCounts[job.id]?.processed ?? 0}
+                            </p>
+                            <p className="text-xs text-slate-500">Diproses</p>
+                          </div>
+                          <div>
+                            <p className="text-lg font-bold tabular-nums text-primary">
+                              {appCounts[job.id]?.approved ?? 0}
+                            </p>
+                            <p className="text-xs text-slate-500">Diterima</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-slate-100 bg-slate-50/50 p-4">
                         <div className="flex flex-wrap gap-2">
                           <Link
                             href={`/dashboard/lowongan/${job.id}`}
-                            className={`landing-focus inline-flex flex-1 items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
+                            className={`landing-focus flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
                               job.status === "Menunggu Verifikasi"
                                 ? "bg-amber-500 hover:bg-amber-600"
                                 : "bg-primary hover:bg-[var(--color-primary-dark)]"
+                            }`}
+                          >
+                            <i className="ri-eye-line" />
+                            <span className="truncate">
+                              {job.status === "Menunggu Verifikasi"
+                                ? "Review & Konfirmasi"
+                                : "Detail"}
+                            </span>
+                          </Link>
+                          {job.status !== "Menunggu Verifikasi" && (
+                            <Link
+                              href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`}
+                              className="landing-focus flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
+                              title="Pelamar"
+                            >
+                              <i className="ri-user-search-line" />
+                              <span className="truncate">Pelamar</span>
+                            </Link>
+                          )}
+                          {canEdit && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingId(String(job.id));
+                                const raw = lowonganList.find(
+                                  (j) => String(j.id) === String(job.id),
+                                );
+
+                                // Find matching category
+                                let matchedCategory =
+                                  raw?.category || job.sektor;
+                                if (matchedCategory)
+                                  matchedCategory = String(matchedCategory);
+
+                                const foundCat = categoryOptions.find(
+                                  (o) =>
+                                    o.value === matchedCategory ||
+                                    o.label === matchedCategory ||
+                                    o.value.toLowerCase() ===
+                                      matchedCategory.toLowerCase() ||
+                                    o.label.toLowerCase() ===
+                                      matchedCategory.toLowerCase(),
+                                );
+                                if (foundCat) matchedCategory = foundCat.value;
+
+                                // Find matching education
+                                let matchedEdu =
+                                  raw?.education_required ||
+                                  job.education_required;
+                                if (matchedEdu) matchedEdu = String(matchedEdu);
+
+                                let foundEdu = educationOptions.find(
+                                  (o) =>
+                                    o.value === matchedEdu ||
+                                    o.label === matchedEdu ||
+                                    o.value.toLowerCase() ===
+                                      matchedEdu.toLowerCase() ||
+                                    o.label.toLowerCase() ===
+                                      matchedEdu.toLowerCase(),
+                                );
+
+                                if (
+                                  !foundEdu &&
+                                  matchedEdu &&
+                                  educationGroups.length > 0
+                                ) {
+                                  for (const g of educationGroups) {
+                                    if (g.items) {
+                                      const item = g.items.find(
+                                        (i) => String(i.id) === matchedEdu,
+                                      );
+                                      if (item) {
+                                        const name = item.name;
+                                        foundEdu = educationOptions.find(
+                                          (o) => o.value === name,
+                                        );
+                                        break;
+                                      }
+                                    }
+                                  }
+                                }
+
+                                if (foundEdu) {
+                                  matchedEdu = foundEdu.value;
+                                }
+
+                                setNewJob({
+                                  posisi: raw?.job_title || job.posisi,
+                                  position_id: raw?.position_id
+                                    ? String(raw.position_id)
+                                    : "",
+                                  company_id: raw?.company_id
+                                    ? String(raw.company_id)
+                                    : job.companyId
+                                      ? String(job.companyId)
+                                      : "",
+                                  sektor: matchedCategory,
+                                  tipe: job.tipe as UITipe,
+                                  gender: raw?.gender || "L/P",
+                                  quota: raw?.quota || 1,
+                                  deskripsi:
+                                    raw?.job_description || job.deskripsi,
+                                  experience_required:
+                                    raw?.experience_required ||
+                                    job.experience_required,
+                                  education_required: matchedEdu,
+                                  skills_required:
+                                    raw?.skills_required || job.skills_required,
+                                  min_salary:
+                                    typeof raw?.min_salary === "number"
+                                      ? raw!.min_salary
+                                      : 0,
+                                  max_salary:
+                                    typeof raw?.max_salary === "number"
+                                      ? raw!.max_salary
+                                      : 0,
+                                  work_setup: raw?.work_setup || job.lokasi,
+                                });
+                                setShowForm(true);
+                              }}
+                              className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
+                              title="Edit"
+                            >
+                              <i className="ri-edit-line" />
+                              <span className="truncate">Edit</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardGrid>
+              ) : (
+                <Card className="overflow-hidden !rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02] [&>div]:!p-0">
+                  <Table className="hidden sm:block">
+                    <TableHead>
+                      <tr>
+                        <TH>Posisi</TH>
+                        <TH>Perusahaan</TH>
+                        <TH>Lokasi</TH>
+                        <TH>Status</TH>
+                        <TH>Pelamar</TH>
+                        <TH>Aksi</TH>
+                      </tr>
+                    </TableHead>
+                    <TableBody>
+                      {paginatedLowongan.map((job, idx) => (
+                        <TableRow
+                          key={`${job.id || `${job.companyId}-${job.posisi}-${job.quota}`}-${job.status}-${idx}`}
+                        >
+                          <TD>
+                            <div>
+                              <span className="font-medium text-slate-900">
+                                {job.posisi}
+                              </span>
+                              <p className="text-xs text-slate-500">
+                                {job.tipe}
+                              </p>
+                            </div>
+                          </TD>
+                          <TD className="text-slate-700">{job.perusahaan}</TD>
+                          <TD>
+                            <span className="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                              {job.lokasi}
+                            </span>
+                          </TD>
+                          <TD>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusColor(job.status)}`}
+                            >
+                              {job.status}
+                            </span>
+                          </TD>
+                          <TD>
+                            <div className="text-center">
+                              <p className="font-bold tabular-nums text-primary">
+                                {appCounts[job.id]?.total ?? 0}
+                              </p>
+                            </div>
+                          </TD>
+                          <TD>
+                            <div className="flex flex-wrap gap-2">
+                              <Link
+                                href={`/dashboard/lowongan/${job.id}`}
+                                className={`landing-focus inline-flex flex-1 items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
+                                  job.status === "Menunggu Verifikasi"
+                                    ? "bg-amber-500 hover:bg-amber-600"
+                                    : "bg-primary hover:bg-[var(--color-primary-dark)]"
+                                }`}
+                              >
+                                {job.status === "Menunggu Verifikasi"
+                                  ? "Review & Konfirmasi"
+                                  : "Detail"}
+                              </Link>
+                              {job.status !== "Menunggu Verifikasi" && (
+                                <Link
+                                  href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`}
+                                  className="landing-focus inline-flex flex-1 items-center justify-center rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
+                                >
+                                  Pelamar
+                                </Link>
+                              )}
+                            </div>
+                          </TD>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  <div className="space-y-3 p-3 sm:hidden">
+                    {paginatedLowongan.map((job, idx) => (
+                      <div
+                        key={`m-${job.id || `${job.companyId}-${job.posisi}-${job.quota}`}-${job.status}-${idx}`}
+                        className="rounded-xl border border-slate-200/90 bg-slate-50/40 p-4 ring-1 ring-slate-950/[0.02]"
+                      >
+                        <div className="block">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="truncate font-semibold text-slate-900">
+                                {job.posisi}
+                              </p>
+                              <p className="truncate text-xs text-slate-500">
+                                {job.perusahaan}
+                              </p>
+                            </div>
+                            <span
+                              className={`inline-flex shrink-0 items-center rounded-full px-2 py-1 text-[10px] font-semibold ${getStatusColor(job.status)}`}
+                            >
+                              {job.status}
+                            </span>
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600 ring-1 ring-slate-200/80">
+                              {job.lokasi}
+                            </span>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2 py-1 text-[11px] font-medium ${getTipeColor(job.tipe as UITipe)}`}
+                            >
+                              {job.tipe}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Link
+                            href={`/dashboard/lowongan/${job.id}`}
+                            className={`landing-focus flex min-w-0 flex-1 items-center justify-center rounded-lg px-3 py-2 text-xs font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
+                              job.status === "Menunggu Verifikasi"
+                                ? "bg-amber-500"
+                                : "bg-primary"
                             }`}
                           >
                             {job.status === "Menunggu Verifikasi"
@@ -1320,173 +1387,116 @@ export default function LowonganPage() {
                           {job.status !== "Menunggu Verifikasi" && (
                             <Link
                               href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`}
-                              className="landing-focus inline-flex flex-1 items-center justify-center rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
+                              className="flex min-w-0 flex-1 items-center justify-center rounded-lg bg-white px-3 py-2 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
                             >
                               Pelamar
                             </Link>
                           )}
-                        </div>
-                      </TD>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <div className="space-y-3 p-3 sm:hidden">
-                {paginatedLowongan.map((job, idx) => (
-                  <div
-                    key={`m-${job.id || `${job.companyId}-${job.posisi}-${job.quota}`}-${job.status}-${idx}`}
-                    className="rounded-xl border border-slate-200/90 bg-slate-50/40 p-4 ring-1 ring-slate-950/[0.02]"
-                  >
-                    <div className="block">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold text-slate-900">
-                            {job.posisi}
-                          </p>
-                          <p className="truncate text-xs text-slate-500">
-                            {job.perusahaan}
-                          </p>
-                        </div>
-                        <span
-                          className={`inline-flex shrink-0 items-center rounded-full px-2 py-1 text-[10px] font-semibold ${getStatusColor(job.status)}`}
-                        >
-                          {job.status}
-                        </span>
-                      </div>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600 ring-1 ring-slate-200/80">
-                          {job.lokasi}
-                        </span>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-[11px] font-medium ${getTipeColor(job.tipe as UITipe)}`}
-                        >
-                          {job.tipe}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Link
-                        href={`/dashboard/lowongan/${job.id}`}
-                        className={`landing-focus flex min-w-0 flex-1 items-center justify-center rounded-lg px-3 py-2 text-xs font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
-                          job.status === "Menunggu Verifikasi"
-                            ? "bg-amber-500"
-                            : "bg-primary"
-                        }`}
-                      >
-                        {job.status === "Menunggu Verifikasi"
-                          ? "Review & Konfirmasi"
-                          : "Detail"}
-                      </Link>
-                      {job.status !== "Menunggu Verifikasi" && (
-                        <Link
-                          href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`}
-                          className="flex min-w-0 flex-1 items-center justify-center rounded-lg bg-white px-3 py-2 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
-                        >
-                          Pelamar
-                        </Link>
-                      )}
-                      {canEdit && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingId(String(job.id));
-                            const raw = lowonganList.find(
-                              (j) => String(j.id) === String(job.id),
-                            );
-                            let matchedCategory = raw?.category || job.sektor;
-                            const foundCat = categoryOptions.find(
-                              (o) =>
-                                o.value === matchedCategory ||
-                                o.label === matchedCategory ||
-                                o.value.toLowerCase() ===
-                                  String(matchedCategory).toLowerCase() ||
-                                o.label.toLowerCase() ===
-                                  String(matchedCategory).toLowerCase(),
-                            );
-                            if (foundCat) matchedCategory = foundCat.value;
+                          {canEdit && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingId(String(job.id));
+                                const raw = lowonganList.find(
+                                  (j) => String(j.id) === String(job.id),
+                                );
+                                let matchedCategory =
+                                  raw?.category || job.sektor;
+                                const foundCat = categoryOptions.find(
+                                  (o) =>
+                                    o.value === matchedCategory ||
+                                    o.label === matchedCategory ||
+                                    o.value.toLowerCase() ===
+                                      String(matchedCategory).toLowerCase() ||
+                                    o.label.toLowerCase() ===
+                                      String(matchedCategory).toLowerCase(),
+                                );
+                                if (foundCat) matchedCategory = foundCat.value;
 
-                            let matchedEdu =
-                              raw?.education_required || job.education_required;
-                            const foundEdu = educationOptions.find(
-                              (o) =>
-                                o.value === matchedEdu ||
-                                o.label === matchedEdu ||
-                                o.value.toLowerCase() ===
-                                  String(matchedEdu).toLowerCase() ||
-                                o.label.toLowerCase() ===
-                                  String(matchedEdu).toLowerCase(),
-                            );
-                            if (foundEdu) {
-                              matchedEdu = foundEdu.value;
-                            } else if (matchedEdu) {
-                              const exists = educationOptions.some(
-                                (o) => o.value === String(matchedEdu),
-                              );
-                              if (!exists) {
-                                setEducationOptions((prev) => [
-                                  ...prev,
-                                  {
-                                    value: String(matchedEdu),
-                                    label: String(matchedEdu),
-                                  },
-                                ]);
-                              }
-                            }
+                                let matchedEdu =
+                                  raw?.education_required ||
+                                  job.education_required;
+                                const foundEdu = educationOptions.find(
+                                  (o) =>
+                                    o.value === matchedEdu ||
+                                    o.label === matchedEdu ||
+                                    o.value.toLowerCase() ===
+                                      String(matchedEdu).toLowerCase() ||
+                                    o.label.toLowerCase() ===
+                                      String(matchedEdu).toLowerCase(),
+                                );
+                                if (foundEdu) {
+                                  matchedEdu = foundEdu.value;
+                                } else if (matchedEdu) {
+                                  const exists = educationOptions.some(
+                                    (o) => o.value === String(matchedEdu),
+                                  );
+                                  if (!exists) {
+                                    setEducationOptions((prev) => [
+                                      ...prev,
+                                      {
+                                        value: String(matchedEdu),
+                                        label: String(matchedEdu),
+                                      },
+                                    ]);
+                                  }
+                                }
 
-                            setNewJob({
-                              posisi: raw?.job_title || job.posisi,
-                              position_id: raw?.position_id || "",
-                              company_id:
-                                raw?.company_id || job.companyId || "",
-                              sektor: matchedCategory,
-                              tipe: job.tipe as UITipe,
-                              gender: raw?.gender || "L/P",
-                              quota: raw?.quota || 1,
-                              deskripsi: raw?.job_description || job.deskripsi,
-                              experience_required:
-                                raw?.experience_required ||
-                                job.experience_required,
-                              education_required: matchedEdu,
-                              skills_required:
-                                raw?.skills_required || job.skills_required,
-                              min_salary:
-                                typeof raw?.min_salary === "number"
-                                  ? raw!.min_salary
-                                  : 0,
-                              max_salary:
-                                typeof raw?.max_salary === "number"
-                                  ? raw!.max_salary
-                                  : 0,
-                              work_setup: raw?.work_setup || job.lokasi,
-                            });
-                            setShowForm(true);
-                          }}
-                          className="flex min-w-0 flex-1 items-center justify-center rounded-lg bg-white px-3 py-2 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
-                        >
-                          Edit
-                        </button>
-                      )}
-                    </div>
+                                setNewJob({
+                                  posisi: raw?.job_title || job.posisi,
+                                  position_id: raw?.position_id || "",
+                                  company_id:
+                                    raw?.company_id || job.companyId || "",
+                                  sektor: matchedCategory,
+                                  tipe: job.tipe as UITipe,
+                                  gender: raw?.gender || "L/P",
+                                  quota: raw?.quota || 1,
+                                  deskripsi:
+                                    raw?.job_description || job.deskripsi,
+                                  experience_required:
+                                    raw?.experience_required ||
+                                    job.experience_required,
+                                  education_required: matchedEdu,
+                                  skills_required:
+                                    raw?.skills_required || job.skills_required,
+                                  min_salary:
+                                    typeof raw?.min_salary === "number"
+                                      ? raw!.min_salary
+                                      : 0,
+                                  max_salary:
+                                    typeof raw?.max_salary === "number"
+                                      ? raw!.max_salary
+                                      : 0,
+                                  work_setup: raw?.work_setup || job.lokasi,
+                                });
+                                setShowForm(true);
+                              }}
+                              className="flex min-w-0 flex-1 items-center justify-center rounded-lg bg-white px-3 py-2 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
+                            >
+                              Edit
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </Card>
+              )}
+
+              <div className="pt-1">
+                <Pagination
+                  page={page}
+                  pageSize={pageSize}
+                  total={filteredLowongan.length}
+                  onPageChange={(p) => setPage(p)}
+                  onPageSizeChange={(s) => {
+                    setPageSize(s);
+                    setPage(1);
+                  }}
+                />
               </div>
-            </Card>
-          )}
-
-          <div className="pt-1">
-            <Pagination
-              page={page}
-              pageSize={pageSize}
-              total={filteredLowongan.length}
-              onPageChange={(p) => setPage(p)}
-              onPageSizeChange={(s) => {
-                setPageSize(s);
-                setPage(1);
-              }}
-            />
-          </div>
-
-          {filteredLowongan.length === 0 && (
+            </>
+          ) : (
             <div className="rounded-2xl border border-slate-200/90 bg-white py-12 text-center shadow-sm ring-1 ring-slate-950/[0.02]">
               <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
                 <i className="ri-briefcase-line text-3xl leading-none" />

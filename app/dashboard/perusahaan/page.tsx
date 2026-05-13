@@ -435,170 +435,256 @@ export default function PerusahaanPage() {
             </div>
           </div>
 
-          {viewMode === "grid" ? (
-            <CardGrid className="gap-5 xl:grid-cols-3">
-              {filteredPerusahaan.map((p) => (
-                <div
-                  key={p.id}
-                  className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02] transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none"
-                >
-                  <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50/95 to-white p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <Image
-                          src={p.company_logo || "https://picsum.photos/200"}
-                          alt={p.company_name}
-                          width={48}
-                          height={48}
-                          className="h-12 w-12 shrink-0 rounded-xl object-cover ring-1 ring-slate-200/80"
-                        />
-                        <div className="min-w-0">
-                          <h3 className="truncate text-sm font-bold leading-tight text-slate-900">
-                            {p.company_name}
-                          </h3>
-                          <p className="truncate text-xs text-slate-500">
-                            {p.kelurahan || p.kecamatan || "-"}
-                          </p>
+          {filteredPerusahaan.length > 0 ? (
+            <>
+              {viewMode === "grid" ? (
+                <CardGrid className="gap-5 xl:grid-cols-3">
+                  {filteredPerusahaan.map((p) => (
+                    <div
+                      key={p.id}
+                      className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02] transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none"
+                    >
+                      <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50/95 to-white p-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <Image
+                              src={
+                                p.company_logo || "https://picsum.photos/200"
+                              }
+                              alt={p.company_name}
+                              width={48}
+                              height={48}
+                              className="h-12 w-12 shrink-0 rounded-xl object-cover ring-1 ring-slate-200/80"
+                            />
+                            <div className="min-w-0">
+                              <h3 className="truncate text-sm font-bold leading-tight text-slate-900">
+                                {p.company_name}
+                              </h3>
+                              <p className="truncate text-xs text-slate-500">
+                                {p.kelurahan || p.kecamatan || "-"}
+                              </p>
+                            </div>
+                          </div>
+                          <span
+                            className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-semibold sm:py-1 sm:text-xs ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}
+                          >
+                            {apiToUIStatus[getApiStatus(p)]}
+                          </span>
                         </div>
                       </div>
-                      <span
-                        className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-semibold sm:py-1 sm:text-xs ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}
-                      >
-                        {apiToUIStatus[getApiStatus(p)]}
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="space-y-3 p-4">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <i className="ri-map-pin-line shrink-0 text-slate-400" />
-                      <span className="truncate">{p.address}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <i className="ri-phone-line shrink-0 text-slate-400" />
-                      <span>{p.no_handphone}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <i className="ri-global-line shrink-0 text-slate-400" />
-                      <span className="truncate">{p.website || "-"}</span>
-                    </div>
-                  </div>
+                      <div className="space-y-3 p-4">
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <i className="ri-map-pin-line shrink-0 text-slate-400" />
+                          <span className="truncate">{p.address}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <i className="ri-phone-line shrink-0 text-slate-400" />
+                          <span>{p.no_handphone}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <i className="ri-global-line shrink-0 text-slate-400" />
+                          <span className="truncate">{p.website || "-"}</span>
+                        </div>
+                      </div>
 
-                  <div className="border-t border-slate-100 bg-slate-50/50 p-4">
-                    <div className="flex gap-2">
-                      <Link
-                        href={`/dashboard/perusahaan/${p.id}`}
-                        className={`landing-focus flex flex-1 items-center justify-center rounded-xl px-3 py-2.5 text-sm font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
-                          getApiStatus(p) === "PENDING"
-                            ? "bg-amber-500 hover:bg-amber-600"
-                            : "bg-primary hover:bg-[var(--color-primary-dark)]"
-                        }`}
-                      >
-                        <i className="ri-eye-line mr-1.5" />
-                        {getApiStatus(p) === "PENDING"
-                          ? "Review & Konfirmasi"
-                          : "Detail"}
-                      </Link>
-                      {canUpdate && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingCompanyId(p.id);
-                            setEditingCompanyUserId(p.user_id);
-                            setFormCompany({
-                              company_name: p.company_name || "",
-                              company_type: p.company_type || "",
-                              nib: p.nib || "",
-                              company_logo: p.company_logo || "",
-                              no_handphone: p.no_handphone || "",
-                              kecamatan: p.kecamatan || "",
-                              kelurahan: p.kelurahan || "",
-                              address: p.address || "",
-                              website: p.website || "",
-                              about_company: p.about_company || "",
-                            });
-                            setShowFormModal(true);
-                            setSubmittedCompany(false);
-                            setFieldErrors({});
-                          }}
-                          className="flex flex-1 items-center justify-center rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
-                        >
-                          <i className="ri-pencil-line mr-1.5" />
-                          Edit
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </CardGrid>
-          ) : (
-            <Card className="overflow-hidden !rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02] [&>div]:!p-0">
-              <Table className="hidden sm:block">
-                <TableHead>
-                  <tr>
-                    <TH>Perusahaan</TH>
-                    <TH>Sektor</TH>
-                    <TH>Status</TH>
-                    <TH>Lowongan</TH>
-                    <TH>Pelamar</TH>
-                    <TH>Aksi</TH>
-                  </tr>
-                </TableHead>
-                <TableBody>
-                  {filteredPerusahaan.map((p) => (
-                    <TableRow key={p.id}>
-                      <TD>
-                        <div className="flex items-center gap-3">
-                          <Image
-                            src={p.company_logo || "https://picsum.photos/200"}
-                            alt={p.company_name}
-                            width={40}
-                            height={40}
-                            className="h-10 w-10 shrink-0 rounded-lg object-cover ring-1 ring-slate-200/80"
-                          />
-                          <div>
-                            <p className="font-medium text-slate-900">
-                              {p.company_name}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {p.website || "-"}
-                            </p>
-                          </div>
-                        </div>
-                      </TD>
-                      <TD className="text-slate-700">
-                        {p.kelurahan || p.kecamatan || "-"}
-                      </TD>
-                      <TD>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}
-                        >
-                          {apiToUIStatus[getApiStatus(p)]}
-                        </span>
-                      </TD>
-                      <TD>
-                        <div className="text-center">
-                          <p className="font-bold tabular-nums text-primary">
-                            {p.job_vacancies_count || 0}
-                          </p>
-                        </div>
-                      </TD>
-                      <TD>
-                        <div className="text-center">
-                          <p className="font-bold tabular-nums text-primary">
-                            {p.applicants_count || 0}
-                          </p>
-                        </div>
-                      </TD>
-                      <TD>
-                        <div className="flex flex-wrap gap-2">
+                      <div className="border-t border-slate-100 bg-slate-50/50 p-4">
+                        <div className="flex gap-2">
                           <Link
                             href={`/dashboard/perusahaan/${p.id}`}
-                            className={`landing-focus inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
+                            className={`landing-focus flex flex-1 items-center justify-center rounded-xl px-3 py-2.5 text-sm font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
                               getApiStatus(p) === "PENDING"
                                 ? "bg-amber-500 hover:bg-amber-600"
                                 : "bg-primary hover:bg-[var(--color-primary-dark)]"
+                            }`}
+                          >
+                            <i className="ri-eye-line mr-1.5" />
+                            {getApiStatus(p) === "PENDING"
+                              ? "Review & Konfirmasi"
+                              : "Detail"}
+                          </Link>
+                          {canUpdate && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingCompanyId(p.id);
+                                setEditingCompanyUserId(p.user_id);
+                                setFormCompany({
+                                  company_name: p.company_name || "",
+                                  company_type: p.company_type || "",
+                                  nib: p.nib || "",
+                                  company_logo: p.company_logo || "",
+                                  no_handphone: p.no_handphone || "",
+                                  kecamatan: p.kecamatan || "",
+                                  kelurahan: p.kelurahan || "",
+                                  address: p.address || "",
+                                  website: p.website || "",
+                                  about_company: p.about_company || "",
+                                });
+                                setShowFormModal(true);
+                                setSubmittedCompany(false);
+                                setFieldErrors({});
+                              }}
+                              className="flex flex-1 items-center justify-center rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
+                            >
+                              <i className="ri-pencil-line mr-1.5" />
+                              Edit
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardGrid>
+              ) : (
+                <Card className="overflow-hidden !rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02] [&>div]:!p-0">
+                  <Table className="hidden sm:block">
+                    <TableHead>
+                      <tr>
+                        <TH>Perusahaan</TH>
+                        <TH>Sektor</TH>
+                        <TH>Status</TH>
+                        <TH>Lowongan</TH>
+                        <TH>Pelamar</TH>
+                        <TH>Aksi</TH>
+                      </tr>
+                    </TableHead>
+                    <TableBody>
+                      {filteredPerusahaan.map((p) => (
+                        <TableRow key={p.id}>
+                          <TD>
+                            <div className="flex items-center gap-3">
+                              <Image
+                                src={
+                                  p.company_logo || "https://picsum.photos/200"
+                                }
+                                alt={p.company_name}
+                                width={40}
+                                height={40}
+                                className="h-10 w-10 shrink-0 rounded-lg object-cover ring-1 ring-slate-200/80"
+                              />
+                              <div>
+                                <p className="font-medium text-slate-900">
+                                  {p.company_name}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  {p.website || "-"}
+                                </p>
+                              </div>
+                            </div>
+                          </TD>
+                          <TD className="text-slate-700">
+                            {p.kelurahan || p.kecamatan || "-"}
+                          </TD>
+                          <TD>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}
+                            >
+                              {apiToUIStatus[getApiStatus(p)]}
+                            </span>
+                          </TD>
+                          <TD>
+                            <div className="text-center">
+                              <p className="font-bold tabular-nums text-primary">
+                                {p.job_vacancies_count || 0}
+                              </p>
+                            </div>
+                          </TD>
+                          <TD>
+                            <div className="text-center">
+                              <p className="font-bold tabular-nums text-primary">
+                                {p.applicants_count || 0}
+                              </p>
+                            </div>
+                          </TD>
+                          <TD>
+                            <div className="flex flex-wrap gap-2">
+                              <Link
+                                href={`/dashboard/perusahaan/${p.id}`}
+                                className={`landing-focus inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
+                                  getApiStatus(p) === "PENDING"
+                                    ? "bg-amber-500 hover:bg-amber-600"
+                                    : "bg-primary hover:bg-[var(--color-primary-dark)]"
+                                }`}
+                              >
+                                {getApiStatus(p) === "PENDING"
+                                  ? "Review & Konfirmasi"
+                                  : "Detail"}
+                              </Link>
+                              {canUpdate && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingCompanyId(p.id);
+                                    setEditingCompanyUserId(p.user_id);
+                                    setFormCompany({
+                                      company_name: p.company_name || "",
+                                      company_type: p.company_type || "",
+                                      nib: p.nib || "",
+                                      company_logo: p.company_logo || "",
+                                      no_handphone: p.no_handphone || "",
+                                      kecamatan: p.kecamatan || "",
+                                      kelurahan: p.kelurahan || "",
+                                      address: p.address || "",
+                                      website: p.website || "",
+                                      about_company: p.about_company || "",
+                                    });
+                                    setShowFormModal(true);
+                                  }}
+                                  className="inline-flex items-center justify-center rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
+                                >
+                                  Edit
+                                </button>
+                              )}
+                            </div>
+                          </TD>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  <div className="space-y-3 p-3 sm:hidden">
+                    {filteredPerusahaan.map((p) => (
+                      <div
+                        key={`m-${p.id}`}
+                        className="rounded-xl border border-slate-200/90 bg-slate-50/40 p-4 ring-1 ring-slate-950/[0.02]"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <Image
+                              src={
+                                p.company_logo || "https://picsum.photos/200"
+                              }
+                              alt={p.company_name}
+                              width={32}
+                              height={32}
+                              className="h-8 w-8 shrink-0 rounded-lg object-cover ring-1 ring-slate-200/80"
+                            />
+                            <div className="min-w-0">
+                              <p className="truncate font-semibold text-slate-900">
+                                {p.company_name}
+                              </p>
+                              <p className="truncate text-xs text-slate-500">
+                                {p.kelurahan || p.kecamatan || "-"}
+                              </p>
+                            </div>
+                          </div>
+                          <span
+                            className={`inline-flex shrink-0 items-center rounded-full px-2 py-1 text-[10px] font-semibold ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}
+                          >
+                            {apiToUIStatus[getApiStatus(p)]}
+                          </span>
+                        </div>
+                        <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500">
+                          <i className="ri-map-pin-line shrink-0" />
+                          <span className="truncate">{p.address}</span>
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <Link
+                            href={`/dashboard/perusahaan/${p.id}`}
+                            className={`landing-focus flex items-center justify-center rounded-lg px-3 py-2 text-xs font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
+                              getApiStatus(p) === "PENDING"
+                                ? "bg-amber-500"
+                                : "bg-primary"
                             }`}
                           >
                             {getApiStatus(p) === "PENDING"
@@ -625,108 +711,54 @@ export default function PerusahaanPage() {
                                 });
                                 setShowFormModal(true);
                               }}
-                              className="inline-flex items-center justify-center rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
+                              className="rounded-lg bg-white px-3 py-2 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
                             >
                               Edit
                             </button>
                           )}
                         </div>
-                      </TD>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <div className="space-y-3 p-3 sm:hidden">
-                {filteredPerusahaan.map((p) => (
-                  <div
-                    key={`m-${p.id}`}
-                    className="rounded-xl border border-slate-200/90 bg-slate-50/40 p-4 ring-1 ring-slate-950/[0.02]"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <Image
-                          src={p.company_logo || "https://picsum.photos/200"}
-                          alt={p.company_name}
-                          width={32}
-                          height={32}
-                          className="h-8 w-8 shrink-0 rounded-lg object-cover ring-1 ring-slate-200/80"
-                        />
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold text-slate-900">
-                            {p.company_name}
-                          </p>
-                          <p className="truncate text-xs text-slate-500">
-                            {p.kelurahan || p.kecamatan || "-"}
-                          </p>
-                        </div>
                       </div>
-                      <span
-                        className={`inline-flex shrink-0 items-center rounded-full px-2 py-1 text-[10px] font-semibold ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}
-                      >
-                        {apiToUIStatus[getApiStatus(p)]}
-                      </span>
-                    </div>
-                    <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500">
-                      <i className="ri-map-pin-line shrink-0" />
-                      <span className="truncate">{p.address}</span>
-                    </div>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      <Link
-                        href={`/dashboard/perusahaan/${p.id}`}
-                        className={`landing-focus flex items-center justify-center rounded-lg px-3 py-2 text-xs font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
-                          getApiStatus(p) === "PENDING"
-                            ? "bg-amber-500"
-                            : "bg-primary"
-                        }`}
-                      >
-                        {getApiStatus(p) === "PENDING"
-                          ? "Review & Konfirmasi"
-                          : "Detail"}
-                      </Link>
-                      {canUpdate && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingCompanyId(p.id);
-                            setEditingCompanyUserId(p.user_id);
-                            setFormCompany({
-                              company_name: p.company_name || "",
-                              company_type: p.company_type || "",
-                              nib: p.nib || "",
-                              company_logo: p.company_logo || "",
-                              no_handphone: p.no_handphone || "",
-                              kecamatan: p.kecamatan || "",
-                              kelurahan: p.kelurahan || "",
-                              address: p.address || "",
-                              website: p.website || "",
-                              about_company: p.about_company || "",
-                            });
-                            setShowFormModal(true);
-                          }}
-                          className="rounded-lg bg-white px-3 py-2 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
-                        >
-                          Edit
-                        </button>
-                      )}
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </Card>
-          )}
+                </Card>
+              )}
 
-          <div className="pt-1">
-            <Pagination
-              page={page}
-              pageSize={pageSize}
-              total={total || filteredPerusahaan.length}
-              onPageChange={(p) => setPage(p)}
-              onPageSizeChange={(s) => {
-                setPageSize(s);
-                setPage(1);
-              }}
-            />
-          </div>
+              <div className="pt-1">
+                <Pagination
+                  page={page}
+                  pageSize={pageSize}
+                  total={total || filteredPerusahaan.length}
+                  onPageChange={(p) => setPage(p)}
+                  onPageSizeChange={(s) => {
+                    setPageSize(s);
+                    setPage(1);
+                  }}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="rounded-2xl border border-slate-200/90 bg-white py-12 text-center shadow-sm ring-1 ring-slate-950/[0.02]">
+              <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                <i className="ri-building-line text-3xl leading-none" />
+              </span>
+              <h3 className="text-lg font-semibold text-slate-900">
+                Tidak ada data perusahaan
+              </h3>
+              <p className="mx-auto mt-2 max-w-md px-4 text-sm text-slate-600">
+                Coba ubah kata kunci pencarian atau filter status.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm("");
+                  setStatusFilter("all");
+                }}
+                className="mt-6 inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-primary-dark)]"
+              >
+                Reset pencarian
+              </button>
+            </div>
+          )}
 
           <Modal
             open={showFormModal}
@@ -996,30 +1028,6 @@ export default function PerusahaanPage() {
               </div>
             </div>
           </Modal>
-
-          {filteredPerusahaan.length === 0 && (
-            <div className="rounded-2xl border border-slate-200/90 bg-white py-12 text-center shadow-sm ring-1 ring-slate-950/[0.02]">
-              <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-                <i className="ri-building-line text-3xl leading-none" />
-              </span>
-              <h3 className="text-lg font-semibold text-slate-900">
-                Tidak ada data perusahaan
-              </h3>
-              <p className="mx-auto mt-2 max-w-md px-4 text-sm text-slate-600">
-                Coba ubah kata kunci pencarian atau filter status.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchTerm("");
-                  setStatusFilter("all");
-                }}
-                className="mt-6 inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-primary-dark)]"
-              >
-                Reset pencarian
-              </button>
-            </div>
-          )}
         </div>
       </main>
     </>
