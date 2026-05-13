@@ -688,13 +688,20 @@ const Ak1PreviewItem = ({
   const previewUrl = bgUrl;
 
   return (
-    <div className="w-full mb-8 border-b pb-4 last:border-0">
-      <div className="text-sm font-bold text-gray-700 mb-2">
-        {template.name || "Template"}
+    <div className="mb-8 w-full rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 last:mb-0">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold text-slate-800">
+            {template.name || "Template"}
+          </p>
+          <p className="text-xs text-slate-500">
+            Pratinjau posisi field AK1 berdasarkan template aktif.
+          </p>
+        </div>
       </div>
       <div ref={containerRef} className="w-full overflow-hidden">
         <div
-          className="relative bg-white shadow-sm border mx-auto"
+          className="relative mx-auto overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
           style={{
             width: FRONT_BASE.w * scale,
             height: FRONT_BASE.h * scale,
@@ -823,7 +830,9 @@ export default function Ak1Page() {
   }, [genCandidate, genMeta.no_urut_pendaftaran]);
 
   const ensureGenNoUrut = useCallback(async (doc: Ak1Document | null) => {
-    let noUrut = doc?.no_urut_pendaftaran ? String(doc.no_urut_pendaftaran) : "";
+    let noUrut = doc?.no_urut_pendaftaran
+      ? String(doc.no_urut_pendaftaran)
+      : "";
     if (!noUrut) {
       try {
         const nResp = await getNextAk1NoUrut();
@@ -1140,18 +1149,18 @@ export default function Ak1Page() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Aktif":
-        return "bg-green-100 text-green-800";
+        return "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/80";
       case "Menunggu Pembuatan":
-        return "bg-blue-100 text-blue-800";
+        return "bg-sky-100 text-sky-900 ring-1 ring-sky-200/80";
       case "Menunggu Perpanjangan":
-        return "bg-orange-100 text-orange-800";
+        return "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80";
       case "Ditolak":
       case "Kadaluarsa":
-        return "bg-red-100 text-red-800";
+        return "bg-rose-100 text-rose-900 ring-1 ring-rose-200/80";
       case "Sudah Ditempatkan":
-        return "bg-violet-100 text-violet-800";
+        return "bg-violet-100 text-violet-900 ring-1 ring-violet-200/80";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80";
     }
   };
   const generateAk1Pdf = async (docOverride?: Ak1Document | null) => {
@@ -2190,11 +2199,23 @@ export default function Ak1Page() {
       p.postal_code,
     );
   })();
+  const primaryButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600";
+  const secondaryButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600";
+  const neutralButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200";
+  const warningButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600";
+  const cardSurfaceClass =
+    "!rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02]";
+  const documentLinkClass =
+    "text-sm font-medium text-primary underline-offset-2 transition hover:underline";
 
   if (loading || !guardReady) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
           <FullPageLoading isSection />
         </div>
       </main>
@@ -2203,38 +2224,53 @@ export default function Ak1Page() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-primary">
-                Kartu Kuning (AK1)
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Kelola pengajuan AK1 dan verifikasi
-              </p>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full space-y-8">
+          <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+            <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+            <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  Kartu Kuning (AK1)
+                </p>
+                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                  Kelola pengajuan dan verifikasi AK1
+                </h1>
+                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                  {role === "candidate"
+                    ? "Lengkapi persyaratan, pantau status pengajuan, dan unduh kartu AK1 digital Anda."
+                    : "Tinjau pengajuan, verifikasi dokumen, generate kartu, dan proses perpanjangan AK1 dalam satu area."}
+                </p>
+              </div>
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                <i className="ri-file-list-3-line" aria-hidden />
+                {role === "candidate" ? "Mode Pemohon" : "Mode Petugas"}
+              </span>
             </div>
-          </div>
+          </header>
 
           {!loading &&
             role === "candidate" &&
             !requiredComplete &&
             permissions.includes("ak1.submit") &&
             (!doc || !doc.status) && (
-              <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-xl mb-6">
+              <div className="rounded-2xl border border-amber-200/80 bg-amber-50/90 p-5 text-amber-900 shadow-sm">
                 <div className="flex items-start gap-3">
-                  <i className="ri-alert-line mt-0.5"></i>
+                  <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-base text-amber-700">
+                    <i className="ri-alert-line" />
+                  </div>
                   <div>
                     <p className="font-semibold">Profil belum lengkap</p>
-                    <p className="text-sm">
+                    <p className="mt-1 text-sm leading-relaxed text-amber-800">
                       Lengkapi nama lengkap, NIK, tempat/tanggal lahir, jenis
                       kelamin, status perkawinan, alamat, dan kode pos di
                       halaman Profil.
                     </p>
                     <a
                       href="/dashboard/profile"
-                      className="inline-block mt-2 px-3 py-2 bg-primary text-white rounded-lg"
+                      className="mt-3 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white transition hover:brightness-95"
                     >
+                      <i className="ri-user-settings-line" aria-hidden />
                       Ke Halaman Profil
                     </a>
                   </div>
@@ -2246,134 +2282,144 @@ export default function Ak1Page() {
             role === "candidate" &&
             (!doc || !doc.status || (doc && doc.status === "EXPIRED")) &&
             requiredComplete && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-                {doc && doc.status === "EXPIRED" && (
-                  <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg mb-6">
-                    Kartu AK1 Anda sudah expired silahkan buat baru
-                  </div>
-                )}
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center">
-                    <span className="text-blue-600 text-xl font-bold">#</span>
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    Pengajuan Kartu AK1
-                  </h2>
-                </div>
-
-                <div className="space-y-4" key="ak1-new">
-                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                    <p className="text-sm text-blue-800">
-                      Untuk pembuatan kartu AK1 baru, silakan lengkapi dokumen
-                      persyaratan di bawah ini.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                      label="Scan KTP (JPG/PNG)"
-                      type="file"
-                      accept="image/*"
-                      error={fieldErrors["ktp"]}
-                      onChange={(e) =>
-                        uploadFile(
-                          "ktp",
-                          (e.target as HTMLInputElement).files?.[0],
-                        )
-                      }
-                    />
-                    <Input
-                      label="Ijazah Terakhir (PDF)"
-                      type="file"
-                      accept=".pdf"
-                      error={fieldErrors["ijazah"]}
-                      onChange={(e) =>
-                        uploadFile(
-                          "ijazah",
-                          (e.target as HTMLInputElement).files?.[0],
-                        )
-                      }
-                    />
-                    <Input
-                      label="Pas Foto (3x4)"
-                      type="file"
-                      accept="image/*"
-                      hint="Format gambar (JPG/PNG)"
-                      error={fieldErrors["pas_photo"]}
-                      onChange={(e) =>
-                        uploadFile(
-                          "pas_photo",
-                          (e.target as HTMLInputElement).files?.[0],
-                        )
-                      }
-                    />
-                    <Input
-                      label="Sertifikat Kompetensi (PDF - Opsional)"
-                      type="file"
-                      accept=".pdf"
-                      error={fieldErrors["certificate"]}
-                      onChange={(e) =>
-                        uploadFile(
-                          "certificate",
-                          (e.target as HTMLInputElement).files?.[0],
-                        )
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Keterampilan / Skill
-                    </label>
-                    <Input
-                      placeholder="Ketik keahlian lalu tekan Enter"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          const val = e.currentTarget.value.trim();
-                          if (val && !skills.includes(val)) {
-                            setSkills([...skills, val]);
-                            e.currentTarget.value = "";
-                          }
-                        }
-                      }}
-                    />
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {skills.map((s) => (
-                        <span
-                          key={s}
-                          className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center gap-1"
-                        >
-                          {s}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSkills(skills.filter((x) => x !== s))
-                            }
-                            className="hover:text-blue-900 ml-1"
-                          >
-                            &times;
-                          </button>
-                        </span>
-                      ))}
+              <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+                <div className="h-1 bg-gradient-to-r from-primary/90 via-primary-light to-secondary" />
+                <div className="p-6 sm:p-8">
+                  {doc && doc.status === "EXPIRED" && (
+                    <div className="mb-6 rounded-2xl border border-rose-200/80 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                      Kartu AK1 Anda sudah expired silahkan buat baru
+                    </div>
+                  )}
+                  <div className="mb-6 flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-xl text-primary">
+                      <i className="ri-file-list-3-line" aria-hidden />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold text-slate-900">
+                        Pengajuan Kartu AK1
+                      </h2>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Unggah dokumen wajib dan tambahkan keterampilan
+                        pendukung agar pengajuan lebih siap diverifikasi.
+                      </p>
                     </div>
                   </div>
-                </div>
 
-                {submissionError && (
-                  <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-100">
-                    {submissionError}
+                  <div className="space-y-4" key="ak1-new">
+                    <div className="rounded-2xl border border-sky-200/80 bg-sky-50/80 p-4">
+                      <p className="text-sm leading-relaxed text-sky-900">
+                        Untuk pembuatan kartu AK1 baru, silakan lengkapi dokumen
+                        persyaratan di bawah ini.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <Input
+                        label="Scan KTP (JPG/PNG)"
+                        type="file"
+                        accept="image/*"
+                        error={fieldErrors["ktp"]}
+                        onChange={(e) =>
+                          uploadFile(
+                            "ktp",
+                            (e.target as HTMLInputElement).files?.[0],
+                          )
+                        }
+                      />
+                      <Input
+                        label="Ijazah Terakhir (PDF)"
+                        type="file"
+                        accept=".pdf"
+                        error={fieldErrors["ijazah"]}
+                        onChange={(e) =>
+                          uploadFile(
+                            "ijazah",
+                            (e.target as HTMLInputElement).files?.[0],
+                          )
+                        }
+                      />
+                      <Input
+                        label="Pas Foto (3x4)"
+                        type="file"
+                        accept="image/*"
+                        hint="Format gambar (JPG/PNG)"
+                        error={fieldErrors["pas_photo"]}
+                        onChange={(e) =>
+                          uploadFile(
+                            "pas_photo",
+                            (e.target as HTMLInputElement).files?.[0],
+                          )
+                        }
+                      />
+                      <Input
+                        label="Sertifikat Kompetensi (PDF - Opsional)"
+                        type="file"
+                        accept=".pdf"
+                        error={fieldErrors["certificate"]}
+                        onChange={(e) =>
+                          uploadFile(
+                            "certificate",
+                            (e.target as HTMLInputElement).files?.[0],
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-600">
+                        Keterampilan / Skill
+                      </label>
+                      <Input
+                        placeholder="Ketik keahlian lalu tekan Enter"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const val = e.currentTarget.value.trim();
+                            if (val && !skills.includes(val)) {
+                              setSkills([...skills, val]);
+                              e.currentTarget.value = "";
+                            }
+                          }
+                        }}
+                      />
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {skills.map((s) => (
+                          <span
+                            key={s}
+                            className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/15"
+                          >
+                            {s}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSkills(skills.filter((x) => x !== s))
+                              }
+                              className="ml-1 text-primary/80 transition hover:text-primary"
+                            >
+                              &times;
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                )}
 
-                <div className="mt-6 flex justify-end">
-                  <button
-                    onClick={handleSubmitAk1}
-                    disabled={submitting}
-                    className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium shadow-sm"
-                  >
-                    {submitting ? "Menyimpan..." : "Simpan Pengajuan"}
-                  </button>
+                  {submissionError && (
+                    <div className="mt-4 rounded-2xl border border-rose-200/80 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                      {submissionError}
+                    </div>
+                  )}
+
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      onClick={handleSubmitAk1}
+                      disabled={submitting}
+                      className={primaryButtonClass}
+                    >
+                      <i className="ri-send-plane-line" aria-hidden />
+                      {submitting ? "Menyimpan..." : "Simpan Pengajuan"}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -2426,16 +2472,16 @@ export default function Ak1Page() {
 
                   return (
                     <>
-                      <Card>
+                      <Card className={cardSurfaceClass}>
                         <div className="flex flex-col gap-4">
-                          <div className="border-b pb-4">
-                            <div className="flex justify-between items-start">
+                          <div className="border-b border-slate-200/80 pb-4">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                               <div>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                <h3 className="mb-2 text-lg font-semibold text-slate-900">
                                   Status Dokumen
                                 </h3>
                                 <div
-                                  className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${statusColor}`}
+                                  className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${statusColor}`}
                                 >
                                   {uiStatus}
                                 </div>
@@ -2461,8 +2507,9 @@ export default function Ak1Page() {
                                       }
                                     }
                                   }}
-                                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                                  className={primaryButtonClass}
                                 >
+                                  <i className="ri-refresh-line" aria-hidden />
                                   Perpanjang Kartu
                                 </button>
                               )}
@@ -2481,7 +2528,7 @@ export default function Ak1Page() {
                               </p>
                             )}
                             {statusRaw === "REJECTED" && (
-                              <div className="mt-3 p-3 bg-red-50 text-red-800 rounded-lg text-sm border border-red-200">
+                              <div className="mt-3 rounded-2xl border border-rose-200/80 bg-rose-50 px-4 py-3 text-sm text-rose-800">
                                 <p className="font-semibold mb-1">
                                   Pengajuan Ditolak
                                 </p>
@@ -2494,15 +2541,15 @@ export default function Ak1Page() {
                           </div>
 
                           {currentExpiryDate && (
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4">
+                              <h3 className="mb-2 text-lg font-semibold text-slate-900">
                                 Masa Berlaku
                               </h3>
                               <div className="flex items-center gap-3 mb-2">
-                                <span className="text-gray-600">
+                                <span className="text-slate-600">
                                   Berlaku sampai:
                                 </span>
-                                <span className="font-medium">
+                                <span className="font-medium text-slate-900">
                                   {currentExpiryDate.toLocaleDateString(
                                     "id-ID",
                                     {
@@ -2513,12 +2560,12 @@ export default function Ak1Page() {
                               </div>
 
                               <div
-                                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
+                                className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium ${
                                   daysLeft !== null && daysLeft < 0
-                                    ? "bg-red-100 text-red-800"
+                                    ? "bg-rose-100 text-rose-900 ring-1 ring-rose-200/80"
                                     : daysLeft !== null && daysLeft < 60
-                                      ? "bg-yellow-100 text-yellow-800"
-                                      : "bg-green-100 text-green-800"
+                                      ? "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80"
+                                      : "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/80"
                                 }`}
                               >
                                 <i className="ri-time-line"></i>
@@ -2532,20 +2579,20 @@ export default function Ak1Page() {
                       </Card>
 
                       {d.card_file && (
-                        <Card>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                        <Card className={cardSurfaceClass}>
+                          <h3 className="mb-4 text-lg font-semibold text-slate-900">
                             Kartu AK1 Digital
                           </h3>
-                          <div className="bg-gray-50 p-4 rounded-lg flex items-center justify-between border border-gray-200">
+                          <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/90 bg-slate-50/80 p-4 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex items-center gap-3">
-                              <div className="p-2 bg-white rounded shadow-sm border border-gray-100">
+                              <div className="rounded-xl border border-slate-200/80 bg-white p-2 shadow-sm">
                                 <i className="ri-file-pdf-line text-red-500 text-2xl"></i>
                               </div>
                               <div>
-                                <p className="font-medium text-gray-900">
+                                <p className="font-medium text-slate-900">
                                   Kartu AK1.pdf
                                 </p>
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs text-slate-500">
                                   Dokumen Digital
                                 </p>
                               </div>
@@ -2557,8 +2604,9 @@ export default function Ak1Page() {
                                 );
                                 window.open(signed.url, "_blank");
                               }}
-                              className="px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
+                              className={neutralButtonClass}
                             >
+                              <i className="ri-download-2-line" aria-hidden />
                               Unduh
                             </button>
                           </div>
@@ -2572,57 +2620,73 @@ export default function Ak1Page() {
 
           {role !== "candidate" && (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <StatCard
-                  title="Total Pengajuan"
-                  value={filteredAk1.length}
-                  change=""
-                  color="var(--color-secondary)"
-                  icon="ri-id-card-line"
-                />
-                <StatCard
-                  title="Aktif"
-                  value={
-                    filteredAk1.filter((r) => r.uiStatus === "Aktif").length
-                  }
-                  change=""
-                  color="var(--color-primary)"
-                  icon="ri-checkbox-circle-line"
-                />
-                <StatCard
-                  title="Menunggu"
-                  value={
-                    filteredAk1.filter(
-                      (r) => r.uiStatus === "Menunggu Pembuatan",
-                    ).length
-                  }
-                  change=""
-                  color="var(--color-foreground)"
-                  icon="ri-time-line"
-                />
-                <StatCard
-                  title="Ditolak"
-                  value={
-                    filteredAk1.filter((r) => r.uiStatus === "Ditolak").length
-                  }
-                  change=""
-                  color="var(--color-primary)"
-                  icon="ri-close-circle-line"
-                />
-              </div>
-              <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
-                <div className="flex flex-col sm:flex-row gap-4">
+              <section className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900">
+                      Ringkasan pengajuan
+                    </h2>
+                    <p className="text-sm text-slate-500">
+                      Pantau antrean verifikasi dan status AK1 aktif dari satu
+                      dashboard.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <StatCard
+                    title="Total Pengajuan"
+                    value={filteredAk1.length}
+                    change=""
+                    color="var(--color-secondary)"
+                    icon="ri-file-list-3-line"
+                  />
+                  <StatCard
+                    title="Aktif"
+                    value={
+                      filteredAk1.filter((r) => r.uiStatus === "Aktif").length
+                    }
+                    change=""
+                    color="var(--color-primary)"
+                    icon="ri-checkbox-circle-line"
+                  />
+                  <StatCard
+                    title="Menunggu"
+                    value={
+                      filteredAk1.filter(
+                        (r) => r.uiStatus === "Menunggu Pembuatan",
+                      ).length
+                    }
+                    change=""
+                    color="var(--color-foreground)"
+                    icon="ri-time-line"
+                  />
+                  <StatCard
+                    title="Ditolak"
+                    value={
+                      filteredAk1.filter((r) => r.uiStatus === "Ditolak").length
+                    }
+                    change=""
+                    color="var(--color-primary)"
+                    icon="ri-close-circle-line"
+                  />
+                </div>
+              </section>
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-950/[0.02] sm:p-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
                   <div className="flex-1">
+                    <p className="mb-2 text-sm font-medium text-slate-500">
+                      Cari pengajuan
+                    </p>
                     <Input
                       icon="ri-search-line"
                       type="text"
                       placeholder="Cari nama atau NIK..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full py-3"
+                      className="w-full rounded-xl py-3"
                     />
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-2 items-stretch">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
                     <SearchableSelect
                       value={statusFilter}
                       onChange={(v) => setStatusFilter(v)}
@@ -2643,35 +2707,31 @@ export default function Ak1Page() {
                     />
                     <button
                       onClick={() => setShowInfo(true)}
-                      className="px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary text-sm"
+                      className={neutralButtonClass}
                     >
+                      <i className="ri-information-line" aria-hidden />
                       Info
                     </button>
                   </div>
                 </div>
               </div>
               <Card
-                header={
-                  <h2 className="text-lg font-semibold text-primary">
-                    Data AK1
-                  </h2>
-                }
-                className="overflow-hidden"
+                className={`overflow-hidden ${cardSurfaceClass} [&>div]:!p-0`}
               >
                 {viewMode === "grid" ? (
                   <CardGrid>
                     {paginatedAk1.map((r) => (
                       <div
                         key={`ak1-${r.candidate_id}-${r.nik}`}
-                        className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
+                        className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                       >
-                        <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+                        <div className="border-b border-slate-200/80 bg-gradient-to-r from-slate-50 to-slate-100/80 p-4">
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
-                              <p className="font-bold text-primary text-sm leading-tight truncate">
+                              <p className="truncate text-sm font-bold leading-tight text-slate-900">
                                 {r.full_name || "-"}
                               </p>
-                              <p className="text-xs text-gray-500 truncate">
+                              <p className="truncate text-xs text-slate-500">
                                 {r.nik || "-"}
                               </p>
                             </div>
@@ -2695,7 +2755,7 @@ export default function Ak1Page() {
                             <div className="text-xs text-gray-600">
                               {r.file ? (
                                 <button
-                                  className="text-primary underline"
+                                  className={documentLinkClass}
                                   onClick={async () => {
                                     const d = await presignDownload(
                                       r.file as string,
@@ -2711,7 +2771,7 @@ export default function Ak1Page() {
                             </div>
                             <div className="flex gap-2">
                               <button
-                                className="px-3 py-1 text-xs rounded bg-secondary text-white hover:brightness-95"
+                                className={secondaryButtonClass}
                                 onClick={async () => {
                                   const d = await getAk1Document(
                                     undefined,
@@ -2730,6 +2790,7 @@ export default function Ak1Page() {
                                   setShowDetailModal(true);
                                 }}
                               >
+                                <i className="ri-eye-line" aria-hidden />
                                 Detail
                               </button>
                               {permissions.includes("ak1.verify") &&
@@ -2739,7 +2800,7 @@ export default function Ak1Page() {
                                 ] || "Menunggu Pembuatan") ===
                                   "Menunggu Pembuatan" && (
                                   <button
-                                    className="px-3 py-1 text-xs rounded bg-primary text-white hover:bg-[var(--color-primary-dark)]"
+                                    className={primaryButtonClass}
                                     onClick={async () => {
                                       const d = await getAk1Document(
                                         undefined,
@@ -2763,6 +2824,10 @@ export default function Ak1Page() {
                                       setShowVerifyModal(true);
                                     }}
                                   >
+                                    <i
+                                      className="ri-shield-check-line"
+                                      aria-hidden
+                                    />
                                     Verifikasi
                                   </button>
                                 )}
@@ -2772,7 +2837,7 @@ export default function Ak1Page() {
                                   String(r.status || "").toUpperCase()
                                 ] || "") === "Menunggu Perpanjangan" && (
                                   <button
-                                    className="px-3 py-1 text-xs rounded bg-orange-500 text-white hover:bg-orange-600"
+                                    className={warningButtonClass}
                                     onClick={async () => {
                                       setGenerating(true);
                                       try {
@@ -2929,13 +2994,17 @@ export default function Ak1Page() {
                                       }
                                     }}
                                   >
+                                    <i
+                                      className="ri-refresh-line"
+                                      aria-hidden
+                                    />
                                     Perpanjangan
                                   </button>
                                 )}
                               {permissions.includes("ak1.generate") &&
                                 !r.file && (
                                   <button
-                                    className="px-3 py-1 text-xs rounded bg-secondary text-white hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className={secondaryButtonClass}
                                     disabled={generating}
                                     onClick={async () => {
                                       setGenerating(true);
@@ -3113,6 +3182,10 @@ export default function Ak1Page() {
                                       setShowGenerateModal(true);
                                     }}
                                   >
+                                    <i
+                                      className="ri-file-pdf-line"
+                                      aria-hidden
+                                    />
                                     {generating ? "Loading..." : "Generate"}
                                   </button>
                                 )}
@@ -3126,21 +3199,21 @@ export default function Ak1Page() {
                   <>
                     <Table className="hidden sm:block">
                       <TableHead>
-                        <tr>
+                        <TableRow>
                           <TH>Nama</TH>
                           <TH>NIK</TH>
                           <TH>Status</TH>
                           <TH>File</TH>
                           <TH>Aksi</TH>
-                        </tr>
+                        </TableRow>
                       </TableHead>
                       <TableBody>
                         {paginatedAk1.map((r, i) => (
                           <TableRow key={`${r.candidate_id}-${r.nik}-${i}`}>
-                            <TD className="text-gray-900">
+                            <TD className="text-slate-900">
                               {r.full_name || "-"}
                             </TD>
-                            <TD className="text-gray-900">{r.nik || "-"}</TD>
+                            <TD className="text-slate-900">{r.nik || "-"}</TD>
                             <TD>
                               {(() => {
                                 const ui =
@@ -3159,7 +3232,7 @@ export default function Ak1Page() {
                             <TD>
                               {r.file ? (
                                 <button
-                                  className="text-primary underline"
+                                  className={documentLinkClass}
                                   onClick={async () => {
                                     const d = await presignDownload(
                                       r.file as string,
@@ -3174,9 +3247,9 @@ export default function Ak1Page() {
                               )}
                             </TD>
                             <TD>
-                              <div className="flex gap-2">
+                              <div className="flex flex-wrap gap-2">
                                 <button
-                                  className="px-3 py-1 text-xs rounded bg-secondary text-white hover:brightness-95"
+                                  className={secondaryButtonClass}
                                   onClick={async () => {
                                     const d = await getAk1Document(
                                       undefined,
@@ -3195,6 +3268,7 @@ export default function Ak1Page() {
                                     setShowDetailModal(true);
                                   }}
                                 >
+                                  <i className="ri-eye-line" aria-hidden />
                                   Detail
                                 </button>
                                 {permissions.includes("ak1.verify") &&
@@ -3204,7 +3278,7 @@ export default function Ak1Page() {
                                   ] || "Menunggu Pembuatan") ===
                                     "Menunggu Pembuatan" && (
                                     <button
-                                      className="px-3 py-1 text-xs rounded bg-primary text-white hover:bg-[var(--color-primary-dark)]"
+                                      className={primaryButtonClass}
                                       onClick={async () => {
                                         const d = await getAk1Document(
                                           undefined,
@@ -3228,6 +3302,10 @@ export default function Ak1Page() {
                                         setShowVerifyModal(true);
                                       }}
                                     >
+                                      <i
+                                        className="ri-shield-check-line"
+                                        aria-hidden
+                                      />
                                       Verifikasi
                                     </button>
                                   )}
@@ -3237,7 +3315,7 @@ export default function Ak1Page() {
                                     String(r.status || "").toUpperCase()
                                   ] || "") === "Menunggu Perpanjangan" && (
                                     <button
-                                      className="px-3 py-1 text-xs rounded bg-orange-500 text-white hover:bg-orange-600"
+                                      className={warningButtonClass}
                                       onClick={async () => {
                                         setGenerating(true);
                                         try {
@@ -3395,13 +3473,17 @@ export default function Ak1Page() {
                                         }
                                       }}
                                     >
+                                      <i
+                                        className="ri-refresh-line"
+                                        aria-hidden
+                                      />
                                       Perpanjangan
                                     </button>
                                   )}
                                 {permissions.includes("ak1.generate") &&
                                   !r.file && (
                                     <button
-                                      className="px-3 py-1 text-xs rounded bg-secondary text-white hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                      className={secondaryButtonClass}
                                       disabled={generating}
                                       onClick={async () => {
                                         setGenerating(true);
@@ -3592,6 +3674,10 @@ export default function Ak1Page() {
                                         setShowGenerateModal(true);
                                       }}
                                     >
+                                      <i
+                                        className="ri-file-pdf-line"
+                                        aria-hidden
+                                      />
                                       {generating ? "Loading..." : "Generate"}
                                     </button>
                                   )}
@@ -3601,18 +3687,18 @@ export default function Ak1Page() {
                         ))}
                       </TableBody>
                     </Table>
-                    <div className="sm:hidden p-3 space-y-3">
+                    <div className="space-y-3 p-3 sm:hidden">
                       {paginatedAk1.map((r, idx) => (
                         <div
                           key={`m-${r.candidate_id}-${r.nik}-${idx}`}
-                          className="border border-gray-200 rounded-lg p-3"
+                          className="rounded-2xl border border-slate-200/90 bg-slate-50/70 p-4 shadow-sm"
                         >
                           <div className="flex items-start justify-between">
                             <div className="min-w-0">
-                              <p className="font-semibold text-primary truncate">
+                              <p className="truncate font-semibold text-slate-900">
                                 {r.full_name || "-"}
                               </p>
-                              <p className="text-xs text-gray-500 truncate">
+                              <p className="truncate text-xs text-slate-500">
                                 {r.nik || "-"}
                               </p>
                             </div>
@@ -3630,9 +3716,9 @@ export default function Ak1Page() {
                               );
                             })()}
                           </div>
-                          <div className="mt-3 flex gap-2">
+                          <div className="mt-3 flex flex-wrap gap-2">
                             <button
-                              className="flex-1 px-3 py-2 text-xs bg-secondary text-white rounded hover:brightness-95 transition"
+                              className={secondaryButtonClass}
                               onClick={async () => {
                                 const d = await getAk1Document(
                                   undefined,
@@ -3651,6 +3737,7 @@ export default function Ak1Page() {
                                 setShowDetailModal(true);
                               }}
                             >
+                              <i className="ri-eye-line" aria-hidden />
                               Detail
                             </button>
                             {permissions.includes("ak1.verify") &&
@@ -3660,7 +3747,7 @@ export default function Ak1Page() {
                               ] || "Menunggu Pembuatan") ===
                                 "Menunggu Pembuatan" && (
                                 <button
-                                  className="flex-1 px-3 py-2 text-xs bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition"
+                                  className={primaryButtonClass}
                                   onClick={async () => {
                                     const d = await getAk1Document(
                                       undefined,
@@ -3683,6 +3770,10 @@ export default function Ak1Page() {
                                     setShowVerifyModal(true);
                                   }}
                                 >
+                                  <i
+                                    className="ri-shield-check-line"
+                                    aria-hidden
+                                  />
                                   Verifikasi
                                 </button>
                               )}
@@ -3692,7 +3783,7 @@ export default function Ak1Page() {
                                 String(r.status || "").toUpperCase()
                               ] || "") === "Menunggu Perpanjangan" && (
                                 <button
-                                  className="flex-1 px-3 py-2 text-xs bg-orange-500 text-white rounded hover:bg-orange-600 transition"
+                                  className={warningButtonClass}
                                   onClick={async () => {
                                     setGenerating(true);
                                     try {
@@ -3839,13 +3930,14 @@ export default function Ak1Page() {
                                     }
                                   }}
                                 >
+                                  <i className="ri-refresh-line" aria-hidden />
                                   Perpanjangan
                                 </button>
                               )}
                             {permissions.includes("ak1.generate") &&
                               !r.file && (
                                 <button
-                                  className="flex-1 px-3 py-2 text-xs bg-secondary text-white rounded hover:brightness-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className={secondaryButtonClass}
                                   disabled={generating}
                                   onClick={async () => {
                                     setGenerating(true);
@@ -3926,6 +4018,7 @@ export default function Ak1Page() {
                                     setShowGenerateModal(true);
                                   }}
                                 >
+                                  <i className="ri-file-pdf-line" aria-hidden />
                                   {generating ? "Loading..." : "Generate"}
                                 </button>
                               )}
@@ -3936,7 +4029,7 @@ export default function Ak1Page() {
                   </>
                 )}
               </Card>
-              <div className="mt-4">
+              <div className="pt-1">
                 <Pagination
                   page={page}
                   pageSize={pageSize}
@@ -3958,13 +4051,13 @@ export default function Ak1Page() {
             actions={
               <button
                 onClick={() => setShowInfo(false)}
-                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
+                className={neutralButtonClass}
               >
                 Tutup
               </button>
             }
           >
-            <p className="text-sm text-gray-500">
+            <p className="text-sm leading-relaxed text-slate-600">
               Setelah dokumen diunggah dan profil lengkap, AK1 akan diverifikasi
               oleh petugas Disnaker. Jika disetujui, kartu dapat diunduh di
               halaman ini.
@@ -3980,7 +4073,7 @@ export default function Ak1Page() {
               <>
                 <button
                   onClick={() => setShowGenerateModal(false)}
-                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
+                  className={neutralButtonClass}
                 >
                   Tutup
                 </button>
@@ -4172,30 +4265,37 @@ export default function Ak1Page() {
                       setGenerating(false);
                     }
                   }}
-                  className="ml-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={primaryButtonClass}
                 >
+                  <i className="ri-shield-check-line" aria-hidden />
                   {generating ? "Loading..." : "Simpan & Verifikasi"}
                 </button>
               </>
             }
           >
-            <div>
-              <div className="mb-4">
-                <label className="text-sm text-gray-700">
+            <div className="space-y-6">
+              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4">
+                <p className="text-sm leading-relaxed text-slate-600">
+                  Pastikan pratinjau template, nomor urut, dan data pencari
+                  kerja sudah benar sebelum kartu disimpan dan diverifikasi.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-4">
+                <label className="text-sm font-medium text-slate-600">
                   No urut pendaftaran (otomatis)
                   <Input
                     type="text"
                     readOnly
-                    className="mt-1 w-full bg-gray-50 cursor-not-allowed"
+                    className="mt-2 w-full rounded-xl bg-slate-100 cursor-not-allowed"
                     value={genMeta.no_urut_pendaftaran || ""}
                   />
                 </label>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-2 text-xs leading-relaxed text-slate-500">
                   Nomor diurutkan otomatis (1, 2, 3, …). Jika kartu sudah punya
                   nomor, nilai yang tersimpan dipakai lagi.
                 </p>
               </div>
-              <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+              <div className="max-h-[60vh] space-y-6 overflow-y-auto pr-2">
                 {templates.map((t) => (
                   <Ak1PreviewItem
                     key={t.id}
@@ -4213,7 +4313,7 @@ export default function Ak1Page() {
                   />
                 ))}
                 {templates.length === 0 && (
-                  <div className="text-center text-gray-500 py-8">
+                  <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center text-slate-500">
                     Belum ada template yang tersedia.
                   </div>
                 )}
@@ -4230,7 +4330,7 @@ export default function Ak1Page() {
               <>
                 <button
                   onClick={() => setShowRenewModal(false)}
-                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
+                  className={neutralButtonClass}
                 >
                   Batal
                 </button>
@@ -4277,15 +4377,16 @@ export default function Ak1Page() {
                       setGenerating(false);
                     }
                   }}
-                  className="ml-2 px-4 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50"
+                  className={warningButtonClass}
                 >
+                  <i className="ri-refresh-line" aria-hidden />
                   {generating ? "Proses..." : "Simpan Perpanjangan"}
                 </button>
               </>
             }
           >
-            <div className="space-y-6 max-h-[80vh] overflow-y-auto">
-              <div className="bg-blue-50 p-4 rounded-lg mb-4 text-blue-800 text-sm">
+            <div className="max-h-[80vh] space-y-6 overflow-y-auto">
+              <div className="rounded-2xl border border-sky-200/80 bg-sky-50/80 p-4 text-sm text-sky-900">
                 Pastikan data perpanjangan (NIP & Tanggal) sudah benar pada
                 pratinjau di bawah ini.
               </div>
@@ -4315,99 +4416,124 @@ export default function Ak1Page() {
             actions={
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
+                className={neutralButtonClass}
               >
                 Tutup
               </button>
             }
           >
-            <div className="text-sm text-gray-700 space-y-2">
-              <div>
-                Nama: {(detailData?.candidate || profile)?.full_name || "-"}
+            <div className="space-y-4 text-sm text-slate-700">
+              <div className="grid gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Nama
+                  </p>
+                  <p className="mt-1 font-medium text-slate-900">
+                    {(detailData?.candidate || profile)?.full_name || "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    NIK
+                  </p>
+                  <p className="mt-1 font-medium text-slate-900">
+                    {(detailData?.candidate || profile)?.nik || "-"}
+                  </p>
+                </div>
+                <div className="sm:col-span-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Tempat / Tanggal Lahir
+                  </p>
+                  <p className="mt-1 font-medium text-slate-900">
+                    {(detailData?.candidate || profile)?.place_of_birth || "-"}{" "}
+                    /{" "}
+                    {String(
+                      (detailData?.candidate || profile)?.birthdate || "",
+                    ).slice(0, 10) || "-"}
+                  </p>
+                </div>
               </div>
-              <div>NIK: {(detailData?.candidate || profile)?.nik || "-"}</div>
-              <div>
-                Tempat/Tgl Lahir:{" "}
-                {(detailData?.candidate || profile)?.place_of_birth || "-"} /{" "}
-                {String(
-                  (detailData?.candidate || profile)?.birthdate || "",
-                ).slice(0, 10) || "-"}
-              </div>
-              <hr className="my-2" />
-              <div>
-                KTP:{" "}
-                {detailData?.document?.ktp_file ? (
-                  <a
-                    href={detailData.document.ktp_file}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-primary underline"
-                  >
-                    Lihat
-                  </a>
-                ) : (
-                  "-"
-                )}
-              </div>
-              <div>
-                Ijazah:{" "}
-                {detailData?.document?.ijazah_file ? (
-                  <a
-                    href={detailData.document.ijazah_file}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-primary underline"
-                  >
-                    Lihat
-                  </a>
-                ) : (
-                  "-"
-                )}
-              </div>
-              <div>
-                Pas Foto:{" "}
-                {detailData?.document?.pas_photo_file ? (
-                  <a
-                    href={detailData.document.pas_photo_file}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-primary underline"
-                  >
-                    Lihat
-                  </a>
-                ) : (
-                  "-"
-                )}
-              </div>
-              <div>
-                Sertifikat:{" "}
-                {detailData?.document?.certificate_file ? (
-                  <a
-                    href={detailData.document.certificate_file}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-primary underline"
-                  >
-                    Lihat
-                  </a>
-                ) : (
-                  "-"
-                )}
-              </div>
-              <div>
-                Kartu AK1:{" "}
-                {detailData?.document?.card_file ? (
-                  <a
-                    href={detailData.document.card_file}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-primary underline"
-                  >
-                    Unduh Kartu
-                  </a>
-                ) : (
-                  "-"
-                )}
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-4">
+                <p className="mb-3 text-sm font-semibold text-slate-900">
+                  Dokumen terlampir
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    KTP:{" "}
+                    {detailData?.document?.ktp_file ? (
+                      <a
+                        href={detailData.document.ktp_file}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={documentLinkClass}
+                      >
+                        Lihat
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </div>
+                  <div>
+                    Ijazah:{" "}
+                    {detailData?.document?.ijazah_file ? (
+                      <a
+                        href={detailData.document.ijazah_file}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={documentLinkClass}
+                      >
+                        Lihat
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </div>
+                  <div>
+                    Pas Foto:{" "}
+                    {detailData?.document?.pas_photo_file ? (
+                      <a
+                        href={detailData.document.pas_photo_file}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={documentLinkClass}
+                      >
+                        Lihat
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </div>
+                  <div>
+                    Sertifikat:{" "}
+                    {detailData?.document?.certificate_file ? (
+                      <a
+                        href={detailData.document.certificate_file}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={documentLinkClass}
+                      >
+                        Lihat
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </div>
+                  <div className="sm:col-span-2">
+                    Kartu AK1:{" "}
+                    {detailData?.document?.card_file ? (
+                      <a
+                        href={detailData.document.card_file}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={documentLinkClass}
+                      >
+                        Unduh Kartu
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </Modal>
@@ -4420,7 +4546,7 @@ export default function Ak1Page() {
               <>
                 <button
                   onClick={() => setShowVerifyModal(false)}
-                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
+                  className={neutralButtonClass}
                 >
                   Batal
                 </button>
@@ -4445,18 +4571,19 @@ export default function Ak1Page() {
                       showError("Gagal verifikasi AK1");
                     }
                   }}
-                  className="ml-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
+                  className={primaryButtonClass}
                 >
+                  <i className="ri-save-line" aria-hidden />
                   Simpan
                 </button>
               </>
             }
           >
-            <div className="grid grid-cols-1 gap-3">
-              <label className="text-sm text-gray-700">
+            <div className="grid grid-cols-1 gap-4">
+              <label className="text-sm font-medium text-slate-600">
                 Status
                 <select
-                  className="mt-1 w-full border rounded p-2"
+                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                   value={verifyPayload.status}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                     setVerifyPayload({
@@ -4470,10 +4597,10 @@ export default function Ak1Page() {
                 </select>
               </label>
               {verifyPayload.status === "REJECTED" && (
-                <label className="text-sm text-gray-700">
+                <label className="text-sm font-medium text-slate-600">
                   Catatan Penolakan
                   <textarea
-                    className="mt-1 w-full border rounded p-2"
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                     rows={3}
                     value={verifyPayload.note || ""}
                     onChange={(e) =>
@@ -4486,93 +4613,114 @@ export default function Ak1Page() {
                   />
                 </label>
               )}
-              <div className="text-sm text-gray-700 space-y-2">
-                <div>
-                  Nama: {(detailData?.candidate || profile)?.full_name || "-"}
+              <div className="space-y-4 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 text-sm text-slate-700">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Nama
+                    </p>
+                    <p className="mt-1 font-medium text-slate-900">
+                      {(detailData?.candidate || profile)?.full_name || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      NIK
+                    </p>
+                    <p className="mt-1 font-medium text-slate-900">
+                      {(detailData?.candidate || profile)?.nik || "-"}
+                    </p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Tempat / Tanggal Lahir
+                    </p>
+                    <p className="mt-1 font-medium text-slate-900">
+                      {(detailData?.candidate || profile)?.place_of_birth ||
+                        "-"}{" "}
+                      /{" "}
+                      {String(
+                        (detailData?.candidate || profile)?.birthdate || "",
+                      ).slice(0, 10) || "-"}
+                    </p>
+                  </div>
                 </div>
-                <div>NIK: {(detailData?.candidate || profile)?.nik || "-"}</div>
-                <div>
-                  Tempat/Tgl Lahir:{" "}
-                  {(detailData?.candidate || profile)?.place_of_birth || "-"} /{" "}
-                  {String(
-                    (detailData?.candidate || profile)?.birthdate || "",
-                  ).slice(0, 10) || "-"}
-                </div>
-                <hr className="my-2" />
-                <div>
-                  KTP:{" "}
-                  {detailData?.document?.ktp_file ? (
-                    <a
-                      href={detailData.document.ktp_file}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-primary underline"
-                    >
-                      Lihat
-                    </a>
-                  ) : (
-                    "-"
-                  )}
-                </div>
-                <div>
-                  Ijazah:{" "}
-                  {detailData?.document?.ijazah_file ? (
-                    <a
-                      href={detailData.document.ijazah_file}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-primary underline"
-                    >
-                      Lihat
-                    </a>
-                  ) : (
-                    "-"
-                  )}
-                </div>
-                <div>
-                  Pas Foto:{" "}
-                  {detailData?.document?.pas_photo_file ? (
-                    <a
-                      href={detailData.document.pas_photo_file}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-primary underline"
-                    >
-                      Lihat
-                    </a>
-                  ) : (
-                    "-"
-                  )}
-                </div>
-                <div>
-                  Sertifikat:{" "}
-                  {detailData?.document?.certificate_file ? (
-                    <a
-                      href={detailData.document.certificate_file}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-primary underline"
-                    >
-                      Lihat
-                    </a>
-                  ) : (
-                    "-"
-                  )}
-                </div>
-                <div>
-                  Kartu AK1:{" "}
-                  {detailData?.document?.card_file ? (
-                    <a
-                      href={detailData.document.card_file}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-primary underline"
-                    >
-                      Unduh Kartu
-                    </a>
-                  ) : (
-                    "-"
-                  )}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    KTP:{" "}
+                    {detailData?.document?.ktp_file ? (
+                      <a
+                        href={detailData.document.ktp_file}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={documentLinkClass}
+                      >
+                        Lihat
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </div>
+                  <div>
+                    Ijazah:{" "}
+                    {detailData?.document?.ijazah_file ? (
+                      <a
+                        href={detailData.document.ijazah_file}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={documentLinkClass}
+                      >
+                        Lihat
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </div>
+                  <div>
+                    Pas Foto:{" "}
+                    {detailData?.document?.pas_photo_file ? (
+                      <a
+                        href={detailData.document.pas_photo_file}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={documentLinkClass}
+                      >
+                        Lihat
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </div>
+                  <div>
+                    Sertifikat:{" "}
+                    {detailData?.document?.certificate_file ? (
+                      <a
+                        href={detailData.document.certificate_file}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={documentLinkClass}
+                      >
+                        Lihat
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </div>
+                  <div className="sm:col-span-2">
+                    Kartu AK1:{" "}
+                    {detailData?.document?.card_file ? (
+                      <a
+                        href={detailData.document.card_file}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={documentLinkClass}
+                      >
+                        Unduh Kartu
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

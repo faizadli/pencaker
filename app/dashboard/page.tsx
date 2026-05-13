@@ -569,7 +569,7 @@ function DashboardPageComponent() {
                   value={candidateStats.ak1Status}
                   change={`Status terkini (${candidateStats.rawDebug})`}
                   color={candidateStats.ak1Color}
-                  icon="ri-id-card-line"
+                  icon="ri-file-list-3-line"
                 />
                 <StatCard
                   title="Lamaran Terkirim"

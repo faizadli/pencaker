@@ -246,7 +246,7 @@ export default function Sidebar({
                       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${isActive && !isExit ? "bg-secondary/20 text-secondary" : "bg-black/15 text-emerald-100"}`}
                     >
                       <i
-                        className={`${item.icon || "ri-id-card-line"} text-lg leading-none`}
+                        className={`${item.icon || "ri-file-list-3-line"} text-lg leading-none`}
                       />
                     </span>
                     {!isMinimized && (
