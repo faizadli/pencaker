@@ -39,6 +39,7 @@ import {
   type TrainingAlumniParsedInvalid,
   type TrainingAlumniParsedValid,
 } from "../../../utils/training-alumni-excel";
+import { exportTrainingAlumniRowsXlsx } from "../../../utils/export-training-alumni";
 import {
   Table,
   TableHead,
@@ -274,6 +275,7 @@ export default function DashboardPesertaLatihanPage() {
   const [rows, setRows] = useState<TrainingAlumniRow[]>([]);
   const [total, setTotal] = useState(0);
   const [listLoading, setListLoading] = useState(false);
+  const [exportingExcel, setExportingExcel] = useState(false);
   const [distinctOptions, setDistinctOptions] =
     useState<TrainingAlumniDistinctOptions | null>(null);
   const [filterTrainingName, setFilterTrainingName] = useState("");
@@ -413,6 +415,37 @@ export default function DashboardPesertaLatihanPage() {
       setLoading(false);
     }
   }, [filterTrainingName, filterTrainingYear, showError]);
+
+  const handleExportExcel = useCallback(async () => {
+    if (!canRead) return;
+    const y = Number(filterTrainingYear);
+    if (filterTrainingYear === "" || Number.isNaN(y)) {
+      showError("Pilih tahun pelatihan terlebih dahulu");
+      return;
+    }
+    const nameTrim = filterTrainingName.trim();
+    setExportingExcel(true);
+    try {
+      const rows = await listTrainingAlumniAllPages({
+        training_year: y,
+        training_name: nameTrim !== "" ? nameTrim : undefined,
+      });
+      await exportTrainingAlumniRowsXlsx(rows, {
+        trainingYear: y,
+        trainingName: nameTrim !== "" ? nameTrim : undefined,
+      });
+      showSuccess(
+        rows.length === 0
+          ? "File Excel diunduh (tidak ada data untuk filter ini)"
+          : `Berhasil mengekspor ${rows.length} baris ke Excel`,
+      );
+    } catch (e) {
+      console.error(e);
+      showError("Gagal mengekspor data ke Excel");
+    } finally {
+      setExportingExcel(false);
+    }
+  }, [canRead, filterTrainingName, filterTrainingYear, showError, showSuccess]);
 
   useEffect(() => {
     if (!canRead) {
@@ -1021,6 +1054,26 @@ export default function DashboardPesertaLatihanPage() {
                 placeholder="Tahun pelatihan..."
                 className="w-full sm:w-[min(100%,10rem)] sm:min-w-[8rem]"
               />
+              {canRead && (
+                <button
+                  type="button"
+                  onClick={() => void handleExportExcel()}
+                  disabled={
+                    exportingExcel ||
+                    filterTrainingYear === "" ||
+                    Number.isNaN(Number(filterTrainingYear))
+                  }
+                  title="Unduh semua data yang cocok dengan tahun (dan nama pelatihan jika dipilih)"
+                  className="px-4 py-2.5 w-full sm:w-auto sm:min-w-[11rem] rounded-lg border border-primary bg-white text-primary hover:bg-primary/5 text-sm transition flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {exportingExcel ? (
+                    <i className="ri-loader-4-line animate-spin" aria-hidden />
+                  ) : (
+                    <i className="ri-download-2-line" aria-hidden />
+                  )}
+                  Export Excel
+                </button>
+              )}
               {canCreate && (
                 <button
                   type="button"

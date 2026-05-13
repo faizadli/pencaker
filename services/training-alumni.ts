@@ -147,15 +147,21 @@ const TRAINING_ALUMNI_LIST_SAFE_PAGE_SIZE = 100;
 export async function listTrainingAlumniAllPages(params?: {
   /** Untuk pengecekan duplikat NIK+tahun pada impor: batasi ke tahun yang sama. */
   training_year?: number;
+  /** Opsional: sama seperti filter daftar (kosong = semua nama pada tahun tersebut). */
+  training_name?: string;
 }): Promise<TrainingAlumniRow[]> {
   const limit = TRAINING_ALUMNI_LIST_SAFE_PAGE_SIZE;
   const out: TrainingAlumniRow[] = [];
   let page = 1;
+  const nameTrim =
+    params?.training_name != null ? String(params.training_name).trim() : "";
+  const training_name = nameTrim !== "" ? nameTrim : undefined;
   for (;;) {
     const res = await listTrainingAlumni({
       page,
       limit,
       training_year: params?.training_year,
+      training_name,
     });
     if (res.data.length === 0) break;
     out.push(...res.data);
