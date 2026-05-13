@@ -146,16 +146,26 @@ export default function Navbar() {
   const isLogin = (pathname || "").startsWith("/login");
   const isRegister = (pathname || "").startsWith("/register");
   if (isDashboard || isLogin || isRegister) return null;
+
+  const navPill =
+    "px-3 py-2 rounded-xl text-sm xl:text-base whitespace-nowrap motion-safe:transition-colors duration-200";
+  const navOn = `${navPill} font-semibold text-primary underline decoration-2 decoration-primary/50 underline-offset-8`;
+  const navMoreOn = `${navPill} font-semibold text-primary`;
+  const navOff = `${navPill} text-slate-600 hover:text-primary`;
+
   return (
     <div>
       <nav
         ref={navRef}
-        className="bg-white shadow-lg border-b border-gray-200 fixed top-0 left-0 right-0 z-50 w-full"
+        className="fixed top-0 left-0 right-0 z-50 w-full border-b border-slate-200/80 bg-white/90 shadow-[0_1px_0_rgba(0,0,0,0.04)] backdrop-blur-md supports-[backdrop-filter]:bg-white/75"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center">
-              <div className="flex-shrink-0 flex items-center gap-3">
+              <Link
+                href="/"
+                className="landing-focus flex-shrink-0 flex items-center gap-3 rounded-xl outline-offset-2"
+              >
                 {brand.logo ? (
                   <Image
                     src={brand.logo}
@@ -164,65 +174,46 @@ export default function Navbar() {
                     height={200}
                     className="object-contain h-8 sm:h-10 md:h-12 w-auto"
                     unoptimized
+                    priority
                   />
                 ) : (
-                  <div className="bg-primary rounded-lg flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark shadow-md shadow-primary/25">
                     <i className="ri-building-line text-white text-base sm:text-lg md:text-xl"></i>
                   </div>
                 )}
-              </div>
+              </Link>
             </div>
 
             <div className="hidden xl:block">
               <div className="ml-6 lg:ml-10 flex items-baseline space-x-2 lg:space-x-3">
                 <Link
                   href="/"
-                  className={
-                    isRoute("/")
-                      ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
-                      : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
-                  }
+                  className={`landing-focus ${isRoute("/") ? navOn : navOff}`}
                 >
                   Beranda
                 </Link>
                 <Link
                   href="/about"
-                  className={
-                    isRoute("/about")
-                      ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
-                      : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
-                  }
+                  className={`landing-focus ${isRoute("/about") ? navOn : navOff}`}
                 >
                   <span className="hidden xl:inline">Tentang Kami</span>
                   <span className="xl:hidden">Tentang</span>
                 </Link>
                 <Link
                   href="/jobs"
-                  className={
-                    isRoute("/jobs")
-                      ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
-                      : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
-                  }
+                  className={`landing-focus ${isRoute("/jobs") ? navOn : navOff}`}
                 >
                   Lowongan
                 </Link>
                 <Link
                   href="/bkk"
-                  className={
-                    isRoute("/bkk")
-                      ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
-                      : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
-                  }
+                  className={`landing-focus ${isRoute("/bkk") ? navOn : navOff}`}
                 >
                   BKK
                 </Link>
                 <Link
                   href="/informasi"
-                  className={
-                    isRoute("/informasi")
-                      ? "text-primary font-semibold bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
-                      : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors text-sm xl:text-base whitespace-nowrap"
-                  }
+                  className={`landing-focus ${isRoute("/informasi") ? navOn : navOff}`}
                 >
                   Informasi
                 </Link>
@@ -241,11 +232,8 @@ export default function Navbar() {
                   }}
                 >
                   <button
-                    className={
-                      isMoreActive
-                        ? "text-primary font-semibold px-3 py-2 rounded-lg bg-gray-50 transition-colors flex items-center gap-1"
-                        : "text-gray-600 hover:text-primary hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors flex items-center gap-1"
-                    }
+                    type="button"
+                    className={`landing-focus flex items-center gap-1 ${isMoreActive ? navMoreOn : navOff}`}
                   >
                     Lainnya{" "}
                     <i
@@ -254,7 +242,7 @@ export default function Navbar() {
                   </button>
                   {openMore && (
                     <div
-                      className="absolute right-0 mt-3 w-56 bg-white border border-gray-200 rounded-xl shadow-xl p-2"
+                      className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200/90 bg-white/95 p-2 shadow-xl shadow-primary/5 ring-1 ring-black/[0.04] backdrop-blur-md"
                       onMouseEnter={() => {
                         cancelCloseMore();
                         setOpenMore(true);
@@ -270,7 +258,7 @@ export default function Navbar() {
                       <Link
                         href="/pelatihan"
                         onClick={() => setOpenMore(false)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/pelatihan") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}
+                        className={`landing-focus flex items-center gap-2 rounded-lg px-3 py-2 text-sm motion-safe:transition-colors ${isRoute("/pelatihan") ? "font-semibold text-primary" : "text-slate-700 hover:text-primary"}`}
                       >
                         <i className="ri-graduation-cap-line text-primary"></i>{" "}
                         <span>Bidang Pelatihan</span>
@@ -278,7 +266,7 @@ export default function Navbar() {
                       <Link
                         href="/transmigrasi"
                         onClick={() => setOpenMore(false)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/transmigrasi") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}
+                        className={`landing-focus flex items-center gap-2 rounded-lg px-3 py-2 text-sm motion-safe:transition-colors ${isRoute("/transmigrasi") ? "font-semibold text-primary" : "text-slate-700 hover:text-primary"}`}
                       >
                         <i className="ri-route-line text-primary"></i>{" "}
                         <span>Bidang Transmigrasi</span>
@@ -286,7 +274,7 @@ export default function Navbar() {
                       <Link
                         href="/penempatan"
                         onClick={() => setOpenMore(false)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/penempatan") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}
+                        className={`landing-focus flex items-center gap-2 rounded-lg px-3 py-2 text-sm motion-safe:transition-colors ${isRoute("/penempatan") ? "font-semibold text-primary" : "text-slate-700 hover:text-primary"}`}
                       >
                         <i className="ri-map-pin-line text-primary"></i>{" "}
                         <span>Bidang Penempatan</span>
@@ -294,7 +282,7 @@ export default function Navbar() {
                       <Link
                         href="/hubungan-industri"
                         onClick={() => setOpenMore(false)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isRoute("/hubungan-industri") ? "text-primary bg-gray-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"}`}
+                        className={`landing-focus flex items-center gap-2 rounded-lg px-3 py-2 text-sm motion-safe:transition-colors ${isRoute("/hubungan-industri") ? "font-semibold text-primary" : "text-slate-700 hover:text-primary"}`}
                       >
                         <i className="ri-briefcase-line text-primary"></i>{" "}
                         <span>Bidang Hubungan Industri</span>
@@ -309,7 +297,7 @@ export default function Navbar() {
               <div className="hidden lg:flex items-center gap-4">
                 <Link
                   href="/dashboard"
-                  className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                  className="landing-focus flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-dark px-4 py-2.5 text-white shadow-md shadow-primary/25 motion-safe:transition-all motion-safe:duration-200 hover:brightness-110"
                 >
                   <i className="ri-dashboard-line"></i>
                   Dashboard
@@ -318,14 +306,16 @@ export default function Navbar() {
             ) : (
               <div className="hidden xl:flex items-center gap-4">
                 <button
+                  type="button"
                   onClick={() => setOpenLogin(true)}
-                  className="text-primary hover:text-primary font-medium transition-colors"
+                  className="landing-focus rounded-xl px-3 py-2 font-medium text-primary motion-safe:transition-colors hover:text-[var(--color-primary-dark)]"
                 >
                   Masuk
                 </button>
                 <button
+                  type="button"
                   onClick={() => setOpenRegister(true)}
-                  className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                  className="landing-focus flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-dark px-4 py-2.5 text-white shadow-md shadow-primary/25 motion-safe:transition-all hover:brightness-110"
                 >
                   <i className="ri-user-add-line"></i>
                   Daftar
@@ -335,9 +325,11 @@ export default function Navbar() {
 
             <div className="xl:hidden">
               <button
+                type="button"
                 aria-label="Menu"
+                aria-expanded={openMobile}
                 onClick={() => setOpenMobile((v) => !v)}
-                className="text-primary p-2"
+                className="landing-focus text-primary rounded-xl p-2 motion-safe:transition-opacity hover:opacity-80"
               >
                 <i className="ri-menu-line text-xl"></i>
               </button>
@@ -348,48 +340,49 @@ export default function Navbar() {
       {/* Dropdown anchored card (desktop) restored */}
       {openMobile && (
         <div
-          className="xl:hidden fixed left-0 right-0 z-50 bg-white border-b border-gray-200 shadow"
+          className="xl:hidden fixed left-0 right-0 z-50 border-b border-slate-200/90 bg-white/95 shadow-lg shadow-primary/5 backdrop-blur-md supports-[backdrop-filter]:bg-white/90"
           style={{ top: "var(--navbar-height, 64px)" }}
         >
           <div className="px-4 py-3 space-y-3">
             <Link
               href="/"
               onClick={() => setOpenMobile(false)}
-              className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+              className={`landing-focus block rounded-xl px-3 py-2 motion-safe:transition-colors ${isRoute("/") ? "font-semibold text-primary underline decoration-2 decoration-primary/50 underline-offset-8" : "text-slate-700 hover:text-primary"}`}
             >
               Beranda
             </Link>
             <Link
               href="/about"
               onClick={() => setOpenMobile(false)}
-              className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/about") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+              className={`landing-focus block rounded-xl px-3 py-2 motion-safe:transition-colors ${isRoute("/about") ? "font-semibold text-primary underline decoration-2 decoration-primary/50 underline-offset-8" : "text-slate-700 hover:text-primary"}`}
             >
               Tentang Kami
             </Link>
             <Link
               href="/jobs"
               onClick={() => setOpenMobile(false)}
-              className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/jobs") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+              className={`landing-focus block rounded-xl px-3 py-2 motion-safe:transition-colors ${isRoute("/jobs") ? "font-semibold text-primary underline decoration-2 decoration-primary/50 underline-offset-8" : "text-slate-700 hover:text-primary"}`}
             >
               Lowongan
             </Link>
             <Link
               href="/bkk"
               onClick={() => setOpenMobile(false)}
-              className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/bkk") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+              className={`landing-focus block rounded-xl px-3 py-2 motion-safe:transition-colors ${isRoute("/bkk") ? "font-semibold text-primary underline decoration-2 decoration-primary/50 underline-offset-8" : "text-slate-700 hover:text-primary"}`}
             >
               BKK
             </Link>
             <Link
               href="/informasi"
               onClick={() => setOpenMobile(false)}
-              className={`block px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/informasi") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+              className={`landing-focus block rounded-xl px-3 py-2 motion-safe:transition-colors ${isRoute("/informasi") ? "font-semibold text-primary underline decoration-2 decoration-primary/50 underline-offset-8" : "text-slate-700 hover:text-primary"}`}
             >
               Informasi
             </Link>
             <button
+              type="button"
               onClick={() => setOpenMobileMore((v) => !v)}
-              className="flex items-center justify-between w-full text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50"
+              className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-slate-700 motion-safe:transition-colors hover:text-primary"
             >
               <span>Lainnya</span>
               <i
@@ -403,7 +396,7 @@ export default function Navbar() {
                 <Link
                   href="/pelatihan"
                   onClick={() => setOpenMobile(false)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/pelatihan") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+                  className={`landing-focus flex items-center gap-2 rounded-xl px-3 py-2 motion-safe:transition-colors ${isRoute("/pelatihan") ? "font-semibold text-primary underline decoration-2 decoration-primary/50 underline-offset-8" : "text-slate-700 hover:text-primary"}`}
                 >
                   <i className="ri-graduation-cap-line text-primary"></i>
                   <span>Pelatihan</span>
@@ -411,7 +404,7 @@ export default function Navbar() {
                 <Link
                   href="/transmigrasi"
                   onClick={() => setOpenMobile(false)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/transmigrasi") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+                  className={`landing-focus flex items-center gap-2 rounded-xl px-3 py-2 motion-safe:transition-colors ${isRoute("/transmigrasi") ? "font-semibold text-primary underline decoration-2 decoration-primary/50 underline-offset-8" : "text-slate-700 hover:text-primary"}`}
                 >
                   <i className="ri-route-line text-primary"></i>
                   <span>Bidang Transmigrasi</span>
@@ -419,7 +412,7 @@ export default function Navbar() {
                 <Link
                   href="/penempatan"
                   onClick={() => setOpenMobile(false)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/penempatan") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+                  className={`landing-focus flex items-center gap-2 rounded-xl px-3 py-2 motion-safe:transition-colors ${isRoute("/penempatan") ? "font-semibold text-primary underline decoration-2 decoration-primary/50 underline-offset-8" : "text-slate-700 hover:text-primary"}`}
                 >
                   <i className="ri-map-pin-line text-primary"></i>
                   <span>Penempatan</span>
@@ -427,7 +420,7 @@ export default function Navbar() {
                 <Link
                   href="/hubungan-industri"
                   onClick={() => setOpenMobile(false)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 ${isRoute("/hubungan-industri") ? "text-primary font-medium bg-gray-50" : "text-gray-700"}`}
+                  className={`landing-focus flex items-center gap-2 rounded-xl px-3 py-2 motion-safe:transition-colors ${isRoute("/hubungan-industri") ? "font-semibold text-primary underline decoration-2 decoration-primary/50 underline-offset-8" : "text-slate-700 hover:text-primary"}`}
                 >
                   <i className="ri-briefcase-line text-primary"></i>
                   <span>Hubungan Industri</span>
@@ -438,27 +431,29 @@ export default function Navbar() {
               <Link
                 href="/dashboard"
                 onClick={() => setOpenMobile(false)}
-                className="block bg-primary text-white px-4 py-2 rounded-lg"
+                className="landing-focus block rounded-xl bg-gradient-to-r from-primary to-primary-dark px-4 py-3 text-center font-medium text-white shadow-md shadow-primary/20 hover:brightness-110"
               >
                 Dashboard
               </Link>
             ) : (
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={() => {
                     setOpenMobile(false);
                     setOpenLogin(true);
                   }}
-                  className="flex-1 text-primary border border-gray-300 px-4 py-2 rounded-lg"
+                  className="landing-focus flex-1 rounded-xl border border-slate-200/90 px-4 py-3 font-medium text-primary motion-safe:transition-colors hover:text-[var(--color-primary-dark)]"
                 >
                   Masuk
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setOpenMobile(false);
                     setOpenRegister(true);
                   }}
-                  className="flex-1 bg-primary text-white px-4 py-2 rounded-lg"
+                  className="landing-focus flex-1 rounded-xl bg-gradient-to-r from-primary to-primary-dark px-4 py-3 font-medium text-white shadow-md shadow-primary/20 hover:brightness-110"
                 >
                   Daftar
                 </button>
@@ -484,7 +479,7 @@ export default function Navbar() {
             <Link
               href="/login/candidate"
               onClick={() => setOpenLogin(false)}
-              className="group border border-gray-200 rounded-xl p-6 hover:border-primary transition-colors"
+              className="landing-focus group rounded-xl border border-slate-200/90 p-6 shadow-sm ring-1 ring-black/[0.02] transition-all hover:border-primary/40 hover:shadow-md"
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-gray-100 text-primary flex items-center justify-center">
@@ -501,7 +496,7 @@ export default function Navbar() {
             <Link
               href="/login/company"
               onClick={() => setOpenLogin(false)}
-              className="group border border-gray-200 rounded-xl p-6 hover:border-primary transition-colors"
+              className="landing-focus group rounded-xl border border-slate-200/90 p-6 shadow-sm ring-1 ring-black/[0.02] transition-all hover:border-primary/40 hover:shadow-md"
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-gray-100 text-primary flex items-center justify-center">
@@ -538,7 +533,7 @@ export default function Navbar() {
             <Link
               href="/register/candidate"
               onClick={() => setOpenRegister(false)}
-              className="px-8 py-4 bg-primary hover:bg-primary text-white font-semibold rounded-xl transition-all shadow-lg flex items-center justify-center gap-3"
+              className="landing-focus flex items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-primary to-primary-dark px-8 py-4 font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:brightness-110"
             >
               <i className="ri-user-add-line"></i>
               Daftar Pencari Kerja
@@ -546,7 +541,7 @@ export default function Navbar() {
             <Link
               href="/register/company"
               onClick={() => setOpenRegister(false)}
-              className="px-8 py-4 border-2 border-primary text-primary font-semibold rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-3"
+              className="landing-focus flex items-center justify-center gap-3 rounded-xl border-2 border-primary/90 px-8 py-4 font-semibold text-primary transition-all hover:bg-primary/5"
             >
               <i className="ri-building-line"></i>
               Daftar Perusahaan
@@ -555,11 +550,12 @@ export default function Navbar() {
           <p className="mt-2 text-sm text-gray-600 text-center">
             Sudah punya akun?{" "}
             <button
+              type="button"
               onClick={() => {
                 setOpenRegister(false);
                 setOpenLogin(true);
               }}
-              className="text-primary hover:underline font-medium"
+              className="landing-focus font-medium text-primary hover:underline"
             >
               Masuk di sini
             </button>
