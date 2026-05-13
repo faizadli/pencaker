@@ -609,10 +609,41 @@ export default function ProfilePage() {
     fetchProfile();
   }, [role, userId]);
 
+  const roleLabel =
+    role === "company"
+      ? "Perusahaan"
+      : role === "candidate"
+        ? "Pencari Kerja"
+        : "Dinas Tenaga Kerja";
+  const roleDescription =
+    role === "company"
+      ? "Perbarui identitas perusahaan, kontak utama, dan profil publik untuk kebutuhan rekrutmen."
+      : role === "candidate"
+        ? "Lengkapi data pribadi, domisili, pendidikan, dan resume agar profil Anda siap digunakan."
+        : "Kelola identitas petugas Disnaker yang tampil di area administrasi dan dokumen terkait.";
+  const currentDisplayName =
+    role === "company"
+      ? companyForm.company_name || user.nama || "Profil perusahaan"
+      : role === "candidate"
+        ? candidateForm.full_name || user.nama || "Profil pencaker"
+        : disnakerForm.full_name || user.nama || "Profil disnaker";
+  const currentPreviewSrc =
+    role === "company"
+      ? companyLogoPreview
+      : role === "candidate"
+        ? candidatePhotoPreview
+        : disnakerPhotoPreview;
+  const cardSurfaceClass =
+    "!rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02]";
+  const primaryButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95";
+  const neutralButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200";
+
   if (loading && userId && role) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
           <FullPageLoading isSection />
         </div>
       </main>
@@ -620,38 +651,38 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-      <div className="px-4 sm:px-6">
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-primary">
-            Profil Pengguna
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Kelola informasi pribadi dan keamanan
-          </p>
-        </div>
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+      <div className="w-full space-y-8">
+        <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+          <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+          <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Profile
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                Kelola profil pengguna
+              </h1>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                {roleDescription}
+              </p>
+            </div>
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+              <i className="ri-account-circle-line" aria-hidden />
+              Role aktif: {roleLabel}
+            </span>
+          </div>
+        </header>
 
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[0.34fr_0.66fr]">
           <div className="space-y-6">
-            <Card className="mb-6 py-8">
+            <Card className={`${cardSurfaceClass} py-8`}>
               <div className="flex flex-col items-center justify-center gap-6">
                 <div className="relative group">
-                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-lg relative">
-                    {(
-                      role === "company"
-                        ? companyLogoPreview
-                        : role === "candidate"
-                          ? candidatePhotoPreview
-                          : disnakerPhotoPreview
-                    ) ? (
+                  <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-slate-100 bg-slate-100 shadow-lg">
+                    {currentPreviewSrc ? (
                       <Image
-                        src={
-                          role === "company"
-                            ? companyLogoPreview
-                            : role === "candidate"
-                              ? candidatePhotoPreview
-                              : disnakerPhotoPreview
-                        }
+                        src={currentPreviewSrc}
                         alt="Profile Preview"
                         width={128}
                         height={128}
@@ -659,73 +690,114 @@ export default function ProfilePage() {
                         unoptimized
                       />
                     ) : (
-                      <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+                      <div className="flex h-full w-full items-center justify-center bg-slate-200 text-slate-400">
                         <i
                           className={`ri-${
                             role === "company" ? "building" : "user"
                           }-line text-4xl`}
-                        ></i>
+                        />
                       </div>
                     )}
                   </div>
                 </div>
 
                 <div className="text-center">
-                  <h2 className="text-xl font-bold text-gray-800">
-                    {role === "company"
-                      ? companyForm.company_name
-                      : role === "candidate"
-                        ? candidateForm.full_name
-                        : disnakerForm.full_name || user.nama}
+                  <h2 className="text-xl font-bold text-slate-900">
+                    {currentDisplayName}
                   </h2>
-                  <p className="text-sm text-gray-500 capitalize">
-                    {role === "company"
-                      ? "Perusahaan"
-                      : role === "candidate"
-                        ? "Pencari Kerja"
-                        : "Dinas Tenaga Kerja"}
+                  <p className="text-sm capitalize text-slate-500">
+                    {roleLabel}
                   </p>
+                  <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                    {user.email ? (
+                      <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                        {user.email}
+                      </span>
+                    ) : null}
+                    {user.status ? (
+                      <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200/80">
+                        {user.status}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
 
-                <div className="flex flex-col items-center gap-3 w-full max-w-xs">
-                  <div className="w-full">
-                    <label className="block text-sm font-medium text-gray-700 mb-1 text-center">
-                      Ganti Foto Profil
-                    </label>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                      icon="ri-camera-line"
-                    />
+                <div className="w-full max-w-xs rounded-2xl border border-slate-200/90 bg-slate-50/70 p-4">
+                  <div className="mb-4 space-y-2 text-left">
+                    <p className="text-sm font-semibold text-slate-900">
+                      Informasi akun
+                    </p>
+                    <div className="space-y-1 text-sm text-slate-500">
+                      <p>
+                        Email:{" "}
+                        <span className="font-medium text-slate-700">
+                          {user.email || "-"}
+                        </span>
+                      </p>
+                      <p>
+                        Telepon:{" "}
+                        <span className="font-medium text-slate-700">
+                          {user.telepon || "-"}
+                        </span>
+                      </p>
+                      <p>
+                        Username:{" "}
+                        <span className="font-medium text-slate-700">
+                          {user.username || "-"}
+                        </span>
+                      </p>
+                    </div>
                   </div>
-                  {selectedFile && (
-                    <button
-                      onClick={handleSavePhoto}
-                      disabled={isUploadingPhoto}
-                      className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                    >
-                      {isUploadingPhoto ? (
-                        <>
-                          <i className="ri-loader-4-line animate-spin"></i>{" "}
-                          Menyimpan...
-                        </>
-                      ) : (
-                        <>
-                          <i className="ri-save-line"></i> Simpan Foto
-                        </>
-                      )}
-                    </button>
-                  )}
+                  <div className="flex flex-col items-center gap-3 w-full">
+                    <div className="w-full">
+                      <label className="mb-1 block text-center text-sm font-medium text-slate-700">
+                        Ganti Foto Profil
+                      </label>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        icon="ri-camera-line"
+                      />
+                    </div>
+                    {selectedFile && (
+                      <button
+                        onClick={handleSavePhoto}
+                        disabled={isUploadingPhoto}
+                        className={`${primaryButtonClass} w-full`}
+                      >
+                        {isUploadingPhoto ? (
+                          <>
+                            <i className="ri-loader-4-line animate-spin" />{" "}
+                            Menyimpan...
+                          </>
+                        ) : (
+                          <>
+                            <i className="ri-save-line" /> Simpan Foto
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </Card>
+          </div>
+
+          <div className="space-y-6">
             <Card
-              className="overflow-hidden"
+              className={`${cardSurfaceClass} overflow-hidden`}
               header={
-                <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
-                  <i className="ri-user-settings-line"></i>Informasi Pengguna
-                </h3>
+                <div className="flex flex-col gap-2 border-b border-slate-100 pb-5">
+                  <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+                    <i className="ri-user-settings-line" />
+                    Informasi pengguna
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    Sesuaikan data utama sesuai role akun Anda agar informasi
+                    yang tersimpan tetap akurat dan siap digunakan.
+                  </p>
+                </div>
               }
             >
               <div
@@ -1384,15 +1456,22 @@ export default function ProfilePage() {
               <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <button
                   onClick={handleSaveProfile}
-                  className="w-full sm:w-auto px-6 py-3 bg-primary hover:bg-[var(--color-primary-dark)] text-white rounded-xl text-sm transition-all flex items-center justify-center gap-2"
+                  className={`${primaryButtonClass} w-full sm:w-auto`}
                 >
-                  <i className="ri-save-line"></i>
+                  <i className="ri-save-line" />
                   Simpan Perubahan
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFieldErrors({})}
+                  className={`${neutralButtonClass} w-full sm:w-auto`}
+                >
+                  Bersihkan Error
                 </button>
               </div>
               {role === "company" && companyFilled && !companyApproved && (
                 <div className="mt-2">
-                  <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                  <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-900 ring-1 ring-amber-200/80">
                     Menunggu persetujuan Disnaker
                   </span>
                 </div>
@@ -1400,13 +1479,19 @@ export default function ProfilePage() {
             </Card>
 
             <Card
-              className="overflow-hidden"
+              className={`${cardSurfaceClass} overflow-hidden`}
               header={
-                <div className="flex items-center gap-2">
-                  <i className="ri-lock-password-line"></i>
-                  <span className="text-lg font-semibold text-primary">
-                    Ubah Kata Sandi
-                  </span>
+                <div className="flex flex-col gap-2 border-b border-slate-100 pb-5">
+                  <div className="flex items-center gap-2">
+                    <i className="ri-lock-password-line" />
+                    <span className="text-lg font-bold text-slate-900">
+                      Ubah kata sandi
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-500">
+                    Gunakan kombinasi kata sandi yang kuat untuk menjaga
+                    keamanan akun Anda.
+                  </p>
                 </div>
               }
             >
@@ -1464,11 +1549,8 @@ export default function ProfilePage() {
                     />
                   </div>
                 </div>
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-primary hover:bg-[var(--color-primary-dark)] text-white rounded-xl text-sm transition-all flex items-center gap-2"
-                >
-                  <i className="ri-save-line"></i>
+                <button type="submit" className={primaryButtonClass}>
+                  <i className="ri-save-line" />
                   Simpan Kata Sandi
                 </button>
               </form>
