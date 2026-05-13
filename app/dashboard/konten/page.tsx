@@ -1,6 +1,6 @@
 "use client";
 import { ZodIssue } from "zod";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import {
   Input,
@@ -1268,37 +1268,101 @@ export default function KontenPage() {
     switch (status) {
       case "Publikasi":
       case "Aktif":
-        return "bg-green-100 text-green-800";
+        return "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/80";
       case "Draft":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80";
       case "Pendaftaran":
-        return "bg-blue-100 text-blue-800";
+        return "bg-sky-100 text-sky-900 ring-1 ring-sky-200/80";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80";
     }
   };
 
   const getKategoriColor = (kategori: string) => {
     switch (kategori) {
       case "Pelatihan":
-        return "bg-blue-100 text-blue-800";
+        return "bg-sky-100 text-sky-900 ring-1 ring-sky-200/80";
       case "Event":
-        return "bg-purple-100 text-purple-800";
+        return "bg-violet-100 text-violet-900 ring-1 ring-violet-200/80";
       case "Informasi":
-        return "bg-green-100 text-green-800";
+        return "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/80";
       case "Administrasi":
-        return "bg-orange-100 text-orange-800";
+        return "bg-orange-100 text-orange-900 ring-1 ring-orange-200/80";
       case "Hukum":
-        return "bg-red-100 text-red-800";
+        return "bg-rose-100 text-rose-900 ring-1 ring-rose-200/80";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80";
     }
   };
 
+  const publishedFaqCount = useMemo(
+    () => faqList.filter((f) => f.status === "Publikasi").length,
+    [faqList],
+  );
+  const publishedPartnersCount = useMemo(
+    () => partnersList.filter((p) => p.status === "Publikasi").length,
+    [partnersList],
+  );
+  const publishedTestimonialsCount = useMemo(
+    () => testimonialsList.filter((t) => t.status === "Publikasi").length,
+    [testimonialsList],
+  );
+  const aboutSectionCount =
+    focusList.length +
+    missionsList.length +
+    teamList.length +
+    (profileHtml.trim() ? 1 : 0) +
+    (visionHtml.trim() ? 1 : 0) +
+    (runningText?.text?.trim() ? 1 : 0);
+  const paginatedFaqList = useMemo(
+    () =>
+      faqList.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize),
+    [faqList, page, pageSize],
+  );
+  const paginatedPartnersList = useMemo(
+    () =>
+      partnersList.slice(
+        (page - 1) * pageSize,
+        (page - 1) * pageSize + pageSize,
+      ),
+    [partnersList, page, pageSize],
+  );
+  const paginatedTestimonialsList = useMemo(
+    () =>
+      testimonialsList.slice(
+        (page - 1) * pageSize,
+        (page - 1) * pageSize + pageSize,
+      ),
+    [testimonialsList, page, pageSize],
+  );
+  const paginatedHolidayGreetingsList = useMemo(
+    () =>
+      holidayGreetingsList.slice(
+        (page - 1) * pageSize,
+        (page - 1) * pageSize + pageSize,
+      ),
+    [holidayGreetingsList, page, pageSize],
+  );
+  const currentTabTotal =
+    activeTab === "faq"
+      ? faqList.length
+      : activeTab === "partners"
+        ? partnersList.length
+        : activeTab === "testimonials"
+          ? testimonialsList.length
+          : activeTab === "holiday_greetings"
+            ? holidayGreetingsList.length
+            : 0;
+  const showPagination =
+    activeTab === "faq" ||
+    activeTab === "partners" ||
+    activeTab === "testimonials" ||
+    activeTab === "holiday_greetings";
+
   if (loading) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
           <FullPageLoading isSection />
         </div>
       </main>
@@ -1307,60 +1371,111 @@ export default function KontenPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">
-              Manajemen Konten Website
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Kelola berita, FAQ, mitra, testimoni, dan halaman tentang
-            </p>
-          </div>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full space-y-8">
+          <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+            <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+            <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  Konten Website
+                </p>
+                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                  Manajemen konten publik
+                </h1>
+                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                  Kelola FAQ, mitra, testimoni, ucapan hari raya, dan seluruh
+                  bagian halaman Tentang dari satu tempat yang konsisten.
+                </p>
+              </div>
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                <i className="ri-layout-grid-line" aria-hidden />
+                Tab aktif:{" "}
+                {activeTab === "faq"
+                  ? "FAQ"
+                  : activeTab === "partners"
+                    ? "Mitra"
+                    : activeTab === "testimonials"
+                      ? "Testimoni"
+                      : activeTab === "holiday_greetings"
+                        ? "Ucapan"
+                        : "Tentang"}
+              </span>
+            </div>
+          </header>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard
-              title="FAQ Terbit"
-              value={faqList.filter((f) => f.status === "Publikasi").length}
-              change=""
-              color="var(--color-danger)"
-              icon="ri-question-line"
-            />
-            <StatCard
-              title="Mitra"
-              value={partnersList.length}
-              change=""
-              color="var(--color-primary)"
-              icon="ri-team-line"
-            />
-          </div>
+          <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+            <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5">
+              <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                Ringkasan konten
+              </h2>
+              <p className="text-sm text-slate-500">
+                Ikhtisar cepat konten terbit dan item yang saat ini dikelola.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard
+                title="FAQ terbit"
+                value={publishedFaqCount}
+                change="Pertanyaan yang tampil"
+                color="var(--color-danger)"
+                icon="ri-question-line"
+              />
+              <StatCard
+                title="Mitra publik"
+                value={publishedPartnersCount}
+                change="Logo mitra aktif"
+                color="var(--color-primary)"
+                icon="ri-team-line"
+              />
+              <StatCard
+                title="Testimoni terbit"
+                value={publishedTestimonialsCount}
+                change="Cerita pengguna tampil"
+                color="var(--color-secondary)"
+                icon="ri-chat-1-line"
+              />
+              <StatCard
+                title="Bagian tentang"
+                value={aboutSectionCount}
+                change="Fokus, misi, tim"
+                color="var(--color-foreground)"
+                icon="ri-file-user-line"
+              />
+            </div>
+          </section>
 
-          <Card className="mb-6">
-            <div className="flex overflow-x-auto">
+          <Card className="!rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02]">
+            <div className="flex overflow-x-auto gap-2 rounded-2xl bg-slate-50/80 p-2">
               {[
-                { id: "faq", label: "❓ FAQ", icon: "ri-question-line" },
-                { id: "partners", label: "🤝 Mitra", icon: "ri-team-line" },
+                { id: "faq", label: "FAQ", icon: "ri-question-line" },
+                { id: "partners", label: "Mitra", icon: "ri-team-line" },
                 {
                   id: "testimonials",
-                  label: "💬 Testimoni",
+                  label: "Testimoni",
                   icon: "ri-chat-1-line",
                 },
                 {
                   id: "holiday_greetings",
-                  label: "🎉 Ucapan",
+                  label: "Ucapan",
                   icon: "ri-gift-line",
                 },
-                { id: "about", label: "📄 Tentang", icon: "ri-file-user-line" },
+                { id: "about", label: "Tentang", icon: "ri-file-user-line" },
               ].map((tab) => (
                 <button
                   key={tab.id}
+                  type="button"
                   onClick={() => {
                     setActiveTab(tab.id as typeof activeTab);
                     setPage(1);
                   }}
-                  className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id ? "text-primary border-b-2 border-primary" : "text-gray-500 hover:text-primary"}`}
+                  className={`inline-flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-medium transition ${
+                    activeTab === tab.id
+                      ? "bg-white text-primary shadow-sm ring-1 ring-primary/15"
+                      : "text-slate-500 hover:bg-white/80 hover:text-primary"
+                  }`}
                 >
-                  <i className={tab.icon}></i>
+                  <i className={tab.icon} aria-hidden />
                   {tab.label}
                 </button>
               ))}
@@ -1369,27 +1484,35 @@ export default function KontenPage() {
 
           {activeTab === "holiday_greetings" && (
             <Card
+              className="overflow-hidden !rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02]"
               header={
-                <h2 className="text-lg font-semibold text-primary">
-                  Ucapan Hari Raya
-                </h2>
+                <div className="flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">
+                      Ucapan hari raya
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Kelola banner ucapan musiman seperti Idul Fitri, Natal,
+                      atau momentum khusus lainnya.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleAdd("holiday_greetings")}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
+                  >
+                    <i className="ri-add-line" aria-hidden />
+                    Tambah ucapan
+                  </button>
+                </div>
               }
             >
-              <div className="flex justify-between items-center mb-4">
-                <p className="text-sm text-gray-600">
-                  Daftar ucapan selamat (Lebaran, Natal, dll)
-                </p>
-                <button
-                  onClick={() => handleAdd("holiday_greetings")}
-                  className="px-3 py-2 bg-primary text-white rounded-lg text-sm"
-                >
-                  <i className="ri-add-line"></i> Tambah
-                </button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {holidayGreetingsList.map((h) => (
-                  <div key={h.id} className="p-4 bg-white rounded-lg border">
-                    <div className="relative w-full h-32 mb-3 bg-gray-100 rounded overflow-hidden">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {paginatedHolidayGreetingsList.map((h) => (
+                  <div
+                    key={h.id}
+                    className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <div className="relative mb-0 h-40 w-full overflow-hidden bg-slate-100">
                       {h.image ? (
                         <Image
                           src={h.image}
@@ -1398,42 +1521,49 @@ export default function KontenPage() {
                           className="object-cover"
                         />
                       ) : (
-                        <div className="flex items-center justify-center h-full text-gray-400">
-                          <i className="ri-image-line text-2xl"></i>
+                        <div className="flex h-full items-center justify-center text-slate-400">
+                          <i className="ri-image-line text-3xl" />
                         </div>
                       )}
                     </div>
-                    <p className="font-semibold text-primary truncate">
-                      {h.title}
-                    </p>
-                    <div className="flex justify-between items-center mt-3">
-                      <span
-                        className={`text-xs px-2 py-1 rounded ${getStatusColor(h.status)}`}
-                      >
-                        {h.status}
-                      </span>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEdit("holiday_greetings", h)}
-                          className="p-1.5 border rounded text-gray-600 hover:text-primary"
+                    <div className="space-y-4 p-5">
+                      <div className="space-y-2">
+                        <p className="line-clamp-1 text-base font-semibold text-slate-900">
+                          {h.title || "Tanpa judul"}
+                        </p>
+                        <p className="line-clamp-2 text-sm leading-relaxed text-slate-500">
+                          {h.description || "Belum ada deskripsi ucapan."}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(h.status)}`}
                         >
-                          <i className="ri-edit-line"></i>
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleDelete("holiday_greetings", h.id)
-                          }
-                          className="p-1.5 border rounded text-red-600 hover:text-red-800"
-                        >
-                          <i className="ri-delete-bin-line"></i>
-                        </button>
+                          {h.status}
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEdit("holiday_greetings", h)}
+                            className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-primary/20 hover:text-primary"
+                          >
+                            <i className="ri-edit-line" />
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDelete("holiday_greetings", h.id)
+                            }
+                            className="inline-flex items-center justify-center rounded-xl border border-rose-200 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+                          >
+                            <i className="ri-delete-bin-line" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 ))}
                 {holidayGreetingsList.length === 0 && (
-                  <div className="col-span-full text-center py-8 text-gray-500">
-                    Belum ada ucapan hari raya
+                  <div className="col-span-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center text-sm text-slate-500">
+                    Belum ada ucapan hari raya yang ditambahkan.
                   </div>
                 )}
               </div>
@@ -1442,90 +1572,119 @@ export default function KontenPage() {
 
           {activeTab === "about" && (
             <div className="space-y-6">
+              <div className="rounded-2xl border border-sky-100 bg-sky-50/70 px-5 py-4 text-sm text-slate-600">
+                Setiap bagian halaman Tentang dirapikan per modul agar lebih
+                mudah dikelola, dari konten HTML utama sampai list fokus, misi,
+                anggota tim, dan running text.
+              </div>
               <Card
+                className="!rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02]"
                 header={
-                  <h2 className="text-lg font-semibold text-primary">Profil</h2>
+                  <div className="flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-900">
+                        Profil
+                      </h2>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Konten HTML profil instansi untuk halaman publik.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setAboutModal({
+                          section: "profile",
+                          id: profileId || undefined,
+                        })
+                      }
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
+                    >
+                      <i className="ri-edit-line" aria-hidden />
+                      Edit profil
+                    </button>
+                  </div>
                 }
               >
-                <div className="flex justify-between items-center mb-4">
-                  <p className="text-sm text-gray-600">
-                    Konten HTML profil instansi
-                  </p>
-                  <button
-                    onClick={() =>
-                      setAboutModal({
-                        section: "profile",
-                        id: profileId || undefined,
-                      })
-                    }
-                    className="px-3 py-2 bg-primary text-white rounded-lg text-sm"
-                  >
-                    <i className="ri-edit-line"></i> Edit
-                  </button>
-                </div>
                 <div
-                  className="prose max-w-none text-sm"
+                  className="prose max-w-none text-sm prose-headings:text-slate-900 prose-p:text-slate-600"
                   dangerouslySetInnerHTML={{ __html: profileHtml || "" }}
                 />
               </Card>
 
               <Card
+                className="!rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02]"
                 header={
-                  <h2 className="text-lg font-semibold text-primary">Visi</h2>
+                  <div className="flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-900">Visi</h2>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Narasi visi utama yang ditampilkan kepada pengunjung.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setAboutModal({
+                          section: "vision",
+                          id: visionId || undefined,
+                        })
+                      }
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
+                    >
+                      <i className="ri-edit-line" aria-hidden />
+                      Edit visi
+                    </button>
+                  </div>
                 }
               >
-                <div className="flex justify-between items-center mb-4">
-                  <p className="text-sm text-gray-600">Konten HTML visi</p>
-                  <button
-                    onClick={() =>
-                      setAboutModal({
-                        section: "vision",
-                        id: visionId || undefined,
-                      })
-                    }
-                    className="px-3 py-2 bg-primary text-white rounded-lg text-sm"
-                  >
-                    <i className="ri-edit-line"></i> Edit
-                  </button>
-                </div>
                 <div
-                  className="prose max-w-none text-sm"
+                  className="prose max-w-none text-sm prose-headings:text-slate-900 prose-p:text-slate-600"
                   dangerouslySetInnerHTML={{ __html: visionHtml || "" }}
                 />
               </Card>
 
               <Card
+                className="!rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02]"
                 header={
-                  <h2 className="text-lg font-semibold text-primary">Fokus</h2>
+                  <div className="flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-900">
+                        Fokus
+                      </h2>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Daftar area fokus yang ingin disorot pada profil
+                        lembaga.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const item: AboutFocus = {
+                          id: "__new__",
+                          text: "",
+                          status: "Draft",
+                        };
+                        setEditFocus(item);
+                        setAboutModal({
+                          section: "focus_areas",
+                          id: "__new__",
+                        });
+                      }}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
+                    >
+                      <i className="ri-add-line" aria-hidden />
+                      Tambah fokus
+                    </button>
+                  </div>
                 }
               >
-                <div className="flex justify-between items-center mb-4">
-                  <p className="text-sm text-gray-600">Daftar area fokus</p>
-                  <button
-                    onClick={() => {
-                      const item: AboutFocus = {
-                        id: "__new__",
-                        text: "",
-                        status: "Draft",
-                      };
-                      setEditFocus(item);
-                      setAboutModal({ section: "focus_areas", id: "__new__" });
-                    }}
-                    className="px-3 py-2 bg-primary text-white rounded-lg text-sm"
-                  >
-                    <i className="ri-add-line"></i> Tambah
-                  </button>
-                </div>
                 <div className="space-y-3">
                   {focusList.map((f) => (
                     <div
                       key={f.id}
-                      className="p-4 bg-white rounded-lg border flex justify-between items-start gap-3"
+                      className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200/90 bg-slate-50/70 p-4"
                     >
-                      <div>
-                        <p className="text-sm text-primary">{f.text}</p>
+                      <div className="space-y-2">
+                        <p className="text-sm text-slate-700">{f.text}</p>
                         <span
-                          className={`mt-2 inline-block px-2 py-1 rounded ${getStatusColor(f.status)}`}
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(f.status)}`}
                         >
                           {f.status}
                         </span>
@@ -1536,15 +1695,15 @@ export default function KontenPage() {
                             setEditFocus(f);
                             setAboutModal({ section: "focus_areas", id: f.id });
                           }}
-                          className="px-2 py-1 border rounded text-sm"
+                          className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-primary/20 hover:text-primary"
                         >
-                          <i className="ri-edit-line"></i>
+                          <i className="ri-edit-line" />
                         </button>
                         <button
                           onClick={() => handleDelete("about_focus", f.id)}
-                          className="px-2 py-1 border rounded text-sm text-red-700"
+                          className="inline-flex items-center justify-center rounded-xl border border-rose-200 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
                         >
-                          <i className="ri-delete-bin-line"></i>
+                          <i className="ri-delete-bin-line" />
                         </button>
                       </div>
                     </div>
@@ -1553,40 +1712,46 @@ export default function KontenPage() {
               </Card>
 
               <Card
+                className="!rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02]"
                 header={
-                  <h2 className="text-lg font-semibold text-primary">Misi</h2>
+                  <div className="flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-900">Misi</h2>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Poin-poin misi yang menjelaskan arah kerja dan tujuan.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const item: AboutMission = {
+                          id: "__new__",
+                          text: "",
+                          status: "Draft",
+                        };
+                        setEditMission(item);
+                        setAboutModal({
+                          section: "mission_points",
+                          id: "__new__",
+                        });
+                      }}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
+                    >
+                      <i className="ri-add-line" aria-hidden />
+                      Tambah misi
+                    </button>
+                  </div>
                 }
               >
-                <div className="flex justify-between items-center mb-4">
-                  <p className="text-sm text-gray-600">Poin misi</p>
-                  <button
-                    onClick={() => {
-                      const item: AboutMission = {
-                        id: "__new__",
-                        text: "",
-                        status: "Draft",
-                      };
-                      setEditMission(item);
-                      setAboutModal({
-                        section: "mission_points",
-                        id: "__new__",
-                      });
-                    }}
-                    className="px-3 py-2 bg-primary text-white rounded-lg text-sm"
-                  >
-                    <i className="ri-add-line"></i> Tambah
-                  </button>
-                </div>
                 <div className="space-y-3">
                   {missionsList.map((m) => (
                     <div
                       key={m.id}
-                      className="p-4 bg-white rounded-lg border flex justify-between items-start gap-3"
+                      className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200/90 bg-slate-50/70 p-4"
                     >
-                      <div>
-                        <p className="text-sm text-primary">{m.text}</p>
+                      <div className="space-y-2">
+                        <p className="text-sm text-slate-700">{m.text}</p>
                         <span
-                          className={`mt-2 inline-block px-2 py-1 rounded ${getStatusColor(m.status)}`}
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(m.status)}`}
                         >
                           {m.status}
                         </span>
@@ -1600,15 +1765,15 @@ export default function KontenPage() {
                               id: m.id,
                             });
                           }}
-                          className="px-2 py-1 border rounded text-sm"
+                          className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-primary/20 hover:text-primary"
                         >
-                          <i className="ri-edit-line"></i>
+                          <i className="ri-edit-line" />
                         </button>
                         <button
                           onClick={() => handleDelete("about_mission", m.id)}
-                          className="px-2 py-1 border rounded text-sm text-red-700"
+                          className="inline-flex items-center justify-center rounded-xl border border-rose-200 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
                         >
-                          <i className="ri-delete-bin-line"></i>
+                          <i className="ri-delete-bin-line" />
                         </button>
                       </div>
                     </div>
@@ -1617,45 +1782,52 @@ export default function KontenPage() {
               </Card>
 
               <Card
+                className="!rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02]"
                 header={
-                  <h2 className="text-lg font-semibold text-primary">Tim</h2>
+                  <div className="flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-900">Tim</h2>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Susun profil anggota tim yang akan ditampilkan di
+                        halaman Tentang.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const item: TeamMember = {
+                          id: "__new__",
+                          name: "",
+                          position: "",
+                          role: "",
+                          image: "",
+                          status: "Draft",
+                        };
+                        setEditTeam(item);
+                        setAboutModal({ section: "team", id: "__new__" });
+                      }}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
+                    >
+                      <i className="ri-add-line" aria-hidden />
+                      Tambah anggota
+                    </button>
+                  </div>
                 }
               >
-                <div className="flex justify-between items-center mb-4">
-                  <p className="text-sm text-gray-600">Anggota tim</p>
-                  <button
-                    onClick={() => {
-                      const item: TeamMember = {
-                        id: "__new__",
-                        name: "",
-                        position: "",
-                        role: "",
-                        image: "",
-                        status: "Draft",
-                      };
-                      setEditTeam(item);
-                      setAboutModal({ section: "team", id: "__new__" });
-                    }}
-                    className="px-3 py-2 bg-primary text-white rounded-lg text-sm"
-                  >
-                    <i className="ri-add-line"></i> Tambah
-                  </button>
-                </div>
                 <div className="space-y-3">
                   {teamList.map((t) => (
                     <div
                       key={t.id}
-                      className="p-4 bg-white rounded-lg border flex justify-between items-start gap-3"
+                      className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200/90 bg-slate-50/70 p-4"
                     >
-                      <div>
-                        <p className="text-sm font-semibold text-primary">
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-slate-900">
                           {t.name}
                         </p>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-slate-500">
                           {t.position} • {t.role}
                         </p>
                         <span
-                          className={`mt-2 inline-block px-2 py-1 rounded ${getStatusColor(t.status)}`}
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(t.status)}`}
                         >
                           {t.status}
                         </span>
@@ -1666,15 +1838,15 @@ export default function KontenPage() {
                             setEditTeam(t);
                             setAboutModal({ section: "team", id: t.id });
                           }}
-                          className="px-2 py-1 border rounded text-sm"
+                          className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-primary/20 hover:text-primary"
                         >
-                          <i className="ri-edit-line"></i>
+                          <i className="ri-edit-line" />
                         </button>
                         <button
                           onClick={() => handleDelete("about_team", t.id)}
-                          className="px-2 py-1 border rounded text-sm text-red-700"
+                          className="inline-flex items-center justify-center rounded-xl border border-rose-200 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
                         >
-                          <i className="ri-delete-bin-line"></i>
+                          <i className="ri-delete-bin-line" />
                         </button>
                       </div>
                     </div>
@@ -1683,40 +1855,46 @@ export default function KontenPage() {
               </Card>
 
               <Card
+                className="!rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02]"
                 header={
-                  <h2 className="text-lg font-semibold text-primary">
-                    Teks Berjalan (Running Text)
-                  </h2>
+                  <div className="flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-900">
+                        Teks berjalan
+                      </h2>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Teks singkat yang tampil berjalan pada halaman beranda.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const item: RunningText = runningText || {
+                          id: "__new__",
+                          text: "",
+                          status: "Publikasi",
+                        };
+                        setEditRunningText(item);
+                        setAboutModal({
+                          section: "running_text",
+                          id: item.id === "__new__" ? "__new__" : item.id,
+                        });
+                      }}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
+                    >
+                      <i className="ri-edit-line" aria-hidden />
+                      Edit running text
+                    </button>
+                  </div>
                 }
               >
-                <div className="flex justify-between items-center mb-4">
-                  <p className="text-sm text-gray-600">
-                    Teks yang berjalan di halaman beranda
-                  </p>
-                  <button
-                    onClick={() => {
-                      const item: RunningText = runningText || {
-                        id: "__new__",
-                        text: "",
-                        status: "Publikasi",
-                      };
-                      setEditRunningText(item);
-                      setAboutModal({
-                        section: "running_text",
-                        id: item.id === "__new__" ? "__new__" : item.id,
-                      });
-                    }}
-                    className="px-3 py-2 bg-primary text-white rounded-lg text-sm"
-                  >
-                    <i className="ri-edit-line"></i> Edit
-                  </button>
-                </div>
                 {runningText ? (
-                  <div className="p-4 bg-white rounded-lg border">
-                    <p className="text-sm text-primary">{runningText.text}</p>
+                  <div className="rounded-2xl border border-slate-200/90 bg-slate-50/70 p-4">
+                    <p className="text-sm leading-relaxed text-slate-700">
+                      {runningText.text}
+                    </p>
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-400 italic">
+                  <p className="text-sm italic text-slate-400">
                     Belum ada teks berjalan.
                   </p>
                 )}
@@ -1777,19 +1955,23 @@ export default function KontenPage() {
                           }
                           setAboutModal(null);
                         }}
-                        className="px-3 py-2 bg-primary text-white rounded-lg"
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
                       >
-                        <i className="ri-check-line"></i> Simpan
+                        <i className="ri-check-line" /> Simpan
                       </button>
                       <button
                         onClick={() => setAboutModal(null)}
-                        className="px-3 py-2 border rounded-lg"
+                        className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
                       >
                         Batal
                       </button>
                     </>
                   }
                 >
+                  <p className="mb-4 text-sm leading-relaxed text-slate-500">
+                    Perbarui isi bagian ini agar halaman Tentang tampil rapi dan
+                    konsisten di website publik.
+                  </p>
                   {aboutModal.section === "profile" && (
                     <TextEditor
                       value={profileHtml}
@@ -1953,66 +2135,66 @@ export default function KontenPage() {
           )}
 
           {activeTab === "partners" && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-primary">Mitra</h2>
+            <div className="space-y-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">Mitra</h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Tampilkan logo dan identitas partner yang mendukung program.
+                  </p>
+                </div>
                 <button
                   onClick={() => handleAdd("partners")}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
                 >
-                  <i className="ri-add-line"></i>
-                  Tambah Mitra
+                  <i className="ri-add-line" aria-hidden />
+                  Tambah mitra
                 </button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {partnersList
-                  .slice(
-                    (page - 1) * pageSize,
-                    (page - 1) * pageSize + pageSize,
-                  )
-                  .map((p) => (
-                    <div
-                      key={p.id}
-                      className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden"
-                    >
-                      <div className="p-6">
-                        <div className="flex justify-between items-start gap-4">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-primary text-lg">
-                              {p.name}
-                            </h3>
-                            <div className="flex items-center gap-3 mt-3">
-                              <span
-                                className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(p.status)}`}
-                              >
-                                {p.status}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-400 mt-2">
-                              {p.logo}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleEdit("partners", p)}
-                              className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1"
-                            >
-                              <i className="ri-edit-line"></i>Edit
-                            </button>
-                            <button
-                              onClick={() => handleDelete("partners", p.id)}
-                              className="px-3 py-2 text-sm border border-red-200 text-red-700 rounded-lg hover:bg-red-50 transition flex items-center gap-1"
-                            >
-                              <i className="ri-delete-bin-line"></i>Hapus
-                            </button>
-                          </div>
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                {paginatedPartnersList.map((p) => (
+                  <div
+                    key={p.id}
+                    className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate text-lg font-semibold text-slate-900">
+                          {p.name}
+                        </h3>
+                        <div className="mt-3 flex items-center gap-3">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(p.status)}`}
+                          >
+                            {p.status}
+                          </span>
                         </div>
+                        <p className="mt-3 truncate text-xs text-slate-400">
+                          {p.logo}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit("partners", p)}
+                          className="inline-flex items-center gap-2 rounded-xl bg-secondary px-3 py-2 text-sm font-medium text-white transition hover:brightness-95"
+                        >
+                          <i className="ri-edit-line" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete("partners", p.id)}
+                          className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+                        >
+                          <i className="ri-delete-bin-line" />
+                          Hapus
+                        </button>
                       </div>
                     </div>
-                  ))}
+                  </div>
+                ))}
                 {partnersList.length === 0 && (
-                  <div className="col-span-full text-center py-8 text-gray-500">
-                    Belum ada mitra
+                  <div className="col-span-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center text-sm text-slate-500">
+                    Belum ada mitra yang ditambahkan.
                   </div>
                 )}
               </div>
@@ -2020,70 +2202,72 @@ export default function KontenPage() {
           )}
 
           {activeTab === "testimonials" && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-primary">
-                  Testimoni
-                </h2>
+            <div className="space-y-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    Testimoni
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Kelola kutipan pengalaman pengguna agar lebih meyakinkan dan
+                    relevan.
+                  </p>
+                </div>
                 <button
                   onClick={() => handleAdd("testimonials")}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
                 >
-                  <i className="ri-add-line"></i>Tambah Testimoni
+                  <i className="ri-add-line" aria-hidden />
+                  Tambah testimoni
                 </button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {testimonialsList
-                  .slice(
-                    (page - 1) * pageSize,
-                    (page - 1) * pageSize + pageSize,
-                  )
-                  .map((t) => (
-                    <div
-                      key={t.id}
-                      className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden"
-                    >
-                      <div className="p-6">
-                        <div className="flex justify-between items-start gap-4">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-primary text-lg">
-                              {t.nama}
-                            </h3>
-                            <p className="text-sm text-gray-500 mt-1">
-                              {t.pekerjaan} • {t.perusahaan}
-                            </p>
-                            <p className="text-sm text-gray-500 mt-3">
-                              {t.testimoni}
-                            </p>
-                            <div className="flex items-center gap-3 mt-3">
-                              <span
-                                className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(t.status)}`}
-                              >
-                                {t.status}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleEdit("testimonials", t)}
-                              className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1"
-                            >
-                              <i className="ri-edit-line"></i>Edit
-                            </button>
-                            <button
-                              onClick={() => handleDelete("testimonials", t.id)}
-                              className="px-3 py-2 text-sm border border-red-200 text-red-700 rounded-lg hover:bg-red-50 transition flex items-center gap-1"
-                            >
-                              <i className="ri-delete-bin-line"></i>Hapus
-                            </button>
-                          </div>
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                {paginatedTestimonialsList.map((t) => (
+                  <div
+                    key={t.id}
+                    className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-lg font-semibold text-slate-900">
+                          {t.nama}
+                        </h3>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {t.pekerjaan} • {t.perusahaan}
+                        </p>
+                        <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-slate-600">
+                          {t.testimoni}
+                        </p>
+                        <div className="mt-4 flex items-center gap-3">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(t.status)}`}
+                          >
+                            {t.status}
+                          </span>
                         </div>
                       </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit("testimonials", t)}
+                          className="inline-flex items-center gap-2 rounded-xl bg-secondary px-3 py-2 text-sm font-medium text-white transition hover:brightness-95"
+                        >
+                          <i className="ri-edit-line" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete("testimonials", t.id)}
+                          className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+                        >
+                          <i className="ri-delete-bin-line" />
+                          Hapus
+                        </button>
+                      </div>
                     </div>
-                  ))}
+                  </div>
+                ))}
                 {testimonialsList.length === 0 && (
-                  <div className="col-span-full text-center py-8 text-gray-500">
-                    Belum ada testimoni
+                  <div className="col-span-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center text-sm text-slate-500">
+                    Belum ada testimoni yang ditambahkan.
                   </div>
                 )}
               </div>
@@ -2127,19 +2311,23 @@ export default function KontenPage() {
                       }
                       setContentModal(null);
                     }}
-                    className="px-3 py-2 bg-primary text-white rounded-lg"
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
                   >
-                    <i className="ri-check-line"></i> Simpan
+                    <i className="ri-check-line" /> Simpan
                   </button>
                   <button
                     onClick={() => setContentModal(null)}
-                    className="px-3 py-2 border rounded-lg"
+                    className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
                   >
                     Batal
                   </button>
                 </>
               }
             >
+              <p className="mb-4 text-sm leading-relaxed text-slate-500">
+                Lengkapi konten berikut untuk menjaga tampilan homepage tetap
+                informatif, terstruktur, dan mudah dibaca.
+              </p>
               {contentModal.section === "partners" && editPartner && (
                 <div className="space-y-3">
                   <Input
@@ -2408,100 +2596,94 @@ export default function KontenPage() {
           )}
 
           {activeTab === "faq" && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-primary">
-                  FAQ (Pertanyaan Umum)
-                </h2>
+            <div className="space-y-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    FAQ (Pertanyaan Umum)
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Pertanyaan populer untuk membantu pengunjung menemukan
+                    jawaban lebih cepat.
+                  </p>
+                </div>
                 <button
                   onClick={() => handleAdd("faq")}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center gap-2"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
                 >
-                  <i className="ri-add-line"></i>
+                  <i className="ri-add-line" aria-hidden />
                   Tambah FAQ
                 </button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {faqList
-                  .slice(
-                    (page - 1) * pageSize,
-                    (page - 1) * pageSize + pageSize,
-                  )
-                  .map((f) => (
-                    <div
-                      key={f.id}
-                      className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden"
-                    >
-                      <div className="p-6">
-                        <div className="flex justify-between items-start gap-4">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-primary text-lg">
-                              {f.pertanyaan}
-                            </h3>
-                            <p className="text-sm text-gray-500 mt-3">
-                              {f.jawaban}
-                            </p>
-                            <div className="flex items-center gap-3 mt-3">
-                              <span
-                                className={`px-2 py-1 text-xs rounded-full ${getKategoriColor(f.kategori)}`}
-                              >
-                                {f.kategori}
-                              </span>
-                              <span
-                                className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(f.status)}`}
-                              >
-                                {f.status}
-                              </span>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => handleEdit("faq", f)}
-                            className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center gap-1"
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                {paginatedFaqList.map((f) => (
+                  <div
+                    key={f.id}
+                    className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-lg font-semibold text-slate-900">
+                          {f.pertanyaan}
+                        </h3>
+                        <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-slate-600">
+                          {f.jawaban}
+                        </p>
+                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getKategoriColor(f.kategori)}`}
                           >
-                            <i className="ri-edit-line"></i>
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete("faq", f.id)}
-                            className="px-3 py-2 text-sm border border-red-200 text-red-700 rounded-lg hover:bg-red-50 transition flex items-center gap-1"
+                            {f.kategori}
+                          </span>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(f.status)}`}
                           >
-                            <i className="ri-delete-bin-line"></i>Hapus
-                          </button>
+                            {f.status}
+                          </span>
                         </div>
                       </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit("faq", f)}
+                          className="inline-flex items-center gap-2 rounded-xl bg-secondary px-3 py-2 text-sm font-medium text-white transition hover:brightness-95"
+                        >
+                          <i className="ri-edit-line" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete("faq", f.id)}
+                          className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+                        >
+                          <i className="ri-delete-bin-line" />
+                          Hapus
+                        </button>
+                      </div>
                     </div>
-                  ))}
+                  </div>
+                ))}
                 {faqList.length === 0 && (
-                  <div className="col-span-full text-center py-8 text-gray-500">
-                    Belum ada FAQ
+                  <div className="col-span-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center text-sm text-slate-500">
+                    Belum ada FAQ yang ditambahkan.
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          <div className="mt-4">
-            <Pagination
-              page={page}
-              pageSize={pageSize}
-              total={
-                activeTab === "faq"
-                  ? faqList.length
-                  : activeTab === "partners"
-                    ? partnersList.length
-                    : activeTab === "testimonials"
-                      ? testimonialsList.length
-                      : activeTab === "holiday_greetings"
-                        ? holidayGreetingsList.length
-                        : 1
-              }
-              onPageChange={(p) => setPage(p)}
-              onPageSizeChange={(s) => {
-                setPageSize(s);
-                setPage(1);
-              }}
-            />
-          </div>
+          {showPagination && currentTabTotal > 0 && (
+            <div className="pt-1">
+              <Pagination
+                page={page}
+                pageSize={pageSize}
+                total={currentTabTotal}
+                onPageChange={(p) => setPage(p)}
+                onPageSizeChange={(s) => {
+                  setPageSize(s);
+                  setPage(1);
+                }}
+              />
+            </div>
+          )}
         </div>
       </main>
     </>
