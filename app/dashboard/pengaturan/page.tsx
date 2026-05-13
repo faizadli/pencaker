@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   Input,
@@ -41,6 +41,7 @@ import {
 import { presignDisnakerProfileUpload } from "../../../services/profile";
 import type { Ak1Template } from "../../../services/ak1";
 import Card from "../../../components/ui/Card";
+import StatCard from "../../../components/ui/StatCard";
 import { useToast } from "../../../components/ui/Toast";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
 
@@ -369,10 +370,52 @@ export default function PengaturanPage() {
     })();
   }, []);
 
+  const sections = [
+    { id: "instansi", label: "Profil Instansi", icon: "ri-building-line" },
+    { id: "banner", label: "Banner Website", icon: "ri-image-line" },
+    { id: "maintenance", label: "Maintenance", icon: "ri-tools-line" },
+    { id: "master", label: "Master Data", icon: "ri-database-line" },
+    { id: "ak1layout", label: "Layout AK1", icon: "ri-layout-5-line" },
+  ];
+  const filledInstansiCount = useMemo(
+    () =>
+      Object.values(instansi).filter((value) => String(value || "").trim())
+        .length,
+    [instansi],
+  );
+  const filledBannerCount = useMemo(
+    () =>
+      Object.values(banner).filter((value) => String(value || "").trim())
+        .length,
+    [banner],
+  );
+  const masterGroupCount =
+    kategoriGroups.length + educationGroups.length + positionGroups.length;
+  const masterItemCount =
+    kategoriGroups.reduce((sum, group) => sum + (group.items?.length || 0), 0) +
+    educationGroups.reduce(
+      (sum, group) => sum + (group.items?.length || 0),
+      0,
+    ) +
+    positionGroups.reduce((sum, group) => sum + (group.items?.length || 0), 0);
+  const activeSectionLabel =
+    sections.find((section) => section.id === activeSection)?.label ||
+    "Pengaturan";
+  const cardSurfaceClass =
+    "!rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02]";
+  const primaryButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95";
+  const secondaryButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95";
+  const neutralButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200";
+  const inlineEditButtonClass =
+    "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-primary transition hover:bg-primary/10";
+
   if (loading) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
           <FullPageLoading isSection />
         </div>
       </main>
@@ -1271,32 +1314,85 @@ export default function PengaturanPage() {
     }
   };
 
-  const sections = [
-    { id: "instansi", label: "Profil Instansi", icon: "ri-building-line" },
-    { id: "banner", label: "Banner Website", icon: "ri-image-line" },
-    { id: "maintenance", label: "Maintenance", icon: "ri-tools-line" },
-    { id: "master", label: "Master Data", icon: "ri-database-line" },
-    { id: "ak1layout", label: "Layout AK1", icon: "ri-layout-5-line" },
-  ];
-
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">
-              Pengaturan Sistem
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Atur profil instansi, tampilan publik, dan master data
-            </p>
-          </div>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full space-y-8">
+          <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+            <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+            <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  Pengaturan
+                </p>
+                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                  Pengaturan sistem dan data inti
+                </h1>
+                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                  Atur profil instansi, tampilan publik website, mode
+                  maintenance, master data, dan layout AK1 dari satu area yang
+                  konsisten.
+                </p>
+              </div>
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                <i className="ri-settings-3-line" aria-hidden />
+                Section aktif: {activeSectionLabel}
+              </span>
+            </div>
+          </header>
 
-          <Card className="mb-6 overflow-hidden">
-            <div className="flex overflow-x-auto">
+          <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+            <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5">
+              <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                Ringkasan konfigurasi
+              </h2>
+              <p className="text-sm text-slate-500">
+                Ikhtisar cepat area pengaturan yang sudah terisi dan data utama
+                yang sedang dikelola.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard
+                title="Field instansi"
+                value={filledInstansiCount}
+                change="Kolom profil terisi"
+                color="var(--color-primary)"
+                icon="ri-building-line"
+              />
+              <StatCard
+                title="Field banner"
+                value={filledBannerCount}
+                change="Konten hero terisi"
+                color="var(--color-secondary)"
+                icon="ri-image-line"
+              />
+              <StatCard
+                title="Total grup master"
+                value={masterGroupCount}
+                change="Kategori, pendidikan, jabatan"
+                color="var(--color-foreground)"
+                icon="ri-database-line"
+              />
+              <StatCard
+                title="Total item master"
+                value={masterItemCount}
+                change={
+                  maintenance.aktif
+                    ? "Maintenance sedang aktif"
+                    : "Sistem berjalan normal"
+                }
+                color="var(--color-danger)"
+                icon="ri-list-check-3"
+              />
+            </div>
+          </section>
+
+          <Card className={`${cardSurfaceClass} overflow-hidden`}>
+            <div className="flex overflow-x-auto gap-2 rounded-2xl bg-slate-50/80 p-2">
               {sections.map((section) => (
                 <button
                   key={section.id}
+                  type="button"
                   onClick={() =>
                     setActiveSection(
                       section.id as
@@ -1307,9 +1403,13 @@ export default function PengaturanPage() {
                         | "ak1layout",
                     )
                   }
-                  className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap ${activeSection === section.id ? "text-primary border-b-2 border-primary" : "text-gray-500 hover:text-primary"}`}
+                  className={`inline-flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-medium transition ${
+                    activeSection === section.id
+                      ? "bg-white text-primary shadow-sm ring-1 ring-primary/15"
+                      : "text-slate-500 hover:bg-white/80 hover:text-primary"
+                  }`}
                 >
-                  <i className={section.icon}></i>
+                  <i className={section.icon} aria-hidden />
                   {section.label}
                 </button>
               ))}
@@ -1318,10 +1418,17 @@ export default function PengaturanPage() {
 
           {activeSection === "instansi" && (
             <Card
+              className={cardSurfaceClass}
               header={
-                <h3 className="text-lg font-semibold text-primary">
-                  Profil Instansi
-                </h3>
+                <div className="flex flex-col gap-2 border-b border-slate-100 pb-5">
+                  <h3 className="text-lg font-bold text-slate-900">
+                    Profil instansi
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    Perbarui identitas, kontak, dan informasi publik instansi
+                    yang tampil di berbagai area website.
+                  </p>
+                </div>
               }
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -1341,7 +1448,7 @@ export default function PengaturanPage() {
                   ).map((key) => (
                     <div key={key}>
                       <div className="flex justify-between items-center mb-2">
-                        <label className="text-sm font-medium text-gray-500 capitalize">
+                        <label className="text-sm font-medium text-slate-500 capitalize">
                           {key === "nama" && "Nama Instansi"}
                           {key === "alamat" && "Alamat"}
                           {key === "telepon" && "Telepon"}
@@ -1357,9 +1464,9 @@ export default function PengaturanPage() {
                             onClick={() =>
                               handleEdit(`instansi.${key}`, instansi[key])
                             }
-                            className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                            className={inlineEditButtonClass}
                           >
-                            <i className="ri-edit-line"></i>
+                            <i className="ri-edit-line" />
                             Edit
                           </button>
                         )}
@@ -1390,22 +1497,22 @@ export default function PengaturanPage() {
                           <div className="flex gap-2">
                             <button
                               onClick={handleSave}
-                              className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2"
+                              className={primaryButtonClass}
                             >
-                              <i className="ri-check-line"></i>
+                              <i className="ri-check-line" />
                               Simpan
                             </button>
                             <button
                               onClick={() => setEditField(null)}
-                              className="px-3 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                              className={neutralButtonClass}
                             >
                               Batal
                             </button>
                           </div>
                         </div>
                       ) : (
-                        <p className="text-sm text-primary font-medium">
-                          {instansi[key]}
+                        <p className="rounded-xl border border-slate-200/80 bg-slate-50/70 px-4 py-3 text-sm font-medium text-slate-700">
+                          {instansi[key] || "-"}
                         </p>
                       )}
                     </div>
@@ -1413,15 +1520,15 @@ export default function PengaturanPage() {
                 </div>
                 <div>
                   <div className="flex justify-between items-center mb-4">
-                    <label className="text-sm font-medium text-gray-500">
+                    <label className="text-sm font-medium text-slate-500">
                       Logo Instansi
                     </label>
                     {editField !== "logo" && (
                       <button
                         onClick={() => handleEdit("logo", instansi.logo)}
-                        className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                        className={inlineEditButtonClass}
                       >
-                        <i className="ri-edit-line"></i>
+                        <i className="ri-edit-line" />
                         Ganti
                       </button>
                     )}
@@ -1441,35 +1548,37 @@ export default function PengaturanPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={handleSave}
-                          className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2"
+                          className={primaryButtonClass}
                         >
-                          <i className="ri-check-line"></i>
+                          <i className="ri-check-line" />
                           Simpan
                         </button>
                         <button
                           onClick={() => setEditField(null)}
-                          className="px-3 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                          className={neutralButtonClass}
                         >
                           Batal
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center">
+                    <div className="flex flex-col items-center rounded-2xl border border-slate-200/90 bg-slate-50/70 p-6">
                       {logoUrl ? (
                         <Image
                           src={logoUrl}
                           alt="Logo Instansi"
                           width={128}
                           height={128}
-                          className="w-32 h-32 object-contain border border-gray-200 rounded-lg"
+                          className="h-32 w-32 rounded-2xl border border-slate-200 bg-white object-contain"
                         />
                       ) : (
-                        <div className="w-32 h-32 flex items-center justify-center border border-gray-200 rounded-lg bg-gray-50 text-gray-400">
-                          <i className="ri-image-line text-2xl"></i>
+                        <div className="flex h-32 w-32 items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white text-slate-400">
+                          <i className="ri-image-line text-2xl" />
                         </div>
                       )}
-                      <p className="text-xs text-gray-500 mt-2">Preview Logo</p>
+                      <p className="mt-3 text-xs text-slate-500">
+                        Preview logo
+                      </p>
                     </div>
                   )}
                 </div>
@@ -1479,14 +1588,21 @@ export default function PengaturanPage() {
 
           {activeSection === "banner" && (
             <Card
+              className={cardSurfaceClass}
               header={
-                <h3 className="text-lg font-semibold text-primary">
-                  Banner Website
-                </h3>
+                <div className="flex flex-col gap-2 border-b border-slate-100 pb-5">
+                  <h3 className="text-lg font-bold text-slate-900">
+                    Banner website
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    Kelola visual hero, judul utama, dan CTA yang menjadi kesan
+                    pertama pengunjung saat membuka website.
+                  </p>
+                </div>
               }
             >
               <div className="mb-6">
-                <div className="relative w-full h-48 rounded-lg mb-4 border border-gray-200 overflow-hidden">
+                <div className="relative mb-4 h-56 w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
                   <Image
                     src={bannerUrl || banner.backgroundImage}
                     alt="Preview Banner"
@@ -1510,14 +1626,14 @@ export default function PengaturanPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={handleSave}
-                        className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2"
+                        className={primaryButtonClass}
                       >
-                        <i className="ri-check-line"></i>
+                        <i className="ri-check-line" />
                         Simpan
                       </button>
                       <button
                         onClick={() => setEditField(null)}
-                        className="px-3 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                        className={neutralButtonClass}
                       >
                         Batal
                       </button>
@@ -1528,9 +1644,9 @@ export default function PengaturanPage() {
                     onClick={() =>
                       handleEdit("backgroundImage", banner.backgroundImage)
                     }
-                    className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                    className={inlineEditButtonClass}
                   >
-                    <i className="ri-edit-line"></i>
+                    <i className="ri-edit-line" />
                     Ganti Gambar Background
                   </button>
                 )}
@@ -1546,7 +1662,7 @@ export default function PengaturanPage() {
                 ).map((key) => (
                   <div key={key}>
                     <div className="flex justify-between items-center mb-2">
-                      <label className="text-sm font-medium text-gray-500 capitalize">
+                      <label className="text-sm font-medium text-slate-500 capitalize">
                         {key === "judul" && "Judul Banner"}
                         {key === "subjudul" && "Subjudul"}
                         {key === "ctaText" && "Teks Tombol"}
@@ -1557,9 +1673,9 @@ export default function PengaturanPage() {
                           onClick={() =>
                             handleEdit(`banner.${key}`, banner[key])
                           }
-                          className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                          className={inlineEditButtonClass}
                         >
-                          <i className="ri-edit-line"></i>
+                          <i className="ri-edit-line" />
                           Edit
                         </button>
                       )}
@@ -1590,22 +1706,22 @@ export default function PengaturanPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={handleSave}
-                            className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2"
+                            className={primaryButtonClass}
                           >
-                            <i className="ri-check-line"></i>
+                            <i className="ri-check-line" />
                             Simpan
                           </button>
                           <button
                             onClick={() => setEditField(null)}
-                            className="px-3 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                            className={neutralButtonClass}
                           >
                             Batal
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-primary font-medium">
-                        {banner[key]}
+                      <p className="rounded-xl border border-slate-200/80 bg-slate-50/70 px-4 py-3 text-sm font-medium text-slate-700">
+                        {banner[key] || "-"}
                       </p>
                     )}
                   </div>
@@ -1616,16 +1732,25 @@ export default function PengaturanPage() {
 
           {activeSection === "maintenance" && (
             <Card
+              className={cardSurfaceClass}
               header={
-                <h3 className="text-lg font-semibold text-primary">
-                  Mode Pemeliharaan
-                </h3>
+                <div className="flex flex-col gap-2 border-b border-slate-100 pb-5">
+                  <h3 className="text-lg font-bold text-slate-900">
+                    Mode pemeliharaan
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    Kontrol akses publik ketika sistem sedang diperbarui atau
+                    perlu dibatasi sementara.
+                  </p>
+                </div>
               }
             >
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-6">
+              <div className="mb-6 flex items-center justify-between rounded-2xl border border-slate-200/90 bg-slate-50/80 p-4">
                 <div>
-                  <p className="font-medium text-primary">Status Maintenance</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="font-medium text-slate-900">
+                    Status maintenance
+                  </p>
+                  <p className="text-sm text-slate-500">
                     {maintenance.aktif
                       ? "Sistem dalam mode maintenance"
                       : "Sistem berjalan normal"}
@@ -1643,7 +1768,7 @@ export default function PengaturanPage() {
                     }
                     className="sr-only peer"
                   />
-                  <div className="relative w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                  <div className="relative h-6 w-11 rounded-full bg-slate-300 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full" />
                 </label>
               </div>
               {maintenance.aktif && (
@@ -1651,7 +1776,7 @@ export default function PengaturanPage() {
                   {["pesan", "jadwal"].map((key) => (
                     <div key={key}>
                       <div className="flex justify-between items-center mb-2">
-                        <label className="text-sm font-medium text-gray-500 capitalize">
+                        <label className="text-sm font-medium text-slate-500 capitalize">
                           {key === "pesan" && "Pesan Maintenance"}
                           {key === "jadwal" && "Jadwal Maintenance"}
                         </label>
@@ -1663,9 +1788,9 @@ export default function PengaturanPage() {
                                 maintenance[key as keyof Maintenance] as string,
                               )
                             }
-                            className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                            className={inlineEditButtonClass}
                           >
-                            <i className="ri-edit-line"></i>
+                            <i className="ri-edit-line" />
                             Edit
                           </button>
                         )}
@@ -1694,22 +1819,23 @@ export default function PengaturanPage() {
                           <div className="flex gap-2">
                             <button
                               onClick={handleSave}
-                              className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2"
+                              className={primaryButtonClass}
                             >
-                              <i className="ri-check-line"></i>
+                              <i className="ri-check-line" />
                               Simpan
                             </button>
                             <button
                               onClick={() => setEditField(null)}
-                              className="px-3 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                              className={neutralButtonClass}
                             >
                               Batal
                             </button>
                           </div>
                         </div>
                       ) : (
-                        <p className="text-sm text-primary font-medium">
-                          {maintenance[key as keyof Maintenance] as string}
+                        <p className="rounded-xl border border-slate-200/80 bg-slate-50/70 px-4 py-3 text-sm font-medium text-slate-700">
+                          {(maintenance[key as keyof Maintenance] as string) ||
+                            "-"}
                         </p>
                       )}
                     </div>
@@ -1721,14 +1847,25 @@ export default function PengaturanPage() {
 
           {activeSection === "master" && (
             <div className="space-y-6">
+              <div className="rounded-2xl border border-sky-100 bg-sky-50/70 px-5 py-4 text-sm text-slate-600">
+                Kelola data referensi utama untuk kebutuhan publikasi, formulir,
+                dan proses administrasi internal secara terstruktur per grup.
+              </div>
               <Card
+                className={cardSurfaceClass}
                 header={
-                  <h3 className="text-lg font-semibold text-primary">
-                    Kategori Pekerjaan
-                  </h3>
+                  <div className="flex flex-col gap-2 border-b border-slate-100 pb-5">
+                    <h3 className="text-lg font-bold text-slate-900">
+                      Kategori pekerjaan
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      Susun grup dan kategori pekerjaan agar referensi lowongan
+                      lebih rapi dan mudah dipilih.
+                    </p>
+                  </div>
                 }
               >
-                <div className="flex gap-2 mb-4">
+                <div className="mb-4 flex flex-wrap gap-2">
                   <button
                     onClick={() => {
                       setEditingGroup(null);
@@ -1736,9 +1873,9 @@ export default function PengaturanPage() {
                       setModalErrors({});
                       setIsGroupModalOpen(true);
                     }}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition text-sm flex items-center gap-2"
+                    className={primaryButtonClass}
                   >
-                    <i className="ri-add-line"></i> Tambah Grup
+                    <i className="ri-add-line" /> Tambah Grup
                   </button>
                   <button
                     onClick={() => {
@@ -1747,80 +1884,84 @@ export default function PengaturanPage() {
                       setModalErrors({});
                       setIsCategoryModalOpen(true);
                     }}
-                    className="px-4 py-2 bg-secondary text-white rounded-lg hover:opacity-90 transition text-sm flex items-center gap-2"
+                    className={secondaryButtonClass}
                   >
-                    <i className="ri-add-line"></i> Tambah Kategori
+                    <i className="ri-add-line" /> Tambah Kategori
                   </button>
                 </div>
 
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TH>Kode Grup</TH>
-                      <TH>Nama Grup</TH>
-                      <TH>Jumlah Kategori</TH>
-                      <TH>Aksi</TH>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {kategoriGroups.length === 0 ? (
+                <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white">
+                  <Table>
+                    <TableHead>
                       <TableRow>
-                        <TD
-                          colSpan={4}
-                          className="text-center py-4 text-gray-500"
-                        >
-                          Belum ada grup kategori
-                        </TD>
+                        <TH>Kode Grup</TH>
+                        <TH>Nama Grup</TH>
+                        <TH>Jumlah Kategori</TH>
+                        <TH>Aksi</TH>
                       </TableRow>
-                    ) : (
-                      kategoriGroups.map((g, idx) => (
-                        <TableRow key={idx}>
-                          <TD>{g.code || "-"}</TD>
-                          <TD>{g.name}</TD>
-                          <TD>
-                            <span className="text-sm text-gray-600">
-                              {g.items?.length || 0} Kategori
-                            </span>
-                          </TD>
-                          <TD>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => {
-                                  setEditingGroup({
-                                    idx,
-                                    code: g.code || "",
-                                    name: g.name,
-                                  });
-                                  setNewGroupData({
-                                    id: g.id,
-                                    code: g.code || "",
-                                    name: g.name,
-                                    items: g.items.map((it) => ({
-                                      id: it.id,
-                                      code: it.code || "",
-                                      name: it.name,
-                                    })),
-                                  });
-                                  setModalErrors({});
-                                  setIsGroupModalOpen(true);
-                                }}
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                <i className="ri-edit-line"></i>
-                              </button>
-                              <button
-                                onClick={() => handleDeleteCategoryGroup(idx)}
-                                className="text-red-600 hover:text-red-800"
-                              >
-                                <i className="ri-delete-bin-line"></i>
-                              </button>
-                            </div>
+                    </TableHead>
+                    <TableBody>
+                      {kategoriGroups.length === 0 ? (
+                        <TableRow>
+                          <TD
+                            colSpan={4}
+                            className="py-10 text-center text-sm text-slate-500"
+                          >
+                            Belum ada grup kategori pekerjaan.
                           </TD>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                      ) : (
+                        kategoriGroups.map((g, idx) => (
+                          <TableRow key={idx}>
+                            <TD className="text-slate-700">{g.code || "-"}</TD>
+                            <TD className="font-medium text-slate-900">
+                              {g.name}
+                            </TD>
+                            <TD>
+                              <span className="text-sm text-slate-600">
+                                {g.items?.length || 0} Kategori
+                              </span>
+                            </TD>
+                            <TD>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    setEditingGroup({
+                                      idx,
+                                      code: g.code || "",
+                                      name: g.name,
+                                    });
+                                    setNewGroupData({
+                                      id: g.id,
+                                      code: g.code || "",
+                                      name: g.name,
+                                      items: g.items.map((it) => ({
+                                        id: it.id,
+                                        code: it.code || "",
+                                        name: it.name,
+                                      })),
+                                    });
+                                    setModalErrors({});
+                                    setIsGroupModalOpen(true);
+                                  }}
+                                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:border-primary/20 hover:text-primary"
+                                >
+                                  <i className="ri-edit-line" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteCategoryGroup(idx)}
+                                  className="inline-flex items-center justify-center rounded-lg border border-rose-200 p-2 text-rose-700 transition hover:bg-rose-50"
+                                >
+                                  <i className="ri-delete-bin-line" />
+                                </button>
+                              </div>
+                            </TD>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
 
                 {/* Modals */}
                 <Modal
@@ -1834,19 +1975,23 @@ export default function PengaturanPage() {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => setIsGroupModalOpen(false)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                        className={neutralButtonClass}
                       >
                         Batal
                       </button>
                       <button
                         onClick={handleSaveGroup}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)]"
+                        className={primaryButtonClass}
                       >
                         Simpan
                       </button>
                     </div>
                   }
                 >
+                  <p className="mb-4 text-sm leading-relaxed text-slate-500">
+                    Lengkapi grup kategori beserta daftar item di dalamnya untuk
+                    menjaga master data tetap terstruktur.
+                  </p>
                   <div className="space-y-4">
                     <Input
                       label="Kode Grup"
@@ -1873,9 +2018,9 @@ export default function PengaturanPage() {
                       error={modalErrors.name}
                     />
 
-                    <div className="pt-2 border-t mt-4">
+                    <div className="mt-4 border-t border-slate-100 pt-3">
                       <div className="flex items-center justify-between mb-2">
-                        <label className="text-sm font-medium text-gray-700">
+                        <label className="text-sm font-medium text-slate-700">
                           Daftar Kategori
                         </label>
                         <button
@@ -1887,7 +2032,7 @@ export default function PengaturanPage() {
                             });
                             setGroupItemSearchTerm("");
                           }}
-                          className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium"
+                          className="inline-flex items-center rounded-lg bg-sky-50 px-2.5 py-1.5 text-xs font-medium text-sky-700 transition hover:bg-sky-100"
                         >
                           + Tambah Kategori
                         </button>
@@ -1901,7 +2046,7 @@ export default function PengaturanPage() {
                           placeholder="Cari kategori..."
                         />
                       </div>
-                      <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      <div className="max-h-60 space-y-2 overflow-y-auto pr-1">
                         {newGroupData.items
                           .map((item, idx) => ({ item, idx }))
                           .filter(
@@ -1960,7 +2105,7 @@ export default function PengaturanPage() {
                                     items: newItems,
                                   });
                                 }}
-                                className="px-2 text-red-500 hover:bg-red-50 rounded"
+                                className="rounded-lg px-2 text-rose-600 transition hover:bg-rose-50"
                                 title="Hapus Kategori"
                               >
                                 <i className="ri-delete-bin-line" />
@@ -1968,7 +2113,7 @@ export default function PengaturanPage() {
                             </div>
                           ))}
                         {newGroupData.items.length === 0 && (
-                          <p className="text-sm text-gray-400 italic text-center py-4 bg-gray-50 rounded border border-dashed">
+                          <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 py-4 text-center text-sm italic text-slate-400">
                             Belum ada kategori dalam grup ini
                           </p>
                         )}
@@ -1986,19 +2131,23 @@ export default function PengaturanPage() {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => setIsCategoryModalOpen(false)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                        className={neutralButtonClass}
                       >
                         Batal
                       </button>
                       <button
                         onClick={handleSaveCategory}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)]"
+                        className={primaryButtonClass}
                       >
                         Simpan
                       </button>
                     </div>
                   }
                 >
+                  <p className="mb-4 text-sm leading-relaxed text-slate-500">
+                    Tambahkan kategori pekerjaan ke grup yang sesuai agar data
+                    referensi tetap mudah dipelihara.
+                  </p>
                   <div className="space-y-4">
                     {!editingCategory && (
                       <SearchableSelect
@@ -2018,10 +2167,10 @@ export default function PengaturanPage() {
                     )}
                     {editingCategory && (
                       <div className="mb-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="mb-1 block text-sm font-medium text-slate-700">
                           Grup
                         </label>
-                        <div className="px-3 py-2 bg-gray-100 rounded-lg text-gray-700">
+                        <div className="rounded-xl bg-slate-100 px-3 py-2 text-slate-700">
                           {kategoriGroups[editingCategory.groupIdx]?.name ||
                             "-"}
                         </div>
@@ -2054,22 +2203,29 @@ export default function PengaturanPage() {
               </Card>
 
               <Card
+                className={cardSurfaceClass}
                 header={
-                  <h3 className="text-lg font-semibold text-primary">
-                    Data Pendidikan
-                  </h3>
+                  <div className="flex flex-col gap-2 border-b border-slate-100 pb-5">
+                    <h3 className="text-lg font-bold text-slate-900">
+                      Data pendidikan
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      Kelola grup pendidikan dan tingkat di dalamnya untuk
+                      kebutuhan registrasi serta filter data.
+                    </p>
+                  </div>
                 }
               >
-                <div className="flex gap-2 mb-4">
+                <div className="mb-4 flex flex-wrap gap-2">
                   <button
                     onClick={() => {
                       setEditingEduGroup(null);
                       setNewEduGroupData({ code: "", name: "", items: [] });
                       setIsEduGroupModalOpen(true);
                     }}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition text-sm flex items-center gap-2"
+                    className={primaryButtonClass}
                   >
-                    <i className="ri-add-line"></i> Tambah Grup
+                    <i className="ri-add-line" /> Tambah Grup
                   </button>
                   <button
                     onClick={() => {
@@ -2077,79 +2233,85 @@ export default function PengaturanPage() {
                       setNewEduLevelData({ groupIdx: "", code: "", name: "" });
                       setIsEduLevelModalOpen(true);
                     }}
-                    className="px-4 py-2 bg-secondary text-white rounded-lg hover:opacity-90 transition text-sm flex items-center gap-2"
+                    className={secondaryButtonClass}
                   >
-                    <i className="ri-add-line"></i> Tambah Tingkat
+                    <i className="ri-add-line" /> Tambah Tingkat
                   </button>
                 </div>
 
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TH>Kode Grup</TH>
-                      <TH>Nama Grup</TH>
-                      <TH>Jumlah Tingkat</TH>
-                      <TH>Aksi</TH>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {educationGroups.length === 0 ? (
+                <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white">
+                  <Table>
+                    <TableHead>
                       <TableRow>
-                        <TD
-                          colSpan={4}
-                          className="text-center py-4 text-gray-500"
-                        >
-                          Belum ada grup pendidikan
-                        </TD>
+                        <TH>Kode Grup</TH>
+                        <TH>Nama Grup</TH>
+                        <TH>Jumlah Tingkat</TH>
+                        <TH>Aksi</TH>
                       </TableRow>
-                    ) : (
-                      educationGroups.map((g, idx) => (
-                        <TableRow key={idx}>
-                          <TD>{g.code || "-"}</TD>
-                          <TD>{g.name}</TD>
-                          <TD>
-                            <span className="text-sm text-gray-600">
-                              {g.items?.length || 0} Tingkat
-                            </span>
-                          </TD>
-                          <TD>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => {
-                                  setEditingEduGroup({
-                                    idx,
-                                    code: g.code || "",
-                                    name: g.name,
-                                  });
-                                  setNewEduGroupData({
-                                    id: g.id,
-                                    code: g.code || "",
-                                    name: g.name,
-                                    items: g.items.map((it) => ({
-                                      id: it.id,
-                                      code: it.code || "",
-                                      name: it.name,
-                                    })),
-                                  });
-                                  setIsEduGroupModalOpen(true);
-                                }}
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                <i className="ri-edit-line"></i>
-                              </button>
-                              <button
-                                onClick={() => handleDeleteEducationGroup(idx)}
-                                className="text-red-600 hover:text-red-800"
-                              >
-                                <i className="ri-delete-bin-line"></i>
-                              </button>
-                            </div>
+                    </TableHead>
+                    <TableBody>
+                      {educationGroups.length === 0 ? (
+                        <TableRow>
+                          <TD
+                            colSpan={4}
+                            className="py-10 text-center text-sm text-slate-500"
+                          >
+                            Belum ada grup pendidikan.
                           </TD>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                      ) : (
+                        educationGroups.map((g, idx) => (
+                          <TableRow key={idx}>
+                            <TD className="text-slate-700">{g.code || "-"}</TD>
+                            <TD className="font-medium text-slate-900">
+                              {g.name}
+                            </TD>
+                            <TD>
+                              <span className="text-sm text-slate-600">
+                                {g.items?.length || 0} Tingkat
+                              </span>
+                            </TD>
+                            <TD>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    setEditingEduGroup({
+                                      idx,
+                                      code: g.code || "",
+                                      name: g.name,
+                                    });
+                                    setNewEduGroupData({
+                                      id: g.id,
+                                      code: g.code || "",
+                                      name: g.name,
+                                      items: g.items.map((it) => ({
+                                        id: it.id,
+                                        code: it.code || "",
+                                        name: it.name,
+                                      })),
+                                    });
+                                    setIsEduGroupModalOpen(true);
+                                  }}
+                                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:border-primary/20 hover:text-primary"
+                                >
+                                  <i className="ri-edit-line" />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleDeleteEducationGroup(idx)
+                                  }
+                                  className="inline-flex items-center justify-center rounded-lg border border-rose-200 p-2 text-rose-700 transition hover:bg-rose-50"
+                                >
+                                  <i className="ri-delete-bin-line" />
+                                </button>
+                              </div>
+                            </TD>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
 
                 {/* Modals */}
                 <Modal
@@ -2165,19 +2327,23 @@ export default function PengaturanPage() {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => setIsEduGroupModalOpen(false)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                        className={neutralButtonClass}
                       >
                         Batal
                       </button>
                       <button
                         onClick={handleSaveEduGroup}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)]"
+                        className={primaryButtonClass}
                       >
                         Simpan
                       </button>
                     </div>
                   }
                 >
+                  <p className="mb-4 text-sm leading-relaxed text-slate-500">
+                    Lengkapi grup pendidikan beserta tingkat di dalamnya untuk
+                    memudahkan pengelolaan referensi akademik.
+                  </p>
                   <div className="space-y-4">
                     <Input
                       label="Kode Grup"
@@ -2204,9 +2370,9 @@ export default function PengaturanPage() {
                       error={modalErrors.name}
                     />
 
-                    <div className="pt-2 border-t mt-4">
+                    <div className="mt-4 border-t border-slate-100 pt-3">
                       <div className="flex items-center justify-between mb-2">
-                        <label className="text-sm font-medium text-gray-700">
+                        <label className="text-sm font-medium text-slate-700">
                           Daftar Tingkat
                         </label>
                         <button
@@ -2218,7 +2384,7 @@ export default function PengaturanPage() {
                             });
                             setEduGroupItemSearchTerm("");
                           }}
-                          className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium"
+                          className="inline-flex items-center rounded-lg bg-sky-50 px-2.5 py-1.5 text-xs font-medium text-sky-700 transition hover:bg-sky-100"
                         >
                           + Tambah Tingkat
                         </button>
@@ -2303,7 +2469,7 @@ export default function PengaturanPage() {
                             </div>
                           ))}
                         {newEduGroupData.items.length === 0 && (
-                          <p className="text-sm text-gray-400 italic text-center py-4 bg-gray-50 rounded border border-dashed">
+                          <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 py-4 text-center text-sm italic text-slate-400">
                             Belum ada tingkat dalam grup ini
                           </p>
                         )}
@@ -2325,19 +2491,23 @@ export default function PengaturanPage() {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => setIsEduLevelModalOpen(false)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                        className={neutralButtonClass}
                       >
                         Batal
                       </button>
                       <button
                         onClick={handleSaveEduLevel}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)]"
+                        className={primaryButtonClass}
                       >
                         Simpan
                       </button>
                     </div>
                   }
                 >
+                  <p className="mb-4 text-sm leading-relaxed text-slate-500">
+                    Tambahkan tingkat pendidikan pada grup yang sesuai agar data
+                    referensi tetap terjaga kualitasnya.
+                  </p>
                   <div className="space-y-4">
                     {!editingEduLevel && (
                       <SearchableSelect
@@ -2358,10 +2528,10 @@ export default function PengaturanPage() {
                     )}
                     {editingEduLevel && (
                       <div className="mb-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="mb-1 block text-sm font-medium text-slate-700">
                           Grup
                         </label>
-                        <div className="px-3 py-2 bg-gray-100 rounded-lg text-gray-700">
+                        <div className="rounded-xl bg-slate-100 px-3 py-2 text-slate-700">
                           {educationGroups[editingEduLevel.groupIdx]?.name ||
                             "-"}
                         </div>
@@ -2396,22 +2566,29 @@ export default function PengaturanPage() {
               </Card>
 
               <Card
+                className={cardSurfaceClass}
                 header={
-                  <h3 className="text-lg font-semibold text-primary">
-                    Data Jabatan
-                  </h3>
+                  <div className="flex flex-col gap-2 border-b border-slate-100 pb-5">
+                    <h3 className="text-lg font-bold text-slate-900">
+                      Data jabatan
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      Susun grup jabatan dan item turunannya untuk membantu
+                      pencatatan posisi kerja lebih konsisten.
+                    </p>
+                  </div>
                 }
               >
-                <div className="flex gap-2 mb-4">
+                <div className="mb-4 flex flex-wrap gap-2">
                   <button
                     onClick={() => {
                       setEditingPosGroup(null);
                       setNewPosGroupData({ code: "", name: "", items: [] });
                       setIsPosGroupModalOpen(true);
                     }}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition text-sm flex items-center gap-2"
+                    className={primaryButtonClass}
                   >
-                    <i className="ri-add-line"></i> Tambah Grup
+                    <i className="ri-add-line" /> Tambah Grup
                   </button>
                   <button
                     onClick={() => {
@@ -2419,79 +2596,83 @@ export default function PengaturanPage() {
                       setNewPosTitleData({ groupIdx: "", code: "", name: "" });
                       setIsPosTitleModalOpen(true);
                     }}
-                    className="px-4 py-2 bg-secondary text-white rounded-lg hover:opacity-90 transition text-sm flex items-center gap-2"
+                    className={secondaryButtonClass}
                   >
-                    <i className="ri-add-line"></i> Tambah Jabatan
+                    <i className="ri-add-line" /> Tambah Jabatan
                   </button>
                 </div>
 
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TH>Kode Grup</TH>
-                      <TH>Nama Grup</TH>
-                      <TH>Jumlah Jabatan</TH>
-                      <TH>Aksi</TH>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {positionGroups.length === 0 ? (
+                <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white">
+                  <Table>
+                    <TableHead>
                       <TableRow>
-                        <TD
-                          colSpan={4}
-                          className="text-center py-4 text-gray-500"
-                        >
-                          Belum ada grup jabatan
-                        </TD>
+                        <TH>Kode Grup</TH>
+                        <TH>Nama Grup</TH>
+                        <TH>Jumlah Jabatan</TH>
+                        <TH>Aksi</TH>
                       </TableRow>
-                    ) : (
-                      positionGroups.map((g, idx) => (
-                        <TableRow key={idx}>
-                          <TD>{g.code || "-"}</TD>
-                          <TD>{g.name}</TD>
-                          <TD>
-                            <span className="text-sm text-gray-600">
-                              {g.items?.length || 0} Jabatan
-                            </span>
-                          </TD>
-                          <TD>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => {
-                                  setEditingPosGroup({
-                                    idx,
-                                    code: g.code || "",
-                                    name: g.name,
-                                  });
-                                  setNewPosGroupData({
-                                    id: g.id,
-                                    code: g.code || "",
-                                    name: g.name,
-                                    items: g.items.map((it) => ({
-                                      id: it.id,
-                                      code: it.code || "",
-                                      name: it.name,
-                                    })),
-                                  });
-                                  setIsPosGroupModalOpen(true);
-                                }}
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                <i className="ri-edit-line"></i>
-                              </button>
-                              <button
-                                onClick={() => handleDeletePosGroup(idx)}
-                                className="text-red-600 hover:text-red-800"
-                              >
-                                <i className="ri-delete-bin-line"></i>
-                              </button>
-                            </div>
+                    </TableHead>
+                    <TableBody>
+                      {positionGroups.length === 0 ? (
+                        <TableRow>
+                          <TD
+                            colSpan={4}
+                            className="py-10 text-center text-sm text-slate-500"
+                          >
+                            Belum ada grup jabatan.
                           </TD>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                      ) : (
+                        positionGroups.map((g, idx) => (
+                          <TableRow key={idx}>
+                            <TD className="text-slate-700">{g.code || "-"}</TD>
+                            <TD className="font-medium text-slate-900">
+                              {g.name}
+                            </TD>
+                            <TD>
+                              <span className="text-sm text-slate-600">
+                                {g.items?.length || 0} Jabatan
+                              </span>
+                            </TD>
+                            <TD>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    setEditingPosGroup({
+                                      idx,
+                                      code: g.code || "",
+                                      name: g.name,
+                                    });
+                                    setNewPosGroupData({
+                                      id: g.id,
+                                      code: g.code || "",
+                                      name: g.name,
+                                      items: g.items.map((it) => ({
+                                        id: it.id,
+                                        code: it.code || "",
+                                        name: it.name,
+                                      })),
+                                    });
+                                    setIsPosGroupModalOpen(true);
+                                  }}
+                                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:border-primary/20 hover:text-primary"
+                                >
+                                  <i className="ri-edit-line" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeletePosGroup(idx)}
+                                  className="inline-flex items-center justify-center rounded-lg border border-rose-200 p-2 text-rose-700 transition hover:bg-rose-50"
+                                >
+                                  <i className="ri-delete-bin-line" />
+                                </button>
+                              </div>
+                            </TD>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
 
                 {/* Modals */}
                 <Modal
@@ -2507,19 +2688,23 @@ export default function PengaturanPage() {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => setIsPosGroupModalOpen(false)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                        className={neutralButtonClass}
                       >
                         Batal
                       </button>
                       <button
                         onClick={handleSavePosGroup}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)]"
+                        className={primaryButtonClass}
                       >
                         Simpan
                       </button>
                     </div>
                   }
                 >
+                  <p className="mb-4 text-sm leading-relaxed text-slate-500">
+                    Lengkapi grup jabatan beserta daftar item agar referensi
+                    posisi kerja lebih mudah dikelola.
+                  </p>
                   <div className="space-y-4">
                     <Input
                       label="Kode Grup"
@@ -2544,9 +2729,9 @@ export default function PengaturanPage() {
                       placeholder="Contoh: Tenaga Profesional"
                     />
 
-                    <div className="pt-2 border-t mt-4">
+                    <div className="mt-4 border-t border-slate-100 pt-3">
                       <div className="flex items-center justify-between mb-2">
-                        <label className="text-sm font-medium text-gray-700">
+                        <label className="text-sm font-medium text-slate-700">
                           Daftar Jabatan
                         </label>
                         <button
@@ -2558,7 +2743,7 @@ export default function PengaturanPage() {
                             });
                             setPosGroupItemSearchTerm("");
                           }}
-                          className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium"
+                          className="inline-flex items-center rounded-lg bg-sky-50 px-2.5 py-1.5 text-xs font-medium text-sky-700 transition hover:bg-sky-100"
                         >
                           + Tambah Jabatan
                         </button>
@@ -2643,7 +2828,7 @@ export default function PengaturanPage() {
                             </div>
                           ))}
                         {newPosGroupData.items.length === 0 && (
-                          <p className="text-sm text-gray-400 italic text-center py-4 bg-gray-50 rounded border border-dashed">
+                          <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 py-4 text-center text-sm italic text-slate-400">
                             Belum ada jabatan dalam grup ini
                           </p>
                         )}
@@ -2661,19 +2846,23 @@ export default function PengaturanPage() {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => setIsPosTitleModalOpen(false)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                        className={neutralButtonClass}
                       >
                         Batal
                       </button>
                       <button
                         onClick={handleSavePosTitle}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)]"
+                        className={primaryButtonClass}
                       >
                         Simpan
                       </button>
                     </div>
                   }
                 >
+                  <p className="mb-4 text-sm leading-relaxed text-slate-500">
+                    Tambahkan jabatan pada grup yang sesuai untuk menjaga
+                    pilihan posisi tetap terstruktur dan mudah dicari.
+                  </p>
                   <div className="space-y-4">
                     {!editingPosTitle && (
                       <SearchableSelect
@@ -2693,10 +2882,10 @@ export default function PengaturanPage() {
                     )}
                     {editingPosTitle && (
                       <div className="mb-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="mb-1 block text-sm font-medium text-slate-700">
                           Grup
                         </label>
-                        <div className="px-3 py-2 bg-gray-100 rounded-lg text-gray-700">
+                        <div className="rounded-xl bg-slate-100 px-3 py-2 text-slate-700">
                           {positionGroups[editingPosTitle.groupIdx]?.name ||
                             "-"}
                         </div>
@@ -2833,6 +3022,12 @@ function Ak1LayoutEditor() {
   const [editingTemplateName, setEditingTemplateName] = useState("");
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const { showSuccess, showError, confirmDelete } = useToast();
+  const cardSurfaceClass =
+    "!rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02]";
+  const primaryButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95";
+  const dangerButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50";
 
   useEffect(() => {
     const recalc = () => {
@@ -3188,88 +3383,102 @@ function Ak1LayoutEditor() {
   return (
     <>
       <Card
+        className={cardSurfaceClass}
         header={
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-primary">
-              Kelola Template
-            </h3>
+          <div className="flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">
+                Kelola template
+              </h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Unggah file template AK1 yang akan dipakai sebagai dasar
+                pengaturan koordinat.
+              </p>
+            </div>
             <button
               onClick={() => {
                 setEditingTemplateName("");
                 setIsTemplateModalOpen(true);
               }}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm flex items-center gap-2"
+              className={primaryButtonClass}
             >
-              <i className="ri-add-line"></i>
+              <i className="ri-add-line" />
               Tambah Template
             </button>
           </div>
         }
       >
         <div className="space-y-6">
-          <div className="border-t pt-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">
+          <div>
+            <h4 className="mb-3 text-sm font-medium text-slate-700">
               Daftar Template Tersedia
             </h4>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TH>Nama Template</TH>
-                  <TH>Urutan</TH>
-                  <TH>File</TH>
-                  <TH>Aksi</TH>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {templates.length === 0 ? (
+            <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white">
+              <Table>
+                <TableHead>
                   <TableRow>
-                    <TD colSpan={4} className="text-center py-4 text-gray-500">
-                      Belum ada template
-                    </TD>
+                    <TH>Nama Template</TH>
+                    <TH>Urutan</TH>
+                    <TH>File</TH>
+                    <TH>Aksi</TH>
                   </TableRow>
-                ) : (
-                  templates.map((t, idx) => (
-                    <TableRow key={idx}>
-                      <TD>{t.name}</TD>
-                      <TD>{t.order || 0}</TD>
-                      <TD>
-                        {t.file_template ? (
-                          <a
-                            href={t.file_template}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline text-sm"
-                          >
-                            <i className="ri-file-image-line mr-1"></i> Lihat
-                          </a>
-                        ) : (
-                          "-"
-                        )}
-                      </TD>
-                      <TD>
-                        <button
-                          onClick={() => {
-                            setEditingTemplateName(t.name);
-                            setIsTemplateModalOpen(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-800 p-1 hover:bg-blue-50 rounded mr-2"
-                          title="Edit Template"
-                        >
-                          <i className="ri-edit-line"></i>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteTemplate(t)}
-                          className="text-red-600 hover:text-red-800 p-1 hover:bg-red-50 rounded"
-                          title="Hapus Template"
-                        >
-                          <i className="ri-delete-bin-line"></i>
-                        </button>
+                </TableHead>
+                <TableBody>
+                  {templates.length === 0 ? (
+                    <TableRow>
+                      <TD
+                        colSpan={4}
+                        className="py-10 text-center text-sm text-slate-500"
+                      >
+                        Belum ada template.
                       </TD>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    templates.map((t, idx) => (
+                      <TableRow key={idx}>
+                        <TD className="font-medium text-slate-900">{t.name}</TD>
+                        <TD className="text-slate-700">{t.order || 0}</TD>
+                        <TD>
+                          {t.file_template ? (
+                            <a
+                              href={t.file_template}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm font-medium text-primary hover:underline"
+                            >
+                              <i className="ri-file-image-line mr-1" /> Lihat
+                            </a>
+                          ) : (
+                            "-"
+                          )}
+                        </TD>
+                        <TD>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingTemplateName(t.name);
+                                setIsTemplateModalOpen(true);
+                              }}
+                              className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:border-primary/20 hover:text-primary"
+                              title="Edit Template"
+                            >
+                              <i className="ri-edit-line" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTemplate(t)}
+                              className="inline-flex items-center justify-center rounded-lg border border-rose-200 p-2 text-rose-700 transition hover:bg-rose-50"
+                              title="Hapus Template"
+                            >
+                              <i className="ri-delete-bin-line" />
+                            </button>
+                          </div>
+                        </TD>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </div>
       </Card>
@@ -3301,14 +3510,23 @@ function Ak1LayoutEditor() {
         />
       </Modal>
       <Card
-        className="mt-6"
+        className={`mt-6 ${cardSurfaceClass}`}
         header={
-          <h3 className="text-lg font-semibold text-primary">
-            Koordinat Layout
-          </h3>
+          <div className="flex flex-col gap-2 border-b border-slate-100 pb-5">
+            <h3 className="text-lg font-bold text-slate-900">
+              Koordinat layout
+            </h3>
+            <p className="text-sm text-slate-500">
+              Atur posisi elemen di atas template AK1 secara visual dan presisi.
+            </p>
+          </div>
         }
       >
         <div className="space-y-6">
+          <div className="rounded-2xl border border-sky-100 bg-sky-50/70 px-5 py-4 text-sm text-slate-600">
+            Pilih template terlebih dahulu, lalu geser atau resize elemen di
+            area preview untuk mengatur posisi output cetak.
+          </div>
           <div className="space-y-3">
             <div className="w-full">
               <SearchableSelect
@@ -4353,7 +4571,7 @@ function Ak1LayoutEditor() {
               </div>
             </div>
           ) : (
-            <div className="text-sm text-gray-500">
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center text-sm text-slate-500">
               Pilih layout terlebih dahulu untuk menampilkan preview dan membuat
               koordinat.
             </div>
@@ -4363,7 +4581,7 @@ function Ak1LayoutEditor() {
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <button
-                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)] text-sm font-medium"
+                  className={primaryButtonClass}
                   onClick={() =>
                     setFields((prev) => [
                       ...prev,
@@ -4379,10 +4597,10 @@ function Ak1LayoutEditor() {
                     ])
                   }
                 >
-                  <i className="ri-add-line mr-2"></i>
+                  <i className="ri-add-line" />
                   Tambah Koordinat
                 </button>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-slate-500">
                   Geser untuk memindahkan, resize untuk mengubah ukuran.
                 </div>
               </div>
@@ -4391,7 +4609,7 @@ function Ak1LayoutEditor() {
                 {fields.map((f, idx) => (
                   <div
                     key={idx}
-                    className="border border-gray-200 rounded-lg p-4 bg-white space-y-3"
+                    className="space-y-3 rounded-2xl border border-slate-200/90 bg-slate-50/70 p-4"
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       <SearchableSelect
@@ -4689,12 +4907,12 @@ function Ak1LayoutEditor() {
 
                     <div className="flex justify-end pt-2">
                       <button
-                        className="px-4 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-sm font-medium flex items-center gap-2"
+                        className={dangerButtonClass}
                         onClick={() =>
                           setFields((prev) => prev.filter((_, i) => i !== idx))
                         }
                       >
-                        <i className="ri-delete-bin-line"></i>
+                        <i className="ri-delete-bin-line" />
                         Hapus
                       </button>
                     </div>
@@ -4705,7 +4923,7 @@ function Ak1LayoutEditor() {
           )}
 
           {templateId && (
-            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+            <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row">
               <button
                 disabled={saving}
                 onClick={async () => {
@@ -4734,7 +4952,11 @@ function Ak1LayoutEditor() {
                     setSaving(false);
                   }
                 }}
-                className={`px-6 py-3 rounded-lg text-sm font-medium ${saving ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-primary text-white hover:bg-[var(--color-primary-dark)]"}`}
+                className={`inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-medium ${
+                  saving
+                    ? "cursor-not-allowed bg-slate-300 text-slate-600"
+                    : "bg-primary text-white shadow-sm transition hover:brightness-95"
+                }`}
               >
                 {saving ? "Menyimpan..." : "Simpan Layout"}
               </button>
@@ -4745,16 +4967,16 @@ function Ak1LayoutEditor() {
                   if (ly) setFields(ly.coordinates || fields);
                   showSuccess("Layout dimuat");
                 }}
-                className="px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary text-sm font-medium"
+                className="inline-flex items-center justify-center rounded-xl bg-slate-100 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
               >
                 Muat Layout
               </button>
             </div>
           )}
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-            <p className="text-sm text-blue-800">
-              <i className="ri-information-line mr-2"></i>
+          <div className="mt-4 rounded-2xl border border-sky-200 bg-sky-50 p-4">
+            <p className="text-sm text-sky-900">
+              <i className="ri-information-line mr-2" />
               <strong>Catatan:</strong> Untuk No Pendaftaran: sediakan 4 kotak
               (NIK awal), 8 kotak (No Urut), 6 kotak (TTL). NIK juga gunakan 16
               kotak.
@@ -4790,6 +5012,10 @@ function UploadTemplateInline({
 
   return (
     <div className="space-y-4">
+      <p className="text-sm leading-relaxed text-slate-500">
+        Unggah file template baru atau perbarui file yang sudah ada untuk
+        dipakai pada editor layout AK1.
+      </p>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         <div className="md:col-span-8">
           <Input
@@ -4837,7 +5063,11 @@ function UploadTemplateInline({
       <div className="flex justify-end">
         <button
           disabled={saving || !name || (!file && !initialUrl)}
-          className={`px-6 py-3 rounded-lg text-sm font-medium ${saving || !name || (!file && !initialUrl) ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-primary text-white hover:bg-[var(--color-primary-dark)]"}`}
+          className={`inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-medium ${
+            saving || !name || (!file && !initialUrl)
+              ? "cursor-not-allowed bg-slate-300 text-slate-600"
+              : "bg-primary text-white shadow-sm transition hover:brightness-95"
+          }`}
           onClick={async () => {
             try {
               setSubmitted(true);
@@ -4917,7 +5147,7 @@ function UploadTemplateInline({
               setFile(null);
               onDone();
             }}
-            className="ml-2 px-4 py-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium"
+            className="ml-2 inline-flex items-center justify-center rounded-xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
           >
             Batal
           </button>
