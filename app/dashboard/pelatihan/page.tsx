@@ -155,6 +155,10 @@ const editPesertaFormSchema = z
       .string()
       .length(16, "NIK harus 16 digit")
       .regex(/^\d+$/, "NIK hanya angka"),
+    no_kk: z
+      .string()
+      .length(16, "Nomor KK harus 16 digit")
+      .regex(/^\d+$/, "Nomor KK hanya angka"),
     gender: z.enum(["L", "P"], { message: "Jenis kelamin wajib diisi" }),
     birth_place: z.string().min(1, "Tempat lahir wajib diisi"),
     birth_date: z.string().min(1, "Tanggal lahir wajib diisi"),
@@ -217,6 +221,7 @@ function buildEditFormFromRow(row: TrainingAlumniRow) {
     end_date: toYmdInput(row.end_date),
     full_name: row.full_name ?? "",
     nik: (row.nik ?? "").replace(/\D/g, "").slice(0, 16),
+    no_kk: (row.no_kk ?? "").replace(/\D/g, "").slice(0, 16),
     gender: row.gender === "P" ? ("P" as const) : ("L" as const),
     birth_place: row.birth_place ?? "",
     birth_date: toYmdInput(row.birth_date),
@@ -236,6 +241,7 @@ function emptyEditForm(): ReturnType<typeof buildEditFormFromRow> {
     end_date: "",
     full_name: "",
     nik: "",
+    no_kk: "",
     gender: "L",
     birth_place: "",
     birth_date: "",
@@ -755,6 +761,7 @@ export default function DashboardPesertaLatihanPage() {
         end_date: d.end_date.slice(0, 10),
         full_name: d.full_name,
         nik: d.nik,
+        no_kk: d.no_kk,
         gender: d.gender,
         birth_place: d.birth_place,
         birth_date: d.birth_date.trim().slice(0, 10),
@@ -885,9 +892,7 @@ export default function DashboardPesertaLatihanPage() {
             training_name: baseName,
             training_year: baseYear,
           });
-          showSuccess(
-            `Pelatihan dihapus (${res.count ?? 0} peserta dihapus)`,
-          );
+          showSuccess(`Pelatihan dihapus (${res.count ?? 0} peserta dihapus)`);
           try {
             const opt = await getTrainingAlumniDistinctOptions();
             setDistinctOptions(opt);
@@ -1089,6 +1094,7 @@ export default function DashboardPesertaLatihanPage() {
                     <TH>Selesai</TH>
                     <TH>Nama</TH>
                     <TH>NIK</TH>
+                    <TH>No. KK</TH>
                     <TH>JK</TH>
                     <TH>Pendidikan</TH>
                     <TH>Kontak</TH>
@@ -1099,7 +1105,7 @@ export default function DashboardPesertaLatihanPage() {
                   {rows.length === 0 ? (
                     <TableRow>
                       <TD
-                        colSpan={canCreate ? 9 : 8}
+                        colSpan={canCreate ? 10 : 9}
                         className="text-center text-gray-500 py-8"
                       >
                         Belum ada data
@@ -1118,6 +1124,9 @@ export default function DashboardPesertaLatihanPage() {
                         <TD>{row.full_name}</TD>
                         <TD className="text-xs font-mono whitespace-nowrap">
                           {row.nik || "—"}
+                        </TD>
+                        <TD className="text-xs font-mono whitespace-nowrap">
+                          {row.no_kk || "—"}
                         </TD>
                         <TD className="text-center text-sm">
                           {row.gender === "L"
@@ -1380,8 +1389,8 @@ export default function DashboardPesertaLatihanPage() {
               </div>
             </div>
             <p className="text-sm text-gray-600">
-              Unggah file Excel berisi kolom peserta (NAMA, NIK, dll.) sesuai
-              template. Data pelatihan di atas berlaku untuk semua baris.
+              Unggah file Excel berisi kolom peserta (NAMA, NIK, NOMOR KK, dll.)
+              sesuai template. Data pelatihan di atas berlaku untuk semua baris.
             </p>
             <div
               role="region"
@@ -1599,8 +1608,8 @@ export default function DashboardPesertaLatihanPage() {
           <form onSubmit={handleSubmitEdit} className="space-y-4">
             <div className="max-h-[min(72vh,560px)] overflow-y-auto pr-1 space-y-4">
               <p className="text-sm text-gray-600">
-                Sesuaikan data pelatihan dan biodata peserta. NIK harus 16 digit
-                angka.
+                Sesuaikan data pelatihan dan biodata peserta. NIK dan nomor KK
+                masing-masing 16 digit angka.
               </p>
               <Input
                 label="Nama pelatihan"
@@ -1743,6 +1752,26 @@ export default function DashboardPesertaLatihanPage() {
                   }
                 }}
                 error={editFormErrors.nik}
+                className="w-full"
+                required
+              />
+              <Input
+                label="Nomor Kartu Keluarga (KK)"
+                inputMode="numeric"
+                maxLength={16}
+                value={editForm.no_kk}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, "").slice(0, 16);
+                  setEditForm((f) => ({ ...f, no_kk: v }));
+                  if (editFormErrors.no_kk) {
+                    setEditFormErrors((prev) => {
+                      const n = { ...prev };
+                      delete n.no_kk;
+                      return n;
+                    });
+                  }
+                }}
+                error={editFormErrors.no_kk}
                 className="w-full"
                 required
               />

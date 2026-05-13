@@ -16,14 +16,21 @@ function formatIdDateExcel(s?: string | null): string {
   });
 }
 
-function statusLabel(status: TrainingRegistrationApplication["status"]): string {
+function statusLabel(
+  status: TrainingRegistrationApplication["status"],
+): string {
   if (status === "accepted") return "Diterima";
   if (status === "rejected") return "Ditolak";
   return "Menunggu";
 }
 
 function safeFileNamePart(s: string): string {
-  return s.replace(/[<>:"/\\|?*]/g, "_").trim().slice(0, 80) || "pendaftar";
+  return (
+    s
+      .replace(/[<>:"/\\|?*]/g, "_")
+      .trim()
+      .slice(0, 80) || "pendaftar"
+  );
 }
 
 /**
@@ -43,6 +50,7 @@ export async function exportTrainingRegistrationApplicationsXlsx(
     "No",
     "Nama",
     "NIK",
+    "No. KK",
     "Jenis kelamin",
     "Email",
     "Tempat lahir",
@@ -58,7 +66,7 @@ export async function exportTrainingRegistrationApplicationsXlsx(
   headerRow.font = { bold: true };
   headerRow.alignment = { vertical: "middle", wrapText: true };
 
-  const colWidths = [6, 28, 18, 14, 28, 18, 14, 16, 22, 40, 12, 18];
+  const colWidths = [6, 28, 18, 18, 14, 28, 18, 14, 16, 22, 40, 12, 18];
   colWidths.forEach((w, i) => {
     sheet.getColumn(i + 1).width = w;
   });
@@ -68,6 +76,7 @@ export async function exportTrainingRegistrationApplicationsXlsx(
       idx + 1,
       a.full_name ?? "",
       a.nik ?? "",
+      a.no_kk ?? "",
       a.gender === "P" ? "Perempuan" : "Laki-laki",
       a.email ?? "",
       a.birth_place ?? "",
@@ -79,7 +88,8 @@ export async function exportTrainingRegistrationApplicationsXlsx(
       formatIdDateExcel(a.created_at),
     ]);
     row.getCell(3).numFmt = "@";
-    row.getCell(8).numFmt = "@";
+    row.getCell(4).numFmt = "@";
+    row.getCell(9).numFmt = "@";
     row.alignment = { vertical: "top", wrapText: true };
   });
 

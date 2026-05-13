@@ -95,9 +95,9 @@ export default function DaftarPelatihanPanitiaPage() {
   const [passwordInput, setPasswordInput] = useState("");
   const [loginBusy, setLoginBusy] = useState(false);
 
-  const [applications, setApplications] = useState<TrainingRegistrationApplication[]>(
-    [],
-  );
+  const [applications, setApplications] = useState<
+    TrainingRegistrationApplication[]
+  >([]);
   const [listLoading, setListLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -221,9 +221,7 @@ export default function DaftarPelatihanPanitiaPage() {
     try {
       const res = await guestSetTrainingRegistrationEnabled(slug, token, next);
       setCampaignMeta(res.data);
-      showSuccess(
-        next ? "Pendaftaran dibuka kembali" : "Pendaftaran ditutup",
-      );
+      showSuccess(next ? "Pendaftaran dibuka kembali" : "Pendaftaran ditutup");
     } catch (e) {
       showError(
         e instanceof Error ? e.message : "Gagal memperbarui status pendaftaran",
@@ -241,6 +239,7 @@ export default function DaftarPelatihanPanitiaPage() {
       const haystack = [
         a.full_name,
         a.nik,
+        a.no_kk ?? "",
         a.email ?? "",
         a.phone,
         a.birth_place,
@@ -360,7 +359,9 @@ export default function DaftarPelatihanPanitiaPage() {
     }
   };
 
-  const handleReopenToPending = async (app: TrainingRegistrationApplication) => {
+  const handleReopenToPending = async (
+    app: TrainingRegistrationApplication,
+  ) => {
     if (!slug || !token) return;
     const warnAccepted =
       app.status === "accepted"
@@ -372,7 +373,11 @@ export default function DaftarPelatihanPanitiaPage() {
     if (!ok) return;
     setBusyId(app.id);
     try {
-      await guestReopenTrainingRegistrationApplicationToPending(slug, token, app.id);
+      await guestReopenTrainingRegistrationApplicationToPending(
+        slug,
+        token,
+        app.id,
+      );
       showSuccess("Pengajuan dikembalikan ke menunggu");
       await loadApplications();
     } catch (e) {
@@ -395,8 +400,16 @@ export default function DaftarPelatihanPanitiaPage() {
     try {
       const res =
         action === "accept"
-          ? await guestBulkAcceptTrainingRegistrationApplications(slug, token, ids)
-          : await guestBulkRejectTrainingRegistrationApplications(slug, token, ids);
+          ? await guestBulkAcceptTrainingRegistrationApplications(
+              slug,
+              token,
+              ids,
+            )
+          : await guestBulkRejectTrainingRegistrationApplications(
+              slug,
+              token,
+              ids,
+            );
       const msg = formatBulkResultMessage(action, res);
       if (res.failed.length) {
         showError(msg, {
@@ -571,9 +584,7 @@ export default function DaftarPelatihanPanitiaPage() {
                   >
                     <span
                       className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${
-                        registrationEnabled
-                          ? "translate-x-5"
-                          : "translate-x-1"
+                        registrationEnabled ? "translate-x-5" : "translate-x-1"
                       }`}
                     />
                   </button>
@@ -716,6 +727,7 @@ export default function DaftarPelatihanPanitiaPage() {
                     </TH>
                     <TH>Nama</TH>
                     <TH>NIK</TH>
+                    <TH>No. KK</TH>
                     <TH>JK</TH>
                     <TH>Email</TH>
                     <TH>Tempat / Tgl lahir</TH>
@@ -729,13 +741,19 @@ export default function DaftarPelatihanPanitiaPage() {
                 <TableBody>
                   {applications.length === 0 ? (
                     <TableRow>
-                      <TD colSpan={11} className="text-center text-gray-500 py-8">
+                      <TD
+                        colSpan={12}
+                        className="text-center text-gray-500 py-8"
+                      >
                         Belum ada pengajuan
                       </TD>
                     </TableRow>
                   ) : filteredApplications.length === 0 ? (
                     <TableRow>
-                      <TD colSpan={11} className="text-center text-gray-500 py-8">
+                      <TD
+                        colSpan={12}
+                        className="text-center text-gray-500 py-8"
+                      >
                         Tidak ada hasil untuk filter ini.
                       </TD>
                     </TableRow>
@@ -759,6 +777,9 @@ export default function DaftarPelatihanPanitiaPage() {
                           <TD>{a.full_name}</TD>
                           <TD className="text-xs font-mono whitespace-nowrap">
                             {a.nik}
+                          </TD>
+                          <TD className="text-xs font-mono whitespace-nowrap">
+                            {a.no_kk || "—"}
                           </TD>
                           <TD>{a.gender}</TD>
                           <TD className="text-xs max-w-[8rem] truncate">

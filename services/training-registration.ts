@@ -29,6 +29,7 @@ export type TrainingRegistrationApplication = {
   campaign_id: string;
   full_name: string;
   nik: string;
+  no_kk: string | null;
   gender: "L" | "P";
   email: string | null;
   birth_place: string;
@@ -261,6 +262,7 @@ export async function updateTrainingRegistrationApplication(
   body: {
     full_name: string;
     nik: string;
+    no_kk: string;
     gender: "L" | "P";
     email?: string;
     birth_place: string;
@@ -390,6 +392,7 @@ export async function submitPublicTrainingRegistration(
   body: {
     full_name: string;
     nik: string;
+    no_kk: string;
     gender: "L" | "P";
     email?: string;
     birth_place: string;
@@ -446,9 +449,7 @@ export async function trainingRegistrationGuestLogin(
   );
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
-    throw new Error(
-      (err as { message?: string }).message || "Gagal masuk",
-    );
+    throw new Error((err as { message?: string }).message || "Gagal masuk");
   }
   return resp.json() as Promise<{ token: string; expires_in: number }>;
 }
@@ -481,9 +482,7 @@ export async function guestAcceptTrainingRegistrationApplication(
   );
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
-    throw new Error(
-      (err as { message?: string }).message || "Gagal menerima",
-    );
+    throw new Error((err as { message?: string }).message || "Gagal menerima");
   }
   return resp.json() as Promise<{ message?: string }>;
 }
@@ -499,9 +498,7 @@ export async function guestRejectTrainingRegistrationApplication(
   );
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
-    throw new Error(
-      (err as { message?: string }).message || "Gagal menolak",
-    );
+    throw new Error((err as { message?: string }).message || "Gagal menolak");
   }
   return resp.json() as Promise<{ message?: string }>;
 }
@@ -534,15 +531,16 @@ export async function guestBulkAcceptTrainingRegistrationApplications(
     `${BASE}/api/public/training-registration/${encodeURIComponent(slug)}/guest/applications/bulk-accept`,
     {
       method: "POST",
-      headers: { ...guestPanelAuthHeader(token), "Content-Type": "application/json" },
+      headers: {
+        ...guestPanelAuthHeader(token),
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ ids }),
     },
   );
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
-    throw new Error(
-      (err as { message?: string }).message || "Gagal memproses",
-    );
+    throw new Error((err as { message?: string }).message || "Gagal memproses");
   }
   return resp.json() as Promise<BulkApplicationActionResult>;
 }
@@ -556,15 +554,16 @@ export async function guestBulkRejectTrainingRegistrationApplications(
     `${BASE}/api/public/training-registration/${encodeURIComponent(slug)}/guest/applications/bulk-reject`,
     {
       method: "POST",
-      headers: { ...guestPanelAuthHeader(token), "Content-Type": "application/json" },
+      headers: {
+        ...guestPanelAuthHeader(token),
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ ids }),
     },
   );
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
-    throw new Error(
-      (err as { message?: string }).message || "Gagal memproses",
-    );
+    throw new Error((err as { message?: string }).message || "Gagal memproses");
   }
   return resp.json() as Promise<BulkApplicationActionResult>;
 }
@@ -579,7 +578,10 @@ export async function guestSetTrainingRegistrationEnabled(
     `${BASE}/api/public/training-registration/${encodeURIComponent(slug)}/guest/toggle-registration`,
     {
       method: "PATCH",
-      headers: { ...guestPanelAuthHeader(token), "Content-Type": "application/json" },
+      headers: {
+        ...guestPanelAuthHeader(token),
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ registration_enabled: registrationEnabled }),
     },
   );
@@ -590,5 +592,7 @@ export async function guestSetTrainingRegistrationEnabled(
         "Gagal memperbarui status pendaftaran",
     );
   }
-  return resp.json() as Promise<{ data: PublicTrainingRegistrationCampaignPayload }>;
+  return resp.json() as Promise<{
+    data: PublicTrainingRegistrationCampaignPayload;
+  }>;
 }

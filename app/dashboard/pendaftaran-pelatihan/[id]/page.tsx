@@ -82,7 +82,11 @@ function formatBulkResultMessage(
   res: BulkApplicationActionResult,
 ): string {
   const label =
-    action === "accept" ? "diterima" : action === "reject" ? "ditolak" : "dihapus";
+    action === "accept"
+      ? "diterima"
+      : action === "reject"
+        ? "ditolak"
+        : "dihapus";
   if (!res.failed.length) {
     return `${res.succeeded.length} pengajuan ${label}`;
   }
@@ -193,6 +197,7 @@ export default function PendaftaranPelatihanDetailPage() {
       const haystack = [
         a.full_name,
         a.nik,
+        a.no_kk ?? "",
         a.email ?? "",
         a.phone,
         a.birth_place,
@@ -324,9 +329,7 @@ export default function PendaftaranPelatihanDetailPage() {
     try {
       const res = await setTrainingRegistrationEnabled(campaign.id, next);
       setCampaign(res.data);
-      showSuccess(
-        next ? "Pendaftaran dibuka kembali" : "Pendaftaran ditutup",
-      );
+      showSuccess(next ? "Pendaftaran dibuka kembali" : "Pendaftaran ditutup");
     } catch (e) {
       showError(
         e instanceof Error ? e.message : "Gagal memperbarui status pendaftaran",
@@ -376,7 +379,9 @@ export default function PendaftaranPelatihanDetailPage() {
     }
   };
 
-  const handleReopenToPending = async (app: TrainingRegistrationApplication) => {
+  const handleReopenToPending = async (
+    app: TrainingRegistrationApplication,
+  ) => {
     if (!canCreate) return;
     const warnAccepted =
       app.status === "accepted"
@@ -425,7 +430,8 @@ export default function PendaftaranPelatihanDetailPage() {
     const ids = Array.from(selectedIds);
     if (!ids.length) return;
 
-    const noun = action === "accept" ? "terima" : action === "reject" ? "tolak" : "hapus";
+    const noun =
+      action === "accept" ? "terima" : action === "reject" ? "tolak" : "hapus";
     const confirmed = window.confirm(
       `${noun === "hapus" ? "Hapus" : noun.charAt(0).toUpperCase() + noun.slice(1)} ${ids.length} pengajuan terpilih?`,
     );
@@ -492,8 +498,8 @@ export default function PendaftaranPelatihanDetailPage() {
           </p>
         ) : null}
         <p className="text-xs text-gray-500">
-          Sandi ini tidak ditampilkan lagi. Anda dapat mengubahnya kapan saja
-          di halaman ini atau lewat &quot;Ubah program&quot; pada daftar
+          Sandi ini tidak ditampilkan lagi. Anda dapat mengubahnya kapan saja di
+          halaman ini atau lewat &quot;Ubah program&quot; pada daftar
           pendaftaran.
         </p>
         <div className="flex justify-end pt-2">
@@ -553,503 +559,518 @@ export default function PendaftaranPelatihanDetailPage() {
 
   return (
     <>
-    <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-      <div className="px-4 sm:px-6">
-        <Link
-          href="/dashboard/pendaftaran-pelatihan"
-          className="text-sm text-primary hover:underline mb-4 inline-block"
-        >
-          ← Daftar pendaftaran
-        </Link>
+      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
+        <div className="px-4 sm:px-6">
+          <Link
+            href="/dashboard/pendaftaran-pelatihan"
+            className="text-sm text-primary hover:underline mb-4 inline-block"
+          >
+            ← Daftar pendaftaran
+          </Link>
 
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-primary">
-            {campaign.training_name}
-          </h1>
-          <p className="text-sm text-gray-600 mt-1">
-            {campaign.institution_name?.trim()
-              ? campaign.institution_name
-              : "—"}
-          </p>
-          <p className="text-sm text-gray-500">
-            {campaign.start_date || campaign.end_date ? (
-              <>
-                Periode pendaftaran (WIB): {formatIdDate(campaign.start_date)} –{" "}
-                {formatIdDate(campaign.end_date)}
-              </>
-            ) : (
-              <>
-                Periode pendaftaran: belum ditetapkan (link tamu selalu terbuka)
-              </>
-            )}
-          </p>
-        </div>
+          <div className="mb-6">
+            <h1 className="text-xl sm:text-2xl font-bold text-primary">
+              {campaign.training_name}
+            </h1>
+            <p className="text-sm text-gray-600 mt-1">
+              {campaign.institution_name?.trim()
+                ? campaign.institution_name
+                : "—"}
+            </p>
+            <p className="text-sm text-gray-500">
+              {campaign.start_date || campaign.end_date ? (
+                <>
+                  Periode pendaftaran (WIB): {formatIdDate(campaign.start_date)}{" "}
+                  – {formatIdDate(campaign.end_date)}
+                </>
+              ) : (
+                <>
+                  Periode pendaftaran: belum ditetapkan (link tamu selalu
+                  terbuka)
+                </>
+              )}
+            </p>
+          </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-primary mb-2">
-                Link untuk tamu (tanpa login)
-              </p>
-              <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                <code className="text-xs bg-gray-50 border rounded-lg px-3 py-2 break-all flex-1">
-                  {buildGuestRegistrationUrl(campaign.public_slug)}
-                </code>
-                <button
-                  type="button"
-                  onClick={() => void copyLink()}
-                  className="px-4 py-2 bg-secondary text-white rounded-lg text-sm hover:brightness-95 shrink-0"
-                >
-                  Salin link
-                </button>
-              </div>
-            </div>
-            {canCreate && (
-              <div className="lg:w-72 shrink-0 bg-gray-50/60 border border-gray-200 rounded-lg p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900">
-                      Status pendaftaran
-                    </p>
-                    <p className="text-xs text-gray-600 mt-0.5">
-                      {registrationEnabled
-                        ? "Form tamu bisa diisi (selama dalam periode)."
-                        : "Form tamu sedang ditutup oleh admin."}
-                    </p>
-                  </div>
+          <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-primary mb-2">
+                  Link untuk tamu (tanpa login)
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                  <code className="text-xs bg-gray-50 border rounded-lg px-3 py-2 break-all flex-1">
+                    {buildGuestRegistrationUrl(campaign.public_slug)}
+                  </code>
                   <button
                     type="button"
-                    role="switch"
-                    aria-checked={registrationEnabled}
-                    aria-label="Toggle buka/tutup pendaftaran"
-                    disabled={togglingRegistration}
-                    onClick={() =>
-                      void handleToggleRegistration(!registrationEnabled)
-                    }
-                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition disabled:opacity-60 ${
-                      registrationEnabled ? "bg-emerald-500" : "bg-gray-300"
-                    }`}
+                    onClick={() => void copyLink()}
+                    className="px-4 py-2 bg-secondary text-white rounded-lg text-sm hover:brightness-95 shrink-0"
                   >
-                    <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${
-                        registrationEnabled ? "translate-x-5" : "translate-x-1"
-                      }`}
-                    />
+                    Salin link
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  {registrationEnabled ? (
-                    <>
-                      <span className="inline-flex items-center gap-1 text-emerald-700 font-medium">
-                        <i className="ri-checkbox-circle-line" aria-hidden />
-                        Terbuka
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="inline-flex items-center gap-1 text-gray-700 font-medium">
-                        <i className="ri-forbid-line" aria-hidden />
-                        Ditutup
-                      </span>
-                    </>
-                  )}
-                </p>
               </div>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
-          <p className="text-sm font-medium text-primary mb-2">
-            Panel panitia (publik, tanpa akun dashboard)
-          </p>
-          <p className="text-xs text-gray-600 mb-3">
-            Panitia dapat melihat daftar pendaftar, mengekspor Excel, dan
-            menerima/menolak pengajuan dengan{" "}
-            <strong>kata sandi khusus</strong>. Sandi dibuat otomatis saat
-            program ini dibuat; simpan dengan aman atau ubah di bawah / dari
-            menu ubah program.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-center mb-4">
-            <code className="text-xs bg-gray-50 border rounded-lg px-3 py-2 break-all flex-1">
-              {buildGuestPanelUrl(campaign.public_slug)}
-            </code>
-            <button
-              type="button"
-              onClick={() => void copyPanelLink()}
-              className="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:brightness-95 shrink-0"
-            >
-              Salin link panel
-            </button>
-          </div>
-          {panelPwdDisplay && canCreate && (
-            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-2.5">
-              <p className="text-xs font-medium text-amber-950">
-                Kata sandi panel (aktif di perangkat ini)
-              </p>
-              <p className="text-[11px] text-amber-900/80 mt-0.5 mb-2">
-                Hanya disimpan di browser Anda agar tidak lupa; server hanya
-                menyimpan hash. Jangan bagikan layar publik.
-              </p>
-              <code className="text-xs font-mono block break-all bg-white/80 border border-amber-100 rounded px-2 py-1.5">
-                {panelPwdDisplay}
-              </code>
-              <div className="flex flex-wrap gap-2 mt-2">
-                <button
-                  type="button"
-                  onClick={() => void copyPanelPasswordDisplay()}
-                  className="text-xs px-3 py-1.5 rounded-md bg-amber-800 text-white hover:bg-amber-900"
-                >
-                  Salin sandi
-                </button>
-                <button
-                  type="button"
-                  onClick={() => clearPanelPasswordDisplay()}
-                  className="text-xs px-3 py-1.5 rounded-md border border-amber-300 text-amber-950 hover:bg-amber-100/80"
-                >
-                  Sembunyikan dari halaman ini
-                </button>
-              </div>
-            </div>
-          )}
-          <p className="text-xs text-gray-600 mb-3">
-            Status sandi:{" "}
-            {campaign.guest_panel_password_configured ? (
-              <span className="text-emerald-700 font-medium">Sudah diatur</span>
-            ) : (
-              <span className="text-amber-800 font-medium">
-                Belum diatur — gunakan &quot;Ubah program&quot; atau isi sandi
-                baru di bawah
-              </span>
-            )}
-          </p>
-          {canCreate && (
-            <div className="border-t border-gray-100 pt-3 mt-1 space-y-2">
-              <Input
-                label="Ubah kata sandi panel"
-                type="password"
-                autoComplete="new-password"
-                required={false}
-                value={newPanelPwd}
-                onChange={(e) => setNewPanelPwd(e.target.value)}
-                hint="Minimal 8 karakter. Diberikan kepada panitia yang mengelola link di atas."
-              />
-              <button
-                type="button"
-                disabled={savingPanelPwd || newPanelPwd.trim().length < 8}
-                onClick={() => void handleSavePanelPassword()}
-                className="px-4 py-2 text-sm rounded-lg bg-gray-900 text-white hover:bg-black disabled:opacity-50"
-              >
-                {savingPanelPwd ? "Menyimpan…" : "Simpan sandi baru"}
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="mb-4">
-          <h2 className="text-lg font-bold text-primary">Pengajuan masuk</h2>
-          <p className="text-sm text-gray-500">
-            <strong>Terima</strong> memindahkan ke rekap pelatihan.{" "}
-            <strong>Tolak</strong> menandai ditolak (dari yang diterima: hapus dari
-            rekap). <strong>Buka lagi</strong> mengembalikan ke menunggu agar bisa
-            diproses ulang.
-            Gunakan checkbox untuk aksi massal.
-          </p>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200">
-          <div className="flex flex-col lg:flex-row gap-3 mb-3 lg:items-end">
-            <div className="flex-1 min-w-0">
-              <Input
-                icon="ri-search-line"
-                type="search"
-                placeholder="Cari nama, NIK, email, HP, alamat…"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full py-2.5"
-                aria-label="Cari pendaftar"
-              />
-            </div>
-            <SearchableSelect
-              options={STATUS_FILTER_OPTIONS}
-              value={statusFilter}
-              onChange={(v) =>
-                setStatusFilter(
-                  (v === "pending" ||
-                  v === "accepted" ||
-                  v === "rejected" ||
-                  v === "all"
-                    ? v
-                    : "all") as StatusFilter,
-                )
-              }
-              className="w-full sm:w-56"
-              placeholder="Filter status"
-            />
-            {canRead && (
-              <button
-                type="button"
-                disabled={
-                  exportingExcel ||
-                  applications.length === 0 ||
-                  filteredApplications.length === 0
-                }
-                onClick={() => void handleExportExcel()}
-                title="Mengekspor baris yang tampil sesuai pencarian dan filter status"
-                className="px-4 py-2.5 w-full sm:w-auto shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-sm font-medium hover:bg-emerald-100 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <i className="ri-file-excel-2-line text-lg" aria-hidden />
-                {exportingExcel ? "Menyiapkan…" : "Export Excel"}
-              </button>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
-            <span className="px-2 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-              Menunggu: {statusCounts.pending}
-            </span>
-            <span className="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-              Diterima: {statusCounts.accepted}
-            </span>
-            <span className="px-2 py-1 rounded-full bg-gray-50 text-gray-700 border border-gray-200">
-              Ditolak: {statusCounts.rejected}
-            </span>
-            <span className="ml-auto text-gray-500">
-              Menampilkan {filteredApplications.length} / {applications.length}
-            </span>
-          </div>
-
-          {canCreate && selectedCount > 0 && (
-            <div className="flex flex-wrap items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20">
-              <span className="text-sm text-gray-800">
-                <strong>{selectedCount}</strong> pengajuan dipilih
-              </span>
-              <div className="flex flex-wrap gap-2 ml-auto">
-                <button
-                  type="button"
-                  disabled={bulkBusy}
-                  onClick={() => void handleBulk("accept")}
-                  className={`${bulkBtnBase} bg-emerald-600 text-white hover:bg-emerald-700`}
-                >
-                  <i className="ri-check-line" aria-hidden />
-                  Terima terpilih
-                </button>
-                <button
-                  type="button"
-                  disabled={bulkBusy}
-                  onClick={() => void handleBulk("reject")}
-                  className={`${bulkBtnBase} bg-gray-200 text-gray-900 hover:bg-gray-300`}
-                >
-                  <i className="ri-close-line" aria-hidden />
-                  Tolak terpilih
-                </button>
-                <button
-                  type="button"
-                  disabled={bulkBusy}
-                  onClick={() => void handleBulk("delete")}
-                  className={`${bulkBtnBase} bg-red-600 text-white hover:bg-red-700`}
-                >
-                  <i className="ri-delete-bin-line" aria-hidden />
-                  Hapus terpilih
-                </button>
-                <button
-                  type="button"
-                  disabled={bulkBusy}
-                  onClick={clearSelection}
-                  className={`${bulkBtnBase} border border-gray-300 text-gray-700 hover:bg-gray-100`}
-                >
-                  Bersihkan
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHead>
-                <TableRow>
-                  {canCreate && (
-                    <TH className="w-10">
-                      <input
-                        type="checkbox"
-                        aria-label="Pilih semua pengajuan tersaring"
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                        checked={allFilteredSelected}
-                        ref={(el) => {
-                          if (el)
-                            el.indeterminate =
-                              !allFilteredSelected && anyFilteredSelected;
-                        }}
-                        onChange={toggleSelectAllFiltered}
-                        disabled={filteredIds.length === 0}
+              {canCreate && (
+                <div className="lg:w-72 shrink-0 bg-gray-50/60 border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900">
+                        Status pendaftaran
+                      </p>
+                      <p className="text-xs text-gray-600 mt-0.5">
+                        {registrationEnabled
+                          ? "Form tamu bisa diisi (selama dalam periode)."
+                          : "Form tamu sedang ditutup oleh admin."}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={registrationEnabled}
+                      aria-label="Toggle buka/tutup pendaftaran"
+                      disabled={togglingRegistration}
+                      onClick={() =>
+                        void handleToggleRegistration(!registrationEnabled)
+                      }
+                      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition disabled:opacity-60 ${
+                        registrationEnabled ? "bg-emerald-500" : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${
+                          registrationEnabled
+                            ? "translate-x-5"
+                            : "translate-x-1"
+                        }`}
                       />
-                    </TH>
-                  )}
-                  <TH>Nama</TH>
-                  <TH>NIK</TH>
-                  <TH>JK</TH>
-                  <TH>Email</TH>
-                  <TH>Tempat / Tgl lahir</TH>
-                  <TH>HP</TH>
-                  <TH>Pendidikan</TH>
-                  <TH className="max-w-[10rem]">Alamat</TH>
-                  <TH>Status</TH>
-                  {canCreate && (
-                    <TH className="w-36 text-right whitespace-nowrap">Aksi</TH>
-                  )}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {applications.length === 0 ? (
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {registrationEnabled ? (
+                      <>
+                        <span className="inline-flex items-center gap-1 text-emerald-700 font-medium">
+                          <i className="ri-checkbox-circle-line" aria-hidden />
+                          Terbuka
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="inline-flex items-center gap-1 text-gray-700 font-medium">
+                          <i className="ri-forbid-line" aria-hidden />
+                          Ditutup
+                        </span>
+                      </>
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
+            <p className="text-sm font-medium text-primary mb-2">
+              Panel panitia (publik, tanpa akun dashboard)
+            </p>
+            <p className="text-xs text-gray-600 mb-3">
+              Panitia dapat melihat daftar pendaftar, mengekspor Excel, dan
+              menerima/menolak pengajuan dengan{" "}
+              <strong>kata sandi khusus</strong>. Sandi dibuat otomatis saat
+              program ini dibuat; simpan dengan aman atau ubah di bawah / dari
+              menu ubah program.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center mb-4">
+              <code className="text-xs bg-gray-50 border rounded-lg px-3 py-2 break-all flex-1">
+                {buildGuestPanelUrl(campaign.public_slug)}
+              </code>
+              <button
+                type="button"
+                onClick={() => void copyPanelLink()}
+                className="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:brightness-95 shrink-0"
+              >
+                Salin link panel
+              </button>
+            </div>
+            {panelPwdDisplay && canCreate && (
+              <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-2.5">
+                <p className="text-xs font-medium text-amber-950">
+                  Kata sandi panel (aktif di perangkat ini)
+                </p>
+                <p className="text-[11px] text-amber-900/80 mt-0.5 mb-2">
+                  Hanya disimpan di browser Anda agar tidak lupa; server hanya
+                  menyimpan hash. Jangan bagikan layar publik.
+                </p>
+                <code className="text-xs font-mono block break-all bg-white/80 border border-amber-100 rounded px-2 py-1.5">
+                  {panelPwdDisplay}
+                </code>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => void copyPanelPasswordDisplay()}
+                    className="text-xs px-3 py-1.5 rounded-md bg-amber-800 text-white hover:bg-amber-900"
+                  >
+                    Salin sandi
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => clearPanelPasswordDisplay()}
+                    className="text-xs px-3 py-1.5 rounded-md border border-amber-300 text-amber-950 hover:bg-amber-100/80"
+                  >
+                    Sembunyikan dari halaman ini
+                  </button>
+                </div>
+              </div>
+            )}
+            <p className="text-xs text-gray-600 mb-3">
+              Status sandi:{" "}
+              {campaign.guest_panel_password_configured ? (
+                <span className="text-emerald-700 font-medium">
+                  Sudah diatur
+                </span>
+              ) : (
+                <span className="text-amber-800 font-medium">
+                  Belum diatur — gunakan &quot;Ubah program&quot; atau isi sandi
+                  baru di bawah
+                </span>
+              )}
+            </p>
+            {canCreate && (
+              <div className="border-t border-gray-100 pt-3 mt-1 space-y-2">
+                <Input
+                  label="Ubah kata sandi panel"
+                  type="password"
+                  autoComplete="new-password"
+                  required={false}
+                  value={newPanelPwd}
+                  onChange={(e) => setNewPanelPwd(e.target.value)}
+                  hint="Minimal 8 karakter. Diberikan kepada panitia yang mengelola link di atas."
+                />
+                <button
+                  type="button"
+                  disabled={savingPanelPwd || newPanelPwd.trim().length < 8}
+                  onClick={() => void handleSavePanelPassword()}
+                  className="px-4 py-2 text-sm rounded-lg bg-gray-900 text-white hover:bg-black disabled:opacity-50"
+                >
+                  {savingPanelPwd ? "Menyimpan…" : "Simpan sandi baru"}
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-primary">Pengajuan masuk</h2>
+            <p className="text-sm text-gray-500">
+              <strong>Terima</strong> memindahkan ke rekap pelatihan.{" "}
+              <strong>Tolak</strong> menandai ditolak (dari yang diterima: hapus
+              dari rekap). <strong>Buka lagi</strong> mengembalikan ke menunggu
+              agar bisa diproses ulang. Gunakan checkbox untuk aksi massal.
+            </p>
+          </div>
+
+          <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200">
+            <div className="flex flex-col lg:flex-row gap-3 mb-3 lg:items-end">
+              <div className="flex-1 min-w-0">
+                <Input
+                  icon="ri-search-line"
+                  type="search"
+                  placeholder="Cari nama, NIK, email, HP, alamat…"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full py-2.5"
+                  aria-label="Cari pendaftar"
+                />
+              </div>
+              <SearchableSelect
+                options={STATUS_FILTER_OPTIONS}
+                value={statusFilter}
+                onChange={(v) =>
+                  setStatusFilter(
+                    (v === "pending" ||
+                    v === "accepted" ||
+                    v === "rejected" ||
+                    v === "all"
+                      ? v
+                      : "all") as StatusFilter,
+                  )
+                }
+                className="w-full sm:w-56"
+                placeholder="Filter status"
+              />
+              {canRead && (
+                <button
+                  type="button"
+                  disabled={
+                    exportingExcel ||
+                    applications.length === 0 ||
+                    filteredApplications.length === 0
+                  }
+                  onClick={() => void handleExportExcel()}
+                  title="Mengekspor baris yang tampil sesuai pencarian dan filter status"
+                  className="px-4 py-2.5 w-full sm:w-auto shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-sm font-medium hover:bg-emerald-100 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <i className="ri-file-excel-2-line text-lg" aria-hidden />
+                  {exportingExcel ? "Menyiapkan…" : "Export Excel"}
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
+              <span className="px-2 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                Menunggu: {statusCounts.pending}
+              </span>
+              <span className="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                Diterima: {statusCounts.accepted}
+              </span>
+              <span className="px-2 py-1 rounded-full bg-gray-50 text-gray-700 border border-gray-200">
+                Ditolak: {statusCounts.rejected}
+              </span>
+              <span className="ml-auto text-gray-500">
+                Menampilkan {filteredApplications.length} /{" "}
+                {applications.length}
+              </span>
+            </div>
+
+            {canCreate && selectedCount > 0 && (
+              <div className="flex flex-wrap items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20">
+                <span className="text-sm text-gray-800">
+                  <strong>{selectedCount}</strong> pengajuan dipilih
+                </span>
+                <div className="flex flex-wrap gap-2 ml-auto">
+                  <button
+                    type="button"
+                    disabled={bulkBusy}
+                    onClick={() => void handleBulk("accept")}
+                    className={`${bulkBtnBase} bg-emerald-600 text-white hover:bg-emerald-700`}
+                  >
+                    <i className="ri-check-line" aria-hidden />
+                    Terima terpilih
+                  </button>
+                  <button
+                    type="button"
+                    disabled={bulkBusy}
+                    onClick={() => void handleBulk("reject")}
+                    className={`${bulkBtnBase} bg-gray-200 text-gray-900 hover:bg-gray-300`}
+                  >
+                    <i className="ri-close-line" aria-hidden />
+                    Tolak terpilih
+                  </button>
+                  <button
+                    type="button"
+                    disabled={bulkBusy}
+                    onClick={() => void handleBulk("delete")}
+                    className={`${bulkBtnBase} bg-red-600 text-white hover:bg-red-700`}
+                  >
+                    <i className="ri-delete-bin-line" aria-hidden />
+                    Hapus terpilih
+                  </button>
+                  <button
+                    type="button"
+                    disabled={bulkBusy}
+                    onClick={clearSelection}
+                    className={`${bulkBtnBase} border border-gray-300 text-gray-700 hover:bg-gray-100`}
+                  >
+                    Bersihkan
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHead>
                   <TableRow>
-                    <TD
-                      colSpan={canCreate ? 11 : 9}
-                      className="text-center text-gray-500 py-8"
-                    >
-                      Belum ada pengajuan
-                    </TD>
+                    {canCreate && (
+                      <TH className="w-10">
+                        <input
+                          type="checkbox"
+                          aria-label="Pilih semua pengajuan tersaring"
+                          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                          checked={allFilteredSelected}
+                          ref={(el) => {
+                            if (el)
+                              el.indeterminate =
+                                !allFilteredSelected && anyFilteredSelected;
+                          }}
+                          onChange={toggleSelectAllFiltered}
+                          disabled={filteredIds.length === 0}
+                        />
+                      </TH>
+                    )}
+                    <TH>Nama</TH>
+                    <TH>NIK</TH>
+                    <TH>No. KK</TH>
+                    <TH>JK</TH>
+                    <TH>Email</TH>
+                    <TH>Tempat / Tgl lahir</TH>
+                    <TH>HP</TH>
+                    <TH>Pendidikan</TH>
+                    <TH className="max-w-[10rem]">Alamat</TH>
+                    <TH>Status</TH>
+                    {canCreate && (
+                      <TH className="w-36 text-right whitespace-nowrap">
+                        Aksi
+                      </TH>
+                    )}
                   </TableRow>
-                ) : filteredApplications.length === 0 ? (
-                  <TableRow>
-                    <TD
-                      colSpan={canCreate ? 11 : 9}
-                      className="text-center text-gray-500 py-8"
-                    >
-                      Tidak ada hasil untuk filter ini.
-                    </TD>
-                  </TableRow>
-                ) : (
-                  filteredApplications.map((a) => {
-                    const checked = selectedIds.has(a.id);
-                    return (
-                      <TableRow
-                        key={a.id}
-                        className={checked ? "bg-primary/5" : undefined}
+                </TableHead>
+                <TableBody>
+                  {applications.length === 0 ? (
+                    <TableRow>
+                      <TD
+                        colSpan={canCreate ? 12 : 10}
+                        className="text-center text-gray-500 py-8"
                       >
-                        {canCreate && (
-                          <TD className="align-top">
-                            <input
-                              type="checkbox"
-                              aria-label={`Pilih pengajuan ${a.full_name}`}
-                              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                              checked={checked}
-                              onChange={() => toggleSelect(a.id)}
-                            />
+                        Belum ada pengajuan
+                      </TD>
+                    </TableRow>
+                  ) : filteredApplications.length === 0 ? (
+                    <TableRow>
+                      <TD
+                        colSpan={canCreate ? 12 : 10}
+                        className="text-center text-gray-500 py-8"
+                      >
+                        Tidak ada hasil untuk filter ini.
+                      </TD>
+                    </TableRow>
+                  ) : (
+                    filteredApplications.map((a) => {
+                      const checked = selectedIds.has(a.id);
+                      return (
+                        <TableRow
+                          key={a.id}
+                          className={checked ? "bg-primary/5" : undefined}
+                        >
+                          {canCreate && (
+                            <TD className="align-top">
+                              <input
+                                type="checkbox"
+                                aria-label={`Pilih pengajuan ${a.full_name}`}
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                checked={checked}
+                                onChange={() => toggleSelect(a.id)}
+                              />
+                            </TD>
+                          )}
+                          <TD>{a.full_name}</TD>
+                          <TD className="text-xs font-mono whitespace-nowrap">
+                            {a.nik}
                           </TD>
-                        )}
-                        <TD>{a.full_name}</TD>
-                        <TD className="text-xs font-mono whitespace-nowrap">
-                          {a.nik}
-                        </TD>
-                        <TD>{a.gender}</TD>
-                        <TD className="text-xs max-w-[8rem] truncate">
-                          {a.email || "—"}
-                        </TD>
-                        <TD className="text-xs">
-                          <div>{a.birth_place}</div>
-                          <div className="text-gray-500">
-                            {formatIdDate(a.birth_date)}
-                          </div>
-                        </TD>
-                        <TD className="text-xs whitespace-nowrap">
-                          {a.phone}
-                        </TD>
-                        <TD className="text-xs max-w-[8rem] truncate">
-                          {a.last_education}
-                        </TD>
-                        <TD className="text-xs max-w-[10rem] truncate align-top">
-                          <span title={a.address}>{a.address}</span>
-                        </TD>
-                        <TD>
-                          {a.status === "pending" && (
-                            <span className="text-amber-700 text-xs font-medium">
-                              Menunggu
-                            </span>
-                          )}
-                          {a.status === "accepted" && (
-                            <span className="text-emerald-700 text-xs font-medium">
-                              Diterima
-                            </span>
-                          )}
-                          {a.status === "rejected" && (
-                            <span className="text-gray-600 text-xs font-medium">
-                              Ditolak
-                            </span>
-                          )}
-                        </TD>
-                        {canCreate && (
-                          <TD className="text-right align-top">
-                            {a.status === "pending" ? (
-                              <div className="flex flex-wrap items-center justify-end gap-1.5">
-                                <button
-                                  type="button"
-                                  disabled={busyId === a.id || bulkBusy}
-                                  onClick={() => void handleAccept(a)}
-                                  className="px-2 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50"
-                                >
-                                  {busyId === a.id ? "…" : "Terima"}
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={busyId === a.id || bulkBusy}
-                                  onClick={() => void handleReject(a)}
-                                  className="px-2 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:opacity-50"
-                                >
-                                  Tolak
-                                </button>
-                              </div>
-                            ) : a.status === "accepted" ? (
-                              <div className="flex flex-wrap items-center justify-end gap-1.5">
-                                <button
-                                  type="button"
-                                  disabled={busyId === a.id || bulkBusy}
-                                  onClick={() => void handleReject(a)}
-                                  className="px-2 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:opacity-50"
-                                >
-                                  {busyId === a.id ? "…" : "Tolak"}
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={busyId === a.id || bulkBusy}
-                                  onClick={() => void handleReopenToPending(a)}
-                                  className="px-2 py-1 text-xs bg-amber-100 text-amber-900 rounded hover:bg-amber-200 disabled:opacity-50"
-                                >
-                                  Buka lagi
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="flex flex-wrap items-center justify-end gap-1.5">
-                                <button
-                                  type="button"
-                                  disabled={busyId === a.id || bulkBusy}
-                                  onClick={() => void handleAccept(a)}
-                                  className="px-2 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50"
-                                >
-                                  {busyId === a.id ? "…" : "Terima"}
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={busyId === a.id || bulkBusy}
-                                  onClick={() => void handleReopenToPending(a)}
-                                  className="px-2 py-1 text-xs bg-amber-100 text-amber-900 rounded hover:bg-amber-200 disabled:opacity-50"
-                                >
-                                  Buka lagi
-                                </button>
-                              </div>
+                          <TD className="text-xs font-mono whitespace-nowrap">
+                            {a.no_kk || "—"}
+                          </TD>
+                          <TD>{a.gender}</TD>
+                          <TD className="text-xs max-w-[8rem] truncate">
+                            {a.email || "—"}
+                          </TD>
+                          <TD className="text-xs">
+                            <div>{a.birth_place}</div>
+                            <div className="text-gray-500">
+                              {formatIdDate(a.birth_date)}
+                            </div>
+                          </TD>
+                          <TD className="text-xs whitespace-nowrap">
+                            {a.phone}
+                          </TD>
+                          <TD className="text-xs max-w-[8rem] truncate">
+                            {a.last_education}
+                          </TD>
+                          <TD className="text-xs max-w-[10rem] truncate align-top">
+                            <span title={a.address}>{a.address}</span>
+                          </TD>
+                          <TD>
+                            {a.status === "pending" && (
+                              <span className="text-amber-700 text-xs font-medium">
+                                Menunggu
+                              </span>
+                            )}
+                            {a.status === "accepted" && (
+                              <span className="text-emerald-700 text-xs font-medium">
+                                Diterima
+                              </span>
+                            )}
+                            {a.status === "rejected" && (
+                              <span className="text-gray-600 text-xs font-medium">
+                                Ditolak
+                              </span>
                             )}
                           </TD>
-                        )}
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+                          {canCreate && (
+                            <TD className="text-right align-top">
+                              {a.status === "pending" ? (
+                                <div className="flex flex-wrap items-center justify-end gap-1.5">
+                                  <button
+                                    type="button"
+                                    disabled={busyId === a.id || bulkBusy}
+                                    onClick={() => void handleAccept(a)}
+                                    className="px-2 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50"
+                                  >
+                                    {busyId === a.id ? "…" : "Terima"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={busyId === a.id || bulkBusy}
+                                    onClick={() => void handleReject(a)}
+                                    className="px-2 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:opacity-50"
+                                  >
+                                    Tolak
+                                  </button>
+                                </div>
+                              ) : a.status === "accepted" ? (
+                                <div className="flex flex-wrap items-center justify-end gap-1.5">
+                                  <button
+                                    type="button"
+                                    disabled={busyId === a.id || bulkBusy}
+                                    onClick={() => void handleReject(a)}
+                                    className="px-2 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:opacity-50"
+                                  >
+                                    {busyId === a.id ? "…" : "Tolak"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={busyId === a.id || bulkBusy}
+                                    onClick={() =>
+                                      void handleReopenToPending(a)
+                                    }
+                                    className="px-2 py-1 text-xs bg-amber-100 text-amber-900 rounded hover:bg-amber-200 disabled:opacity-50"
+                                  >
+                                    Buka lagi
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="flex flex-wrap items-center justify-end gap-1.5">
+                                  <button
+                                    type="button"
+                                    disabled={busyId === a.id || bulkBusy}
+                                    onClick={() => void handleAccept(a)}
+                                    className="px-2 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50"
+                                  >
+                                    {busyId === a.id ? "…" : "Terima"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={busyId === a.id || bulkBusy}
+                                    onClick={() =>
+                                      void handleReopenToPending(a)
+                                    }
+                                    className="px-2 py-1 text-xs bg-amber-100 text-amber-900 rounded hover:bg-amber-200 disabled:opacity-50"
+                                  >
+                                    Buka lagi
+                                  </button>
+                                </div>
+                              )}
+                            </TD>
+                          )}
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </div>
-      </div>
-    </main>
-    {oneTimePwdModalEl}
+      </main>
+      {oneTimePwdModalEl}
     </>
   );
 }

@@ -1,7 +1,7 @@
 import * as XLSX from "xlsx";
 import { z } from "zod";
 import type { CreateTrainingAlumniRequest } from "../services/training-alumni";
-import { nikSchema } from "./zod-schemas";
+import { nikSchema, noKkSchema } from "./zod-schemas";
 
 /** File statis di `public/` — sama dengan tombol unduh */
 export const TRAINING_ALUMNI_TEMPLATE_PUBLIC_PATH = "/template-alumni.xlsx";
@@ -13,6 +13,7 @@ export type TrainingAlumniExcelRowData = Pick<
   CreateTrainingAlumniRequest,
   | "full_name"
   | "nik"
+  | "no_kk"
   | "gender"
   | "birth_place"
   | "birth_date"
@@ -27,6 +28,7 @@ type ExcelFieldKey = keyof TrainingAlumniExcelRowData;
 const FIELD_KEYS: ExcelFieldKey[] = [
   "full_name",
   "nik",
+  "no_kk",
   "gender",
   "birth_place",
   "birth_date",
@@ -41,6 +43,7 @@ export const TRAINING_ALUMNI_EXCEL_FIELD_LABELS: Record<ExcelFieldKey, string> =
   {
     full_name: "Nama",
     nik: "NIK",
+    no_kk: "Nomor KK",
     gender: "Jenis kelamin",
     birth_place: "Tempat lahir",
     birth_date: "Tanggal lahir",
@@ -64,6 +67,11 @@ const HEADER_ALIASES: Record<string, ExcelFieldKey | null> = {
   "no urut": null,
   nama: "full_name",
   nik: "nik",
+  "nomor kk": "no_kk",
+  "no kk": "no_kk",
+  nokk: "no_kk",
+  kk: "no_kk",
+  "nomor kartu keluarga": "no_kk",
   "jenis kelamin": "gender",
   "j kelamin": "gender",
   jk: "gender",
@@ -185,7 +193,13 @@ export function parseExcelDateValue(v: unknown): string {
 
 function isHeaderRow(row: unknown[]): boolean {
   const norms = row.map((c) => normalizeHeader(cellToString(c)));
-  return norms.includes("nama") && norms.includes("nik");
+  return (
+    norms.includes("nama") &&
+    norms.includes("nik") &&
+    (norms.includes("nomor kk") ||
+      norms.includes("no kk") ||
+      norms.includes("nomor kartu keluarga"))
+  );
 }
 
 function buildColumnMap(
@@ -208,7 +222,7 @@ function buildColumnMap(
   if (missing.length > 0) {
     return {
       error:
-        "Judul kolom tidak dikenali. Gunakan file template-alumni.xlsx (baris berisi NAMA, NIK, JENIS KELAMIN, EMAIL, dll.).",
+        "Judul kolom tidak dikenali. Gunakan file template-alumni.xlsx (baris berisi NAMA, NIK, NOMOR KK, JENIS KELAMIN, EMAIL, dll.).",
     };
   }
 
@@ -226,7 +240,7 @@ function rowIsEmpty(
       if (parseExcelDateValue(raw)) any = true;
       return;
     }
-    if (key === "nik") {
+    if (key === "nik" || key === "no_kk") {
       if (nikFromExcelCell(raw)) any = true;
       return;
     }
@@ -250,7 +264,10 @@ function rowToPayload(
       out[key] = phoneFromExcelCell(raw);
       return;
     }
-    const s = key === "nik" ? nikFromExcelCell(raw) : cellToString(raw);
+    const s =
+      key === "nik" || key === "no_kk"
+        ? nikFromExcelCell(raw)
+        : cellToString(raw);
     out[key] = s;
   });
   return out;
@@ -275,6 +292,7 @@ function excelRowSchema() {
   return z.object({
     full_name: z.string().min(1, "Nama wajib diisi"),
     nik: nikSchema,
+    no_kk: noKkSchema,
     gender: genderFromExcelSchema,
     birth_place: z.string().min(1, "Tempat lahir wajib diisi"),
     birth_date: z

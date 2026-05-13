@@ -43,6 +43,10 @@ const guestFormSchema = z
       .string()
       .length(16, "NIK harus 16 digit")
       .regex(/^\d+$/, "NIK hanya angka"),
+    no_kk: z
+      .string()
+      .length(16, "Nomor KK harus 16 digit")
+      .regex(/^\d+$/, "Nomor KK hanya angka"),
     gender: z.enum(["L", "P"]),
     email: z.string().optional(),
     birth_place: z.string().min(1, "Tempat lahir wajib diisi"),
@@ -94,6 +98,7 @@ export default function DaftarPelatihanGuestPage() {
   const [form, setForm] = useState({
     full_name: "",
     nik: "",
+    no_kk: "",
     gender: "L" as "L" | "P",
     email: "",
     birth_place: "",
@@ -115,8 +120,7 @@ export default function DaftarPelatihanGuestPage() {
       try {
         const res = await getPublicTrainingRegistrationCampaign(slug);
         if (cancelled) return;
-        const enabled =
-          res.data.registration_enabled === false ? false : true;
+        const enabled = res.data.registration_enabled === false ? false : true;
         setMeta({
           training_name: res.data.training_name,
           institution_name: res.data.institution_name ?? "",
@@ -166,6 +170,7 @@ export default function DaftarPelatihanGuestPage() {
       await submitPublicTrainingRegistration(slug, {
         full_name: parsed.data.full_name.trim(),
         nik: parsed.data.nik.trim(),
+        no_kk: parsed.data.no_kk.trim(),
         gender: parsed.data.gender,
         email: (parsed.data.email ?? "").trim() || undefined,
         birth_place: parsed.data.birth_place.trim(),
@@ -253,7 +258,9 @@ export default function DaftarPelatihanGuestPage() {
             {meta.training_name}
           </p>
           {meta.institution_name?.trim() ? (
-            <p className="text-sm text-gray-600 mb-4">{meta.institution_name}</p>
+            <p className="text-sm text-gray-600 mb-4">
+              {meta.institution_name}
+            </p>
           ) : null}
           <div
             className="text-left rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 mb-6"
@@ -263,7 +270,8 @@ export default function DaftarPelatihanGuestPage() {
               <p>
                 Pendaftaran untuk pelatihan ini sedang{" "}
                 <strong>ditutup sementara</strong> oleh penyelenggara. Silakan
-                hubungi penyelenggara jika Anda memerlukan informasi lebih lanjut.
+                hubungi penyelenggara jika Anda memerlukan informasi lebih
+                lanjut.
               </p>
             ) : meta.registration_period_status === "upcoming" ? (
               <p>
@@ -319,9 +327,9 @@ export default function DaftarPelatihanGuestPage() {
         >
           <fieldset className="min-w-0 space-y-4 border-0 p-0 m-0">
             <p className="text-xs text-gray-500">
-              Isi data berikut tanpa perlu login. Pastikan NIK sesuai KTP. NIK
-              yang pernah tercatat sebagai alumni pelatihan tidak dapat
-              mendaftar kembali.
+              Isi data berikut tanpa perlu login. Pastikan NIK sesuai KTP dan
+              nomor KK sesuai kartu keluarga (16 digit angka). NIK yang pernah
+              tercatat sebagai alumni pelatihan tidak dapat mendaftar kembali.
             </p>
             <Input
               label="Nama lengkap"
@@ -356,6 +364,25 @@ export default function DaftarPelatihanGuestPage() {
                 }
               }}
               error={errors.nik}
+              required
+            />
+            <Input
+              label="Nomor Kartu Keluarga (KK)"
+              inputMode="numeric"
+              maxLength={16}
+              value={form.no_kk}
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, "").slice(0, 16);
+                setForm((f) => ({ ...f, no_kk: v }));
+                if (errors.no_kk) {
+                  setErrors((s) => {
+                    const n = { ...s };
+                    delete n.no_kk;
+                    return n;
+                  });
+                }
+              }}
+              error={errors.no_kk}
               required
             />
             <SearchableSelect

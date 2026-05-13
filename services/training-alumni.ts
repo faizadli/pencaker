@@ -19,6 +19,7 @@ export interface TrainingAlumniRow {
   phone?: string;
   address?: string;
   nik?: string | null;
+  no_kk?: string | null;
   gender?: "L" | "P" | null;
   birth_place?: string | null;
   birth_date?: string | null;
@@ -45,6 +46,7 @@ export interface CreateTrainingAlumniRequest {
   address: string;
   /** Diisi pada form manual; boleh tidak dikirim saat impor Excel */
   nik?: string;
+  no_kk: string;
   gender?: "L" | "P";
   birth_place?: string;
   /** Format YYYY-MM-DD */
@@ -245,10 +247,13 @@ export async function deleteTrainingAlumniGroup(params: {
     training_name: params.training_name,
     training_year: String(params.training_year),
   });
-  const resp = await fetch(`${BASE}/api/training-alumni/groups?${q.toString()}`, {
-    method: "DELETE",
-    headers: { ...authHeader() },
-  });
+  const resp = await fetch(
+    `${BASE}/api/training-alumni/groups?${q.toString()}`,
+    {
+      method: "DELETE",
+      headers: { ...authHeader() },
+    },
+  );
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
     throw new Error(

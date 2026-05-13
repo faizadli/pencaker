@@ -78,6 +78,13 @@ export const nikSchema = z
   .length(16, "NIK harus 16 digit")
   .regex(/^\d+$/, "NIK hanya boleh angka");
 
+/** Nomor Kartu Keluarga (format sama dengan NIK: 16 digit angka) */
+export const noKkSchema = z
+  .string()
+  .min(1, "Nomor KK wajib diisi")
+  .length(16, "Nomor KK harus 16 digit")
+  .regex(/^\d+$/, "Nomor KK hanya boleh angka");
+
 const phoneSchema = z
   .string()
   .min(1, "Nomor Handphone wajib diisi")

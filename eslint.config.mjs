@@ -13,8 +13,6 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "*.js",
-    // Skrip Node CommonJS (require) — tidak dilint dengan aturan TypeScript/ESM
-    "scripts/**/*.cjs",
   ]),
 ]);
 
