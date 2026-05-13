@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ZodIssue } from "zod";
 import { roleSchema } from "../../../utils/zod-schemas";
@@ -12,6 +12,7 @@ import {
 } from "../../../services/rbac";
 import { Input, SearchableSelect } from "../../../components/ui/field";
 import Card from "../../../components/ui/Card";
+import StatCard from "../../../components/ui/StatCard";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
 import { useToast } from "../../../components/ui/Toast";
 
@@ -34,7 +35,7 @@ export default function AksesPage() {
     perusahaan: "Perusahaan",
     lowongan: "Lowongan",
   };
-  const groupedPerms = (() => {
+  const groupedPerms = useMemo(() => {
     const buckets: Record<string, { code: string; label: string }[]> = {};
     perms.forEach((p) => {
       const key = String(p.code || "").split(".")[0] || "Lainnya";
@@ -42,7 +43,20 @@ export default function AksesPage() {
       buckets[key].push(p);
     });
     return Object.entries(buckets).sort((a, b) => a[0].localeCompare(b[0]));
-  })();
+  }, [perms]);
+  const hasAccess = permissionCodes.includes("akses.read");
+  const selectedRoleData = useMemo(
+    () => roles.find((role) => String(role.id) === selectedRole) || null,
+    [roles, selectedRole],
+  );
+  const selectedRolePermCount = selectedPerms.length;
+  const selectedRoleLabel = selectedRoleData?.name || "Belum memilih role";
+  const primaryButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600";
+  const neutralButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200";
+  const cardSurfaceClass =
+    "!rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02]";
 
   useEffect(() => {
     const init = async () => {
@@ -72,9 +86,9 @@ export default function AksesPage() {
 
   useEffect(() => {
     if (!permsLoaded) return;
-    const allowed = permissionCodes.includes("akses.read");
+    const allowed = hasAccess;
     if (!allowed) router.replace("/dashboard");
-  }, [permsLoaded, permissionCodes, router]);
+  }, [permsLoaded, hasAccess, router]);
 
   useEffect(() => {
     const loadRolePerms = async () => {
@@ -154,8 +168,8 @@ export default function AksesPage() {
 
   if (!permsLoaded) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
           <FullPageLoading isSection />
         </div>
       </main>
@@ -163,32 +177,95 @@ export default function AksesPage() {
   }
 
   return (
-    <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-      <div className="px-4 sm:px-6">
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-primary">
-            Manajemen Akses
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">Atur hak akses per role</p>
-        </div>
-        {!permsLoaded && (
-          <div className="flex items-center justify-center h-[40vh]">
-            <div className="flex items-center gap-3 text-primary">
-              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm font-medium">Memuat data akses...</span>
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+      <div className="w-full space-y-8">
+        <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+          <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+          <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Management Akses
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                Atur role dan izin akses
+              </h1>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                Kelola role sistem, atur distribusi permission per modul, dan
+                siapkan akses admin agar konsisten dengan kebutuhan operasional.
+              </p>
             </div>
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+              <i className="ri-shield-keyhole-line" aria-hidden />
+              Role aktif: {selectedRoleLabel}
+            </span>
           </div>
-        )}
-        {permsLoaded && permissionCodes.includes("akses.read") && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        </header>
+
+        <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+          <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5">
+            <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+              Ringkasan akses
+            </h2>
+            <p className="text-sm text-slate-500">
+              Ikhtisar cepat struktur role dan permission yang saat ini
+              tersedia.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard
+              title="Total role"
+              value={roles.length}
+              change="Role tersedia"
+              color="var(--color-primary)"
+              icon="ri-user-settings-line"
+            />
+            <StatCard
+              title="Total permission"
+              value={perms.length}
+              change="Hak akses terdaftar"
+              color="var(--color-secondary)"
+              icon="ri-key-2-line"
+            />
+            <StatCard
+              title="Grup modul"
+              value={groupedPerms.length}
+              change="Kelompok permission"
+              color="var(--color-foreground)"
+              icon="ri-layout-grid-line"
+            />
+            <StatCard
+              title="Permission role"
+              value={selectedRolePermCount}
+              change={
+                selectedRoleData
+                  ? `Terpilih untuk ${selectedRoleData.name}`
+                  : "Pilih role terlebih dahulu"
+              }
+              color="var(--color-danger)"
+              icon="ri-shield-user-line"
+            />
+          </div>
+        </section>
+
+        {permsLoaded && hasAccess && (
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.25fr_0.75fr]">
             <Card
+              className={cardSurfaceClass}
               header={
-                <h3 className="text-lg font-semibold text-primary">Role</h3>
+                <div className="flex flex-col gap-2 border-b border-slate-100 pb-5">
+                  <h3 className="text-lg font-bold text-slate-900">
+                    Assignment permission
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    Pilih role, lalu aktifkan akses yang dibutuhkan pada setiap
+                    kelompok modul.
+                  </p>
+                </div>
               }
             >
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-slate-500">
                     Pilih Role
                   </label>
                   <SearchableSelect
@@ -204,30 +281,48 @@ export default function AksesPage() {
                     className="w-full"
                   />
                 </div>
-                <div className="space-y-4 mt-2">
+                <div className="rounded-2xl border border-sky-100 bg-sky-50/70 px-4 py-3 text-sm text-slate-600">
+                  {selectedRoleData ? (
+                    <>
+                      <span className="font-medium text-slate-900">
+                        {selectedRoleData.name}
+                      </span>
+                      {selectedRoleData.description
+                        ? ` · ${selectedRoleData.description}`
+                        : " · Belum ada deskripsi role."}
+                    </>
+                  ) : (
+                    "Pilih role terlebih dahulu untuk mengatur permission yang dimiliki."
+                  )}
+                </div>
+                <div className="mt-2 space-y-4">
                   {groupedPerms.map(([group, items]) => (
                     <div
                       key={group}
-                      className="border border-gray-200 rounded-lg p-4"
+                      className="rounded-2xl border border-slate-200/90 bg-slate-50/70 p-4"
                     >
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-semibold text-primary">
+                        <h4 className="text-sm font-semibold text-slate-900">
                           {groupLabels[group] ||
                             group.charAt(0).toUpperCase() + group.slice(1)}
                         </h4>
+                        <span className="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-500 ring-1 ring-slate-200/80">
+                          {items.length} permission
+                        </span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {items.map((p) => (
                           <label
                             key={p.code}
-                            className="flex items-center gap-2 text-sm text-gray-900"
+                            className="flex items-start gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-3 text-sm text-slate-700 transition hover:border-primary/20"
                           >
                             <input
                               type="checkbox"
                               checked={selectedPerms.includes(p.code)}
                               onChange={() => togglePerm(p.code)}
+                              className="mt-0.5 rounded border-slate-300 text-primary focus:ring-primary"
                             />
-                            <span>{p.label}</span>
+                            <span className="leading-relaxed">{p.label}</span>
                           </label>
                         ))}
                       </div>
@@ -237,23 +332,39 @@ export default function AksesPage() {
                 <button
                   onClick={handleAssign}
                   disabled={!selectedRole || loadingAssign}
-                  className="px-6 py-3 bg-primary hover:bg-[var(--color-primary-dark)] text-white rounded-xl text-sm transition-all"
+                  className={primaryButtonClass}
                 >
-                  Simpan Akses
+                  <i className="ri-save-line" />
+                  {loadingAssign ? "Menyimpan..." : "Simpan Akses"}
                 </button>
               </div>
             </Card>
 
             <Card
+              className={cardSurfaceClass}
               header={
-                <h3 className="text-lg font-semibold text-primary">
-                  Buat Role Baru
-                </h3>
+                <div className="flex flex-col gap-2 border-b border-slate-100 pb-5">
+                  <h3 className="text-lg font-bold text-slate-900">
+                    Buat role baru
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    Tambahkan role baru untuk memisahkan tanggung jawab akses
+                    antarpengguna sistem.
+                  </p>
+                </div>
               }
             >
               <div className="space-y-4">
+                <div className="rounded-2xl border border-slate-200/90 bg-slate-50/70 p-4">
+                  <p className="text-sm text-slate-600">
+                    Role yang tersedia saat ini:{" "}
+                    <span className="font-medium text-slate-900">
+                      {roles.map((role) => role.name).join(", ") || "-"}
+                    </span>
+                  </p>
+                </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-slate-500">
                     Nama Role
                   </label>
                   <Input
@@ -267,7 +378,7 @@ export default function AksesPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-slate-500">
                     Deskripsi
                   </label>
                   <Input
@@ -282,9 +393,20 @@ export default function AksesPage() {
                 </div>
                 <button
                   onClick={handleCreateRole}
-                  className="px-6 py-3 bg-primary hover:bg-[var(--color-primary-dark)] text-white rounded-xl text-sm transition-all"
+                  className={primaryButtonClass}
                 >
+                  <i className="ri-user-add-line" />
                   Buat Role
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewRole({ name: "", description: "" });
+                    setFieldErrors({});
+                  }}
+                  className={neutralButtonClass}
+                >
+                  Reset Form
                 </button>
               </div>
             </Card>
