@@ -536,8 +536,8 @@ function DashboardPageComponent() {
 
   if (loading) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
+      <main className="min-h-screen bg-slate-50 pt-20 pb-10 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
           <FullPageLoading isSection />
         </div>
       </main>
@@ -547,18 +547,23 @@ function DashboardPageComponent() {
   return (
     <>
       <main
-        className={`transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64`}
+        className={`min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64`}
       >
-        <div className="px-4 sm:px-6">
+        <div className="w-full">
           {isCandidate && (
-            <div className="mb-6">
-              <h1 className="text-xl sm:text-2xl font-bold text-primary">
-                Dashboard Pencaker
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Lihat profil dan status lamaran anda
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+            <div className="mb-10">
+              <div className="mb-6 border-b border-slate-200/80 pb-6">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  Ringkasan
+                </p>
+                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                  Dashboard Pencaker
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+                  Lihat profil dan status lamaran Anda dalam satu layar.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
                 <StatCard
                   title="Status AK1"
                   value={candidateStats.ak1Status}
@@ -603,31 +608,39 @@ function DashboardPageComponent() {
           )}
 
           {isCompany && (
-            <div className="mb-6">
-              <h1 className="text-xl sm:text-2xl font-bold text-primary">
-                Dashboard Perusahaan
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Kelola lowongan, pantau pelamar, dan verifikasi
-              </p>
+            <div className="mb-10">
+              <div className="mb-6 border-b border-slate-200/80 pb-6">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  Ringkasan
+                </p>
+                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                  Dashboard Perusahaan
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+                  Kelola lowongan, pantau pelamar, dan verifikasi dari satu
+                  ringkasan.
+                </p>
+              </div>
 
               {!companyStats.isVerified && (
-                <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex items-start gap-3">
-                  <i className="ri-time-line text-yellow-600 text-xl mt-0.5"></i>
-                  <div>
-                    <h3 className="text-sm font-semibold text-yellow-800">
-                      Verifikasi Akun
+                <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200/90 bg-amber-50/90 p-4 shadow-sm ring-1 ring-amber-900/[0.04] sm:p-5">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                    <i className="ri-time-line text-xl leading-none" />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-semibold text-amber-900">
+                      Verifikasi akun
                     </h3>
-                    <p className="text-sm text-yellow-700 mt-1">
-                      Informasi akun anda sedang dalam verifikasi admin disnaker
-                      mohon tunggu dalam waktu 24 jam.
+                    <p className="mt-1 text-sm leading-relaxed text-amber-800/90">
+                      Informasi akun Anda sedang diverifikasi admin disnaker;
+                      mohon tunggu hingga 24 jam.
                     </p>
                   </div>
                 </div>
               )}
 
               {companyStats.isVerified && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
                   <StatCard
                     title="Lowongan Dibuat"
                     value={companyStats.jobCount}
@@ -662,22 +675,51 @@ function DashboardPageComponent() {
           )}
 
           {isDashboardAdmin && (
-            <div className="space-y-8 mb-8">
-              <div className="mb-6">
-                <h1 className="text-xl sm:text-2xl font-bold text-primary">
-                  Dashboard Overview
-                </h1>
-                <p className="text-sm text-gray-500 mt-1">
-                  Ringkasan statistik dan aktivitas terkini sistem
-                </p>
-              </div>
+            <div className="space-y-8">
+              <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+                <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+                <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-end sm:justify-between sm:p-8">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                      Ringkasan
+                    </p>
+                    <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                      Dashboard overview
+                    </h1>
+                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+                      Statistik keseluruhan sistem dan capaian tahun berjalan.
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs text-slate-500 sm:justify-end">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-slate-50 px-3 py-1.5 font-medium text-slate-700">
+                      <i className="ri-calendar-line text-primary" />
+                      {new Date().toLocaleDateString("id-ID", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </header>
 
-              {/* Ringkasan Global */}
-              <div>
-                <h2 className="text-lg font-semibold text-primary mb-4">
-                  Ringkasan Global
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+                <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                      Ringkasan global
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Akumulasi data sejak awal pencatatan.
+                    </p>
+                  </div>
+                  <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                    <i className="ri-earth-line" />
+                    Seluruh periode
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3 2xl:grid-cols-5">
                   <StatCard
                     title="Total Pencari Kerja"
                     value={stats.global.pencaker}
@@ -714,14 +756,24 @@ function DashboardPageComponent() {
                     icon="ri-user-follow-line"
                   />
                 </div>
-              </div>
+              </section>
 
-              {/* Ringkasan Tahunan */}
-              <div>
-                <h2 className="text-lg font-semibold text-primary mb-4">
-                  Ringkasan Tahunan ({new Date().getFullYear()})
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+                <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                      Ringkasan tahunan ({new Date().getFullYear()})
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Data yang tercatat sepanjang tahun berjalan.
+                    </p>
+                  </div>
+                  <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-secondary/15 px-2.5 py-1 text-xs font-medium text-slate-800">
+                    <i className="ri-bar-chart-2-line text-primary" />
+                    Tahun berjalan
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3 2xl:grid-cols-5">
                   <StatCard
                     title="Total Pencari Kerja"
                     value={stats.annual.pencaker}
@@ -758,40 +810,53 @@ function DashboardPageComponent() {
                     icon="ri-check-double-line"
                   />
                 </div>
-              </div>
+              </section>
             </div>
           )}
 
           {canSeeOverview && !isDashboardAdmin && !isCompany && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {canReadPencaker && (
-                <StatCard
-                  title="Pencari Kerja"
-                  value={stats.jobSeekers}
-                  change="Total terdata"
-                  color={secondaryColor}
-                  icon="ri-user-line"
-                />
-              )}
-              {canReadLowongan && (
-                <StatCard
-                  title="Lowongan Aktif"
-                  value={stats.activeJobs}
-                  change="Status approved"
-                  color={primaryColor}
-                  icon="ri-briefcase-line"
-                />
-              )}
-              {canReadPerusahaan && (
-                <StatCard
-                  title="Perusahaan"
-                  value={stats.companies}
-                  change="Total terdata"
-                  color={foregroundColor}
-                  icon="ri-building-line"
-                />
-              )}
-            </div>
+            <section className="mb-8 rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+              <div className="mb-6 border-b border-slate-100 pb-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  Ringkasan
+                </p>
+                <h2 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">
+                  Statistik cepat
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Angka terkait akses izin Anda.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+                {canReadPencaker && (
+                  <StatCard
+                    title="Pencari Kerja"
+                    value={stats.jobSeekers}
+                    change="Total terdata"
+                    color={secondaryColor}
+                    icon="ri-user-line"
+                  />
+                )}
+                {canReadLowongan && (
+                  <StatCard
+                    title="Lowongan Aktif"
+                    value={stats.activeJobs}
+                    change="Status approved"
+                    color={primaryColor}
+                    icon="ri-briefcase-line"
+                  />
+                )}
+                {canReadPerusahaan && (
+                  <StatCard
+                    title="Perusahaan"
+                    value={stats.companies}
+                    change="Total terdata"
+                    color={foregroundColor}
+                    icon="ri-building-line"
+                  />
+                )}
+              </div>
+            </section>
           )}
         </div>
       </main>
