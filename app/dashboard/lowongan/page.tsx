@@ -686,32 +686,32 @@ export default function LowonganPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Aktif":
-        return "bg-green-100 text-green-800";
+        return "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/80";
       case "Menunggu Verifikasi":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80";
       case "Ditolak":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 ring-1 ring-red-200/80";
       case "Kadaluarsa":
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80";
     }
   };
 
   const getTipeColor = (tipe: UITipe) => {
     switch (tipe) {
       case "Full-time":
-        return "bg-blue-100 text-blue-800";
+        return "bg-sky-100 text-sky-900 ring-1 ring-sky-200/80";
       case "Part-time":
-        return "bg-purple-100 text-purple-800";
+        return "bg-violet-100 text-violet-900 ring-1 ring-violet-200/80";
       case "Internship":
-        return "bg-green-100 text-green-800";
+        return "bg-teal-100 text-teal-900 ring-1 ring-teal-200/80";
       case "Freelance":
-        return "bg-orange-100 text-orange-800";
+        return "bg-orange-100 text-orange-900 ring-1 ring-orange-200/80";
       case "Contract":
-        return "bg-indigo-100 text-indigo-800";
+        return "bg-indigo-100 text-indigo-900 ring-1 ring-indigo-200/80";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80";
     }
   };
 
@@ -720,8 +720,8 @@ export default function LowonganPage() {
 
   if (!permsLoaded || loading) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
           <FullPageLoading isSection />
         </div>
       </main>
@@ -730,69 +730,78 @@ export default function LowonganPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          {loading && (
-            <div className="flex items-center justify-center h-[40vh]">
-              <div className="flex items-center gap-3 text-primary">
-                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-sm font-medium">
-                  Memuat data lowongan...
-                </span>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full space-y-8">
+          <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+            <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+            <div className="p-6 sm:p-8">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Lowongan
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                Manajemen lowongan pekerjaan
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+                Kelola posisi, pantau pelamar per lowongan, dan proses
+                verifikasi dari satu layar.
+              </p>
+            </div>
+          </header>
+
+          <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+            <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                  Ringkasan status
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Angka mengikuti filter dan halaman ini.
+                </p>
               </div>
             </div>
-          )}
-          <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">
-              Manajemen Lowongan Pekerjaan
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Kelola lowongan aktif, ajukan baru, dan pantau proses rekrutmen
-            </p>
-          </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+              <StatCard
+                title="Total Lowongan"
+                value={lowonganList.length}
+                change="Pada halaman ini"
+                color="var(--color-secondary)"
+                icon="ri-briefcase-line"
+              />
+              <StatCard
+                title="Aktif"
+                value={
+                  filteredLowongan.filter((j) => j.status === "Aktif").length
+                }
+                change="Siap rekrutmen"
+                color="var(--color-primary)"
+                icon="ri-checkbox-circle-line"
+              />
+              <StatCard
+                title="Menunggu"
+                value={
+                  filteredLowongan.filter(
+                    (j) => j.status === "Menunggu Verifikasi",
+                  ).length
+                }
+                change="Perlu tinjauan"
+                color="var(--color-foreground)"
+                icon="ri-time-line"
+              />
+              <StatCard
+                title="Ditolak"
+                value={
+                  filteredLowongan.filter((j) => j.status === "Ditolak").length
+                }
+                change="Total ditolak"
+                color="var(--color-danger)"
+                icon="ri-close-circle-line"
+              />
+            </div>
+          </section>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard
-              title="Total Lowongan"
-              value={lowonganList.length}
-              change="+8%"
-              color="var(--color-secondary)"
-              icon="ri-briefcase-line"
-            />
-            <StatCard
-              title="Aktif"
-              value={
-                filteredLowongan.filter((j) => j.status === "Aktif").length
-              }
-              change="+3"
-              color="var(--color-primary)"
-              icon="ri-checkbox-circle-line"
-            />
-            <StatCard
-              title="Menunggu"
-              value={
-                filteredLowongan.filter(
-                  (j) => j.status === "Menunggu Verifikasi",
-                ).length
-              }
-              change="Perlu tinjauan"
-              color="var(--color-foreground)"
-              icon="ri-time-line"
-            />
-            <StatCard
-              title="Ditolak"
-              value={
-                filteredLowongan.filter((j) => j.status === "Ditolak").length
-              }
-              change="Total ditolak"
-              color="var(--color-danger)"
-              icon="ri-close-circle-line"
-            />
-          </div>
-
-          <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-950/[0.02] sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
+              <div className="min-w-0 flex-1">
                 <Input
                   icon="ri-search-line"
                   type="text"
@@ -802,7 +811,7 @@ export default function LowonganPage() {
                   className="w-full py-3"
                 />
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 items-stretch">
+              <div className="flex flex-col items-stretch gap-2 sm:flex-row">
                 <SearchableSelect
                   value={statusFilter}
                   onChange={(v) => setStatusFilter(v)}
@@ -813,6 +822,7 @@ export default function LowonganPage() {
                     { value: "Kadaluarsa", label: "Kadaluarsa" },
                     { value: "Ditolak", label: "Ditolak" },
                   ]}
+                  className="w-full sm:w-[11rem]"
                 />
 
                 <SegmentedToggle
@@ -822,19 +832,21 @@ export default function LowonganPage() {
                     { value: "grid", icon: "ri-grid-line" },
                     { value: "table", icon: "ri-list-check" },
                   ]}
+                  className="w-full sm:w-[11rem]"
                 />
 
                 {canCreate && (
                   <button
+                    type="button"
                     onClick={() => {
                       setEditingId(null);
                       setNewJob(EMPTY_NEW_JOB);
                       setShowForm(true);
                       setSubmittedJob(false);
                     }}
-                    className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center gap-2"
+                    className="flex h-full w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-primary-dark)] motion-safe:hover:shadow sm:w-auto sm:min-w-[9rem]"
                   >
-                    <i className="ri-add-line"></i>
+                    <i className="ri-add-line text-lg leading-none" />
                     Tambah
                   </button>
                 )}
@@ -855,19 +867,21 @@ export default function LowonganPage() {
             actions={
               <>
                 <button
+                  type="button"
                   onClick={() => {
                     setShowForm(false);
                     setEditingId(null);
                     setNewJob(EMPTY_NEW_JOB);
                     setFieldErrors({});
                   }}
-                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
+                  className="rounded-lg bg-gray-100 px-4 py-2 text-primary transition hover:bg-gray-200"
                 >
                   Batal
                 </button>
                 <button
+                  type="button"
                   onClick={handleAddJob}
-                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
+                  className="rounded-lg bg-primary px-4 py-2 text-white transition hover:bg-[var(--color-primary-dark)]"
                 >
                   Simpan
                 </button>
@@ -1034,90 +1048,90 @@ export default function LowonganPage() {
           </Modal>
 
           {viewMode === "grid" ? (
-            <CardGrid>
+            <CardGrid className="gap-5 xl:grid-cols-3">
               {paginatedLowongan.map((job, idx) => (
                 <div
                   key={`${job.id || `${job.companyId}-${job.posisi}-${job.quota}`}-${job.status}-${idx}`}
-                  className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
+                  className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02] transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none"
                 >
-                  <div className="block p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
-                    <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50/95 to-white p-4">
+                    <div className="mb-2 flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <h3 className="font-bold text-primary text-sm leading-tight">
+                        <h3 className="text-sm font-bold leading-tight text-slate-900">
                           {job.posisi}
                         </h3>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-slate-500">
                           {job.perusahaan}
                         </p>
                       </div>
                       <span
-                        className={`px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0 ${getStatusColor(job.status)}`}
+                        className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-semibold sm:py-1 sm:text-xs ${getStatusColor(job.status)}`}
                       >
                         {job.status}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span
-                        className={`px-2 py-1 text-xs rounded-full ${getTipeColor(job.tipe as UITipe)}`}
+                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getTipeColor(job.tipe as UITipe)}`}
                       >
                         {job.tipe}
                       </span>
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
                         {job.lokasi}
                       </span>
                     </div>
                   </div>
 
-                  <div className="block p-4 space-y-3">
+                  <div className="space-y-3 p-4">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-700">Tayang</span>
-                      <span className="font-medium text-gray-900">
+                      <span className="text-slate-600">Tayang</span>
+                      <span className="font-medium text-slate-900">
                         {job.tanggalTayang}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-700">Kuota</span>
-                      <span className="font-medium text-gray-900">
-                        {job.quota} Orang ({job.gender})
+                      <span className="text-slate-600">Kuota</span>
+                      <span className="font-medium tabular-nums text-slate-900">
+                        {job.quota} orang ({job.gender})
                       </span>
                     </div>
                   </div>
 
-                  <div className="block p-4 border-t border-gray-200 bg-gray-50">
+                  <div className="border-t border-slate-100 bg-slate-50/60 p-4">
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div>
-                        <p className="text-lg font-bold text-primary">
+                        <p className="text-lg font-bold tabular-nums text-primary">
                           {appCounts[job.id]?.total ?? 0}
                         </p>
-                        <p className="text-xs text-gray-500">Pelamar</p>
+                        <p className="text-xs text-slate-500">Pelamar</p>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-primary">
+                        <p className="text-lg font-bold tabular-nums text-primary">
                           {appCounts[job.id]?.processed ?? 0}
                         </p>
-                        <p className="text-xs text-gray-500">Diproses</p>
+                        <p className="text-xs text-slate-500">Diproses</p>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-primary">
+                        <p className="text-lg font-bold tabular-nums text-primary">
                           {appCounts[job.id]?.approved ?? 0}
                         </p>
-                        <p className="text-xs text-gray-500">Diterima</p>
+                        <p className="text-xs text-slate-500">Diterima</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-4 border-t border-gray-200">
-                    <div className="flex gap-2">
+                  <div className="border-t border-slate-100 bg-slate-50/50 p-4">
+                    <div className="flex flex-wrap gap-2">
                       <Link
                         href={`/dashboard/lowongan/${job.id}`}
-                        className={`flex-1 px-3 py-2 text-sm text-white rounded-lg hover:brightness-95 transition flex items-center justify-center gap-2 ${
+                        className={`landing-focus flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
                           job.status === "Menunggu Verifikasi"
-                            ? "bg-yellow-500"
-                            : "bg-secondary"
+                            ? "bg-amber-500 hover:bg-amber-600"
+                            : "bg-primary hover:bg-[var(--color-primary-dark)]"
                         }`}
                       >
-                        <i className="ri-eye-line"></i>
-                        <span>
+                        <i className="ri-eye-line" />
+                        <span className="truncate">
                           {job.status === "Menunggu Verifikasi"
                             ? "Review & Konfirmasi"
                             : "Detail"}
@@ -1126,15 +1140,16 @@ export default function LowonganPage() {
                       {job.status !== "Menunggu Verifikasi" && (
                         <Link
                           href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`}
-                          className="flex-1 px-3 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2"
+                          className="landing-focus flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
                           title="Pelamar"
                         >
-                          <i className="ri-user-search-line"></i>
-                          <span>Pelamar</span>
+                          <i className="ri-user-search-line" />
+                          <span className="truncate">Pelamar</span>
                         </Link>
                       )}
                       {canEdit && (
                         <button
+                          type="button"
                           onClick={() => {
                             setEditingId(String(job.id));
                             const raw = lowonganList.find(
@@ -1230,11 +1245,11 @@ export default function LowonganPage() {
                             });
                             setShowForm(true);
                           }}
-                          className="flex-1 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition flex items-center justify-center gap-2"
+                          className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
                           title="Edit"
                         >
-                          <i className="ri-edit-line"></i>
-                          <span>Edit</span>
+                          <i className="ri-edit-line" />
+                          <span className="truncate">Edit</span>
                         </button>
                       )}
                     </div>
@@ -1243,7 +1258,7 @@ export default function LowonganPage() {
               ))}
             </CardGrid>
           ) : (
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden !rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02] [&>div]:!p-0">
               <Table className="hidden sm:block">
                 <TableHead>
                   <tr>
@@ -1262,40 +1277,40 @@ export default function LowonganPage() {
                     >
                       <TD>
                         <div>
-                          <span className="font-medium text-gray-900 hover:text-primary">
+                          <span className="font-medium text-slate-900">
                             {job.posisi}
                           </span>
-                          <p className="text-xs text-gray-600">{job.tipe}</p>
+                          <p className="text-xs text-slate-500">{job.tipe}</p>
                         </div>
                       </TD>
-                      <TD className="text-gray-900">{job.perusahaan}</TD>
+                      <TD className="text-slate-700">{job.perusahaan}</TD>
                       <TD>
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-500">
+                        <span className="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
                           {job.lokasi}
                         </span>
                       </TD>
                       <TD>
                         <span
-                          className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(job.status)}`}
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusColor(job.status)}`}
                         >
                           {job.status}
                         </span>
                       </TD>
                       <TD>
                         <div className="text-center">
-                          <p className="font-bold text-primary">
+                          <p className="font-bold tabular-nums text-primary">
                             {appCounts[job.id]?.total ?? 0}
                           </p>
                         </div>
                       </TD>
                       <TD>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Link
                             href={`/dashboard/lowongan/${job.id}`}
-                            className={`flex-1 px-3 py-1 text-xs text-white rounded hover:brightness-95 transition flex items-center justify-center ${
+                            className={`landing-focus inline-flex flex-1 items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
                               job.status === "Menunggu Verifikasi"
-                                ? "bg-yellow-500"
-                                : "bg-secondary"
+                                ? "bg-amber-500 hover:bg-amber-600"
+                                : "bg-primary hover:bg-[var(--color-primary-dark)]"
                             }`}
                           >
                             {job.status === "Menunggu Verifikasi"
@@ -1305,7 +1320,7 @@ export default function LowonganPage() {
                           {job.status !== "Menunggu Verifikasi" && (
                             <Link
                               href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`}
-                              className="flex-1 px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+                              className="landing-focus inline-flex flex-1 items-center justify-center rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
                             >
                               Pelamar
                             </Link>
@@ -1316,46 +1331,46 @@ export default function LowonganPage() {
                   ))}
                 </TableBody>
               </Table>
-              <div className="sm:hidden p-3 space-y-3">
+              <div className="space-y-3 p-3 sm:hidden">
                 {paginatedLowongan.map((job, idx) => (
                   <div
                     key={`m-${job.id || `${job.companyId}-${job.posisi}-${job.quota}`}-${job.status}-${idx}`}
-                    className="border border-gray-200 rounded-lg p-3"
+                    className="rounded-xl border border-slate-200/90 bg-slate-50/40 p-4 ring-1 ring-slate-950/[0.02]"
                   >
                     <div className="block">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-semibold text-primary truncate">
+                          <p className="truncate font-semibold text-slate-900">
                             {job.posisi}
                           </p>
-                          <p className="text-xs text-gray-500 truncate">
+                          <p className="truncate text-xs text-slate-500">
                             {job.perusahaan}
                           </p>
                         </div>
                         <span
-                          className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(job.status)}`}
+                          className={`inline-flex shrink-0 items-center rounded-full px-2 py-1 text-[10px] font-semibold ${getStatusColor(job.status)}`}
                         >
                           {job.status}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        <span className="text-[11px] text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600 ring-1 ring-slate-200/80">
                           {job.lokasi}
                         </span>
                         <span
-                          className={`text-[11px] px-2 py-1 rounded ${getTipeColor(job.tipe as UITipe)}`}
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-[11px] font-medium ${getTipeColor(job.tipe as UITipe)}`}
                         >
                           {job.tipe}
                         </span>
                       </div>
                     </div>
-                    <div className="mt-3 flex gap-2">
+                    <div className="mt-3 flex flex-wrap gap-2">
                       <Link
                         href={`/dashboard/lowongan/${job.id}`}
-                        className={`flex-1 px-3 py-2 text-xs text-white rounded hover:brightness-95 transition flex items-center justify-center ${
+                        className={`landing-focus flex min-w-0 flex-1 items-center justify-center rounded-lg px-3 py-2 text-xs font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
                           job.status === "Menunggu Verifikasi"
-                            ? "bg-yellow-500"
-                            : "bg-secondary"
+                            ? "bg-amber-500"
+                            : "bg-primary"
                         }`}
                       >
                         {job.status === "Menunggu Verifikasi"
@@ -1365,13 +1380,14 @@ export default function LowonganPage() {
                       {job.status !== "Menunggu Verifikasi" && (
                         <Link
                           href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`}
-                          className="flex-1 px-3 py-2 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+                          className="flex min-w-0 flex-1 items-center justify-center rounded-lg bg-white px-3 py-2 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
                         >
                           Pelamar
                         </Link>
                       )}
                       {canEdit && (
                         <button
+                          type="button"
                           onClick={() => {
                             setEditingId(String(job.id));
                             const raw = lowonganList.find(
@@ -1445,7 +1461,7 @@ export default function LowonganPage() {
                             });
                             setShowForm(true);
                           }}
-                          className="flex-1 px-3 py-2 text-xs bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition"
+                          className="flex min-w-0 flex-1 items-center justify-center rounded-lg bg-white px-3 py-2 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
                         >
                           Edit
                         </button>
@@ -1457,7 +1473,7 @@ export default function LowonganPage() {
             </Card>
           )}
 
-          <div className="mt-4">
+          <div className="pt-1">
             <Pagination
               page={page}
               pageSize={pageSize}
@@ -1471,22 +1487,25 @@ export default function LowonganPage() {
           </div>
 
           {filteredLowongan.length === 0 && (
-            <div className="text-center py-8 bg-white rounded-xl shadow-md border border-gray-200">
-              <i className="ri-briefcase-line text-4xl text-gray-300 mb-3"></i>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="rounded-2xl border border-slate-200/90 bg-white py-12 text-center shadow-sm ring-1 ring-slate-950/[0.02]">
+              <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                <i className="ri-briefcase-line text-3xl leading-none" />
+              </span>
+              <h3 className="text-lg font-semibold text-slate-900">
                 Tidak ada lowongan ditemukan
               </h3>
-              <p className="text-gray-600 mb-4">
-                Coba ubah kata kunci pencarian atau filter
+              <p className="mx-auto mt-2 max-w-md px-4 text-sm text-slate-600">
+                Coba ubah kata kunci pencarian atau filter status.
               </p>
               <button
+                type="button"
                 onClick={() => {
                   setSearchTerm("");
                   setStatusFilter("all");
                 }}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition"
+                className="mt-6 inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-primary-dark)]"
               >
-                Reset Pencarian
+                Reset pencarian
               </button>
             </div>
           )}
