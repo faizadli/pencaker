@@ -25,6 +25,8 @@ type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
   required?: boolean;
   submitted?: boolean;
+  /** Soft surface + inset shadow; cocok untuk halaman auth */
+  tone?: "default" | "muted";
 };
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   function Input(props, ref) {
@@ -37,6 +39,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       required,
       submitted,
       placeholder,
+      tone = "default",
       ...rest
     } = props;
     const isRequired = required ?? Boolean(label);
@@ -209,6 +212,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         : String(inputValue).trim() === "";
     const showError = !!error || (!!submitted && isRequired && isEmpty);
     const errorText = error || (showError ? "Wajib diisi" : undefined);
+    const fieldSurface = showError
+      ? "border-red-400 bg-white focus:ring-2 focus:ring-red-200 focus:border-red-500"
+      : tone === "muted"
+        ? "border-slate-200/90 bg-slate-50/90 shadow-[inset_0_1px_2px_rgba(15,23,42,0.05)] focus:bg-white focus:border-primary/50 focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_0_3px_rgba(65,152,35,0.1)] transition-[box-shadow,background-color,border-color] duration-200"
+        : "border-gray-300 bg-white focus:ring-2 focus:ring-primary focus:border-transparent";
 
     return (
       <div className="w-full">
@@ -217,23 +225,26 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </label>
         )}
-        <div className="relative w-full">
+        <div className="relative w-full group">
           {icon && (
             <i
-              className={`${icon} absolute left-3 top-1/2 -translate-y-1/2 text-gray-500`}
+              className={`${icon} absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none ${tone === "muted" ? "text-slate-400 group-focus-within:text-primary" : "text-gray-500"}`}
             ></i>
           )}
           <input
             ref={ref}
             {...{ ...inputProps, required: isRequired }}
-            className={`w-full ${icon ? "pl-10" : "pl-3"} ${isPassword ? "pr-10" : "pr-4"} py-3 h-11 border ${showError ? "border-red-400" : "border-gray-300"} rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-500 bg-white text-gray-900 text-sm text-left ${className || ""}`}
+            className={`w-full ${icon ? "pl-10" : "pl-3.5"} ${isPassword ? "pr-11" : "pr-4"} py-3 h-12 border rounded-xl placeholder:text-slate-400 text-gray-900 text-sm text-left outline-none ${fieldSurface} ${className || ""}`}
           />
           {isPassword && (
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary focus:outline-none"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-0.5 text-slate-500 hover:bg-slate-100 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               tabIndex={-1}
+              aria-label={
+                showPassword ? "Sembunyikan password" : "Tampilkan password"
+              }
             >
               <i
                 className={showPassword ? "ri-eye-off-line" : "ri-eye-line"}
@@ -606,6 +617,8 @@ type SegmentedToggleProps = {
   onChange: (value: string) => void;
   className?: string;
   disabled?: boolean;
+  /** Gaya pill untuk halaman login / auth */
+  appearance?: "default" | "pill";
 };
 export function SegmentedToggle({
   options,
@@ -613,7 +626,38 @@ export function SegmentedToggle({
   onChange,
   className,
   disabled,
+  appearance = "default",
 }: SegmentedToggleProps) {
+  if (appearance === "pill") {
+    return (
+      <div
+        className={`flex w-full p-1 rounded-full bg-slate-100/90 border border-slate-200/80 h-12 gap-0.5 ${className || ""} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
+        role="group"
+        aria-label="Pilih metode"
+      >
+        {options.map((opt) => {
+          const active = value === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              disabled={disabled}
+              onClick={() => onChange(opt.value)}
+              className={`flex-1 rounded-full px-3 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap ${
+                active
+                  ? "bg-white text-primary shadow-sm ring-1 ring-black/[0.06]"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              {opt.icon && <i className={opt.icon} />}
+              {opt.label && <span>{opt.label}</span>}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div
       className={`flex items-stretch border border-gray-200 rounded-xl overflow-hidden w-full sm:w-auto sm:min-w-[9rem] shrink-0 h-11 ${className || ""} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}

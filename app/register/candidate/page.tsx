@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import {
   Input,
@@ -10,6 +11,7 @@ import {
   Textarea,
 } from "../../../components/ui/field";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
+import RegisterPageShell from "../../../components/auth/RegisterPageShell";
 import {
   candidateAccountSchema,
   candidateProfileSchema,
@@ -55,7 +57,7 @@ export default function RegisterCandidate() {
       setCheckingSession(false);
     })();
   }, [router]);
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(2);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -723,266 +725,767 @@ export default function RegisterCandidate() {
   if (checkingSession) return <FullPageLoading />;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8 py-8">
-      <div className="w-full max-w-4xl lg:max-w-5xl">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-primary">
-            Pendaftaran Pencari Kerja
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Daftarkan akun Anda untuk mengakses profil dan layanan AK1
-          </p>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden mx-2 sm:mx-0">
-          <div className="px-4 sm:px-8 lg:px-10 pt-6">
-            <div className="flex flex-nowrap items-center justify-center gap-6 sm:gap-10 overflow-x-auto">
-              {[
-                { label: "Akun", icon: "ri-user-line", n: 1 },
-                { label: "Profil", icon: "ri-profile-line", n: 2 },
-                { label: "AK1", icon: "ri-file-text-line", n: 3 },
-                { label: "Selesai", icon: "ri-checkbox-circle-line", n: 4 },
-              ].map((s, idx) => (
-                <div key={s.n} className="flex items-center gap-6">
-                  <div
-                    className={`flex items-center gap-2 ${step === s.n ? "text-primary" : "text-gray-500"}`}
-                  >
-                    <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center text-base ${step === s.n ? "bg-primary/10 border border-primary" : "bg-gray-100 border border-gray-200"}`}
-                    >
-                      <i className={s.icon}></i>
-                    </div>
-                    <span className="text-sm font-medium hidden sm:block">
-                      {s.label}
-                    </span>
-                  </div>
-                  {idx < 3 && (
-                    <div
-                      className={`hidden sm:block w-16 h-0.5 ${step > s.n ? "bg-primary" : "bg-gray-200"} rounded`}
-                    ></div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {step === 1 && (
-            <form
-              onSubmit={submitAccount}
-              className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-6"
-              noValidate
-            >
-              <h2 className="text-lg font-semibold text-primary">Data Akun</h2>
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-                  {error}
-                </div>
-              )}
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-500 mb-2"
-                >
-                  Email (Opsional)
-                </label>
-                <Input
-                  icon="ri-mail-line"
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={account.email}
-                  onChange={(e) => {
-                    setAccount({ ...account, email: e.target.value });
-                    setFieldErrors({ ...fieldErrors, email: "" });
-                  }}
-                  onBlur={(e) => checkAvailability("email", e.target.value)}
-                  className="w-full rounded-lg"
-                  placeholder="admin@contoh.com"
-                  required={false}
-                  error={fieldErrors.email}
-                />
+    <RegisterPageShell
+      variant="candidate"
+      heroTitle="Pendaftaran Pencari Kerja"
+      heroSubtitle="Daftarkan akun Anda untuk mengakses profil dan layanan AK1."
+      wizard={{
+        currentStep: step,
+        steps: [
+          { n: 1, label: "Akun", icon: "ri-user-line" },
+          { n: 2, label: "Profil", icon: "ri-profile-line" },
+          { n: 3, label: "AK1", icon: "ri-file-text-line" },
+          { n: 4, label: "Selesai", icon: "ri-checkbox-circle-line" },
+        ],
+      }}
+      belowCard={
+        <>
+          Sudah punya akun?{" "}
+          <Link
+            href="/login/candidate"
+            className="font-semibold text-primary hover:underline"
+          >
+            Masuk di sini
+          </Link>
+        </>
+      }
+    >
+      <div className="rounded-2xl border border-gray-200/80 bg-white/95 backdrop-blur-md shadow-[0_20px_70px_-15px_rgba(46,116,43,0.16)] ring-1 ring-black/[0.03] overflow-hidden pt-4 sm:pt-5">
+        {step === 1 && (
+          <form
+            onSubmit={submitAccount}
+            className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-6"
+            noValidate
+          >
+            <h2 className="text-lg font-semibold text-primary">Data Akun</h2>
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+                {error}
               </div>
+            )}
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-500 mb-2"
+              >
+                Email (Opsional)
+              </label>
+              <Input
+                icon="ri-mail-line"
+                type="email"
+                id="email"
+                name="email"
+                value={account.email}
+                onChange={(e) => {
+                  setAccount({ ...account, email: e.target.value });
+                  setFieldErrors({ ...fieldErrors, email: "" });
+                }}
+                onBlur={(e) => checkAvailability("email", e.target.value)}
+                className="w-full rounded-lg"
+                placeholder="admin@contoh.com"
+                required={false}
+                error={fieldErrors.email}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="no_handphone"
+                className="block text-sm font-medium text-gray-500 mb-2"
+              >
+                Nomor Handphone
+              </label>
+              <Input
+                icon="ri-phone-line"
+                type="tel"
+                id="no_handphone"
+                name="no_handphone"
+                value={account.no_handphone}
+                onChange={(e) => {
+                  setAccount({ ...account, no_handphone: e.target.value });
+                  setFieldErrors({ ...fieldErrors, no_handphone: "" });
+                }}
+                onBlur={(e) =>
+                  checkAvailability("no_handphone", e.target.value)
+                }
+                className="w-full rounded-lg"
+                placeholder="08xxxxxxxxxx"
+                error={fieldErrors.no_handphone}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label
-                  htmlFor="no_handphone"
+                  htmlFor="password"
                   className="block text-sm font-medium text-gray-500 mb-2"
                 >
-                  Nomor Handphone
+                  Password
                 </label>
                 <Input
-                  icon="ri-phone-line"
-                  type="tel"
-                  id="no_handphone"
-                  name="no_handphone"
-                  value={account.no_handphone}
-                  onChange={(e) => {
-                    setAccount({ ...account, no_handphone: e.target.value });
-                    setFieldErrors({ ...fieldErrors, no_handphone: "" });
-                  }}
-                  onBlur={(e) =>
-                    checkAvailability("no_handphone", e.target.value)
+                  icon="ri-lock-2-line"
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={account.password}
+                  onChange={(e) =>
+                    setAccount({ ...account, password: e.target.value })
                   }
                   className="w-full rounded-lg"
-                  placeholder="08xxxxxxxxxx"
-                  error={fieldErrors.no_handphone}
+                  placeholder="Minimal 8 karakter"
+                  required
+                  error={fieldErrors.password}
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-gray-500 mb-2"
-                  >
-                    Password
-                  </label>
-                  <Input
-                    icon="ri-lock-2-line"
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={account.password}
-                    onChange={(e) =>
-                      setAccount({ ...account, password: e.target.value })
-                    }
-                    className="w-full rounded-lg"
-                    placeholder="Minimal 8 karakter"
-                    required
-                    error={fieldErrors.password}
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="confirm"
-                    className="block text-sm font-medium text-gray-500 mb-2"
-                  >
-                    Konfirmasi Password
-                  </label>
-                  <Input
-                    icon="ri-lock-2-line"
-                    type="password"
-                    id="confirm"
-                    name="confirm"
-                    value={account.confirm}
-                    onChange={(e) =>
-                      setAccount({ ...account, confirm: e.target.value })
-                    }
-                    className="w-full rounded-lg"
-                    placeholder="Ulangi password"
-                    required
-                    error={fieldErrors.confirm}
-                  />
-                </div>
+              <div>
+                <label
+                  htmlFor="confirm"
+                  className="block text-sm font-medium text-gray-500 mb-2"
+                >
+                  Konfirmasi Password
+                </label>
+                <Input
+                  icon="ri-lock-2-line"
+                  type="password"
+                  id="confirm"
+                  name="confirm"
+                  value={account.confirm}
+                  onChange={(e) =>
+                    setAccount({ ...account, confirm: e.target.value })
+                  }
+                  className="w-full rounded-lg"
+                  placeholder="Ulangi password"
+                  required
+                  error={fieldErrors.confirm}
+                />
               </div>
-              <div className="flex flex-col gap-2 hidden">
-                <div className="text-sm font-medium text-gray-500">
-                  Verifikasi Nomor Handphone
-                </div>
-                <div className="flex gap-3">
+            </div>
+            <div className="flex flex-col gap-2 hidden">
+              <div className="text-sm font-medium text-gray-500">
+                Verifikasi Nomor Handphone
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  disabled={
+                    loading || otpVerified || cooldown > 0 || retryCount >= 3
+                  }
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${otpChannel === "sms" && otpSent ? "bg-primary text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"} ${cooldown > 0 || retryCount >= 3 ? "opacity-50 cursor-not-allowed" : ""}`}
+                  onClick={() => handleSendOtp("sms")}
+                >
+                  <i className="ri-smartphone-line mr-2"></i>
+                  {cooldown > 0 && otpChannel === "sms"
+                    ? `Tunggu ${cooldown}s`
+                    : "Kirim Kode OTP"}
+                </button>
+              </div>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3 animate-in fade-in slide-in-from-top-2 hidden">
+              <label
+                htmlFor="otp"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Masukkan Kode OTP
+              </label>
+              <div className="flex items-center gap-2">
+                <Input
+                  icon="ri-shield-keyhole-line"
+                  type="text"
+                  id="otp"
+                  name="otp"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="w-full rounded-lg"
+                  placeholder="6 digit kode"
+                  disabled={otpVerified}
+                  error={fieldErrors.otp}
+                />
+                {!otpVerified && (
                   <button
                     type="button"
-                    disabled={
-                      loading || otpVerified || cooldown > 0 || retryCount >= 3
-                    }
-                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${otpChannel === "sms" && otpSent ? "bg-primary text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"} ${cooldown > 0 || retryCount >= 3 ? "opacity-50 cursor-not-allowed" : ""}`}
-                    onClick={() => handleSendOtp("sms")}
+                    className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-600 font-medium whitespace-nowrap"
+                    onClick={async () => {
+                      setError("");
+                      try {
+                        const res = await verifyOtp(
+                          String(account.no_handphone).trim(),
+                          otp,
+                        );
+                        setVerificationToken(res.verification_token);
+                        setOtpVerified(true);
+                      } catch (e: unknown) {
+                        const msg =
+                          e instanceof Error ? e.message : "Kode OTP salah";
+                        setError(msg);
+                      }
+                    }}
                   >
-                    <i className="ri-smartphone-line mr-2"></i>
-                    {cooldown > 0 && otpChannel === "sms"
-                      ? `Tunggu ${cooldown}s`
-                      : "Kirim Kode OTP"}
+                    Konfirmasi
                   </button>
-                </div>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3 animate-in fade-in slide-in-from-top-2 hidden">
-                <label
-                  htmlFor="otp"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Masukkan Kode OTP
-                </label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    icon="ri-shield-keyhole-line"
-                    type="text"
-                    id="otp"
-                    name="otp"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="w-full rounded-lg"
-                    placeholder="6 digit kode"
-                    disabled={otpVerified}
-                    error={fieldErrors.otp}
-                  />
-                  {!otpVerified && (
-                    <button
-                      type="button"
-                      className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-600 font-medium whitespace-nowrap"
-                      onClick={async () => {
-                        setError("");
-                        try {
-                          const res = await verifyOtp(
-                            String(account.no_handphone).trim(),
-                            otp,
-                          );
-                          setVerificationToken(res.verification_token);
-                          setOtpVerified(true);
-                        } catch (e: unknown) {
-                          const msg =
-                            e instanceof Error ? e.message : "Kode OTP salah";
-                          setError(msg);
-                        }
-                      }}
-                    >
-                      Konfirmasi
-                    </button>
-                  )}
-                  {otpVerified && (
-                    <div className="px-4 py-2 rounded-lg bg-green-100 text-green-700 font-medium flex items-center gap-1">
-                      <i className="ri-checkbox-circle-line"></i>
-                      <span>Terverifikasi</span>
-                    </div>
-                  )}
-                </div>
-                {!otpVerified && otpSent && (
-                  <div className="text-xs text-gray-500">
-                    Kode OTP telah dikirim ke{" "}
-                    {otpChannel === "sms"
-                      ? account.no_handphone
-                      : account.email}
-                    . Belum terima?{" "}
-                    {cooldown > 0 ? (
-                      <span className="text-gray-400">
-                        Kirim ulang dalam {cooldown}s
-                      </span>
-                    ) : retryCount >= 3 ? (
-                      <span className="text-red-500">
-                        Batas kirim ulang tercapai
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleSendOtp("sms")}
-                        className="text-primary hover:underline"
-                      >
-                        Kirim ulang
-                      </button>
-                    )}
+                )}
+                {otpVerified && (
+                  <div className="px-4 py-2 rounded-lg bg-green-100 text-green-700 font-medium flex items-center gap-1">
+                    <i className="ri-checkbox-circle-line"></i>
+                    <span>Terverifikasi</span>
                   </div>
                 )}
               </div>
-              <div className="flex items-center justify-between">
-                <div className="text-xs text-gray-400">
-                  Sudah punya akun?{" "}
-                  <a
-                    href="/login/candidate"
-                    className="text-primary hover:underline font-medium"
-                  >
-                    Masuk di sini
-                  </a>
+              {!otpVerified && otpSent && (
+                <div className="text-xs text-gray-500">
+                  Kode OTP telah dikirim ke{" "}
+                  {otpChannel === "sms" ? account.no_handphone : account.email}.
+                  Belum terima?{" "}
+                  {cooldown > 0 ? (
+                    <span className="text-gray-400">
+                      Kirim ulang dalam {cooldown}s
+                    </span>
+                  ) : retryCount >= 3 ? (
+                    <span className="text-red-500">
+                      Batas kirim ulang tercapai
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleSendOtp("sms")}
+                      className="text-primary hover:underline"
+                    >
+                      Kirim ulang
+                    </button>
+                  )}
                 </div>
+              )}
+            </div>
+            <div className="flex items-center justify-end">
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white shadow-md shadow-primary/25 hover:brightness-[1.06] flex items-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Memproses...
+                  </>
+                ) : (
+                  <>
+                    <span>Lanjut</span>
+                    <i className="ri-arrow-right-line"></i>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {step === 2 && (
+          <form
+            onSubmit={submitProfile}
+            className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5"
+            noValidate
+          >
+            <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
+              <i className="ri-profile-line"></i>
+              <span>Data Profil</span>
+            </h2>
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+                {error}
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2 flex flex-col items-center gap-4 mb-4">
+                <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center group">
+                  {photoPreview ? (
+                    <Image
+                      src={photoPreview}
+                      alt="Preview"
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <i className="ri-user-line text-4xl text-gray-300"></i>
+                  )}
+                </div>
+                <div className="w-full max-w-xs text-center">
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Foto Profil
+                  </p>
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const f =
+                        (e.target as HTMLInputElement).files?.[0] || null;
+                      setPhotoFile(f);
+                      if (f) {
+                        setPhotoPreview(URL.createObjectURL(f));
+                      } else {
+                        setPhotoPreview("");
+                      }
+                    }}
+                    error={fieldErrors.photo}
+                  />
+                </div>
+              </div>
+              <Input
+                label="Nama Lengkap"
+                value={profile.full_name}
+                onChange={(e) =>
+                  setProfile({ ...profile, full_name: e.target.value })
+                }
+                required
+                error={fieldErrors.full_name}
+              />
+              <Input
+                label="NIK"
+                value={profile.nik}
+                onChange={(e) =>
+                  setProfile({ ...profile, nik: e.target.value })
+                }
+                required
+                error={fieldErrors.nik}
+              />
+              <Input
+                label="Tempat Lahir"
+                value={profile.place_of_birth}
+                onChange={(e) =>
+                  setProfile({ ...profile, place_of_birth: e.target.value })
+                }
+                required
+                error={fieldErrors.place_of_birth}
+              />
+              <Input
+                label="Tanggal Lahir"
+                type="date"
+                value={profile.birthdate}
+                onChange={(e) =>
+                  setProfile({ ...profile, birthdate: e.target.value })
+                }
+                required
+                error={fieldErrors.birthdate}
+              />
+              <SearchableSelect
+                label="Jenis Kelamin"
+                options={[
+                  { value: "L", label: "Laki-laki" },
+                  { value: "P", label: "Perempuan" },
+                ]}
+                value={profile.gender}
+                onChange={(v) => setProfile({ ...profile, gender: v })}
+                error={fieldErrors.gender}
+              />
+              <SearchableSelect
+                label="Kondisi Disabilitas"
+                options={[
+                  { value: "Non Disabilitas", label: "Non Disabilitas" },
+                  { value: "Disabilitas", label: "Disabilitas" },
+                ]}
+                value={profile.dis_kondisi}
+                onChange={(v) => setProfile({ ...profile, dis_kondisi: v })}
+                error={fieldErrors.dis_kondisi}
+              />
+              <SearchableSelect
+                label="Agama"
+                options={[
+                  { value: "Islam", label: "Islam" },
+                  { value: "Kristen Protestan", label: "Kristen Protestan" },
+                  { value: "Katolik", label: "Katolik" },
+                  { value: "Hindu", label: "Hindu" },
+                  { value: "Buddha", label: "Buddha" },
+                  { value: "Konghucu", label: "Konghucu" },
+                  {
+                    value: "Kepercayaan Lainnya",
+                    label: "Kepercayaan Lainnya",
+                  },
+                ]}
+                value={profile.agama}
+                onChange={(v) => setProfile({ ...profile, agama: v })}
+                error={fieldErrors.agama}
+              />
+              <SearchableSelect
+                label="Status Perkawinan"
+                options={[
+                  { value: "belum kawin", label: "Belum Kawin" },
+                  { value: "kawin", label: "Kawin" },
+                  { value: "cerai hidup", label: "Cerai Hidup" },
+                  { value: "cerai mati", label: "Cerai Mati" },
+                ]}
+                value={profile.status_perkawinan}
+                onChange={(v) =>
+                  setProfile({ ...profile, status_perkawinan: v })
+                }
+                error={fieldErrors.status_perkawinan}
+              />
+              <SearchableSelect
+                label="Kecamatan"
+                options={[{ value: "", label: "Pilih..." }, ...districtOptions]}
+                value={profile.kecamatan}
+                onChange={(v) =>
+                  setProfile({ ...profile, kecamatan: v, kelurahan: "" })
+                }
+                error={fieldErrors.kecamatan}
+              />
+              <SearchableSelect
+                label="Kelurahan"
+                options={[{ value: "", label: "Pilih..." }, ...villageOptions]}
+                value={profile.kelurahan}
+                onChange={(v) => setProfile({ ...profile, kelurahan: v })}
+                error={fieldErrors.kelurahan}
+              />
+              <div className="sm:col-span-2">
+                <Textarea
+                  label="Alamat"
+                  value={profile.address}
+                  onChange={(e) =>
+                    setProfile({ ...profile, address: e.target.value })
+                  }
+                  required
+                  rows={3}
+                  error={fieldErrors.address}
+                />
+              </div>
+              <Input
+                label="Kode Pos"
+                value={profile.postal_code}
+                onChange={(e) =>
+                  setProfile({ ...profile, postal_code: e.target.value })
+                }
+                required
+                error={fieldErrors.postal_code}
+              />
+
+              <SearchableSelect
+                label="Pendidikan Terakhir"
+                options={educationOptions}
+                value={profile.last_education}
+                onChange={(value) =>
+                  setProfile({ ...profile, last_education: value })
+                }
+                error={fieldErrors.last_education}
+              />
+              <Input
+                label="Tahun Lulus"
+                type="number"
+                value={profile.graduation_year}
+                onChange={(e) =>
+                  setProfile({ ...profile, graduation_year: e.target.value })
+                }
+                required
+                error={fieldErrors.graduation_year}
+              />
+            </div>
+
+            <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/80 space-y-4">
+              <h3 className="text-sm font-semibold text-primary flex items-center gap-2">
+                <i className="ri-graduation-cap-line"></i>
+                Riwayat pelatihan kerja
+              </h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Apakah pernah mengikuti pelatihan kerja?
+                </label>
+                <SegmentedToggle
+                  options={[
+                    { value: "tidak", label: "Tidak" },
+                    { value: "ya", label: "Pernah" },
+                  ]}
+                  value={priorTraining.had_training ? "ya" : "tidak"}
+                  onChange={(v) => {
+                    const on = v === "ya";
+                    setPriorTraining((p) =>
+                      on
+                        ? {
+                            had_training: true,
+                            training_name: p.training_name,
+                            training_year: p.training_year,
+                            alumni_name:
+                              p.alumni_name || profile.full_name || "",
+                            last_education:
+                              p.last_education || profile.last_education || "",
+                            email: p.email || account.email || "",
+                            phone: p.phone || account.no_handphone || "",
+                            address: p.address || profile.address || "",
+                          }
+                        : {
+                            had_training: false,
+                            training_name: "",
+                            training_year: "",
+                            alumni_name: "",
+                            last_education: "",
+                            email: "",
+                            phone: "",
+                            address: "",
+                          },
+                    );
+                  }}
+                />
+              </div>
+              {priorTraining.had_training && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Input
+                    label="Nama pelatihan yang pernah diikuti"
+                    value={priorTraining.training_name}
+                    onChange={(e) =>
+                      setPriorTraining({
+                        ...priorTraining,
+                        training_name: e.target.value,
+                      })
+                    }
+                    error={fieldErrors.prior_training_name}
+                  />
+                  <Input
+                    label="Tahun mengikuti pelatihan"
+                    type="number"
+                    placeholder="contoh: 2023"
+                    value={priorTraining.training_year}
+                    onChange={(e) =>
+                      setPriorTraining({
+                        ...priorTraining,
+                        training_year: e.target.value,
+                      })
+                    }
+                    error={fieldErrors.prior_training_year}
+                  />
+                  <Input
+                    label="Nama alumni pelatihan"
+                    value={priorTraining.alumni_name}
+                    onChange={(e) =>
+                      setPriorTraining({
+                        ...priorTraining,
+                        alumni_name: e.target.value,
+                      })
+                    }
+                    error={fieldErrors.prior_training_alumni_name}
+                  />
+                  <SearchableSelect
+                    label="Pendidikan terakhir (terkait pelatihan)"
+                    options={educationOptions}
+                    value={priorTraining.last_education}
+                    onChange={(value) =>
+                      setPriorTraining({
+                        ...priorTraining,
+                        last_education: value,
+                      })
+                    }
+                    error={fieldErrors.prior_training_last_education}
+                  />
+                  <Input
+                    label="Email"
+                    type="email"
+                    value={priorTraining.email}
+                    onChange={(e) =>
+                      setPriorTraining({
+                        ...priorTraining,
+                        email: e.target.value,
+                      })
+                    }
+                    error={fieldErrors.prior_training_email}
+                  />
+                  <Input
+                    label="No. Telp"
+                    value={priorTraining.phone}
+                    onChange={(e) =>
+                      setPriorTraining({
+                        ...priorTraining,
+                        phone: e.target.value,
+                      })
+                    }
+                    error={fieldErrors.prior_training_phone}
+                  />
+                  <div className="sm:col-span-2">
+                    <Textarea
+                      label="Alamat lengkap"
+                      rows={3}
+                      value={priorTraining.address}
+                      onChange={(e) =>
+                        setPriorTraining({
+                          ...priorTraining,
+                          address: e.target.value,
+                        })
+                      }
+                      error={fieldErrors.prior_training_address}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Resume / CV
+                </label>
+                <div className="mb-4">
+                  <SegmentedToggle
+                    options={[
+                      { value: "file", label: "Upload File (PDF)" },
+                      { value: "text", label: "Isi Text Manual" },
+                    ]}
+                    value={resumeType}
+                    onChange={(v) => setResumeType(v as "file" | "text")}
+                  />
+                </div>
+
+                {resumeType === "file" ? (
+                  <Input
+                    label="Upload CV (PDF)"
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) =>
+                      setCvFile(
+                        (e.target as HTMLInputElement).files?.[0] || null,
+                      )
+                    }
+                    error={fieldErrors.cv}
+                  />
+                ) : (
+                  <Textarea
+                    label="Isi Resume"
+                    value={resumeText}
+                    onChange={(e) => setResumeText(e.target.value)}
+                    rows={10}
+                    placeholder="Tuliskan ringkasan profil, pengalaman kerja, pendidikan, dan keahlian Anda..."
+                    error={fieldErrors.cv}
+                  />
+                )}
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-primary flex items-center gap-2"
+                onClick={() => setStep(1)}
+              >
+                <i className="ri-arrow-left-line"></i>
+                <span>Kembali</span>
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-600 flex items-center gap-2"
+              >
+                <span>Lanjut</span>
+                <i className="ri-arrow-right-line"></i>
+              </button>
+            </div>
+          </form>
+        )}
+
+        {step === 3 && (
+          <form
+            onSubmit={submitAk1}
+            className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5"
+            noValidate
+          >
+            <h2 className="text-lg font-semibold text-primary">AK1</h2>
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+                {error}
+              </div>
+            )}
+            <div className="grid grid-cols-1 gap-3">
+              <Input
+                label="Scan KTP (JPG/PNG)"
+                type="file"
+                onChange={(e) =>
+                  uploadFile(
+                    "ktp",
+                    (e.target as HTMLInputElement).files?.[0] || undefined,
+                  )
+                }
+                error={fieldErrors.ktp}
+              />
+              <Input
+                label="Ijazah (PDF)"
+                type="file"
+                onChange={(e) =>
+                  uploadFile(
+                    "ijazah",
+                    (e.target as HTMLInputElement).files?.[0] || undefined,
+                  )
+                }
+                error={fieldErrors.ijazah}
+              />
+              <Input
+                label="Pas Foto (JPG/PNG)"
+                type="file"
+                onChange={(e) =>
+                  uploadFile(
+                    "pas_photo",
+                    (e.target as HTMLInputElement).files?.[0] || undefined,
+                  )
+                }
+                error={fieldErrors.pas_photo}
+              />
+              <Input
+                label="Sertifikat (PDF, Opsional)"
+                type="file"
+                onChange={(e) =>
+                  uploadFile(
+                    "certificate",
+                    (e.target as HTMLInputElement).files?.[0] || undefined,
+                  )
+                }
+                error={fieldErrors.certificate}
+              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Keterampilan
+                </label>
+                <Input
+                  placeholder="Ketik keterampilan lalu tekan Enter"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const val = (e.target as HTMLInputElement).value.trim();
+                      if (val && !skills.includes(val)) {
+                        setSkills([...skills, val]);
+                        (e.target as HTMLInputElement).value = "";
+                      }
+                    }
+                  }}
+                />
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {skills.map((s) => (
+                    <span
+                      key={s}
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                    >
+                      {s}
+                      <button
+                        type="button"
+                        onClick={() => setSkills(skills.filter((x) => x !== s))}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <i className="ri-close-line"></i>
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                {fieldErrors.skills && (
+                  <p className="text-xs text-red-600 mt-1">
+                    {fieldErrors.skills}
+                  </p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Tekan Enter untuk menambah keterampilan.
+                </p>
+              </div>
+              <p className="text-xs text-gray-500">
+                Unggah dokumen untuk verifikasi Disnaker.
+              </p>
+            </div>
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-primary flex items-center gap-2"
+                onClick={() => setStep(2)}
+              >
+                <i className="ri-arrow-left-line"></i>
+                <span>Kembali</span>
+              </button>
+              <div className="flex items-center gap-2">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-600 flex items-center gap-2"
+                  className={`px-5 py-2.5 rounded-xl flex items-center gap-2 ${loading ? "bg-gray-200 text-gray-500" : "bg-primary text-white hover:bg-primary-600"}`}
                 >
                   {loading ? (
                     <>
@@ -997,584 +1500,45 @@ export default function RegisterCandidate() {
                   )}
                 </button>
               </div>
-            </form>
-          )}
-
-          {step === 2 && (
-            <form
-              onSubmit={submitProfile}
-              className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5"
-              noValidate
-            >
-              <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
-                <i className="ri-profile-line"></i>
-                <span>Data Profil</span>
-              </h2>
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-                  {error}
-                </div>
-              )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="sm:col-span-2 flex flex-col items-center gap-4 mb-4">
-                  <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center group">
-                    {photoPreview ? (
-                      <Image
-                        src={photoPreview}
-                        alt="Preview"
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <i className="ri-user-line text-4xl text-gray-300"></i>
-                    )}
-                  </div>
-                  <div className="w-full max-w-xs text-center">
-                    <p className="text-sm font-medium text-gray-700 mb-2">
-                      Foto Profil
-                    </p>
-                    <Input
-                      type="file"
-                      onChange={(e) => {
-                        const f =
-                          (e.target as HTMLInputElement).files?.[0] || null;
-                        setPhotoFile(f);
-                        if (f) {
-                          setPhotoPreview(URL.createObjectURL(f));
-                        } else {
-                          setPhotoPreview("");
-                        }
-                      }}
-                      error={fieldErrors.photo}
-                    />
-                  </div>
-                </div>
-                <Input
-                  label="Nama Lengkap"
-                  value={profile.full_name}
-                  onChange={(e) =>
-                    setProfile({ ...profile, full_name: e.target.value })
-                  }
-                  required
-                  error={fieldErrors.full_name}
-                />
-                <Input
-                  label="NIK"
-                  value={profile.nik}
-                  onChange={(e) =>
-                    setProfile({ ...profile, nik: e.target.value })
-                  }
-                  required
-                  error={fieldErrors.nik}
-                />
-                <Input
-                  label="Tempat Lahir"
-                  value={profile.place_of_birth}
-                  onChange={(e) =>
-                    setProfile({ ...profile, place_of_birth: e.target.value })
-                  }
-                  required
-                  error={fieldErrors.place_of_birth}
-                />
-                <Input
-                  label="Tanggal Lahir"
-                  type="date"
-                  value={profile.birthdate}
-                  onChange={(e) =>
-                    setProfile({ ...profile, birthdate: e.target.value })
-                  }
-                  required
-                  error={fieldErrors.birthdate}
-                />
-                <SearchableSelect
-                  label="Jenis Kelamin"
-                  options={[
-                    { value: "L", label: "Laki-laki" },
-                    { value: "P", label: "Perempuan" },
-                  ]}
-                  value={profile.gender}
-                  onChange={(v) => setProfile({ ...profile, gender: v })}
-                  error={fieldErrors.gender}
-                />
-                <SearchableSelect
-                  label="Kondisi Disabilitas"
-                  options={[
-                    { value: "Non Disabilitas", label: "Non Disabilitas" },
-                    { value: "Disabilitas", label: "Disabilitas" },
-                  ]}
-                  value={profile.dis_kondisi}
-                  onChange={(v) => setProfile({ ...profile, dis_kondisi: v })}
-                  error={fieldErrors.dis_kondisi}
-                />
-                <SearchableSelect
-                  label="Agama"
-                  options={[
-                    { value: "Islam", label: "Islam" },
-                    { value: "Kristen Protestan", label: "Kristen Protestan" },
-                    { value: "Katolik", label: "Katolik" },
-                    { value: "Hindu", label: "Hindu" },
-                    { value: "Buddha", label: "Buddha" },
-                    { value: "Konghucu", label: "Konghucu" },
-                    {
-                      value: "Kepercayaan Lainnya",
-                      label: "Kepercayaan Lainnya",
-                    },
-                  ]}
-                  value={profile.agama}
-                  onChange={(v) => setProfile({ ...profile, agama: v })}
-                  error={fieldErrors.agama}
-                />
-                <SearchableSelect
-                  label="Status Perkawinan"
-                  options={[
-                    { value: "belum kawin", label: "Belum Kawin" },
-                    { value: "kawin", label: "Kawin" },
-                    { value: "cerai hidup", label: "Cerai Hidup" },
-                    { value: "cerai mati", label: "Cerai Mati" },
-                  ]}
-                  value={profile.status_perkawinan}
-                  onChange={(v) =>
-                    setProfile({ ...profile, status_perkawinan: v })
-                  }
-                  error={fieldErrors.status_perkawinan}
-                />
-                <SearchableSelect
-                  label="Kecamatan"
-                  options={[
-                    { value: "", label: "Pilih..." },
-                    ...districtOptions,
-                  ]}
-                  value={profile.kecamatan}
-                  onChange={(v) =>
-                    setProfile({ ...profile, kecamatan: v, kelurahan: "" })
-                  }
-                  error={fieldErrors.kecamatan}
-                />
-                <SearchableSelect
-                  label="Kelurahan"
-                  options={[
-                    { value: "", label: "Pilih..." },
-                    ...villageOptions,
-                  ]}
-                  value={profile.kelurahan}
-                  onChange={(v) => setProfile({ ...profile, kelurahan: v })}
-                  error={fieldErrors.kelurahan}
-                />
-                <div className="sm:col-span-2">
-                  <Textarea
-                    label="Alamat"
-                    value={profile.address}
-                    onChange={(e) =>
-                      setProfile({ ...profile, address: e.target.value })
-                    }
-                    required
-                    rows={3}
-                    error={fieldErrors.address}
-                  />
-                </div>
-                <Input
-                  label="Kode Pos"
-                  value={profile.postal_code}
-                  onChange={(e) =>
-                    setProfile({ ...profile, postal_code: e.target.value })
-                  }
-                  required
-                  error={fieldErrors.postal_code}
-                />
-
-                <SearchableSelect
-                  label="Pendidikan Terakhir"
-                  options={educationOptions}
-                  value={profile.last_education}
-                  onChange={(value) =>
-                    setProfile({ ...profile, last_education: value })
-                  }
-                  error={fieldErrors.last_education}
-                />
-                <Input
-                  label="Tahun Lulus"
-                  type="number"
-                  value={profile.graduation_year}
-                  onChange={(e) =>
-                    setProfile({ ...profile, graduation_year: e.target.value })
-                  }
-                  required
-                  error={fieldErrors.graduation_year}
-                />
-              </div>
-
-              <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/80 space-y-4">
-                <h3 className="text-sm font-semibold text-primary flex items-center gap-2">
-                  <i className="ri-graduation-cap-line"></i>
-                  Riwayat pelatihan kerja
-                </h3>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Apakah pernah mengikuti pelatihan kerja?
-                  </label>
-                  <SegmentedToggle
-                    options={[
-                      { value: "tidak", label: "Tidak" },
-                      { value: "ya", label: "Pernah" },
-                    ]}
-                    value={priorTraining.had_training ? "ya" : "tidak"}
-                    onChange={(v) => {
-                      const on = v === "ya";
-                      setPriorTraining((p) =>
-                        on
-                          ? {
-                              had_training: true,
-                              training_name: p.training_name,
-                              training_year: p.training_year,
-                              alumni_name:
-                                p.alumni_name || profile.full_name || "",
-                              last_education:
-                                p.last_education ||
-                                profile.last_education ||
-                                "",
-                              email: p.email || account.email || "",
-                              phone: p.phone || account.no_handphone || "",
-                              address: p.address || profile.address || "",
-                            }
-                          : {
-                              had_training: false,
-                              training_name: "",
-                              training_year: "",
-                              alumni_name: "",
-                              last_education: "",
-                              email: "",
-                              phone: "",
-                              address: "",
-                            },
-                      );
-                    }}
-                  />
-                </div>
-                {priorTraining.had_training && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Input
-                      label="Nama pelatihan yang pernah diikuti"
-                      value={priorTraining.training_name}
-                      onChange={(e) =>
-                        setPriorTraining({
-                          ...priorTraining,
-                          training_name: e.target.value,
-                        })
-                      }
-                      error={fieldErrors.prior_training_name}
-                    />
-                    <Input
-                      label="Tahun mengikuti pelatihan"
-                      type="number"
-                      placeholder="contoh: 2023"
-                      value={priorTraining.training_year}
-                      onChange={(e) =>
-                        setPriorTraining({
-                          ...priorTraining,
-                          training_year: e.target.value,
-                        })
-                      }
-                      error={fieldErrors.prior_training_year}
-                    />
-                    <Input
-                      label="Nama alumni pelatihan"
-                      value={priorTraining.alumni_name}
-                      onChange={(e) =>
-                        setPriorTraining({
-                          ...priorTraining,
-                          alumni_name: e.target.value,
-                        })
-                      }
-                      error={fieldErrors.prior_training_alumni_name}
-                    />
-                    <SearchableSelect
-                      label="Pendidikan terakhir (terkait pelatihan)"
-                      options={educationOptions}
-                      value={priorTraining.last_education}
-                      onChange={(value) =>
-                        setPriorTraining({
-                          ...priorTraining,
-                          last_education: value,
-                        })
-                      }
-                      error={fieldErrors.prior_training_last_education}
-                    />
-                    <Input
-                      label="Email"
-                      type="email"
-                      value={priorTraining.email}
-                      onChange={(e) =>
-                        setPriorTraining({
-                          ...priorTraining,
-                          email: e.target.value,
-                        })
-                      }
-                      error={fieldErrors.prior_training_email}
-                    />
-                    <Input
-                      label="No. Telp"
-                      value={priorTraining.phone}
-                      onChange={(e) =>
-                        setPriorTraining({
-                          ...priorTraining,
-                          phone: e.target.value,
-                        })
-                      }
-                      error={fieldErrors.prior_training_phone}
-                    />
-                    <div className="sm:col-span-2">
-                      <Textarea
-                        label="Alamat lengkap"
-                        rows={3}
-                        value={priorTraining.address}
-                        onChange={(e) =>
-                          setPriorTraining({
-                            ...priorTraining,
-                            address: e.target.value,
-                          })
-                        }
-                        error={fieldErrors.prior_training_address}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Resume / CV
-                  </label>
-                  <div className="mb-4">
-                    <SegmentedToggle
-                      options={[
-                        { value: "file", label: "Upload File (PDF)" },
-                        { value: "text", label: "Isi Text Manual" },
-                      ]}
-                      value={resumeType}
-                      onChange={(v) => setResumeType(v as "file" | "text")}
-                    />
-                  </div>
-
-                  {resumeType === "file" ? (
-                    <Input
-                      label="Upload CV (PDF)"
-                      type="file"
-                      accept=".pdf"
-                      onChange={(e) =>
-                        setCvFile(
-                          (e.target as HTMLInputElement).files?.[0] || null,
-                        )
-                      }
-                      error={fieldErrors.cv}
-                    />
-                  ) : (
-                    <Textarea
-                      label="Isi Resume"
-                      value={resumeText}
-                      onChange={(e) => setResumeText(e.target.value)}
-                      rows={10}
-                      placeholder="Tuliskan ringkasan profil, pengalaman kerja, pendidikan, dan keahlian Anda..."
-                      error={fieldErrors.cv}
-                    />
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-primary flex items-center gap-2"
-                  onClick={() => setStep(1)}
-                >
-                  <i className="ri-arrow-left-line"></i>
-                  <span>Kembali</span>
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-600 flex items-center gap-2"
-                >
-                  <span>Lanjut</span>
-                  <i className="ri-arrow-right-line"></i>
-                </button>
-              </div>
-            </form>
-          )}
-
-          {step === 3 && (
-            <form
-              onSubmit={submitAk1}
-              className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5"
-              noValidate
-            >
-              <h2 className="text-lg font-semibold text-primary">AK1</h2>
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-                  {error}
-                </div>
-              )}
-              <div className="grid grid-cols-1 gap-3">
-                <Input
-                  label="Scan KTP (JPG/PNG)"
-                  type="file"
-                  onChange={(e) =>
-                    uploadFile(
-                      "ktp",
-                      (e.target as HTMLInputElement).files?.[0] || undefined,
-                    )
-                  }
-                  error={fieldErrors.ktp}
-                />
-                <Input
-                  label="Ijazah (PDF)"
-                  type="file"
-                  onChange={(e) =>
-                    uploadFile(
-                      "ijazah",
-                      (e.target as HTMLInputElement).files?.[0] || undefined,
-                    )
-                  }
-                  error={fieldErrors.ijazah}
-                />
-                <Input
-                  label="Pas Foto (JPG/PNG)"
-                  type="file"
-                  onChange={(e) =>
-                    uploadFile(
-                      "pas_photo",
-                      (e.target as HTMLInputElement).files?.[0] || undefined,
-                    )
-                  }
-                  error={fieldErrors.pas_photo}
-                />
-                <Input
-                  label="Sertifikat (PDF, Opsional)"
-                  type="file"
-                  onChange={(e) =>
-                    uploadFile(
-                      "certificate",
-                      (e.target as HTMLInputElement).files?.[0] || undefined,
-                    )
-                  }
-                  error={fieldErrors.certificate}
-                />
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Keterampilan
-                  </label>
-                  <Input
-                    placeholder="Ketik keterampilan lalu tekan Enter"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        const val = (e.target as HTMLInputElement).value.trim();
-                        if (val && !skills.includes(val)) {
-                          setSkills([...skills, val]);
-                          (e.target as HTMLInputElement).value = "";
-                        }
-                      }
-                    }}
-                  />
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {skills.map((s) => (
-                      <span
-                        key={s}
-                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                      >
-                        {s}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSkills(skills.filter((x) => x !== s))
-                          }
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <i className="ri-close-line"></i>
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                  {fieldErrors.skills && (
-                    <p className="text-xs text-red-600 mt-1">
-                      {fieldErrors.skills}
-                    </p>
-                  )}
-                  <p className="text-xs text-gray-500 mt-1">
-                    Tekan Enter untuk menambah keterampilan.
-                  </p>
-                </div>
-                <p className="text-xs text-gray-500">
-                  Unggah dokumen untuk verifikasi Disnaker.
-                </p>
-              </div>
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-primary flex items-center gap-2"
-                  onClick={() => setStep(2)}
-                >
-                  <i className="ri-arrow-left-line"></i>
-                  <span>Kembali</span>
-                </button>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={`px-5 py-2.5 rounded-xl flex items-center gap-2 ${loading ? "bg-gray-200 text-gray-500" : "bg-primary text-white hover:bg-primary-600"}`}
-                  >
-                    {loading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Memproses...
-                      </>
-                    ) : (
-                      <>
-                        <span>Lanjut</span>
-                        <i className="ri-arrow-right-line"></i>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </form>
-          )}
-
-          {step === 4 && (
-            <div className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5">
-              <h2 className="text-lg font-semibold text-primary">
-                Registrasi Selesai
-              </h2>
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-                  {error}
-                </div>
-              )}
-              <p className="text-sm text-gray-500">
-                Tekan tombol di bawah untuk membuat akun dan menyimpan profil.
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={loading || finalized}
-                  onClick={finalize}
-                  className={`px-5 py-2.5 rounded-xl flex items-center gap-2 ${loading || finalized ? "bg-gray-200 text-gray-500" : "bg-primary text-white hover:bg-primary-600"}`}
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Memproses...</span>
-                    </>
-                  ) : finalized ? (
-                    <span>Selesai</span>
-                  ) : (
-                    <span>Buat Akun</span>
-                  )}
-                </button>
-              </div>
             </div>
-          )}
-        </div>
+          </form>
+        )}
+
+        {step === 4 && (
+          <div className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5">
+            <h2 className="text-lg font-semibold text-primary">
+              Registrasi Selesai
+            </h2>
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+                {error}
+              </div>
+            )}
+            <p className="text-sm text-gray-500">
+              Tekan tombol di bawah untuk membuat akun dan menyimpan profil.
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={loading || finalized}
+                onClick={finalize}
+                className={`px-5 py-2.5 rounded-xl flex items-center gap-2 ${loading || finalized ? "bg-gray-200 text-gray-500" : "bg-primary text-white hover:bg-primary-600"}`}
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Memproses...</span>
+                  </>
+                ) : finalized ? (
+                  <span>Selesai</span>
+                ) : (
+                  <span>Buat Akun</span>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </RegisterPageShell>
   );
 }

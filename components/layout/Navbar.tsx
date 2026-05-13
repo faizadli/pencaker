@@ -143,7 +143,9 @@ export default function Navbar() {
     window.addEventListener("resize", updateVar);
     return () => window.removeEventListener("resize", updateVar);
   }, []);
-  if (isDashboard) return null;
+  const isLogin = (pathname || "").startsWith("/login");
+  const isRegister = (pathname || "").startsWith("/register");
+  if (isDashboard || isLogin || isRegister) return null;
   return (
     <div>
       <nav

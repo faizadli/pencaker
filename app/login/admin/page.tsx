@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "../../../components/ui/field";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
+import LoginPageShell from "../../../components/auth/LoginPageShell";
 import SessionConfirmModal from "../../../components/ui/SessionConfirmModal";
 import { login, startSession } from "../../../services/auth";
 import { getUserById } from "../../../services/profile";
@@ -47,7 +48,6 @@ export default function AdminLogin() {
     try {
       const result = await login({ email: form.email }, form.password);
 
-      // Check if confirmation is required (existing session detected)
       if (result.confirmation_required) {
         setLoading(false);
         setShowConfirmModal(true);
@@ -96,83 +96,92 @@ export default function AdminLogin() {
 
   return (
     <>
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-          <div className="bg-primary text-white py-6 px-8 text-center">
-            <h1 className="text-2xl font-bold">Admin Disnaker</h1>
-            <p className="text-sm opacity-90">Sistem Penempatan Tenaga Kerja</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="p-8 space-y-6">
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-500 mb-2"
-              >
-                Email
-              </label>
-              <Input
-                icon="ri-mail-line"
-                type="text"
-                id="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                className="w-full rounded-lg"
-                placeholder="admin@example.com"
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-500 mb-2"
-              >
-                Password
-              </label>
-              <Input
-                icon="ri-lock-2-line"
-                type="password"
-                id="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                className="w-full rounded-lg"
-                placeholder="password"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-primary hover:bg-primary-600 text-white font-medium py-2.5 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2"
+      <LoginPageShell
+        variant="admin"
+        heroTitle="Konsol administrator"
+        heroSubtitle="Kelola data ketenagakerjaan, pengguna, dan layanan ADIKARA secara terpusat."
+        cardTitle="Masuk Admin Disnaker"
+        cardDescription="Hanya akun yang terdaftar sebagai administrator yang dapat mengakses area ini."
+        belowForm={
+          <span className="text-gray-500">
+            Butuh bantuan? Hubungi tim IT Dinas Tenaga Kerja.
+          </span>
+        }
+      >
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error ? (
+            <div
+              role="alert"
+              className="flex gap-3 rounded-xl border border-red-200/90 bg-gradient-to-br from-red-50 to-red-50/80 p-3.5 text-sm text-red-800 shadow-sm"
             >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Memuat...
-                </>
-              ) : (
-                "Masuk"
-              )}
-            </button>
-          </form>
+              <i className="ri-error-warning-line shrink-0 text-lg text-red-600 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          ) : null}
 
-          <div className="bg-gray-50 px-8 py-4 text-center border-t border-gray-200">
-            <p className="text-xs text-gray-400">
-              © 2025 Dinas Tenaga Kerja. Hak Cipta Dilindungi.
-            </p>
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-semibold text-slate-800 mb-2"
+            >
+              Email administrator
+            </label>
+            <Input
+              tone="muted"
+              icon="ri-mail-line"
+              type="text"
+              id="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              className="w-full"
+              placeholder="admin@example.com"
+              required
+              autoComplete="username"
+            />
           </div>
-        </div>
-      </div>
+
+          <div className="pt-2 border-t border-slate-100 space-y-3">
+            <label
+              htmlFor="password"
+              className="block text-sm font-semibold text-slate-800 mb-2"
+            >
+              Password
+            </label>
+            <Input
+              tone="muted"
+              icon="ri-lock-2-line"
+              type="password"
+              id="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              className="w-full"
+              placeholder="••••••••"
+              required
+              autoComplete="current-password"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white text-base font-semibold shadow-lg shadow-primary/30 hover:brightness-[1.07] active:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:pointer-events-none disabled:active:scale-100"
+          >
+            {loading ? (
+              <>
+                <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Memuat…
+              </>
+            ) : (
+              <>
+                <i className="ri-shield-keyhole-line text-lg" />
+                Masuk
+              </>
+            )}
+          </button>
+        </form>
+      </LoginPageShell>
 
       <SessionConfirmModal
         isOpen={showConfirmModal}

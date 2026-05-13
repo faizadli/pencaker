@@ -1,15 +1,14 @@
 "use client";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getPublicSiteSettings } from "../../services/site";
+import { LogoWhiteFooter } from "../brand/LogoWhite";
 
 export default function Footer() {
   const pathname = usePathname();
   const isDashboard = (pathname || "").startsWith("/dashboard");
-  const [brand, setBrand] = useState<{ name: string; logo: string }>({
+  const [brand, setBrand] = useState<{ name: string }>({
     name: "",
-    logo: "",
   });
   useEffect(() => {
     const loadBrand = async () => {
@@ -20,13 +19,14 @@ export default function Footer() {
             .data ?? (s as { instansi_nama?: string; instansi_logo?: string });
         setBrand({
           name: String(cfg?.instansi_nama || "ADIKARA"),
-          logo: String(cfg?.instansi_logo || ""),
         });
       } catch {}
     };
     loadBrand();
   }, []);
-  if (isDashboard) return null;
+  const isLogin = (pathname || "").startsWith("/login");
+  const isRegister = (pathname || "").startsWith("/register");
+  if (isDashboard || isLogin || isRegister) return null;
   return (
     <div>
       <footer className="bg-primary text-white pt-12 pb-8">
@@ -34,20 +34,7 @@ export default function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                {brand.logo ? (
-                  <Image
-                    src={brand.logo}
-                    alt={brand.name || "Logo"}
-                    width={200}
-                    height={200}
-                    className="object-contain"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                    <i className="ri-building-line text-white text-lg"></i>
-                  </div>
-                )}
+                <LogoWhiteFooter alt={brand.name || "ADIKARA"} />
               </div>
               <p className="text-sm text-gray-300 leading-relaxed">
                 ADIKARA — Menjunjung kehormatan dan martabat, bertindak dengan

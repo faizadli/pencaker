@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import {
   Input,
@@ -8,6 +9,7 @@ import {
   SearchableSelect,
 } from "../../../components/ui/field";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
+import RegisterPageShell from "../../../components/auth/RegisterPageShell";
 import {
   companyAccountSchema,
   companyProfileSchema,
@@ -48,7 +50,7 @@ export default function RegisterCompany() {
       setCheckingSession(false);
     })();
   }, [router]);
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(2);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -436,443 +438,408 @@ export default function RegisterCompany() {
   if (checkingSession) return <FullPageLoading />;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 sm:px-6 lg:px-8 py-8">
-      <div className="w-full max-w-4xl lg:max-w-5xl">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-primary">
-            Pendaftaran Perusahaan
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Daftarkan perusahaan Anda untuk mengelola lowongan dan kandidat
-          </p>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden mx-2 sm:mx-0">
-          <div className="px-4 sm:px-8 lg:px-10 pt-6">
-            <div className="flex flex-nowrap items-center justify-center gap-6 sm:gap-10 overflow-x-auto">
-              {[
-                { label: "Data Akun", icon: "ri-user-line", n: 1 },
-                { label: "Data Perusahaan", icon: "ri-building-line", n: 2 },
-                { label: "Selesai", icon: "ri-checkbox-circle-line", n: 4 },
-              ].map((s, idx) => (
-                <div key={s.n} className="flex items-center gap-6">
-                  <div
-                    className={`flex items-center gap-2 ${step === s.n ? "text-primary" : "text-gray-500"}`}
-                  >
-                    <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center text-base ${step === s.n ? "bg-gray-100 border border-primary" : "bg-gray-100 border border-gray-200"}`}
-                    >
-                      <i className={s.icon}></i>
-                    </div>
-                    <span className="text-sm font-medium hidden sm:block">
-                      {s.label}
-                    </span>
-                  </div>
-                  {idx < 2 && (
-                    <div
-                      className={`hidden sm:block w-16 h-0.5 ${step > s.n ? "bg-primary" : "bg-gray-200"} rounded`}
-                    ></div>
-                  )}
-                </div>
-              ))}
+    <RegisterPageShell
+      variant="company"
+      heroTitle="Pendaftaran Perusahaan"
+      heroSubtitle="Daftarkan perusahaan Anda untuk mengelola lowongan dan kandidat."
+      wizard={{
+        currentStep: step,
+        steps: [
+          { n: 1, label: "Data Akun", icon: "ri-user-line" },
+          { n: 2, label: "Data Perusahaan", icon: "ri-building-line" },
+          { n: 4, label: "Selesai", icon: "ri-checkbox-circle-line" },
+        ],
+      }}
+      belowCard={
+        <>
+          Sudah punya akun?{" "}
+          <Link
+            href="/login/company"
+            className="font-semibold text-primary hover:underline"
+          >
+            Masuk di sini
+          </Link>
+        </>
+      }
+    >
+      <div className="rounded-2xl border border-gray-200/80 bg-white/95 backdrop-blur-md shadow-[0_20px_70px_-15px_rgba(46,116,43,0.16)] ring-1 ring-black/[0.03] overflow-hidden pt-4 sm:pt-5">
+        {step === 1 && (
+          <form
+            onSubmit={submitAccount}
+            className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-6"
+            noValidate
+          >
+            <h2 className="text-lg font-semibold text-primary">
+              Data Akun Administrator
+            </h2>
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+                {error}
+              </div>
+            )}
+            <div>
+              <Input
+                label="Email Administrator (Opsional)"
+                icon="ri-mail-line"
+                type="email"
+                value={account.email}
+                onChange={(e) => {
+                  setAccount({ ...account, email: e.target.value });
+                }}
+                placeholder="admin@perusahaan.com"
+                required={false}
+                error={fieldErrors.email}
+              />
             </div>
-          </div>
-
-          {step === 1 && (
-            <form
-              onSubmit={submitAccount}
-              className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-6"
-              noValidate
-            >
-              <h2 className="text-lg font-semibold text-primary">
-                Data Akun Administrator
-              </h2>
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-                  {error}
-                </div>
-              )}
-              <div>
-                <Input
-                  label="Email Administrator (Opsional)"
-                  icon="ri-mail-line"
-                  type="email"
-                  value={account.email}
-                  onChange={(e) => {
-                    setAccount({ ...account, email: e.target.value });
-                  }}
-                  placeholder="admin@perusahaan.com"
-                  required={false}
-                  error={fieldErrors.email}
-                />
+            <div>
+              <Input
+                label="Nomor Handphone"
+                icon="ri-phone-line"
+                type="tel"
+                value={account.no_handphone}
+                onChange={(e) => {
+                  setAccount({ ...account, no_handphone: e.target.value });
+                }}
+                placeholder="08xxxxxxxxxx"
+                required
+                error={fieldErrors.no_handphone}
+              />
+            </div>
+            <div>
+              <Input
+                label="Password"
+                icon="ri-lock-2-line"
+                type="password"
+                value={account.password}
+                onChange={(e) =>
+                  setAccount({ ...account, password: e.target.value })
+                }
+                placeholder="Minimal 8 karakter"
+                required
+                error={fieldErrors.password}
+              />
+            </div>
+            <div>
+              <Input
+                label="Konfirmasi Password"
+                icon="ri-lock-2-line"
+                type="password"
+                value={account.confirm}
+                onChange={(e) =>
+                  setAccount({ ...account, confirm: e.target.value })
+                }
+                placeholder="Ulangi password"
+                required
+                error={fieldErrors.confirm}
+              />
+            </div>
+            <div className="flex flex-col gap-2 hidden">
+              <div className="text-sm font-medium text-gray-500">
+                Verifikasi Nomor Handphone
               </div>
-              <div>
-                <Input
-                  label="Nomor Handphone"
-                  icon="ri-phone-line"
-                  type="tel"
-                  value={account.no_handphone}
-                  onChange={(e) => {
-                    setAccount({ ...account, no_handphone: e.target.value });
-                  }}
-                  placeholder="08xxxxxxxxxx"
-                  required
-                  error={fieldErrors.no_handphone}
-                />
-              </div>
-              <div>
-                <Input
-                  label="Password"
-                  icon="ri-lock-2-line"
-                  type="password"
-                  value={account.password}
-                  onChange={(e) =>
-                    setAccount({ ...account, password: e.target.value })
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  disabled={
+                    loading || otpVerified || cooldown > 0 || retryCount >= 3
                   }
-                  placeholder="Minimal 8 karakter"
-                  required
-                  error={fieldErrors.password}
-                />
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${otpChannel === "sms" && otpSent ? "bg-primary text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"} ${cooldown > 0 || retryCount >= 3 ? "opacity-50 cursor-not-allowed" : ""}`}
+                  onClick={() => handleSendOtp("sms")}
+                >
+                  <i className="ri-smartphone-line mr-2"></i>
+                  {cooldown > 0 && otpChannel === "sms"
+                    ? `Tunggu ${cooldown}s`
+                    : "Kirim Kode OTP"}
+                </button>
               </div>
-              <div>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3 animate-in fade-in slide-in-from-top-2 hidden">
+              <label
+                htmlFor="otp"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Masukkan Kode OTP
+              </label>
+              <div className="flex items-center gap-2">
                 <Input
-                  label="Konfirmasi Password"
-                  icon="ri-lock-2-line"
-                  type="password"
-                  value={account.confirm}
-                  onChange={(e) =>
-                    setAccount({ ...account, confirm: e.target.value })
-                  }
-                  placeholder="Ulangi password"
+                  icon="ri-shield-keyhole-line"
+                  type="text"
+                  id="otp"
+                  name="otp"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="w-full rounded-lg"
+                  placeholder="6 digit kode"
                   required
-                  error={fieldErrors.confirm}
+                  disabled={otpVerified}
+                  error={fieldErrors.otp}
                 />
-              </div>
-              <div className="flex flex-col gap-2 hidden">
-                <div className="text-sm font-medium text-gray-500">
-                  Verifikasi Nomor Handphone
-                </div>
-                <div className="flex gap-3">
+                {!otpVerified && (
                   <button
                     type="button"
-                    disabled={
-                      loading || otpVerified || cooldown > 0 || retryCount >= 3
-                    }
-                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${otpChannel === "sms" && otpSent ? "bg-primary text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"} ${cooldown > 0 || retryCount >= 3 ? "opacity-50 cursor-not-allowed" : ""}`}
-                    onClick={() => handleSendOtp("sms")}
+                    className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-600 font-medium whitespace-nowrap"
+                    onClick={async () => {
+                      setError("");
+                      try {
+                        const res = await verifyOtp(
+                          String(account.no_handphone).trim(),
+                          otp,
+                        );
+                        setVerificationToken(res.verification_token);
+                        setOtpVerified(true);
+                      } catch (e: unknown) {
+                        const msg =
+                          e instanceof Error ? e.message : "Kode OTP salah";
+                        setError(msg);
+                      }
+                    }}
                   >
-                    <i className="ri-smartphone-line mr-2"></i>
-                    {cooldown > 0 && otpChannel === "sms"
-                      ? `Tunggu ${cooldown}s`
-                      : "Kirim Kode OTP"}
+                    Konfirmasi
                   </button>
-                </div>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3 animate-in fade-in slide-in-from-top-2 hidden">
-                <label
-                  htmlFor="otp"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Masukkan Kode OTP
-                </label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    icon="ri-shield-keyhole-line"
-                    type="text"
-                    id="otp"
-                    name="otp"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="w-full rounded-lg"
-                    placeholder="6 digit kode"
-                    required
-                    disabled={otpVerified}
-                    error={fieldErrors.otp}
-                  />
-                  {!otpVerified && (
-                    <button
-                      type="button"
-                      className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-600 font-medium whitespace-nowrap"
-                      onClick={async () => {
-                        setError("");
-                        try {
-                          const res = await verifyOtp(
-                            String(account.no_handphone).trim(),
-                            otp,
-                          );
-                          setVerificationToken(res.verification_token);
-                          setOtpVerified(true);
-                        } catch (e: unknown) {
-                          const msg =
-                            e instanceof Error ? e.message : "Kode OTP salah";
-                          setError(msg);
-                        }
-                      }}
-                    >
-                      Konfirmasi
-                    </button>
-                  )}
-                  {otpVerified && (
-                    <div className="px-4 py-2 rounded-lg bg-green-100 text-green-700 font-medium flex items-center gap-1">
-                      <i className="ri-checkbox-circle-line"></i>
-                      <span>Terverifikasi</span>
-                    </div>
-                  )}
-                </div>
-                {!otpVerified && otpSent && (
-                  <div className="text-xs text-gray-500">
-                    Kode OTP telah dikirim ke{" "}
-                    {otpChannel === "sms"
-                      ? account.no_handphone
-                      : account.email}
-                    . Belum terima?{" "}
-                    {cooldown > 0 ? (
-                      <span className="text-gray-400">
-                        Kirim ulang dalam {cooldown}s
-                      </span>
-                    ) : retryCount >= 3 ? (
-                      <span className="text-red-500">
-                        Batas kirim ulang tercapai
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleSendOtp("sms")}
-                        className="text-primary hover:underline"
-                      >
-                        Kirim ulang
-                      </button>
-                    )}
+                )}
+                {otpVerified && (
+                  <div className="px-4 py-2 rounded-lg bg-green-100 text-green-700 font-medium flex items-center gap-1">
+                    <i className="ri-checkbox-circle-line"></i>
+                    <span>Terverifikasi</span>
                   </div>
                 )}
               </div>
-              <div className="flex items-center justify-between">
-                <div className="text-xs text-gray-400">
-                  Sudah punya akun?{" "}
-                  <a
-                    href="/login/company"
-                    className="text-primary hover:underline font-medium"
-                  >
-                    Masuk di sini
-                  </a>
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary flex items-center gap-2"
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Memproses...
-                    </>
+              {!otpVerified && otpSent && (
+                <div className="text-xs text-gray-500">
+                  Kode OTP telah dikirim ke{" "}
+                  {otpChannel === "sms" ? account.no_handphone : account.email}.
+                  Belum terima?{" "}
+                  {cooldown > 0 ? (
+                    <span className="text-gray-400">
+                      Kirim ulang dalam {cooldown}s
+                    </span>
+                  ) : retryCount >= 3 ? (
+                    <span className="text-red-500">
+                      Batas kirim ulang tercapai
+                    </span>
                   ) : (
-                    <>
-                      <span>Lanjut</span>
-                      <i className="ri-arrow-right-line"></i>
-                    </>
+                    <button
+                      type="button"
+                      onClick={() => handleSendOtp("sms")}
+                      className="text-primary hover:underline"
+                    >
+                      Kirim ulang
+                    </button>
                   )}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {step === 2 && (
-            <form
-              onSubmit={submitProfile}
-              className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5"
-              noValidate
-            >
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-                  {error}
                 </div>
               )}
-              <h2 className="text-lg font-semibold text-primary">
-                Data Perusahaan
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-3 md:gap-4">
-                <div className="sm:col-span-2 md:col-span-2 flex flex-col items-center gap-4 mb-4">
-                  <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center group">
-                    {logoPreview ? (
-                      <Image
-                        src={logoPreview}
-                        alt="Logo Preview"
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <i className="ri-building-line text-4xl text-gray-300"></i>
-                    )}
-                  </div>
-                  <div className="w-full max-w-xs text-center">
-                    <p className="text-sm font-medium text-gray-700 mb-2">
-                      Logo Perusahaan
-                    </p>
-                    <Input
-                      type="file"
-                      accept=".png, .jpg, .jpeg"
-                      onChange={(e) =>
-                        uploadLogo(
-                          (e.target as HTMLInputElement).files?.[0] ||
-                            undefined,
-                        )
-                      }
-                      error={fieldErrors.company_logo}
+            </div>
+            <div className="flex items-center justify-end">
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white shadow-md shadow-primary/25 hover:brightness-[1.06] flex items-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Memproses...
+                  </>
+                ) : (
+                  <>
+                    <span>Lanjut</span>
+                    <i className="ri-arrow-right-line"></i>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {step === 2 && (
+          <form
+            onSubmit={submitProfile}
+            className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5"
+            noValidate
+          >
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+                {error}
+              </div>
+            )}
+            <h2 className="text-lg font-semibold text-primary">
+              Data Perusahaan
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-3 md:gap-4">
+              <div className="sm:col-span-2 md:col-span-2 flex flex-col items-center gap-4 mb-4">
+                <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center group">
+                  {logoPreview ? (
+                    <Image
+                      src={logoPreview}
+                      alt="Logo Preview"
+                      fill
+                      className="object-cover"
                     />
-                  </div>
+                  ) : (
+                    <i className="ri-building-line text-4xl text-gray-300"></i>
+                  )}
                 </div>
-                <Input
-                  label="Nama Perusahaan"
-                  value={company.company_name}
-                  onChange={(e) =>
-                    setCompany({ ...company, company_name: e.target.value })
-                  }
-                  required
-                  error={fieldErrors.company_name}
-                />
-                <SearchableSelect
-                  label="Tipe Perusahaan"
-                  value={company.company_type}
-                  onChange={(v) => setCompany({ ...company, company_type: v })}
-                  options={[
-                    {
-                      value: "INSTANSI PEMERINTAH",
-                      label: "INSTANSI PEMERINTAH",
-                    },
-                    { value: "BUMN/BUMD", label: "BUMN/BUMD" },
-                    { value: "KOPERASI", label: "KOPERASI" },
-                    { value: "PERUSAHAAN SWASTA", label: "PERUSAHAAN SWASTA" },
-                    {
-                      value: "BADAN USAHA LAINNYA",
-                      label: "BADAN USAHA LAINNYA",
-                    },
-                    { value: "PERORANGAN", label: "PERORANGAN" },
-                  ]}
-                  error={fieldErrors.company_type}
-                />
-                <Input
-                  label="NIB"
-                  value={company.nib}
-                  onChange={(e) =>
-                    setCompany({ ...company, nib: e.target.value })
-                  }
-                  error={fieldErrors.nib}
-                />
-                <Input
-                  label="Website (Opsional)"
-                  value={company.website}
-                  onChange={(e) =>
-                    setCompany({ ...company, website: e.target.value })
-                  }
-                  error={fieldErrors.website}
-                />
-                <SearchableSelect
-                  label="Kecamatan"
-                  options={[
-                    { value: "", label: "Pilih..." },
-                    ...districtOptions,
-                  ]}
-                  value={company.kecamatan}
-                  onChange={(v) =>
-                    setCompany({ ...company, kecamatan: v, kelurahan: "" })
-                  }
-                  error={fieldErrors.kecamatan}
-                />
-                <SearchableSelect
-                  label="Kelurahan"
-                  options={[
-                    { value: "", label: "Pilih..." },
-                    ...villageOptions,
-                  ]}
-                  value={company.kelurahan}
-                  onChange={(v) => setCompany({ ...company, kelurahan: v })}
-                  error={fieldErrors.kelurahan}
-                />
-                <div className="sm:col-span-2 md:col-span-2">
-                  <Textarea
-                    label="Alamat Lengkap"
-                    value={company.address}
+                <div className="w-full max-w-xs text-center">
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Logo Perusahaan
+                  </p>
+                  <Input
+                    type="file"
+                    accept=".png, .jpg, .jpeg"
                     onChange={(e) =>
-                      setCompany({ ...company, address: e.target.value })
+                      uploadLogo(
+                        (e.target as HTMLInputElement).files?.[0] || undefined,
+                      )
                     }
-                    required
-                    rows={3}
-                    error={fieldErrors.address}
+                    error={fieldErrors.company_logo}
                   />
                 </div>
               </div>
-              <Textarea
-                label="Tentang Perusahaan"
-                value={company.about_company}
+              <Input
+                label="Nama Perusahaan"
+                value={company.company_name}
                 onChange={(e) =>
-                  setCompany({ ...company, about_company: e.target.value })
+                  setCompany({ ...company, company_name: e.target.value })
                 }
                 required
-                rows={5}
-                error={fieldErrors.about_company}
+                error={fieldErrors.company_name}
               />
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-primary flex items-center gap-2"
-                  onClick={() => setStep(1)}
-                >
-                  <i className="ri-arrow-left-line"></i>
-                  <span>Kembali</span>
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary flex items-center gap-2"
-                >
-                  <span>Lanjut</span>
-                  <i className="ri-arrow-right-line"></i>
-                </button>
-              </div>
-            </form>
-          )}
-
-          {step === 4 && (
-            <div className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5">
-              <h2 className="text-lg font-semibold text-primary">
-                Registrasi Selesai
-              </h2>
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-                  {error}
-                </div>
-              )}
-              <p className="text-sm text-gray-500">
-                Tekan tombol di bawah untuk membuat akun dan menyimpan profil.
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={loading || finalized}
-                  onClick={async () => {
-                    await finalize();
-                    if (!error) router.replace("/dashboard/perusahaan");
-                  }}
-                  className={`px-5 py-2.5 rounded-xl flex items-center gap-2 ${loading || finalized ? "bg-gray-200 text-gray-500" : "bg-primary text-white hover:bg-primary"}`}
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Memproses...</span>
-                    </>
-                  ) : finalized ? (
-                    <span>Selesai</span>
-                  ) : (
-                    <span>Buat Akun</span>
-                  )}
-                </button>
+              <SearchableSelect
+                label="Tipe Perusahaan"
+                value={company.company_type}
+                onChange={(v) => setCompany({ ...company, company_type: v })}
+                options={[
+                  {
+                    value: "INSTANSI PEMERINTAH",
+                    label: "INSTANSI PEMERINTAH",
+                  },
+                  { value: "BUMN/BUMD", label: "BUMN/BUMD" },
+                  { value: "KOPERASI", label: "KOPERASI" },
+                  { value: "PERUSAHAAN SWASTA", label: "PERUSAHAAN SWASTA" },
+                  {
+                    value: "BADAN USAHA LAINNYA",
+                    label: "BADAN USAHA LAINNYA",
+                  },
+                  { value: "PERORANGAN", label: "PERORANGAN" },
+                ]}
+                error={fieldErrors.company_type}
+              />
+              <Input
+                label="NIB"
+                value={company.nib}
+                onChange={(e) =>
+                  setCompany({ ...company, nib: e.target.value })
+                }
+                error={fieldErrors.nib}
+              />
+              <Input
+                label="Website (Opsional)"
+                value={company.website}
+                onChange={(e) =>
+                  setCompany({ ...company, website: e.target.value })
+                }
+                error={fieldErrors.website}
+              />
+              <SearchableSelect
+                label="Kecamatan"
+                options={[{ value: "", label: "Pilih..." }, ...districtOptions]}
+                value={company.kecamatan}
+                onChange={(v) =>
+                  setCompany({ ...company, kecamatan: v, kelurahan: "" })
+                }
+                error={fieldErrors.kecamatan}
+              />
+              <SearchableSelect
+                label="Kelurahan"
+                options={[{ value: "", label: "Pilih..." }, ...villageOptions]}
+                value={company.kelurahan}
+                onChange={(v) => setCompany({ ...company, kelurahan: v })}
+                error={fieldErrors.kelurahan}
+              />
+              <div className="sm:col-span-2 md:col-span-2">
+                <Textarea
+                  label="Alamat Lengkap"
+                  value={company.address}
+                  onChange={(e) =>
+                    setCompany({ ...company, address: e.target.value })
+                  }
+                  required
+                  rows={3}
+                  error={fieldErrors.address}
+                />
               </div>
             </div>
-          )}
+            <Textarea
+              label="Tentang Perusahaan"
+              value={company.about_company}
+              onChange={(e) =>
+                setCompany({ ...company, about_company: e.target.value })
+              }
+              required
+              rows={5}
+              error={fieldErrors.about_company}
+            />
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-primary flex items-center gap-2"
+                onClick={() => setStep(1)}
+              >
+                <i className="ri-arrow-left-line"></i>
+                <span>Kembali</span>
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary flex items-center gap-2"
+              >
+                <span>Lanjut</span>
+                <i className="ri-arrow-right-line"></i>
+              </button>
+            </div>
+          </form>
+        )}
 
-          {step === 4 && !finalized && !loading ? null : null}
-        </div>
+        {step === 4 && (
+          <div className="px-4 sm:px-8 lg:px-10 pb-8 pt-6 space-y-5">
+            <h2 className="text-lg font-semibold text-primary">
+              Registrasi Selesai
+            </h2>
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+                {error}
+              </div>
+            )}
+            <p className="text-sm text-gray-500">
+              Tekan tombol di bawah untuk membuat akun dan menyimpan profil.
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={loading || finalized}
+                onClick={async () => {
+                  await finalize();
+                  if (!error) router.replace("/dashboard/perusahaan");
+                }}
+                className={`px-5 py-2.5 rounded-xl flex items-center gap-2 ${loading || finalized ? "bg-gray-200 text-gray-500" : "bg-primary text-white hover:bg-primary"}`}
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Memproses...</span>
+                  </>
+                ) : finalized ? (
+                  <span>Selesai</span>
+                ) : (
+                  <span>Buat Akun</span>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 4 && !finalized && !loading ? null : null}
       </div>
-    </div>
+    </RegisterPageShell>
   );
 }
