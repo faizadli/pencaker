@@ -5,8 +5,8 @@ import LaporanRekapPencakerView from "../../../../components/laporan/LaporanReka
 export default function LaporanRekapPencakerPage() {
   const router = useRouter();
   return (
-    <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-6 pb-8 lg:ml-64">
-      <div className="px-4 sm:px-6">
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+      <div className="w-full">
         <LaporanRekapPencakerView
           onBack={() => router.push("/dashboard/laporan")}
         />

@@ -363,61 +363,70 @@ export default function LaporanRekapPencakerView({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onBack}
-            className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-600 hover:text-gray-900"
-            title="Kembali ke menu laporan"
-          >
-            <i className="ri-arrow-left-line text-2xl"></i>
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Rekap Data Pencaker
-            </h1>
-            <p className="text-sm text-gray-500 mt-1 max-w-3xl">
-              Laporan rekapitulasi data pencari kerja berdasarkan periode
-              pendaftaran
-            </p>
+    <div className="space-y-8">
+      <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+        <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+        <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8">
+          <div className="flex min-w-0 items-start gap-4">
+            <button
+              type="button"
+              onClick={onBack}
+              className="landing-focus mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-primary"
+              title="Kembali ke menu laporan"
+            >
+              <i className="ri-arrow-left-line text-xl leading-none"></i>
+            </button>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Laporan
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                Rekap data pencaker
+              </h1>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                Laporan rekapitulasi data pencari kerja berdasarkan periode
+                pendaftaran dengan preview sebelum ekspor Excel.
+              </p>
+            </div>
           </div>
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+            <i className="ri-user-search-line" />
+            {previewData.length} data preview
+          </span>
         </div>
-      </div>
+      </header>
 
-      {/* Controls */}
-      <Card className="p-5 bg-white shadow-sm border border-gray-200/60 rounded-xl">
-        <div className="flex flex-col lg:flex-row gap-6 justify-between items-end lg:items-center">
+      <Card className="!rounded-2xl !border-slate-200/90 bg-white/90 !shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm [&>div]:!p-0">
+        <div className="flex flex-col gap-6 p-5 sm:p-6 lg:flex-row lg:items-end lg:justify-between">
           {/* Date Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+          <div className="flex w-full flex-col gap-4 sm:flex-row lg:w-auto">
             <div className="flex-1 sm:flex-none">
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Dari Tanggal
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <i className="ri-calendar-line text-gray-400"></i>
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <i className="ri-calendar-line text-slate-400"></i>
                 </div>
                 <input
                   type="date"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm transition-shadow"
+                  className="block w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 transition-shadow focus:border-primary focus:ring-primary"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                 />
               </div>
             </div>
             <div className="flex-1 sm:flex-none">
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Sampai Tanggal
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <i className="ri-calendar-line text-gray-400"></i>
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <i className="ri-calendar-line text-slate-400"></i>
                 </div>
                 <input
                   type="date"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm transition-shadow"
+                  className="block w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 transition-shadow focus:border-primary focus:ring-primary"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                 />
@@ -427,7 +436,7 @@ export default function LaporanRekapPencakerView({
             {/* Loading Indicator (replaces button) */}
             <div className="flex-none self-end pb-2">
               {isLoading && (
-                <span className="text-gray-500 text-sm flex items-center gap-2">
+                <span className="flex items-center gap-2 text-sm text-slate-500">
                   <i className="ri-loader-4-line animate-spin"></i>
                   Memuat...
                 </span>
@@ -438,9 +447,10 @@ export default function LaporanRekapPencakerView({
           {/* Action */}
           <div className="w-full lg:w-auto">
             <button
+              type="button"
               onClick={handleExport}
               disabled={isExporting}
-              className={`w-full lg:w-auto justify-center px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 text-sm font-medium transition-all shadow-sm hover:shadow flex items-center gap-2 ${
+              className={`flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition-all shadow-sm hover:bg-emerald-700 hover:shadow lg:w-auto ${
                 isExporting ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >
@@ -456,13 +466,13 @@ export default function LaporanRekapPencakerView({
       </Card>
 
       {/* Preview Section */}
-      <Card className="overflow-hidden bg-white shadow-sm border border-gray-200/60 rounded-xl">
-        <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-          <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+      <Card className="overflow-hidden !rounded-2xl !border-slate-200/90 bg-white !shadow-sm ring-1 ring-slate-950/[0.02] [&>div]:!p-0">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+          <h3 className="flex items-center gap-2 font-semibold text-slate-800">
             <i className="ri-table-line text-primary"></i>
             Preview Data
           </h3>
-          <span className="text-xs font-medium text-gray-500 bg-white px-2 py-1 rounded border border-gray-200">
+          <span className="rounded-lg border border-slate-200/80 bg-white px-2 py-1 text-xs font-medium text-slate-500">
             {previewData.length} Data Ditemukan
           </span>
         </div>
@@ -541,8 +551,8 @@ export default function LaporanRekapPencakerView({
               {isLoading ? (
                 <tr>
                   <td
-                    colSpan={14}
-                    className="px-4 py-8 text-center text-gray-500 border border-gray-300"
+                    colSpan={18}
+                    className="border border-gray-300 px-4 py-8 text-center text-gray-500"
                   >
                     <div className="flex flex-col items-center justify-center gap-2">
                       <i className="ri-loader-4-line text-2xl animate-spin text-primary"></i>
@@ -553,8 +563,8 @@ export default function LaporanRekapPencakerView({
               ) : previewData.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={14}
-                    className="px-4 py-8 text-center text-gray-500 bg-gray-50/30 border border-gray-300"
+                    colSpan={18}
+                    className="border border-gray-300 bg-gray-50/30 px-4 py-8 text-center text-gray-500"
                   >
                     <div className="flex flex-col items-center justify-center gap-2">
                       <i className="ri-file-search-line text-2xl text-gray-400"></i>
