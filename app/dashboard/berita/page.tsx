@@ -40,19 +40,20 @@ type Berita = {
 
 const getKategoriColor = (k: string) => {
   const colors: Record<string, string> = {
-    Informasi: "bg-blue-100 text-blue-800",
-    Pelatihan: "bg-yellow-100 text-yellow-800",
-    Transmigrasi: "bg-green-100 text-green-800",
-    Penempatan: "bg-purple-100 text-purple-800",
-    "Hubungan Industri": "bg-orange-100 text-orange-800",
+    Informasi: "bg-sky-100 text-sky-800 ring-1 ring-sky-200/80",
+    Pelatihan: "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80",
+    Transmigrasi: "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/80",
+    Penempatan: "bg-violet-100 text-violet-800 ring-1 ring-violet-200/80",
+    "Hubungan Industri":
+      "bg-orange-100 text-orange-800 ring-1 ring-orange-200/80",
   };
-  return colors[k] || "bg-gray-100 text-gray-800";
+  return colors[k] || "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80";
 };
 
 const getStatusColor = (s: string) =>
   s === "Publikasi"
-    ? "bg-green-100 text-green-800"
-    : "bg-gray-100 text-gray-800";
+    ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/80"
+    : "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80";
 
 function NewsCard({
   berita,
@@ -85,8 +86,8 @@ function NewsCard({
   }, [berita.gambar]);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition flex flex-col h-full">
-      <div className="relative h-48 w-full bg-gray-100">
+    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02] transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none">
+      <div className="relative h-52 w-full bg-slate-100">
         <Image
           src={displayUrl}
           alt={berita.judul}
@@ -95,39 +96,41 @@ function NewsCard({
           unoptimized
         />
       </div>
-      <div className="p-4 flex-1 flex flex-col">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="flex flex-1 flex-col p-5">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
           <span
-            className={`px-2 py-1 text-xs rounded-full ${getKategoriColor(berita.kategori)}`}
+            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getKategoriColor(berita.kategori)}`}
           >
             {berita.kategori}
           </span>
           <span
-            className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(berita.status)}`}
+            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusColor(berita.status)}`}
           >
             {berita.status}
           </span>
         </div>
-        <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2">
+        <h3 className="mb-2 line-clamp-2 text-lg font-bold text-slate-900">
           {berita.judul}
         </h3>
-        <div className="text-xs text-gray-500 mb-3">
+        <div className="mb-3 text-xs text-slate-500">
           {formatDate(berita.tanggal)}
         </div>
-        <p className="text-sm text-gray-500 mb-4 line-clamp-3 flex-1">
+        <p className="mb-4 flex-1 line-clamp-3 text-sm leading-relaxed text-slate-600">
           {stripHtml(berita.isi)}
         </p>
 
-        <div className="flex gap-2 mt-auto pt-4 border-t border-gray-100">
+        <div className="mt-auto flex gap-2 border-t border-slate-100 pt-4">
           <button
+            type="button"
             onClick={() => onEdit(berita)}
-            className="flex-1 px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:brightness-95 transition flex items-center justify-center gap-1"
+            className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-primary px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[var(--color-primary-dark)]"
           >
             <i className="ri-edit-line"></i> Edit
           </button>
           <button
+            type="button"
             onClick={() => onDelete(berita.id)}
-            className="flex-1 px-3 py-2 text-sm border border-red-200 text-red-700 rounded-lg hover:bg-red-50 transition flex items-center justify-center gap-1"
+            className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-red-700 shadow-sm ring-1 ring-red-200 transition hover:bg-red-50"
           >
             <i className="ri-delete-bin-line"></i> Hapus
           </button>
@@ -240,10 +243,14 @@ export default function BeritaPage() {
     })();
   }, []);
 
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, statusFilter, pageSize]);
+
   if (loading) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
           <FullPageLoading isSection />
         </div>
       </main>
@@ -415,21 +422,36 @@ export default function BeritaPage() {
   const pagedBerita = filteredBerita.slice(startIndex, endIndex);
 
   return (
-    <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-      <div className="px-4 sm:px-6">
-        <div className="space-y-6">
-          <div className="flex justify-between items-center mb-6">
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+      <div className="w-full space-y-8">
+        <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+          <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+          <div className="p-6 sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+              Berita
+            </p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+              Manajemen berita
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+              Kelola berita dan informasi seputar ketenagakerjaan, dari draft
+              hingga publikasi.
+            </p>
+          </div>
+        </header>
+
+        <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+          <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-primary">
-                Manajemen Berita
-              </h1>
-              <p className="text-gray-500">
-                Kelola berita dan informasi seputar ketenagakerjaan
+              <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                Ringkasan status
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Statistik berita yang tersedia pada halaman ini.
               </p>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             <StatCard
               title="Total Berita"
               value={beritaList.length}
@@ -440,7 +462,7 @@ export default function BeritaPage() {
             <StatCard
               title="Publikasi"
               value={beritaList.filter((b) => b.status === "Publikasi").length}
-              change="Tayang"
+              change="Sedang tayang"
               color="var(--color-primary)"
               icon="ri-check-double-line"
             />
@@ -452,195 +474,221 @@ export default function BeritaPage() {
               icon="ri-edit-line"
             />
           </div>
+        </section>
 
-          <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Input
-                  icon="ri-search-line"
-                  type="text"
-                  placeholder="Cari judul berita..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full py-3"
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2 items-stretch">
-                <SearchableSelect
-                  value={statusFilter}
-                  onChange={(v) => setStatusFilter(v)}
-                  options={[
-                    { value: "all", label: "Semua Status" },
-                    { value: "Publikasi", label: "Publikasi" },
-                    { value: "Draft", label: "Draft" },
-                  ]}
-                />
-                <button
-                  onClick={handleAdd}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition flex items-center gap-2 whitespace-nowrap"
-                >
-                  <i className="ri-add-line"></i>
-                  Tambah Berita
-                </button>
-              </div>
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-950/[0.02] sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
+            <div className="min-w-0 flex-1">
+              <Input
+                icon="ri-search-line"
+                type="text"
+                placeholder="Cari judul berita..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full py-3"
+              />
+            </div>
+            <div className="flex flex-col items-stretch gap-2 sm:flex-row">
+              <SearchableSelect
+                value={statusFilter}
+                onChange={(v) => setStatusFilter(v)}
+                options={[
+                  { value: "all", label: "Semua Status" },
+                  { value: "Publikasi", label: "Publikasi" },
+                  { value: "Draft", label: "Draft" },
+                ]}
+                className="w-full sm:w-[11rem]"
+              />
+              <button
+                type="button"
+                onClick={handleAdd}
+                className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-primary-dark)] motion-safe:hover:shadow sm:w-auto sm:min-w-[11rem]"
+              >
+                <i className="ri-add-line"></i>
+                Tambah Berita
+              </button>
             </div>
           </div>
+        </div>
 
-          <div className="space-y-6">
-            {pagedBerita.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center text-gray-500">
-                Belum ada berita
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {pagedBerita.map((berita) => (
-                  <NewsCard
-                    key={berita.id}
-                    berita={berita}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </div>
-            )}
+        {total > 0 ? (
+          <>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {pagedBerita.map((berita) => (
+                <NewsCard
+                  key={berita.id}
+                  berita={berita}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
 
-            <div className="mt-4">
+            <div className="pt-1">
               <Pagination
                 page={page}
                 pageSize={pageSize}
                 total={total}
                 onPageChange={setPage}
-                onPageSizeChange={setPageSize}
+                onPageSizeChange={(s) => {
+                  setPageSize(s);
+                  setPage(1);
+                }}
               />
             </div>
-          </div>
-
-          {contentModal && editBerita && (
-            <Modal
-              open={!!contentModal}
-              title={
-                contentModal.id === "__new__" ? "Tambah Berita" : "Edit Berita"
-              }
-              onClose={() => setContentModal(null)}
-              size="xl"
+          </>
+        ) : (
+          <div className="rounded-2xl border border-slate-200/90 bg-white py-12 text-center shadow-sm ring-1 ring-slate-950/[0.02]">
+            <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+              <i className="ri-article-line text-3xl leading-none" />
+            </span>
+            <h3 className="text-lg font-semibold text-slate-900">
+              Belum ada berita
+            </h3>
+            <p className="mx-auto mt-2 max-w-md px-4 text-sm text-slate-600">
+              Coba ubah kata kunci pencarian, filter status, atau tambahkan
+              berita baru.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm("");
+                setStatusFilter("all");
+              }}
+              className="mt-6 inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-primary-dark)]"
             >
-              <div className="space-y-4">
-                <Input
-                  label="Judul Berita"
-                  value={editBerita.judul}
-                  onChange={(e) =>
-                    setEditBerita({ ...editBerita, judul: e.target.value })
+              Reset pencarian
+            </button>
+          </div>
+        )}
+
+        {contentModal && editBerita && (
+          <Modal
+            open={!!contentModal}
+            title={
+              contentModal.id === "__new__" ? "Tambah Berita" : "Edit Berita"
+            }
+            onClose={() => setContentModal(null)}
+            size="xl"
+          >
+            <div className="space-y-4">
+              <Input
+                label="Judul Berita"
+                value={editBerita.judul}
+                onChange={(e) =>
+                  setEditBerita({ ...editBerita, judul: e.target.value })
+                }
+                placeholder="Masukkan judul berita"
+                error={fieldErrors["judul"]}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <SearchableSelect
+                  label="Kategori"
+                  options={[
+                    {
+                      value: "Informasi",
+                      label: "Informasi",
+                      perm: "news.category.informasi",
+                    },
+                    {
+                      value: "Pelatihan",
+                      label: "Pelatihan",
+                      perm: "news.category.pelatihan",
+                    },
+                    {
+                      value: "Transmigrasi",
+                      label: "Transmigrasi",
+                      perm: "news.category.transmigrasi",
+                    },
+                    {
+                      value: "Penempatan",
+                      label: "Penempatan",
+                      perm: "news.category.penempatan",
+                    },
+                    {
+                      value: "Hubungan Industri",
+                      label: "Hubungan Industri",
+                      perm: "news.category.hubungan_industri",
+                    },
+                  ]
+                    .filter((c) => permissions.includes(c.perm))
+                    .map((c) => ({ value: c.value, label: c.label }))}
+                  value={editBerita.kategori}
+                  onChange={(v) =>
+                    setEditBerita({ ...editBerita, kategori: v })
                   }
-                  placeholder="Masukkan judul berita"
-                  error={fieldErrors["judul"]}
+                  error={fieldErrors["kategori"]}
                 />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <SearchableSelect
-                    label="Kategori"
-                    options={[
-                      {
-                        value: "Informasi",
-                        label: "Informasi",
-                        perm: "news.category.informasi",
-                      },
-                      {
-                        value: "Pelatihan",
-                        label: "Pelatihan",
-                        perm: "news.category.pelatihan",
-                      },
-                      {
-                        value: "Transmigrasi",
-                        label: "Transmigrasi",
-                        perm: "news.category.transmigrasi",
-                      },
-                      {
-                        value: "Penempatan",
-                        label: "Penempatan",
-                        perm: "news.category.penempatan",
-                      },
-                      {
-                        value: "Hubungan Industri",
-                        label: "Hubungan Industri",
-                        perm: "news.category.hubungan_industri",
-                      },
-                    ]
-                      .filter((c) => permissions.includes(c.perm))
-                      .map((c) => ({ value: c.value, label: c.label }))}
-                    value={editBerita.kategori}
-                    onChange={(v) =>
-                      setEditBerita({ ...editBerita, kategori: v })
-                    }
-                    error={fieldErrors["kategori"]}
-                  />
-                  <SearchableSelect
-                    label="Status Publikasi"
-                    options={[
-                      { value: "Publikasi", label: "Publikasi" },
-                      { value: "Draft", label: "Draft" },
-                    ]}
-                    value={editBerita.status}
-                    onChange={(v) =>
-                      setEditBerita({
-                        ...editBerita,
-                        status: v as Berita["status"],
-                      })
-                    }
-                    error={fieldErrors["status"]}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-primary mb-1">
-                    Gambar Utama
-                  </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition cursor-pointer relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange(e, "gambar")}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    />
-                    {newsImagePreview ? (
-                      <div className="relative h-48 w-full">
-                        <Image
-                          src={newsImagePreview}
-                          alt="Preview"
-                          fill
-                          className="object-contain rounded-md"
-                          unoptimized
-                        />
-                      </div>
-                    ) : (
-                      <div className="text-gray-500">
-                        <i className="ri-image-add-line text-3xl mb-2"></i>
-                        <p>Klik untuk upload gambar</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <TextEditor
-                  label="Isi Berita"
-                  value={editBerita.isi}
-                  onChange={(v) => setEditBerita({ ...editBerita, isi: v })}
-                  error={fieldErrors["isi"]}
+                <SearchableSelect
+                  label="Status Publikasi"
+                  options={[
+                    { value: "Publikasi", label: "Publikasi" },
+                    { value: "Draft", label: "Draft" },
+                  ]}
+                  value={editBerita.status}
+                  onChange={(v) =>
+                    setEditBerita({
+                      ...editBerita,
+                      status: v as Berita["status"],
+                    })
+                  }
+                  error={fieldErrors["status"]}
                 />
-                <div className="flex justify-end gap-2 mt-6">
-                  <button
-                    onClick={() => setContentModal(null)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    onClick={() => handleSave(editBerita.id)}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark"
-                  >
-                    Simpan
-                  </button>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-primary">
+                  Gambar Utama
+                </label>
+                <div className="relative cursor-pointer rounded-xl border-2 border-dashed border-slate-300 p-6 text-center transition hover:border-primary">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, "gambar")}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  {newsImagePreview ? (
+                    <div className="relative h-48 w-full">
+                      <Image
+                        src={newsImagePreview}
+                        alt="Preview"
+                        fill
+                        className="object-contain rounded-md"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-slate-500">
+                      <i className="ri-image-add-line mb-2 text-3xl"></i>
+                      <p>Klik untuk upload gambar</p>
+                    </div>
+                  )}
                 </div>
               </div>
-            </Modal>
-          )}
-        </div>
+              <TextEditor
+                label="Isi Berita"
+                value={editBerita.isi}
+                onChange={(v) => setEditBerita({ ...editBerita, isi: v })}
+                error={fieldErrors["isi"]}
+              />
+              <div className="mt-6 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setContentModal(null)}
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-slate-700 transition hover:bg-slate-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSave(editBerita.id)}
+                  className="rounded-lg bg-primary px-4 py-2 text-white transition hover:bg-[var(--color-primary-dark)]"
+                >
+                  Simpan
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
       </div>
     </main>
   );
