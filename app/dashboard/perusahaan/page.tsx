@@ -271,20 +271,20 @@ export default function PerusahaanPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Terverifikasi":
-        return "bg-green-100 text-green-800";
+        return "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/80";
       case "Menunggu Verifikasi":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80";
       case "Ditolak":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 ring-1 ring-red-200/80";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80";
     }
   };
 
   if (loading) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
           <FullPageLoading isSection />
         </div>
       </main>
@@ -293,74 +293,83 @@ export default function PerusahaanPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          {loading && (
-            <div className="flex items-center justify-center h-[40vh]">
-              <div className="flex items-center gap-3 text-primary">
-                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-sm font-medium">
-                  Memuat data perusahaan...
-                </span>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full space-y-8">
+          <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+            <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+            <div className="p-6 sm:p-8">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Perusahaan
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                Manajemen perusahaan
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+                Kelola mitra, pantau status verifikasi, dan akses detail
+                perusahaan dari satu tempat.
+              </p>
+            </div>
+          </header>
+
+          <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+            <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                  Ringkasan status
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Angka berdasarkan data di halaman ini.
+                </p>
               </div>
             </div>
-          )}
-          <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">
-              Manajemen Perusahaan
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Kelola data perusahaan mitra dan verifikasi legalitas
-            </p>
-          </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+              <StatCard
+                title="Total Perusahaan"
+                value={perusahaanList.length}
+                change="Pada halaman ini"
+                color="var(--color-secondary)"
+                icon="ri-building-line"
+              />
+              <StatCard
+                title="Terverifikasi"
+                value={
+                  perusahaanList.filter(
+                    (p) => apiToUIStatus[getApiStatus(p)] === "Terverifikasi",
+                  ).length
+                }
+                change="Status disetujui"
+                color="var(--color-primary)"
+                icon="ri-checkbox-circle-line"
+              />
+              <StatCard
+                title="Menunggu"
+                value={
+                  perusahaanList.filter(
+                    (p) =>
+                      apiToUIStatus[getApiStatus(p)] === "Menunggu Verifikasi",
+                  ).length
+                }
+                change="Perlu tinjauan"
+                color="var(--color-foreground)"
+                icon="ri-time-line"
+              />
+              <StatCard
+                title="Perusahaan Ditolak"
+                value={
+                  perusahaanList.filter(
+                    (p) => apiToUIStatus[getApiStatus(p)] === "Ditolak",
+                  ).length
+                }
+                change="Total ditolak"
+                color="var(--color-danger)"
+                icon="ri-close-circle-line"
+              />
+            </div>
+          </section>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard
-              title="Total Perusahaan"
-              value={perusahaanList.length}
-              change="+8%"
-              color="var(--color-secondary)"
-              icon="ri-building-line"
-            />
-            <StatCard
-              title="Terverifikasi"
-              value={
-                perusahaanList.filter(
-                  (p) => apiToUIStatus[getApiStatus(p)] === "Terverifikasi",
-                ).length
-              }
-              change="+3"
-              color="var(--color-primary)"
-              icon="ri-checkbox-circle-line"
-            />
-            <StatCard
-              title="Menunggu"
-              value={
-                perusahaanList.filter(
-                  (p) =>
-                    apiToUIStatus[getApiStatus(p)] === "Menunggu Verifikasi",
-                ).length
-              }
-              change="Perlu tinjauan"
-              color="var(--color-foreground)"
-              icon="ri-time-line"
-            />
-            <StatCard
-              title="Perusahaan Ditolak"
-              value={
-                perusahaanList.filter(
-                  (p) => apiToUIStatus[getApiStatus(p)] === "Ditolak",
-                ).length
-              }
-              change="Total ditolak"
-              color="var(--color-danger)"
-              icon="ri-close-circle-line"
-            />
-          </div>
-
-          <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-950/[0.02] sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
+              <div className="min-w-0 flex-1">
                 <Input
                   icon="ri-search-line"
                   type="text"
@@ -370,7 +379,7 @@ export default function PerusahaanPage() {
                   className="w-full py-3"
                 />
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 items-stretch">
+              <div className="flex flex-col items-stretch gap-2 sm:flex-row">
                 <SearchableSelect
                   value={statusFilter}
                   onChange={(v) => setStatusFilter(v)}
@@ -395,6 +404,7 @@ export default function PerusahaanPage() {
 
                 {canCreate && (
                   <button
+                    type="button"
                     onClick={() => {
                       setEditingCompanyId(null);
                       setEditingCompanyUserId(null);
@@ -416,7 +426,7 @@ export default function PerusahaanPage() {
                       setSubmittedCompany(false);
                       setFieldErrors({});
                     }}
-                    className="px-4 py-3 h-full w-full sm:w-[11rem] bg-primary text-white rounded-xl hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center"
+                    className="flex h-full w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-primary-dark)] motion-safe:hover:shadow sm:w-[11rem]"
                   >
                     + Tambah
                   </button>
@@ -426,75 +436,72 @@ export default function PerusahaanPage() {
           </div>
 
           {viewMode === "grid" ? (
-            <CardGrid>
+            <CardGrid className="gap-5 xl:grid-cols-3">
               {filteredPerusahaan.map((p) => (
                 <div
                   key={p.id}
-                  className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
+                  className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02] transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none"
                 >
-                  <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+                  <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50/95 to-white p-4">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex min-w-0 items-center gap-3">
                         <Image
                           src={p.company_logo || "https://picsum.photos/200"}
                           alt={p.company_name}
                           width={48}
                           height={48}
-                          className="w-12 h-12 rounded-lg object-cover"
+                          className="h-12 w-12 shrink-0 rounded-xl object-cover ring-1 ring-slate-200/80"
                         />
                         <div className="min-w-0">
-                          <h3 className="font-bold text-primary text-sm leading-tight truncate">
+                          <h3 className="truncate text-sm font-bold leading-tight text-slate-900">
                             {p.company_name}
                           </h3>
-                          <p className="text-xs text-gray-500 truncate">
+                          <p className="truncate text-xs text-slate-500">
                             {p.kelurahan || p.kecamatan || "-"}
                           </p>
                         </div>
                       </div>
                       <span
-                        className={`px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0 ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}
+                        className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-semibold sm:py-1 sm:text-xs ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}
                       >
                         {apiToUIStatus[getApiStatus(p)]}
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-4 space-y-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <i className="ri-map-pin-line text-gray-500"></i>
-                      <span className="text-gray-500 truncate">
-                        {p.address}
-                      </span>
+                  <div className="space-y-3 p-4">
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <i className="ri-map-pin-line shrink-0 text-slate-400" />
+                      <span className="truncate">{p.address}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <i className="ri-phone-line text-gray-500"></i>
-                      <span className="text-gray-500">{p.no_handphone}</span>
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <i className="ri-phone-line shrink-0 text-slate-400" />
+                      <span>{p.no_handphone}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <i className="ri-mail-line text-gray-500"></i>
-                      <span className="text-gray-500 truncate">
-                        {p.website || "-"}
-                      </span>
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <i className="ri-global-line shrink-0 text-slate-400" />
+                      <span className="truncate">{p.website || "-"}</span>
                     </div>
                   </div>
 
-                  <div className="p-4 border-t border-gray-200">
+                  <div className="border-t border-slate-100 bg-slate-50/50 p-4">
                     <div className="flex gap-2">
                       <Link
                         href={`/dashboard/perusahaan/${p.id}`}
-                        className={`flex-1 px-3 py-2 text-sm text-white rounded-lg hover:brightness-95 transition flex items-center justify-center ${
+                        className={`landing-focus flex flex-1 items-center justify-center rounded-xl px-3 py-2.5 text-sm font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
                           getApiStatus(p) === "PENDING"
-                            ? "bg-yellow-500"
-                            : "bg-secondary"
+                            ? "bg-amber-500 hover:bg-amber-600"
+                            : "bg-primary hover:bg-[var(--color-primary-dark)]"
                         }`}
                       >
-                        <i className="ri-eye-line mr-1"></i>
+                        <i className="ri-eye-line mr-1.5" />
                         {getApiStatus(p) === "PENDING"
                           ? "Review & Konfirmasi"
                           : "Detail"}
                       </Link>
                       {canUpdate && (
                         <button
+                          type="button"
                           onClick={() => {
                             setEditingCompanyId(p.id);
                             setEditingCompanyUserId(p.user_id);
@@ -514,9 +521,9 @@ export default function PerusahaanPage() {
                             setSubmittedCompany(false);
                             setFieldErrors({});
                           }}
-                          className="flex-1 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition"
+                          className="flex flex-1 items-center justify-center rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
                         >
-                          <i className="ri-pencil-line mr-1"></i>
+                          <i className="ri-pencil-line mr-1.5" />
                           Edit
                         </button>
                       )}
@@ -526,7 +533,7 @@ export default function PerusahaanPage() {
               ))}
             </CardGrid>
           ) : (
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden !rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02] [&>div]:!p-0">
               <Table className="hidden sm:block">
                 <TableHead>
                   <tr>
@@ -548,50 +555,50 @@ export default function PerusahaanPage() {
                             alt={p.company_name}
                             width={40}
                             height={40}
-                            className="w-10 h-10 rounded-lg object-cover"
+                            className="h-10 w-10 shrink-0 rounded-lg object-cover ring-1 ring-slate-200/80"
                           />
                           <div>
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-slate-900">
                               {p.company_name}
                             </p>
-                            <p className="text-xs text-gray-600">
+                            <p className="text-xs text-slate-500">
                               {p.website || "-"}
                             </p>
                           </div>
                         </div>
                       </TD>
-                      <TD className="text-gray-900">
+                      <TD className="text-slate-700">
                         {p.kelurahan || p.kecamatan || "-"}
                       </TD>
                       <TD>
                         <span
-                          className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}
                         >
                           {apiToUIStatus[getApiStatus(p)]}
                         </span>
                       </TD>
                       <TD>
                         <div className="text-center">
-                          <p className="font-bold text-primary">
+                          <p className="font-bold tabular-nums text-primary">
                             {p.job_vacancies_count || 0}
                           </p>
                         </div>
                       </TD>
                       <TD>
                         <div className="text-center">
-                          <p className="font-bold text-primary">
+                          <p className="font-bold tabular-nums text-primary">
                             {p.applicants_count || 0}
                           </p>
                         </div>
                       </TD>
                       <TD>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Link
                             href={`/dashboard/perusahaan/${p.id}`}
-                            className={`px-3 py-1 text-xs text-white rounded hover:brightness-95 transition flex items-center justify-center ${
+                            className={`landing-focus inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
                               getApiStatus(p) === "PENDING"
-                                ? "bg-yellow-500"
-                                : "bg-secondary"
+                                ? "bg-amber-500 hover:bg-amber-600"
+                                : "bg-primary hover:bg-[var(--color-primary-dark)]"
                             }`}
                           >
                             {getApiStatus(p) === "PENDING"
@@ -600,6 +607,7 @@ export default function PerusahaanPage() {
                           </Link>
                           {canUpdate && (
                             <button
+                              type="button"
                               onClick={() => {
                                 setEditingCompanyId(p.id);
                                 setEditingCompanyUserId(p.user_id);
@@ -617,7 +625,7 @@ export default function PerusahaanPage() {
                                 });
                                 setShowFormModal(true);
                               }}
-                              className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition"
+                              className="inline-flex items-center justify-center rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
                             >
                               Edit
                             </button>
@@ -628,47 +636,47 @@ export default function PerusahaanPage() {
                   ))}
                 </TableBody>
               </Table>
-              <div className="sm:hidden p-3 space-y-3">
+              <div className="space-y-3 p-3 sm:hidden">
                 {filteredPerusahaan.map((p) => (
                   <div
                     key={`m-${p.id}`}
-                    className="border border-gray-200 rounded-lg p-3"
+                    className="rounded-xl border border-slate-200/90 bg-slate-50/40 p-4 ring-1 ring-slate-950/[0.02]"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
                         <Image
                           src={p.company_logo || "https://picsum.photos/200"}
                           alt={p.company_name}
                           width={32}
                           height={32}
-                          className="w-8 h-8 rounded object-cover"
+                          className="h-8 w-8 shrink-0 rounded-lg object-cover ring-1 ring-slate-200/80"
                         />
                         <div className="min-w-0">
-                          <p className="font-semibold text-primary truncate">
+                          <p className="truncate font-semibold text-slate-900">
                             {p.company_name}
                           </p>
-                          <p className="text-xs text-gray-500 truncate">
+                          <p className="truncate text-xs text-slate-500">
                             {p.kelurahan || p.kecamatan || "-"}
                           </p>
                         </div>
                       </div>
                       <span
-                        className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}
+                        className={`inline-flex shrink-0 items-center rounded-full px-2 py-1 text-[10px] font-semibold ${getStatusColor(apiToUIStatus[getApiStatus(p)])}`}
                       >
                         {apiToUIStatus[getApiStatus(p)]}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 mt-2 text-[11px] text-gray-500">
-                      <i className="ri-map-pin-line"></i>
+                    <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500">
+                      <i className="ri-map-pin-line shrink-0" />
                       <span className="truncate">{p.address}</span>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <Link
                         href={`/dashboard/perusahaan/${p.id}`}
-                        className={`px-3 py-2 text-xs text-white rounded hover:brightness-95 transition flex items-center justify-center ${
+                        className={`landing-focus flex items-center justify-center rounded-lg px-3 py-2 text-xs font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
                           getApiStatus(p) === "PENDING"
-                            ? "bg-yellow-500"
-                            : "bg-secondary"
+                            ? "bg-amber-500"
+                            : "bg-primary"
                         }`}
                       >
                         {getApiStatus(p) === "PENDING"
@@ -677,6 +685,7 @@ export default function PerusahaanPage() {
                       </Link>
                       {canUpdate && (
                         <button
+                          type="button"
                           onClick={() => {
                             setEditingCompanyId(p.id);
                             setEditingCompanyUserId(p.user_id);
@@ -694,7 +703,7 @@ export default function PerusahaanPage() {
                             });
                             setShowFormModal(true);
                           }}
-                          className="px-3 py-2 text-xs bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition"
+                          className="rounded-lg bg-white px-3 py-2 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
                         >
                           Edit
                         </button>
@@ -706,7 +715,7 @@ export default function PerusahaanPage() {
             </Card>
           )}
 
-          <div className="mt-4">
+          <div className="pt-1">
             <Pagination
               page={page}
               pageSize={pageSize}
@@ -989,22 +998,25 @@ export default function PerusahaanPage() {
           </Modal>
 
           {filteredPerusahaan.length === 0 && (
-            <div className="text-center py-8 bg-white rounded-xl shadow-md border border-gray-200">
-              <i className="ri-building-line text-4xl text-gray-300 mb-3"></i>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="rounded-2xl border border-slate-200/90 bg-white py-12 text-center shadow-sm ring-1 ring-slate-950/[0.02]">
+              <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                <i className="ri-building-line text-3xl leading-none" />
+              </span>
+              <h3 className="text-lg font-semibold text-slate-900">
                 Tidak ada data perusahaan
               </h3>
-              <p className="text-gray-600 mb-4">
-                Coba ubah kata kunci pencarian atau filter
+              <p className="mx-auto mt-2 max-w-md px-4 text-sm text-slate-600">
+                Coba ubah kata kunci pencarian atau filter status.
               </p>
               <button
+                type="button"
                 onClick={() => {
                   setSearchTerm("");
                   setStatusFilter("all");
                 }}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition"
+                className="mt-6 inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-primary-dark)]"
               >
-                Reset Pencarian
+                Reset pencarian
               </button>
             </div>
           )}
