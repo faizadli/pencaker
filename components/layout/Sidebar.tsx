@@ -107,6 +107,11 @@ export default function Sidebar({
       path: "/dashboard/lowongan",
     },
     {
+      name: "Kartu Kuning (AK1)",
+      icon: "ri-profile-line",
+      path: "/dashboard/ak1",
+    },
+    {
       name: "Data BKK",
       icon: "ri-community-line",
       path: "/dashboard/bkk",
@@ -116,6 +121,9 @@ export default function Sidebar({
       icon: "ri-send-plane-2-line",
       path: "/dashboard/lamaran",
     },
+    // { name: "Pengaduan", icon: "ri-alert-line", path: "/dashboard/pengaduan" },
+    { name: "Laporan", icon: "ri-file-chart-line", path: "/dashboard/laporan" },
+    { name: "Berita", icon: "ri-newspaper-line", path: "/dashboard/berita" },
     {
       name: "Pelatihan",
       icon: "ri-book-open-line",
@@ -126,18 +134,15 @@ export default function Sidebar({
       icon: "ri-links-line",
       path: "/dashboard/pendaftaran-pelatihan",
     },
-    // { name: "Pengaduan", icon: "ri-alert-line", path: "/dashboard/pengaduan" },
-    { name: "Laporan", icon: "ri-file-chart-line", path: "/dashboard/laporan" },
-    { name: "Berita", icon: "ri-newspaper-line", path: "/dashboard/berita" },
-    {
-      name: "Konten Website",
-      icon: "ri-pages-line",
-      path: "/dashboard/konten",
-    },
     {
       name: "User Management",
       icon: "ri-shield-user-line",
       path: "/dashboard/users",
+    },
+    {
+      name: "Konten Website",
+      icon: "ri-pages-line",
+      path: "/dashboard/konten",
     },
     {
       name: "Pengaturan",
@@ -157,16 +162,7 @@ export default function Sidebar({
   ];
 
   const filteredItems = (() => {
-    const base = permissionCodes.includes("ak1.read")
-      ? allItems.concat([
-          {
-            name: "Kartu Kuning (AK1)",
-            icon: "ri-profile-line",
-            path: "/dashboard/ak1",
-          },
-        ])
-      : allItems;
-    const filtered = base.filter((i) => {
+    const filtered = allItems.filter((i) => {
       if (i.path === "/dashboard/perusahaan")
         return permissionCodes.includes("perusahaan.read");
       if (i.path === "/dashboard/lowongan")
@@ -214,11 +210,11 @@ export default function Sidebar({
       )}
 
       <aside
-        className={`fixed top-16 left-0 z-30 h-screen bg-primary text-white transition-transform duration-300 flex flex-col
+        className={`fixed top-16 bottom-0 left-0 z-30 bg-primary text-white transition-transform duration-300 flex flex-col min-h-0
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0 ${isMinimized ? "w-16" : "w-64"}`}
       >
-        <nav className="px-2 pt-6 flex-1 overflow-y-auto">
+        <nav className="px-2 pt-6 pb-8 flex-1 min-h-0 overflow-y-auto overscroll-contain">
           <ul className="space-y-1">
             {filteredItems.map((item) => {
               const isActive =
