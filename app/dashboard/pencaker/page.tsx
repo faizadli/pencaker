@@ -406,8 +406,8 @@ export default function PencakerPage() {
 
   if (loading || !permsLoaded) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
           <FullPageLoading isSection />
         </div>
       </main>
@@ -536,47 +536,66 @@ export default function PencakerPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">
-              Manajemen Pencari Kerja
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Kelola data pencari kerja dan verifikasi Kartu Kuning (AK1)
-            </p>
-          </div>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full space-y-8">
+          <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+            <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+            <div className="p-6 sm:p-8">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Pencari kerja
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                Manajemen pencari kerja
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+                Kelola data pencari kerja, filter berdasarkan kriteria, dan
+                pantau status Kartu Kuning (AK1).
+              </p>
+            </div>
+          </header>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <StatCard
-              title="Total Pencaker"
-              value={stats.total}
-              change="Total terdaftar"
-              color="var(--color-primary)"
-              icon="ri-group-line"
-            />
-            <StatCard
-              title="Pencaker Bulan Ini"
-              value={stats.thisMonth}
-              change="Bulan ini"
-              color="var(--color-secondary)"
-              icon="ri-user-add-line"
-            />
-            <StatCard
-              title="Pencaker Tahun Ini"
-              value={stats.thisYear}
-              change="Tahun ini"
-              color="var(--color-primary-dark)"
-              icon="ri-calendar-check-line"
-            />
-          </div>
+          <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+            <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                  Ringkasan data
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Jumlah pencaker berdasarkan periode pendaftaran.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+              <StatCard
+                title="Total Pencaker"
+                value={stats.total}
+                change="Total terdaftar"
+                color="var(--color-primary)"
+                icon="ri-group-line"
+              />
+              <StatCard
+                title="Pencaker Bulan Ini"
+                value={stats.thisMonth}
+                change="Bulan ini"
+                color="var(--color-secondary)"
+                icon="ri-user-add-line"
+              />
+              <StatCard
+                title="Pencaker Tahun Ini"
+                value={stats.thisYear}
+                change="Tahun ini"
+                color="var(--color-primary-dark)"
+                icon="ri-calendar-check-line"
+              />
+            </div>
+          </section>
 
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
             {/* Main Content: Table and Actions */}
-            <div className="flex-1 min-w-0">
-              <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1">
+            <div className="min-w-0 flex-1 space-y-6">
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-950/[0.02] sm:p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
+                  <div className="min-w-0 flex-1">
                     <Input
                       icon="ri-search-line"
                       type="text"
@@ -586,9 +605,10 @@ export default function PencakerPage() {
                       className="w-full py-3"
                     />
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-2 items-stretch">
+                  <div className="flex flex-col items-stretch gap-2 sm:flex-row">
                     {permissions.includes("pencaker.create") && (
                       <button
+                        type="button"
                         onClick={() => {
                           setEditingCandidateId(null);
                           setFormCandidate({
@@ -614,7 +634,7 @@ export default function PencakerPage() {
                           setUserPassword("");
                           setShowFormModal(true);
                         }}
-                        className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center"
+                        className="flex h-full w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-primary-dark)] motion-safe:hover:shadow sm:w-auto sm:min-w-[9rem]"
                       >
                         + Tambah
                       </button>
@@ -623,7 +643,7 @@ export default function PencakerPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+              <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHead>
@@ -640,8 +660,8 @@ export default function PencakerPage() {
                       {paginatedPencakers.length === 0 ? (
                         <TableRow>
                           <TD
-                            colSpan={7}
-                            className="text-center py-8 text-gray-500"
+                            colSpan={6}
+                            className="py-10 text-center text-sm text-slate-500"
                           >
                             Tidak ada data ditemukan
                           </TD>
@@ -677,45 +697,45 @@ export default function PencakerPage() {
                                     className="w-10 h-10 rounded-full object-cover"
                                   />
                                   <div>
-                                    <div className="font-medium text-gray-900">
+                                    <div className="font-medium text-slate-900">
                                       {p.nama}
                                     </div>
-                                    <div className="text-xs text-gray-500">
+                                    <div className="text-xs text-slate-500">
                                       {p.nik}
                                     </div>
                                   </div>
                                 </div>
                               </TD>
                               <TD>
-                                <div className="text-sm text-gray-900">
+                                <div className="text-sm text-slate-900">
                                   {p.ttl}
                                 </div>
-                                <div className="text-xs text-gray-500">
+                                <div className="text-xs text-slate-500">
                                   {age} Tahun
                                 </div>
                               </TD>
                               <TD>
-                                <div className="text-sm text-gray-900">
+                                <div className="text-sm text-slate-900">
                                   {p.pendidikan}
                                 </div>
                                 {/* <div className="text-xs text-gray-500">{pTyped.jurusan || "-"}</div> */}
                               </TD>
                               <TD>
-                                <div className="text-sm text-gray-900">
+                                <div className="text-sm text-slate-900">
                                   {p.telepon}
                                 </div>
-                                <div className="text-xs text-gray-500">
+                                <div className="text-xs text-slate-500">
                                   {p.email}
                                 </div>
                               </TD>
                               <TD>
                                 <span
-                                  className={`inline-block px-2 py-1 text-xs rounded-full ${
+                                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
                                     p.ak1Status === "Terverifikasi"
-                                      ? "bg-green-100 text-green-800"
+                                      ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/80"
                                       : p.ak1Status === "Ditolak"
-                                        ? "bg-red-100 text-red-800"
-                                        : "bg-yellow-100 text-yellow-800"
+                                        ? "bg-red-100 text-red-800 ring-1 ring-red-200/80"
+                                        : "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80"
                                   }`}
                                 >
                                   {p.ak1Status}
@@ -725,13 +745,14 @@ export default function PencakerPage() {
                                 <div className="flex justify-end gap-2">
                                   <Link
                                     href={`/dashboard/pencaker/${p.id}`}
-                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition flex items-center justify-center"
+                                    className="landing-focus flex items-center justify-center rounded-lg p-2 text-primary transition hover:bg-primary/10"
                                     title="Detail"
                                   >
-                                    <i className="ri-eye-line"></i>
+                                    <i className="ri-eye-line" />
                                   </Link>
                                   {permissions.includes("pencaker.update") && (
                                     <button
+                                      type="button"
                                       onClick={() => {
                                         setEditingCandidateId(p.id);
                                         const src = rawCandidates.find(
@@ -796,10 +817,10 @@ export default function PencakerPage() {
                                         }
                                         setShowFormModal(true);
                                       }}
-                                      className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition"
+                                      className="landing-focus flex items-center justify-center rounded-lg p-2 text-slate-600 transition hover:bg-primary/10 hover:text-primary"
                                       title="Edit"
                                     >
-                                      <i className="ri-pencil-line"></i>
+                                      <i className="ri-pencil-line" />
                                     </button>
                                   )}
                                 </div>
@@ -813,7 +834,7 @@ export default function PencakerPage() {
                 </div>
               </div>
 
-              <div className="mt-4">
+              <div className="mt-2">
                 <Pagination
                   page={page}
                   pageSize={pageSize}
@@ -828,15 +849,21 @@ export default function PencakerPage() {
             </div>
 
             {/* Sidebar Filter */}
-            <div className="w-full lg:w-80 flex-shrink-0">
-              <div className="bg-white p-5 rounded-xl shadow-md border border-gray-200 sticky top-4">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <i className="ri-filter-3-line"></i> Filter
+            <aside className="w-full shrink-0 lg:w-80 xl:w-96">
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm ring-1 ring-slate-950/[0.02] lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+                <h3 className="mb-1 flex items-center gap-2 text-base font-bold text-slate-900">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <i className="ri-filter-3-line text-lg leading-none" />
+                  </span>
+                  Filter
                 </h3>
+                <p className="mb-5 text-xs text-slate-500">
+                  Sempitkan daftar berdasarkan umur, tanggal, dan pendidikan.
+                </p>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Rentang Umur
+                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Rentang umur
                     </label>
                     <div className="space-y-2">
                       <Input
@@ -857,8 +884,8 @@ export default function PencakerPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tanggal Pendaftaran
+                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Tanggal pendaftaran
                     </label>
                     <div className="space-y-2">
                       <Input
@@ -937,7 +964,7 @@ export default function PencakerPage() {
                     */}
                 </div>
               </div>
-            </div>
+            </aside>
           </div>
 
           {filteredPencakers.length === 0 && (
