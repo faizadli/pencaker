@@ -7,6 +7,7 @@ import FullPageLoading from "../../../../components/ui/FullPageLoading";
 import Modal from "../../../../components/ui/Modal";
 import { useToast } from "../../../../components/ui/Toast";
 import { Input, SearchableSelect } from "../../../../components/ui/field";
+import StatCard from "../../../../components/ui/StatCard";
 import {
   Table,
   TableHead,
@@ -96,6 +97,30 @@ function formatBulkResultMessage(
     .join(" · ");
   const more = res.failed.length > 3 ? " · …" : "";
   return `${res.succeeded.length} ${label}, ${res.failed.length} gagal: ${preview}${more}`;
+}
+
+function getApplicationStatusMeta(
+  status: TrainingRegistrationApplication["status"],
+) {
+  if (status === "accepted") {
+    return {
+      label: "Diterima",
+      className:
+        "inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700",
+    };
+  }
+  if (status === "rejected") {
+    return {
+      label: "Ditolak",
+      className:
+        "inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700",
+    };
+  }
+  return {
+    label: "Menunggu",
+    className:
+      "inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700",
+  };
 }
 
 export default function PendaftaranPelatihanDetailPage() {
@@ -466,9 +491,19 @@ export default function PendaftaranPelatihanDetailPage() {
 
   if (!canRead) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          <p className="text-sm text-gray-500">Tidak memiliki akses.</p>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm ring-1 ring-slate-950/[0.02] sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+              Pendaftaran pelatihan
+            </p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+              Akses tidak tersedia
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">
+              Tidak memiliki akses.
+            </p>
+          </div>
         </div>
       </main>
     );
@@ -481,28 +516,28 @@ export default function PendaftaranPelatihanDetailPage() {
       title="Simpan kata sandi panel panitia"
       size="md"
     >
-      <div className="space-y-3 text-sm text-gray-700">
-        <p>
+      <div className="space-y-4">
+        <p className="rounded-2xl border border-slate-200/90 bg-slate-50/70 px-4 py-3 text-sm leading-relaxed text-slate-600">
           Program baru dibuat. Gunakan kata sandi berikut untuk membuka halaman
           publik kelola pendaftar (bukan dashboard admin):
         </p>
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 font-mono text-base font-semibold text-amber-950 break-all">
+        <div className="break-all rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 font-mono text-base font-semibold text-amber-950 shadow-sm">
           {oneTimePwd}
         </div>
         {campaign ? (
-          <p className="text-xs text-gray-600 break-all">
+          <p className="break-all text-xs text-slate-600">
             Link panel:{" "}
             <span className="font-medium text-primary">
               {buildGuestPanelUrl(campaign.public_slug)}
             </span>
           </p>
         ) : null}
-        <p className="text-xs text-gray-500">
+        <p className="text-xs leading-relaxed text-slate-500">
           Sandi ini tidak ditampilkan lagi. Anda dapat mengubahnya kapan saja di
           halaman ini atau lewat &quot;Ubah program&quot; pada daftar
           pendaftaran.
         </p>
-        <div className="flex justify-end pt-2">
+        <div className="flex justify-end border-t border-slate-100 pt-3">
           <button
             type="button"
             onClick={async () => {
@@ -513,7 +548,7 @@ export default function PendaftaranPelatihanDetailPage() {
                 showError("Gagal menyalin");
               }
             }}
-            className="px-4 py-2 text-sm rounded-lg bg-primary text-white hover:brightness-95"
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:brightness-95"
           >
             Salin sandi
           </button>
@@ -525,8 +560,8 @@ export default function PendaftaranPelatihanDetailPage() {
   if (loading) {
     return (
       <>
-        <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-          <div className="px-4 sm:px-6">
+        <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+          <div className="w-full">
             <FullPageLoading isSection />
           </div>
         </main>
@@ -538,15 +573,26 @@ export default function PendaftaranPelatihanDetailPage() {
   if (!campaign) {
     return (
       <>
-        <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-          <div className="px-4 sm:px-6">
-            <p className="text-gray-600">Data tidak ditemukan.</p>
-            <Link
-              href="/dashboard/pendaftaran-pelatihan"
-              className="text-primary text-sm mt-2 inline-block"
-            >
-              ← Kembali
-            </Link>
+        <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+          <div className="w-full">
+            <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm ring-1 ring-slate-950/[0.02] sm:p-8">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Pendaftaran pelatihan
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                Data tidak ditemukan
+              </h1>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                Program yang Anda buka tidak tersedia atau sudah dihapus.
+              </p>
+              <Link
+                href="/dashboard/pendaftaran-pelatihan"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-medium text-primary transition hover:bg-primary/10"
+              >
+                <i className="ri-arrow-left-line" aria-hidden />
+                Kembali
+              </Link>
+            </div>
           </div>
         </main>
         {oneTimePwdModalEl}
@@ -554,326 +600,440 @@ export default function PendaftaranPelatihanDetailPage() {
     );
   }
 
+  const guestRegistrationUrl = buildGuestRegistrationUrl(campaign.public_slug);
+  const guestPanelUrl = buildGuestPanelUrl(campaign.public_slug);
+  const periodLabel =
+    campaign.start_date || campaign.end_date
+      ? `${formatIdDate(campaign.start_date)} – ${formatIdDate(campaign.end_date)}`
+      : "Belum ditetapkan";
   const bulkBtnBase =
-    "px-3 py-1.5 text-xs rounded-lg transition disabled:opacity-50 flex items-center gap-1.5";
+    "inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition disabled:opacity-50";
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          <Link
-            href="/dashboard/pendaftaran-pelatihan"
-            className="text-sm text-primary hover:underline mb-4 inline-block"
-          >
-            ← Daftar pendaftaran
-          </Link>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full space-y-8">
+          <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+            <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+            <div className="p-6 sm:p-8">
+              <Link
+                href="/dashboard/pendaftaran-pelatihan"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary transition hover:bg-primary/10"
+              >
+                <i className="ri-arrow-left-line" aria-hidden />
+                Daftar pendaftaran
+              </Link>
+              <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                    Detail program
+                  </p>
+                  <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                    {campaign.training_name}
+                  </h1>
+                  <p className="mt-2 text-sm text-slate-600">
+                    {campaign.institution_name?.trim()
+                      ? campaign.institution_name
+                      : "Lembaga belum dicantumkan"}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {campaign.start_date || campaign.end_date ? (
+                      <>Periode pendaftaran (WIB): {periodLabel}</>
+                    ) : (
+                      <>
+                        Periode pendaftaran belum ditetapkan, link tamu selalu
+                        terbuka.
+                      </>
+                    )}
+                  </p>
+                </div>
+                <span
+                  className={`inline-flex w-fit items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium ${
+                    registrationEnabled
+                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                      : "bg-slate-100 text-slate-700 ring-1 ring-slate-200"
+                  }`}
+                >
+                  <i
+                    className={
+                      registrationEnabled
+                        ? "ri-checkbox-circle-line"
+                        : "ri-forbid-line"
+                    }
+                  />
+                  {registrationEnabled
+                    ? "Pendaftaran terbuka"
+                    : "Pendaftaran ditutup"}
+                </span>
+              </div>
+            </div>
+          </header>
 
-          <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">
-              {campaign.training_name}
-            </h1>
-            <p className="text-sm text-gray-600 mt-1">
-              {campaign.institution_name?.trim()
-                ? campaign.institution_name
-                : "—"}
-            </p>
-            <p className="text-sm text-gray-500">
-              {campaign.start_date || campaign.end_date ? (
-                <>
-                  Periode pendaftaran (WIB): {formatIdDate(campaign.start_date)}{" "}
-                  – {formatIdDate(campaign.end_date)}
-                </>
-              ) : (
-                <>
-                  Periode pendaftaran: belum ditetapkan (link tamu selalu
-                  terbuka)
-                </>
-              )}
-            </p>
-          </div>
+          <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+            <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5">
+              <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                Ringkasan pengajuan
+              </h2>
+              <p className="text-sm text-slate-500">
+                Distribusi pengajuan masuk untuk program pendaftaran ini.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard
+                title="Total pengajuan"
+                value={applications.length}
+                change="Semua data masuk"
+                color="var(--color-primary)"
+                icon="ri-file-list-3-line"
+              />
+              <StatCard
+                title="Menunggu"
+                value={statusCounts.pending}
+                change="Belum diproses"
+                color="#d97706"
+                icon="ri-time-line"
+              />
+              <StatCard
+                title="Diterima"
+                value={statusCounts.accepted}
+                change="Sudah masuk rekap"
+                color="#059669"
+                icon="ri-check-double-line"
+              />
+              <StatCard
+                title="Ditolak"
+                value={statusCounts.rejected}
+                change="Pengajuan nonaktif"
+                color="#475569"
+                icon="ri-close-circle-line"
+              />
+            </div>
+          </section>
 
-          <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-primary mb-2">
-                  Link untuk tamu (tanpa login)
-                </p>
-                <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                  <code className="text-xs bg-gray-50 border rounded-lg px-3 py-2 break-all flex-1">
-                    {buildGuestRegistrationUrl(campaign.public_slug)}
+          <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.35fr_1fr]">
+            <div className="space-y-5">
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm ring-1 ring-slate-950/[0.02]">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-bold text-slate-900">
+                      Link untuk tamu
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Form publik ini dipakai peserta untuk mendaftar tanpa
+                      login.
+                    </p>
+                  </div>
+                  <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-secondary/10 px-2.5 py-1 text-xs font-medium text-secondary">
+                    <i className="ri-global-line" aria-hidden />
+                    Publik
+                  </span>
+                </div>
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <code className="flex-1 break-all rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                    {guestRegistrationUrl}
                   </code>
                   <button
                     type="button"
                     onClick={() => void copyLink()}
-                    className="px-4 py-2 bg-secondary text-white rounded-lg text-sm hover:brightness-95 shrink-0"
+                    className="rounded-xl bg-secondary px-4 py-2 text-sm font-medium text-white transition hover:brightness-95"
                   >
                     Salin link
                   </button>
                 </div>
               </div>
-              {canCreate && (
-                <div className="lg:w-72 shrink-0 bg-gray-50/60 border border-gray-200 rounded-lg p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900">
-                        Status pendaftaran
-                      </p>
-                      <p className="text-xs text-gray-600 mt-0.5">
-                        {registrationEnabled
-                          ? "Form tamu bisa diisi (selama dalam periode)."
-                          : "Form tamu sedang ditutup oleh admin."}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={registrationEnabled}
-                      aria-label="Toggle buka/tutup pendaftaran"
-                      disabled={togglingRegistration}
-                      onClick={() =>
-                        void handleToggleRegistration(!registrationEnabled)
-                      }
-                      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition disabled:opacity-60 ${
-                        registrationEnabled ? "bg-emerald-500" : "bg-gray-300"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${
-                          registrationEnabled
-                            ? "translate-x-5"
-                            : "translate-x-1"
-                        }`}
-                      />
-                    </button>
+
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm ring-1 ring-slate-950/[0.02]">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-bold text-slate-900">
+                      Panel panitia
+                    </h2>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                      Panel publik untuk panitia melihat daftar pendaftar,
+                      ekspor Excel, dan memproses pengajuan dengan kata sandi
+                      khusus.
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    {registrationEnabled ? (
-                      <>
-                        <span className="inline-flex items-center gap-1 text-emerald-700 font-medium">
-                          <i className="ri-checkbox-circle-line" aria-hidden />
-                          Terbuka
-                        </span>
-                      </>
+                  <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                    <i className="ri-shield-keyhole-line" aria-hidden />
+                    Proteksi sandi
+                  </span>
+                </div>
+
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <code className="flex-1 break-all rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                    {guestPanelUrl}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={() => void copyPanelLink()}
+                    className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:brightness-95"
+                  >
+                    Salin link panel
+                  </button>
+                </div>
+
+                {panelPwdDisplay && canCreate && (
+                  <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3">
+                    <p className="text-xs font-medium text-amber-950">
+                      Kata sandi panel aktif di perangkat ini
+                    </p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-amber-900/80">
+                      Hanya disimpan di browser Anda agar tidak lupa; server
+                      hanya menyimpan hash. Jangan bagikan layar publik.
+                    </p>
+                    <code className="mt-2 block break-all rounded-lg border border-amber-100 bg-white/80 px-2.5 py-2 font-mono text-xs text-amber-950">
+                      {panelPwdDisplay}
+                    </code>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void copyPanelPasswordDisplay()}
+                        className="rounded-lg bg-amber-800 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-amber-900"
+                      >
+                        Salin sandi
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => clearPanelPasswordDisplay()}
+                        className="rounded-lg border border-amber-300 px-3 py-1.5 text-xs font-medium text-amber-950 transition hover:bg-amber-100/80"
+                      >
+                        Sembunyikan dari halaman ini
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-4 rounded-2xl border border-slate-200/90 bg-slate-50/70 p-4">
+                  <p className="text-sm text-slate-700">
+                    Status sandi:{" "}
+                    {campaign.guest_panel_password_configured ? (
+                      <span className="font-medium text-emerald-700">
+                        Sudah diatur
+                      </span>
                     ) : (
-                      <>
-                        <span className="inline-flex items-center gap-1 text-gray-700 font-medium">
-                          <i className="ri-forbid-line" aria-hidden />
-                          Ditutup
-                        </span>
-                      </>
+                      <span className="font-medium text-amber-800">
+                        Belum diatur
+                      </span>
                     )}
                   </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
-            <p className="text-sm font-medium text-primary mb-2">
-              Panel panitia (publik, tanpa akun dashboard)
-            </p>
-            <p className="text-xs text-gray-600 mb-3">
-              Panitia dapat melihat daftar pendaftar, mengekspor Excel, dan
-              menerima/menolak pengajuan dengan{" "}
-              <strong>kata sandi khusus</strong>. Sandi dibuat otomatis saat
-              program ini dibuat; simpan dengan aman atau ubah di bawah / dari
-              menu ubah program.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-2 sm:items-center mb-4">
-              <code className="text-xs bg-gray-50 border rounded-lg px-3 py-2 break-all flex-1">
-                {buildGuestPanelUrl(campaign.public_slug)}
-              </code>
-              <button
-                type="button"
-                onClick={() => void copyPanelLink()}
-                className="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:brightness-95 shrink-0"
-              >
-                Salin link panel
-              </button>
-            </div>
-            {panelPwdDisplay && canCreate && (
-              <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-2.5">
-                <p className="text-xs font-medium text-amber-950">
-                  Kata sandi panel (aktif di perangkat ini)
-                </p>
-                <p className="text-[11px] text-amber-900/80 mt-0.5 mb-2">
-                  Hanya disimpan di browser Anda agar tidak lupa; server hanya
-                  menyimpan hash. Jangan bagikan layar publik.
-                </p>
-                <code className="text-xs font-mono block break-all bg-white/80 border border-amber-100 rounded px-2 py-1.5">
-                  {panelPwdDisplay}
-                </code>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <button
-                    type="button"
-                    onClick={() => void copyPanelPasswordDisplay()}
-                    className="text-xs px-3 py-1.5 rounded-md bg-amber-800 text-white hover:bg-amber-900"
-                  >
-                    Salin sandi
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => clearPanelPasswordDisplay()}
-                    className="text-xs px-3 py-1.5 rounded-md border border-amber-300 text-amber-950 hover:bg-amber-100/80"
-                  >
-                    Sembunyikan dari halaman ini
-                  </button>
+                  {canCreate && (
+                    <div className="mt-3 border-t border-slate-200 pt-3">
+                      <Input
+                        label="Ubah kata sandi panel"
+                        type="password"
+                        autoComplete="new-password"
+                        required={false}
+                        value={newPanelPwd}
+                        onChange={(e) => setNewPanelPwd(e.target.value)}
+                        hint="Minimal 8 karakter. Diberikan kepada panitia yang mengelola link di atas."
+                      />
+                      <button
+                        type="button"
+                        disabled={
+                          savingPanelPwd || newPanelPwd.trim().length < 8
+                        }
+                        onClick={() => void handleSavePanelPassword()}
+                        className="mt-3 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-black disabled:opacity-50"
+                      >
+                        {savingPanelPwd ? "Menyimpan…" : "Simpan sandi baru"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-            <p className="text-xs text-gray-600 mb-3">
-              Status sandi:{" "}
-              {campaign.guest_panel_password_configured ? (
-                <span className="text-emerald-700 font-medium">
-                  Sudah diatur
-                </span>
-              ) : (
-                <span className="text-amber-800 font-medium">
-                  Belum diatur — gunakan &quot;Ubah program&quot; atau isi sandi
-                  baru di bawah
-                </span>
-              )}
-            </p>
+            </div>
+
             {canCreate && (
-              <div className="border-t border-gray-100 pt-3 mt-1 space-y-2">
-                <Input
-                  label="Ubah kata sandi panel"
-                  type="password"
-                  autoComplete="new-password"
-                  required={false}
-                  value={newPanelPwd}
-                  onChange={(e) => setNewPanelPwd(e.target.value)}
-                  hint="Minimal 8 karakter. Diberikan kepada panitia yang mengelola link di atas."
-                />
-                <button
-                  type="button"
-                  disabled={savingPanelPwd || newPanelPwd.trim().length < 8}
-                  onClick={() => void handleSavePanelPassword()}
-                  className="px-4 py-2 text-sm rounded-lg bg-gray-900 text-white hover:bg-black disabled:opacity-50"
-                >
-                  {savingPanelPwd ? "Menyimpan…" : "Simpan sandi baru"}
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="mb-4">
-            <h2 className="text-lg font-bold text-primary">Pengajuan masuk</h2>
-            <p className="text-sm text-gray-500">
-              <strong>Terima</strong> memindahkan ke rekap pelatihan.{" "}
-              <strong>Tolak</strong> menandai ditolak (dari yang diterima: hapus
-              dari rekap). <strong>Buka lagi</strong> mengembalikan ke menunggu
-              agar bisa diproses ulang. Gunakan checkbox untuk aksi massal.
-            </p>
-          </div>
-
-          <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200">
-            <div className="flex flex-col lg:flex-row gap-3 mb-3 lg:items-end">
-              <div className="flex-1 min-w-0">
-                <Input
-                  icon="ri-search-line"
-                  type="search"
-                  placeholder="Cari nama, NIK, email, HP, alamat…"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full py-2.5"
-                  aria-label="Cari pendaftar"
-                />
-              </div>
-              <SearchableSelect
-                options={STATUS_FILTER_OPTIONS}
-                value={statusFilter}
-                onChange={(v) =>
-                  setStatusFilter(
-                    (v === "pending" ||
-                    v === "accepted" ||
-                    v === "rejected" ||
-                    v === "all"
-                      ? v
-                      : "all") as StatusFilter,
-                  )
-                }
-                className="w-full sm:w-56"
-                placeholder="Filter status"
-              />
-              {canRead && (
-                <button
-                  type="button"
-                  disabled={
-                    exportingExcel ||
-                    applications.length === 0 ||
-                    filteredApplications.length === 0
-                  }
-                  onClick={() => void handleExportExcel()}
-                  title="Mengekspor baris yang tampil sesuai pencarian dan filter status"
-                  className="px-4 py-2.5 w-full sm:w-auto shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-sm font-medium hover:bg-emerald-100 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <i className="ri-file-excel-2-line text-lg" aria-hidden />
-                  {exportingExcel ? "Menyiapkan…" : "Export Excel"}
-                </button>
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
-              <span className="px-2 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                Menunggu: {statusCounts.pending}
-              </span>
-              <span className="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-                Diterima: {statusCounts.accepted}
-              </span>
-              <span className="px-2 py-1 rounded-full bg-gray-50 text-gray-700 border border-gray-200">
-                Ditolak: {statusCounts.rejected}
-              </span>
-              <span className="ml-auto text-gray-500">
-                Menampilkan {filteredApplications.length} /{" "}
-                {applications.length}
-              </span>
-            </div>
-
-            {canCreate && selectedCount > 0 && (
-              <div className="flex flex-wrap items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20">
-                <span className="text-sm text-gray-800">
-                  <strong>{selectedCount}</strong> pengajuan dipilih
-                </span>
-                <div className="flex flex-wrap gap-2 ml-auto">
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm ring-1 ring-slate-950/[0.02]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-bold text-slate-900">
+                      Status pendaftaran
+                    </h2>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                      Kontrol buka atau tutup form publik tanpa mengubah data
+                      program.
+                    </p>
+                  </div>
                   <button
                     type="button"
-                    disabled={bulkBusy}
-                    onClick={() => void handleBulk("accept")}
-                    className={`${bulkBtnBase} bg-emerald-600 text-white hover:bg-emerald-700`}
+                    role="switch"
+                    aria-checked={registrationEnabled}
+                    aria-label="Toggle buka/tutup pendaftaran"
+                    disabled={togglingRegistration}
+                    onClick={() =>
+                      void handleToggleRegistration(!registrationEnabled)
+                    }
+                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition disabled:opacity-60 ${
+                      registrationEnabled ? "bg-emerald-500" : "bg-slate-300"
+                    }`}
                   >
-                    <i className="ri-check-line" aria-hidden />
-                    Terima terpilih
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${
+                        registrationEnabled ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
                   </button>
-                  <button
-                    type="button"
-                    disabled={bulkBusy}
-                    onClick={() => void handleBulk("reject")}
-                    className={`${bulkBtnBase} bg-gray-200 text-gray-900 hover:bg-gray-300`}
-                  >
-                    <i className="ri-close-line" aria-hidden />
-                    Tolak terpilih
-                  </button>
-                  <button
-                    type="button"
-                    disabled={bulkBusy}
-                    onClick={() => void handleBulk("delete")}
-                    className={`${bulkBtnBase} bg-red-600 text-white hover:bg-red-700`}
-                  >
-                    <i className="ri-delete-bin-line" aria-hidden />
-                    Hapus terpilih
-                  </button>
-                  <button
-                    type="button"
-                    disabled={bulkBusy}
-                    onClick={clearSelection}
-                    className={`${bulkBtnBase} border border-gray-300 text-gray-700 hover:bg-gray-100`}
-                  >
-                    Bersihkan
-                  </button>
+                </div>
+                <div className="mt-4 rounded-2xl border border-slate-200/90 bg-slate-50/70 p-4">
+                  <p className="text-sm text-slate-700">
+                    {registrationEnabled
+                      ? "Form tamu bisa diisi selama masih berada dalam periode yang ditentukan."
+                      : "Form tamu sedang ditutup oleh admin dan tidak menerima pengajuan baru."}
+                  </p>
+                  <p className="mt-3">
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium ${
+                        registrationEnabled
+                          ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                          : "bg-slate-100 text-slate-700 ring-1 ring-slate-200"
+                      }`}
+                    >
+                      <i
+                        className={
+                          registrationEnabled
+                            ? "ri-checkbox-circle-line"
+                            : "ri-forbid-line"
+                        }
+                        aria-hidden
+                      />
+                      {registrationEnabled ? "Terbuka" : "Ditutup"}
+                    </span>
+                  </p>
                 </div>
               </div>
             )}
+          </section>
+
+          <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+            <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    Pengajuan masuk
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Terima untuk memindahkan ke rekap pelatihan, tolak untuk
+                    menandai tidak lolos, dan buka lagi untuk memproses ulang.
+                  </p>
+                </div>
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                  <i className="ri-filter-3-line text-primary" />
+                  {filteredApplications.length} / {applications.length}{" "}
+                  pengajuan
+                </span>
+              </div>
+            </div>
+
+            <div className="p-4 sm:p-5">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+                <div className="min-w-0 flex-1">
+                  <Input
+                    icon="ri-search-line"
+                    type="search"
+                    placeholder="Cari nama, NIK, email, HP, alamat…"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full py-2.5"
+                    aria-label="Cari pendaftar"
+                  />
+                </div>
+                <SearchableSelect
+                  options={STATUS_FILTER_OPTIONS}
+                  value={statusFilter}
+                  onChange={(v) =>
+                    setStatusFilter(
+                      (v === "pending" ||
+                      v === "accepted" ||
+                      v === "rejected" ||
+                      v === "all"
+                        ? v
+                        : "all") as StatusFilter,
+                    )
+                  }
+                  className="w-full sm:w-56"
+                  placeholder="Filter status"
+                />
+                {canRead && (
+                  <button
+                    type="button"
+                    disabled={
+                      exportingExcel ||
+                      applications.length === 0 ||
+                      filteredApplications.length === 0
+                    }
+                    onClick={() => void handleExportExcel()}
+                    title="Mengekspor baris yang tampil sesuai pencarian dan filter status"
+                    className="flex w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-900 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                  >
+                    <i className="ri-file-excel-2-line text-lg" aria-hidden />
+                    {exportingExcel ? "Menyiapkan…" : "Export Excel"}
+                  </button>
+                )}
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+                <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-amber-800">
+                  Menunggu: {statusCounts.pending}
+                </span>
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-emerald-800">
+                  Diterima: {statusCounts.accepted}
+                </span>
+                <span className="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-slate-700">
+                  Ditolak: {statusCounts.rejected}
+                </span>
+                <span className="ml-auto text-slate-500">
+                  Menampilkan {filteredApplications.length} /{" "}
+                  {applications.length}
+                </span>
+              </div>
+
+              {canCreate && selectedCount > 0 && (
+                <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3">
+                  <span className="text-sm text-slate-800">
+                    <strong>{selectedCount}</strong> pengajuan dipilih
+                  </span>
+                  <div className="ml-auto flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={bulkBusy}
+                      onClick={() => void handleBulk("accept")}
+                      className={`${bulkBtnBase} bg-emerald-600 text-white hover:bg-emerald-700`}
+                    >
+                      <i className="ri-check-line" aria-hidden />
+                      Terima terpilih
+                    </button>
+                    <button
+                      type="button"
+                      disabled={bulkBusy}
+                      onClick={() => void handleBulk("reject")}
+                      className={`${bulkBtnBase} bg-slate-200 text-slate-900 hover:bg-slate-300`}
+                    >
+                      <i className="ri-close-line" aria-hidden />
+                      Tolak terpilih
+                    </button>
+                    <button
+                      type="button"
+                      disabled={bulkBusy}
+                      onClick={() => void handleBulk("delete")}
+                      className={`${bulkBtnBase} bg-red-600 text-white hover:bg-red-700`}
+                    >
+                      <i className="ri-delete-bin-line" aria-hidden />
+                      Hapus terpilih
+                    </button>
+                    <button
+                      type="button"
+                      disabled={bulkBusy}
+                      onClick={clearSelection}
+                      className={`${bulkBtnBase} border border-slate-300 text-slate-700 hover:bg-slate-100`}
+                    >
+                      Bersihkan
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="overflow-x-auto">
               <Table>
@@ -907,7 +1067,7 @@ export default function PendaftaranPelatihanDetailPage() {
                     <TH className="max-w-[10rem]">Alamat</TH>
                     <TH>Status</TH>
                     {canCreate && (
-                      <TH className="w-36 text-right whitespace-nowrap">
+                      <TH className="w-36 whitespace-nowrap text-right">
                         Aksi
                       </TH>
                     )}
@@ -918,16 +1078,16 @@ export default function PendaftaranPelatihanDetailPage() {
                     <TableRow>
                       <TD
                         colSpan={canCreate ? 12 : 10}
-                        className="text-center text-gray-500 py-8"
+                        className="py-10 text-center text-sm text-slate-500"
                       >
-                        Belum ada pengajuan
+                        Belum ada pengajuan.
                       </TD>
                     </TableRow>
                   ) : filteredApplications.length === 0 ? (
                     <TableRow>
                       <TD
                         colSpan={canCreate ? 12 : 10}
-                        className="text-center text-gray-500 py-8"
+                        className="py-10 text-center text-sm text-slate-500"
                       >
                         Tidak ada hasil untuk filter ini.
                       </TD>
@@ -935,6 +1095,7 @@ export default function PendaftaranPelatihanDetailPage() {
                   ) : (
                     filteredApplications.map((a) => {
                       const checked = selectedIds.has(a.id);
+                      const statusMeta = getApplicationStatusMeta(a.status);
                       return (
                         <TableRow
                           key={a.id}
@@ -951,58 +1112,48 @@ export default function PendaftaranPelatihanDetailPage() {
                               />
                             </TD>
                           )}
-                          <TD>{a.full_name}</TD>
-                          <TD className="text-xs font-mono whitespace-nowrap">
+                          <TD className="font-medium text-slate-900">
+                            {a.full_name}
+                          </TD>
+                          <TD className="whitespace-nowrap font-mono text-xs">
                             {a.nik}
                           </TD>
-                          <TD className="text-xs font-mono whitespace-nowrap">
+                          <TD className="whitespace-nowrap font-mono text-xs">
                             {a.no_kk || "—"}
                           </TD>
                           <TD>{a.gender}</TD>
-                          <TD className="text-xs max-w-[8rem] truncate">
+                          <TD className="max-w-[8rem] truncate text-xs text-slate-700">
                             {a.email || "—"}
                           </TD>
                           <TD className="text-xs">
                             <div>{a.birth_place}</div>
-                            <div className="text-gray-500">
+                            <div className="text-slate-500">
                               {formatIdDate(a.birth_date)}
                             </div>
                           </TD>
-                          <TD className="text-xs whitespace-nowrap">
+                          <TD className="whitespace-nowrap text-xs">
                             {a.phone}
                           </TD>
-                          <TD className="text-xs max-w-[8rem] truncate">
+                          <TD className="max-w-[8rem] truncate text-xs">
                             {a.last_education}
                           </TD>
-                          <TD className="text-xs max-w-[10rem] truncate align-top">
+                          <TD className="max-w-[10rem] truncate align-top text-xs">
                             <span title={a.address}>{a.address}</span>
                           </TD>
                           <TD>
-                            {a.status === "pending" && (
-                              <span className="text-amber-700 text-xs font-medium">
-                                Menunggu
-                              </span>
-                            )}
-                            {a.status === "accepted" && (
-                              <span className="text-emerald-700 text-xs font-medium">
-                                Diterima
-                              </span>
-                            )}
-                            {a.status === "rejected" && (
-                              <span className="text-gray-600 text-xs font-medium">
-                                Ditolak
-                              </span>
-                            )}
+                            <span className={statusMeta.className}>
+                              {statusMeta.label}
+                            </span>
                           </TD>
                           {canCreate && (
-                            <TD className="text-right align-top">
+                            <TD className="align-top text-right">
                               {a.status === "pending" ? (
                                 <div className="flex flex-wrap items-center justify-end gap-1.5">
                                   <button
                                     type="button"
                                     disabled={busyId === a.id || bulkBusy}
                                     onClick={() => void handleAccept(a)}
-                                    className="px-2 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50"
+                                    className="rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
                                   >
                                     {busyId === a.id ? "…" : "Terima"}
                                   </button>
@@ -1010,7 +1161,7 @@ export default function PendaftaranPelatihanDetailPage() {
                                     type="button"
                                     disabled={busyId === a.id || bulkBusy}
                                     onClick={() => void handleReject(a)}
-                                    className="px-2 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:opacity-50"
+                                    className="rounded-lg bg-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-800 transition hover:bg-slate-300 disabled:opacity-50"
                                   >
                                     Tolak
                                   </button>
@@ -1021,7 +1172,7 @@ export default function PendaftaranPelatihanDetailPage() {
                                     type="button"
                                     disabled={busyId === a.id || bulkBusy}
                                     onClick={() => void handleReject(a)}
-                                    className="px-2 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:opacity-50"
+                                    className="rounded-lg bg-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-800 transition hover:bg-slate-300 disabled:opacity-50"
                                   >
                                     {busyId === a.id ? "…" : "Tolak"}
                                   </button>
@@ -1031,7 +1182,7 @@ export default function PendaftaranPelatihanDetailPage() {
                                     onClick={() =>
                                       void handleReopenToPending(a)
                                     }
-                                    className="px-2 py-1 text-xs bg-amber-100 text-amber-900 rounded hover:bg-amber-200 disabled:opacity-50"
+                                    className="rounded-lg bg-amber-100 px-2.5 py-1.5 text-xs font-medium text-amber-900 transition hover:bg-amber-200 disabled:opacity-50"
                                   >
                                     Buka lagi
                                   </button>
@@ -1042,7 +1193,7 @@ export default function PendaftaranPelatihanDetailPage() {
                                     type="button"
                                     disabled={busyId === a.id || bulkBusy}
                                     onClick={() => void handleAccept(a)}
-                                    className="px-2 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50"
+                                    className="rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
                                   >
                                     {busyId === a.id ? "…" : "Terima"}
                                   </button>
@@ -1052,7 +1203,7 @@ export default function PendaftaranPelatihanDetailPage() {
                                     onClick={() =>
                                       void handleReopenToPending(a)
                                     }
-                                    className="px-2 py-1 text-xs bg-amber-100 text-amber-900 rounded hover:bg-amber-200 disabled:opacity-50"
+                                    className="rounded-lg bg-amber-100 px-2.5 py-1.5 text-xs font-medium text-amber-900 transition hover:bg-amber-200 disabled:opacity-50"
                                   >
                                     Buka lagi
                                   </button>

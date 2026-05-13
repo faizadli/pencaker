@@ -162,6 +162,19 @@ export default function PendaftaranPelatihanPage() {
       );
     });
   }, [rows, searchTerm]);
+  const rowsWithPeriod = useMemo(
+    () =>
+      rows.filter((r) => {
+        const start = String(r.start_date ?? "").trim();
+        const end = String(r.end_date ?? "").trim();
+        return start !== "" && end !== "";
+      }).length,
+    [rows],
+  );
+  const rowsWithInstitution = useMemo(
+    () => rows.filter((r) => (r.institution_name ?? "").trim() !== "").length,
+    [rows],
+  );
 
   useEffect(() => {
     setDashboardPerms(readDashboardPermissions());
@@ -249,10 +262,7 @@ export default function PendaftaranPelatihanPage() {
       if (pwd.length >= 8) {
         await setTrainingRegistrationGuestPanelPassword(editTarget.id, pwd);
         try {
-          sessionStorage.setItem(
-            `tr_panel_pwd_display_${editTarget.id}`,
-            pwd,
-          );
+          sessionStorage.setItem(`tr_panel_pwd_display_${editTarget.id}`, pwd);
         } catch {
           /* ignore */
         }
@@ -318,16 +328,23 @@ export default function PendaftaranPelatihanPage() {
     }
   };
 
+  const activeSearch = searchTerm.trim();
+
   if (!canRead) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-primary">
-            Pendaftaran pelatihan
-          </h1>
-          <p className="text-sm text-gray-500 mt-2">
-            Anda tidak memiliki akses ke halaman ini.
-          </p>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm ring-1 ring-slate-950/[0.02] sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+              Pendaftaran pelatihan
+            </p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+              Akses tidak tersedia
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">
+              Anda tidak memiliki akses ke halaman ini.
+            </p>
+          </div>
         </div>
       </main>
     );
@@ -335,8 +352,8 @@ export default function PendaftaranPelatihanPage() {
 
   if (loading) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
           <FullPageLoading isSection />
         </div>
       </main>
@@ -345,40 +362,70 @@ export default function PendaftaranPelatihanPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">
-              Pendaftaran pelatihan
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Buat link pendaftaran untuk tamu; pengajuan diproses di halaman
-              detail.
-            </p>
-          </div>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full space-y-8">
+          <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+            <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+            <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  Pendaftaran pelatihan
+                </p>
+                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                  Kelola program pendaftaran tamu
+                </h1>
+                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                  Buat link pendaftaran untuk tamu tanpa login, lalu proses
+                  semua pengajuan di halaman detail tiap program.
+                </p>
+              </div>
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                <i className="ri-links-line" />
+                {activeSearch
+                  ? `${filteredRows.length} hasil pencarian`
+                  : `${rows.length} program`}
+              </span>
+            </div>
+          </header>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <StatCard
-              title="Total program pendaftaran"
-              value={rows.length}
-              change="Link publik aktif"
-              color="var(--color-primary)"
-              icon="ri-links-line"
-            />
-          </div>
+          <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+            <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5">
+              <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                Ringkasan program
+              </h2>
+              <p className="text-sm text-slate-500">
+                Ikhtisar jumlah program, kelengkapan periode, dan pencantuman
+                lembaga pelatihan.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+              <StatCard
+                title="Total program pendaftaran"
+                value={rows.length}
+                change="Link publik aktif"
+                color="var(--color-primary)"
+                icon="ri-links-line"
+              />
+              <StatCard
+                title="Program berperiode"
+                value={rowsWithPeriod}
+                change="Mulai dan akhir diisi"
+                color="var(--color-secondary)"
+                icon="ri-calendar-event-line"
+              />
+              <StatCard
+                title="Dengan nama lembaga"
+                value={rowsWithInstitution}
+                change="Metadata lebih lengkap"
+                color="var(--color-foreground)"
+                icon="ri-building-line"
+              />
+            </div>
+          </section>
 
-          <div className="mb-4">
-            <h2 className="text-lg font-bold text-primary">
-              Daftar program pendaftaran
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Program yang aktif memiliki link tamu untuk diisi tanpa login.
-            </p>
-          </div>
-
-          <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-8">
-            <div className="flex flex-col sm:flex-row gap-3 mb-4">
-              <div className="flex-1 min-w-0">
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-950/[0.02] sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+              <div className="min-w-0 flex-1">
                 <Input
                   icon="ri-search-line"
                   type="search"
@@ -393,98 +440,134 @@ export default function PendaftaranPelatihanPage() {
                 <button
                   type="button"
                   onClick={openModal}
-                  className="px-4 py-2.5 w-full sm:w-auto sm:min-w-[12rem] bg-secondary text-white rounded-lg hover:brightness-95 text-sm transition flex items-center justify-center gap-2 shrink-0"
+                  className="flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95 sm:w-auto sm:min-w-[12rem]"
                 >
                   <i className="ri-add-line" aria-hidden />
                   Buat pendaftaran baru
                 </button>
               )}
             </div>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TH>Nama pelatihan</TH>
-                  <TH>Lembaga</TH>
-                  <TH>Periode pendaftaran</TH>
-                  <TH>Link tamu</TH>
-                  <TH className="w-14 text-right">Aksi</TH>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {rows.length === 0 ? (
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+            <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    Daftar program pendaftaran
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Program aktif memiliki link tamu yang bisa diisi tanpa
+                    login.
+                  </p>
+                </div>
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                  <i className="ri-search-2-line text-primary" />
+                  {activeSearch
+                    ? `${filteredRows.length} / ${rows.length} program`
+                    : `${rows.length} program`}
+                </span>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHead>
                   <TableRow>
-                    <TD colSpan={5} className="text-center text-gray-500 py-8">
-                      Belum ada pendaftaran. Buat program baru untuk mendapatkan
-                      link.
-                    </TD>
+                    <TH>Nama pelatihan</TH>
+                    <TH>Lembaga</TH>
+                    <TH>Periode pendaftaran</TH>
+                    <TH>Link tamu</TH>
+                    <TH className="w-14 text-right">Aksi</TH>
                   </TableRow>
-                ) : filteredRows.length === 0 ? (
-                  <TableRow>
-                    <TD colSpan={5} className="text-center text-gray-500 py-8">
-                      Tidak ada hasil untuk pencarian ini.
-                    </TD>
-                  </TableRow>
-                ) : (
-                  filteredRows.map((r) => (
-                    <TableRow key={r.id}>
-                      <TD className="font-medium">{r.training_name}</TD>
-                      <TD>
-                        {r.institution_name?.trim() ? r.institution_name : "—"}
-                      </TD>
-                      <TD className="text-sm whitespace-nowrap">
-                        {formatIdDate(r.start_date)} –{" "}
-                        {formatIdDate(r.end_date)}
-                      </TD>
-                      <TD className="max-w-[14rem]">
-                        <span className="text-xs font-mono break-all text-gray-700">
-                          {buildGuestRegistrationUrl(r.public_slug)}
-                        </span>
-                      </TD>
-                      <TD className="text-right">
-                        {canCreate ? (
-                          <ActionMenu
-                            ariaLabel={`Aksi untuk ${r.training_name}`}
-                            items={[
-                              {
-                                id: "detail",
-                                label: "Buka detail",
-                                icon: "ri-external-link-line",
-                                onClick: () => {
-                                  router.push(
-                                    `/dashboard/pendaftaran-pelatihan/${r.id}`,
-                                  );
-                                },
-                              },
-                              { type: "divider" },
-                              {
-                                id: "edit",
-                                label: "Ubah program",
-                                icon: "ri-pencil-line",
-                                onClick: () => openEditModal(r),
-                              },
-                              {
-                                id: "delete",
-                                label: "Hapus program",
-                                icon: "ri-delete-bin-line",
-                                danger: true,
-                                onClick: () => handleDeleteCampaign(r),
-                              },
-                            ]}
-                          />
-                        ) : (
-                          <Link
-                            href={`/dashboard/pendaftaran-pelatihan/${r.id}`}
-                            className="text-primary text-sm font-medium hover:underline"
-                          >
-                            Detail
-                          </Link>
-                        )}
+                </TableHead>
+                <TableBody>
+                  {rows.length === 0 ? (
+                    <TableRow>
+                      <TD
+                        colSpan={5}
+                        className="py-10 text-center text-sm text-slate-500"
+                      >
+                        Belum ada pendaftaran. Buat program baru untuk
+                        mendapatkan link.
                       </TD>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : filteredRows.length === 0 ? (
+                    <TableRow>
+                      <TD
+                        colSpan={5}
+                        className="py-10 text-center text-sm text-slate-500"
+                      >
+                        Tidak ada hasil untuk pencarian ini.
+                      </TD>
+                    </TableRow>
+                  ) : (
+                    filteredRows.map((r) => (
+                      <TableRow key={r.id}>
+                        <TD className="font-medium text-slate-900">
+                          {r.training_name}
+                        </TD>
+                        <TD className="text-slate-700">
+                          {r.institution_name?.trim()
+                            ? r.institution_name
+                            : "—"}
+                        </TD>
+                        <TD className="whitespace-nowrap text-sm text-slate-600">
+                          {formatIdDate(r.start_date)} –{" "}
+                          {formatIdDate(r.end_date)}
+                        </TD>
+                        <TD className="max-w-[14rem]">
+                          <span className="break-all font-mono text-xs text-slate-700">
+                            {buildGuestRegistrationUrl(r.public_slug)}
+                          </span>
+                        </TD>
+                        <TD className="text-right">
+                          {canCreate ? (
+                            <ActionMenu
+                              ariaLabel={`Aksi untuk ${r.training_name}`}
+                              items={[
+                                {
+                                  id: "detail",
+                                  label: "Buka detail",
+                                  icon: "ri-external-link-line",
+                                  onClick: () => {
+                                    router.push(
+                                      `/dashboard/pendaftaran-pelatihan/${r.id}`,
+                                    );
+                                  },
+                                },
+                                { type: "divider" },
+                                {
+                                  id: "edit",
+                                  label: "Ubah program",
+                                  icon: "ri-pencil-line",
+                                  onClick: () => openEditModal(r),
+                                },
+                                {
+                                  id: "delete",
+                                  label: "Hapus program",
+                                  icon: "ri-delete-bin-line",
+                                  danger: true,
+                                  onClick: () => handleDeleteCampaign(r),
+                                },
+                              ]}
+                            />
+                          ) : (
+                            <Link
+                              href={`/dashboard/pendaftaran-pelatihan/${r.id}`}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary transition hover:bg-primary/10"
+                            >
+                              Detail
+                              <i className="ri-arrow-right-line" aria-hidden />
+                            </Link>
+                          )}
+                        </TD>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </div>
       </main>
@@ -497,6 +580,10 @@ export default function PendaftaranPelatihanPage() {
           size="md"
         >
           <div className="space-y-4">
+            <p className="rounded-2xl border border-slate-200/90 bg-slate-50/70 px-4 py-3 text-sm leading-relaxed text-slate-600">
+              Perbarui metadata program dan, bila diperlukan, ganti kata sandi
+              panel panitia publik.
+            </p>
             <Input
               label="Nama pelatihan"
               value={editForm.training_name}
@@ -586,11 +673,11 @@ export default function PendaftaranPelatihanPage() {
               }
               hint="Isi hanya jika ingin mengganti sandi untuk halaman publik kelola pendaftar. Minimal 8 karakter."
             />
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex justify-end gap-3 border-t border-slate-100 pt-3">
               <button
                 type="button"
                 onClick={closeEditModal}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
               >
                 Batal
               </button>
@@ -598,7 +685,7 @@ export default function PendaftaranPelatihanPage() {
                 type="button"
                 disabled={savingEdit}
                 onClick={() => void handleUpdateCampaign()}
-                className="px-4 py-2 text-white bg-primary rounded-lg hover:brightness-95 disabled:opacity-50"
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:brightness-95 disabled:opacity-50"
               >
                 {savingEdit ? "Menyimpan…" : "Simpan"}
               </button>
@@ -615,6 +702,10 @@ export default function PendaftaranPelatihanPage() {
           size="md"
         >
           <div className="space-y-4">
+            <p className="rounded-2xl border border-slate-200/90 bg-slate-50/70 px-4 py-3 text-sm leading-relaxed text-slate-600">
+              Buat program baru untuk menghasilkan link pendaftaran publik dan
+              halaman panel panitia.
+            </p>
             <Input
               label="Nama pelatihan"
               value={form.training_name}
@@ -694,11 +785,11 @@ export default function PendaftaranPelatihanPage() {
               bisa diisi (tanpa batas tanggal, WIB). Jika mengisi tanggal, isi
               keduanya.
             </p>
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex justify-end gap-3 border-t border-slate-100 pt-3">
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
               >
                 Batal
               </button>
@@ -706,7 +797,7 @@ export default function PendaftaranPelatihanPage() {
                 type="button"
                 disabled={saving}
                 onClick={() => void handleCreate()}
-                className="px-4 py-2 text-white bg-primary rounded-lg hover:brightness-95 disabled:opacity-50"
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:brightness-95 disabled:opacity-50"
               >
                 {saving ? "Menyimpan…" : "Buat & lanjut"}
               </button>
