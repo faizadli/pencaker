@@ -831,6 +831,13 @@ export default function DashboardPesertaLatihanPage() {
   };
 
   const currentGroupRow = rows[0] ?? null;
+  const availableTrainingCount = distinctOptions?.training_names?.length ?? 0;
+  const availableYearCount = distinctOptions?.training_years?.length ?? 0;
+  const hasActiveFilter =
+    filterTrainingName.trim() !== "" &&
+    filterTrainingYear !== "" &&
+    !Number.isNaN(Number(filterTrainingYear));
+  const selectedParticipantCount = rows.length;
 
   const openGroupEditModal = () => {
     const baseName = filterTrainingName.trim();
@@ -980,14 +987,19 @@ export default function DashboardPesertaLatihanPage() {
 
   if (!canRead) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-primary">
-            Pelatihan
-          </h1>
-          <p className="text-sm text-gray-500 mt-2">
-            Anda tidak memiliki akses untuk melihat data peserta latihan.
-          </p>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm ring-1 ring-slate-950/[0.02] sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+              Pelatihan
+            </p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+              Akses tidak tersedia
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">
+              Anda tidak memiliki akses untuk melihat data peserta latihan.
+            </p>
+          </div>
         </div>
       </main>
     );
@@ -995,8 +1007,8 @@ export default function DashboardPesertaLatihanPage() {
 
   if (loading && rows.length === 0) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
           <FullPageLoading isSection />
         </div>
       </main>
@@ -1005,41 +1017,71 @@ export default function DashboardPesertaLatihanPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">
-              Pelatihan
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Isi data pelatihan di form, unggah Excel berisi peserta, lalu
-              simpan. Satu NIK tidak boleh diduplikasi untuk tahun pelatihan
-              yang sama (nama pelatihan boleh berbeda).
-            </p>
-          </div>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full space-y-8">
+          <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+            <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+            <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  Pelatihan
+                </p>
+                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                  Manajemen peserta latihan
+                </h1>
+                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                  Isi data pelatihan di form, unggah Excel berisi peserta, lalu
+                  simpan. Satu NIK tidak boleh diduplikasi untuk tahun pelatihan
+                  yang sama, meski nama pelatihan dapat berbeda.
+                </p>
+              </div>
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                <i className="ri-graduation-cap-line" />
+                {hasActiveFilter
+                  ? `${filterTrainingName} (${filterTrainingYear})`
+                  : "Pilih pelatihan"}
+              </span>
+            </div>
+          </header>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <StatCard
-              title="Total peserta latihan"
-              value={total}
-              change="Rekap tersimpan"
-              color="var(--color-primary)"
-              icon="ri-team-line"
-            />
-          </div>
+          <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+            <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                  Ringkasan data
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Ikhtisar peserta latihan dan cakupan filter yang tersedia.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+              <StatCard
+                title="Total peserta latihan"
+                value={total}
+                change="Rekap tersimpan"
+                color="var(--color-primary)"
+                icon="ri-team-line"
+              />
+              <StatCard
+                title="Nama pelatihan"
+                value={availableTrainingCount}
+                change="Tersedia di filter"
+                color="var(--color-secondary)"
+                icon="ri-book-open-line"
+              />
+              <StatCard
+                title="Tahun pelatihan"
+                value={availableYearCount}
+                change="Pilihan tahun"
+                color="var(--color-foreground)"
+                icon="ri-calendar-check-line"
+              />
+            </div>
+          </section>
 
-          <div className="mb-4">
-            <h2 className="text-lg font-bold text-primary">
-              Rekap peserta latihan
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Data dari impor Excel admin dan pencaker yang melaporkan riwayat
-              pelatihan saat pendaftaran.
-            </p>
-          </div>
-
-          <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-8">
-            <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-950/[0.02] sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
               <SearchableSelect
                 options={nameFilterOptions}
                 value={filterTrainingName}
@@ -1064,7 +1106,7 @@ export default function DashboardPesertaLatihanPage() {
                     Number.isNaN(Number(filterTrainingYear))
                   }
                   title="Unduh semua data yang cocok dengan tahun (dan nama pelatihan jika dipilih)"
-                  className="px-4 py-2.5 w-full sm:w-auto sm:min-w-[11rem] rounded-lg border border-primary bg-white text-primary hover:bg-primary/5 text-sm transition flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-primary bg-white px-4 py-2.5 text-sm font-medium text-primary transition hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-[11rem]"
                 >
                   {exportingExcel ? (
                     <i className="ri-loader-4-line animate-spin" aria-hidden />
@@ -1078,25 +1120,28 @@ export default function DashboardPesertaLatihanPage() {
                 <button
                   type="button"
                   onClick={openImportModal}
-                  className="px-4 py-2.5 w-full sm:w-auto sm:min-w-[12rem] bg-secondary text-white rounded-lg hover:brightness-95 text-sm transition flex items-center justify-center gap-2 shrink-0"
+                  className="flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95 sm:w-auto sm:min-w-[12rem]"
                 >
                   <i className="ri-file-excel-2-line" />
                   Impor Excel
                 </button>
               )}
             </div>
-            {canCreate && filterTrainingName && filterTrainingYear && (
-              <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50/80 px-3 py-2">
-                <div className="text-sm text-gray-700 min-w-0">
-                  <span className="text-gray-500">Kelola pelatihan: </span>
-                  <strong className="text-primary break-words">
+          </div>
+
+          {canCreate && hasActiveFilter && (
+            <div className="rounded-2xl border border-slate-200/90 bg-white/90 p-4 shadow-sm ring-1 ring-slate-950/[0.02] sm:p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0 text-sm text-slate-700">
+                  <span className="text-slate-500">Kelola pelatihan:</span>{" "}
+                  <strong className="break-words text-primary">
                     {filterTrainingName}
                   </strong>{" "}
-                  <span className="text-gray-500">({filterTrainingYear})</span>
-                  {rows.length > 0 && (
-                    <span className="text-gray-500">
+                  <span className="text-slate-500">({filterTrainingYear})</span>
+                  {selectedParticipantCount > 0 && (
+                    <span className="text-slate-500">
                       {" · "}
-                      {total} peserta
+                      {selectedParticipantCount} peserta dimuat
                     </span>
                   )}
                 </div>
@@ -1112,7 +1157,7 @@ export default function DashboardPesertaLatihanPage() {
                         ? "Belum ada data pelatihan ini"
                         : "Ubah metadata pelatihan untuk seluruh peserta"
                     }
-                    className="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-800 hover:bg-gray-50 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <i className="ri-pencil-line" aria-hidden />
                     Ubah pelatihan
@@ -1128,118 +1173,147 @@ export default function DashboardPesertaLatihanPage() {
                         ? "Belum ada data pelatihan ini"
                         : "Hapus seluruh data peserta pelatihan ini"
                     }
-                    className="px-3 py-2 text-sm rounded-lg border border-red-200 bg-white text-red-700 hover:bg-red-50 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 rounded-xl border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <i className="ri-delete-bin-line" aria-hidden />
                     {groupDeleting ? "Menghapus…" : "Hapus pelatihan"}
                   </button>
                 </div>
               </div>
-            )}
-            {listLoading ? (
-              <FullPageLoading isSection />
-            ) : (
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TH>Tahun</TH>
-                    <TH>Mulai</TH>
-                    <TH>Selesai</TH>
-                    <TH>Nama</TH>
-                    <TH>NIK</TH>
-                    <TH>No. KK</TH>
-                    <TH>JK</TH>
-                    <TH>Pendidikan</TH>
-                    <TH>Kontak</TH>
-                    {canCreate && <TH className="w-14 text-center">Aksi</TH>}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {rows.length === 0 ? (
+            </div>
+          )}
+
+          <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+            <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    Rekap peserta latihan
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Data dari impor Excel admin dan pencaker yang melaporkan
+                    riwayat pelatihan saat pendaftaran.
+                  </p>
+                </div>
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                  <i className="ri-filter-3-line text-primary" />
+                  {hasActiveFilter
+                    ? `${filterTrainingName} · ${filterTrainingYear}`
+                    : "Belum difilter"}
+                </span>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              {listLoading ? (
+                <div className="p-6">
+                  <FullPageLoading isSection />
+                </div>
+              ) : (
+                <Table>
+                  <TableHead>
                     <TableRow>
-                      <TD
-                        colSpan={canCreate ? 10 : 9}
-                        className="text-center text-gray-500 py-8"
-                      >
-                        Belum ada data
-                      </TD>
+                      <TH>Tahun</TH>
+                      <TH>Mulai</TH>
+                      <TH>Selesai</TH>
+                      <TH>Nama</TH>
+                      <TH>NIK</TH>
+                      <TH>No. KK</TH>
+                      <TH>JK</TH>
+                      <TH>Pendidikan</TH>
+                      <TH>Kontak</TH>
+                      {canCreate && <TH className="w-14 text-center">Aksi</TH>}
                     </TableRow>
-                  ) : (
-                    rows.map((row) => (
-                      <TableRow key={row.id}>
-                        <TD>{row.training_year}</TD>
-                        <TD className="text-xs whitespace-nowrap">
-                          {formatIdDate(row.start_date)}
+                  </TableHead>
+                  <TableBody>
+                    {rows.length === 0 ? (
+                      <TableRow>
+                        <TD
+                          colSpan={canCreate ? 10 : 9}
+                          className="py-10 text-center text-sm text-slate-500"
+                        >
+                          {hasActiveFilter
+                            ? "Belum ada data untuk pelatihan yang dipilih"
+                            : "Pilih nama pelatihan dan tahun untuk melihat data"}
                         </TD>
-                        <TD className="text-xs whitespace-nowrap">
-                          {formatIdDate(row.end_date)}
-                        </TD>
-                        <TD>{row.full_name}</TD>
-                        <TD className="text-xs font-mono whitespace-nowrap">
-                          {row.nik || "—"}
-                        </TD>
-                        <TD className="text-xs font-mono whitespace-nowrap">
-                          {row.no_kk || "—"}
-                        </TD>
-                        <TD className="text-center text-sm">
-                          {row.gender === "L"
-                            ? "L"
-                            : row.gender === "P"
-                              ? "P"
-                              : "—"}
-                        </TD>
-                        <TD className="max-w-[8rem] truncate">
-                          {row.last_education || "—"}
-                        </TD>
-                        <TD className="text-xs">
-                          <div>{row.email || "—"}</div>
-                          <div className="text-gray-500">
-                            {row.phone || "—"}
-                          </div>
-                        </TD>
-                        {canCreate && (
-                          <TD className="align-middle text-center">
-                            <div
-                              data-peserta-latihan-row-actions
-                              className="relative inline-flex justify-center"
-                            >
-                              <button
-                                type="button"
-                                aria-label="Menu aksi"
-                                aria-haspopup="menu"
-                                aria-expanded={actionsMenu?.row.id === row.id}
-                                onClick={(e) => {
-                                  const btn = e.currentTarget;
-                                  const rect = btn.getBoundingClientRect();
-                                  const MENU_W = 176;
-                                  setActionsMenu((cur) => {
-                                    if (cur?.row.id === row.id) return null;
-                                    return {
-                                      row,
-                                      top: rect.bottom + 4,
-                                      left: Math.min(
-                                        Math.max(8, rect.right - MENU_W),
-                                        window.innerWidth - MENU_W - 8,
-                                      ),
-                                    };
-                                  });
-                                }}
-                                className="p-2 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition"
-                              >
-                                <i
-                                  className="ri-more-2-fill text-xl leading-none"
-                                  aria-hidden
-                                />
-                              </button>
+                      </TableRow>
+                    ) : (
+                      rows.map((row) => (
+                        <TableRow key={row.id}>
+                          <TD>{row.training_year}</TD>
+                          <TD className="whitespace-nowrap text-xs">
+                            {formatIdDate(row.start_date)}
+                          </TD>
+                          <TD className="whitespace-nowrap text-xs">
+                            {formatIdDate(row.end_date)}
+                          </TD>
+                          <TD>{row.full_name}</TD>
+                          <TD className="whitespace-nowrap font-mono text-xs">
+                            {row.nik || "—"}
+                          </TD>
+                          <TD className="whitespace-nowrap font-mono text-xs">
+                            {row.no_kk || "—"}
+                          </TD>
+                          <TD className="text-center text-sm">
+                            {row.gender === "L"
+                              ? "L"
+                              : row.gender === "P"
+                                ? "P"
+                                : "—"}
+                          </TD>
+                          <TD className="max-w-[8rem] truncate">
+                            {row.last_education || "—"}
+                          </TD>
+                          <TD className="text-xs">
+                            <div>{row.email || "—"}</div>
+                            <div className="text-slate-500">
+                              {row.phone || "—"}
                             </div>
                           </TD>
-                        )}
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            )}
+                          {canCreate && (
+                            <TD className="align-middle text-center">
+                              <div
+                                data-peserta-latihan-row-actions
+                                className="relative inline-flex justify-center"
+                              >
+                                <button
+                                  type="button"
+                                  aria-label="Menu aksi"
+                                  aria-haspopup="menu"
+                                  aria-expanded={actionsMenu?.row.id === row.id}
+                                  onClick={(e) => {
+                                    const btn = e.currentTarget;
+                                    const rect = btn.getBoundingClientRect();
+                                    const MENU_W = 176;
+                                    setActionsMenu((cur) => {
+                                      if (cur?.row.id === row.id) return null;
+                                      return {
+                                        row,
+                                        top: rect.bottom + 4,
+                                        left: Math.min(
+                                          Math.max(8, rect.right - MENU_W),
+                                          window.innerWidth - MENU_W - 8,
+                                        ),
+                                      };
+                                    });
+                                  }}
+                                  className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                                >
+                                  <i
+                                    className="ri-more-2-fill text-xl leading-none"
+                                    aria-hidden
+                                  />
+                                </button>
+                              </div>
+                            </TD>
+                          )}
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
           </div>
         </div>
       </main>
@@ -1251,7 +1325,7 @@ export default function DashboardPesertaLatihanPage() {
           <ul
             data-peserta-latihan-actions-menu
             role="menu"
-            className="fixed z-[80] min-w-[11rem] rounded-lg border border-gray-200 bg-white py-1 shadow-lg text-left"
+            className="fixed z-[80] min-w-[11rem] rounded-xl border border-slate-200/90 bg-white p-1.5 text-left shadow-xl ring-1 ring-slate-950/[0.03]"
             style={{
               top: actionsMenu.top,
               left: actionsMenu.left,
@@ -1261,7 +1335,7 @@ export default function DashboardPesertaLatihanPage() {
               <button
                 type="button"
                 role="menuitem"
-                className="w-full px-3 py-2 text-sm text-gray-900 hover:bg-gray-50 flex items-center gap-2"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-50"
                 onClick={() => {
                   const r = actionsMenu.row;
                   handleOpenEdit(r);
@@ -1275,7 +1349,7 @@ export default function DashboardPesertaLatihanPage() {
               <button
                 type="button"
                 role="menuitem"
-                className="w-full px-3 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50"
                 onClick={() => {
                   const r = actionsMenu.row;
                   setActionsMenu(null);
@@ -1300,7 +1374,7 @@ export default function DashboardPesertaLatihanPage() {
                     ? "Blacklist NIK ini selama 1 bulan"
                     : "Isi NIK pada baris ini, atau gunakan data dari pendaftaran pencaker"
                 }
-                className="w-full px-3 py-2 text-sm flex items-center gap-2 disabled:opacity-45 disabled:cursor-not-allowed hover:bg-gray-50 text-gray-900"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
                 onClick={() => {
                   const r = actionsMenu.row;
                   if (
@@ -1331,7 +1405,14 @@ export default function DashboardPesertaLatihanPage() {
           title="Impor peserta latihan"
           size="lg"
         >
-          <div className="space-y-4">
+          <div className="space-y-5">
+            <div className="rounded-2xl border border-slate-200/90 bg-slate-50/70 p-4 shadow-sm">
+              <p className="text-sm leading-relaxed text-slate-600">
+                Lengkapi metadata pelatihan terlebih dahulu, lalu unggah file
+                Excel peserta sesuai template. Data pelatihan di bawah akan
+                diterapkan ke semua baris yang valid.
+              </p>
+            </div>
             <div className="flex flex-col gap-4">
               <Input
                 label="Nama pelatihan"
@@ -1441,9 +1522,9 @@ export default function DashboardPesertaLatihanPage() {
                 />
               </div>
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               Unggah file Excel berisi kolom peserta (NAMA, NIK, NOMOR KK, dll.)
-              sesuai template. Data pelatihan di atas berlaku untuk semua baris.
+              sesuai template.
             </p>
             <div
               role="region"
@@ -1475,20 +1556,20 @@ export default function DashboardPesertaLatihanPage() {
                 const f = e.dataTransfer.files?.[0];
                 void stageExcelFromFile(f);
               }}
-              className={`rounded-xl border-2 border-dashed px-5 py-8 flex flex-col items-center justify-center gap-4 text-center transition-colors ${
+              className={`flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed px-5 py-8 text-center transition-colors ${
                 excelDragActive
                   ? "border-primary bg-primary/5"
-                  : "border-gray-300 bg-gray-50/90 hover:border-gray-400"
+                  : "border-slate-300 bg-slate-50/90 hover:border-slate-400"
               } ${excelParsing || importing ? "pointer-events-none opacity-60" : ""}`}
             >
-              <div className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm">
                 <i className="ri-upload-cloud-2-line text-2xl" aria-hidden />
               </div>
-              <div className="flex flex-col sm:flex-row flex-wrap gap-2 justify-center w-full max-w-md">
+              <div className="flex w-full max-w-md flex-col flex-wrap justify-center gap-2 sm:flex-row">
                 <button
                   type="button"
                   onClick={handleDownloadTemplate}
-                  className="px-4 py-2.5 w-full sm:flex-1 sm:min-w-[10rem] border border-gray-300 bg-white text-gray-800 rounded-lg hover:bg-gray-50 text-sm transition flex items-center justify-center gap-2"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50 sm:min-w-[10rem] sm:flex-1"
                 >
                   <i className="ri-download-2-line text-lg text-emerald-700" />
                   Unduh template Excel
@@ -1505,7 +1586,7 @@ export default function DashboardPesertaLatihanPage() {
                   type="button"
                   disabled={excelParsing || importing}
                   onClick={() => excelInputRef.current?.click()}
-                  className="px-4 py-2.5 w-full sm:flex-1 sm:min-w-[10rem] border-2 border-primary bg-primary text-white font-medium rounded-lg hover:brightness-110 text-sm shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:brightness-100"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110 disabled:opacity-50 disabled:hover:brightness-100 sm:min-w-[10rem] sm:flex-1"
                 >
                   <i className="ri-folder-open-line text-lg text-white" />
                   {excelParsing
@@ -1608,14 +1689,14 @@ export default function DashboardPesertaLatihanPage() {
                 </div>
               )}
             </div>
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex justify-end gap-3 border-t border-slate-100 pt-3">
               {excelStaged ? (
                 <>
                   <button
                     type="button"
                     disabled={importing || excelParsing}
                     onClick={cancelExcelStaged}
-                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition disabled:opacity-50"
+                    className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200 disabled:opacity-50"
                   >
                     Batal
                   </button>
@@ -1632,7 +1713,7 @@ export default function DashboardPesertaLatihanPage() {
                         : undefined
                     }
                     onClick={() => void saveStagedExcel()}
-                    className="px-4 py-2 text-white bg-primary rounded-lg hover:brightness-90 transition disabled:opacity-50"
+                    className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:brightness-95 disabled:opacity-50"
                   >
                     {importing ? "Menyimpan…" : "Simpan"}
                   </button>
@@ -1641,7 +1722,7 @@ export default function DashboardPesertaLatihanPage() {
                 <button
                   type="button"
                   onClick={closeImportModal}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+                  className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
                 >
                   Tutup
                 </button>
@@ -1660,7 +1741,7 @@ export default function DashboardPesertaLatihanPage() {
         >
           <form onSubmit={handleSubmitEdit} className="space-y-4">
             <div className="max-h-[min(72vh,560px)] overflow-y-auto pr-1 space-y-4">
-              <p className="text-sm text-gray-600">
+              <p className="rounded-2xl border border-slate-200/90 bg-slate-50/70 px-4 py-3 text-sm leading-relaxed text-slate-600">
                 Sesuaikan data pelatihan dan biodata peserta. NIK dan nomor KK
                 masing-masing 16 digit angka.
               </p>
@@ -1969,18 +2050,18 @@ export default function DashboardPesertaLatihanPage() {
                 required
               />
             </div>
-            <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+            <div className="flex justify-end gap-3 border-t border-slate-100 pt-3">
               <button
                 type="button"
                 onClick={closeEditModal}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+                className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
               >
                 Batal
               </button>
               <button
                 type="submit"
                 disabled={editSaving}
-                className="px-4 py-2 text-white bg-primary rounded-lg hover:brightness-95 transition disabled:opacity-50"
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:brightness-95 disabled:opacity-50"
               >
                 {editSaving ? "Menyimpan…" : "Simpan perubahan"}
               </button>
@@ -1997,7 +2078,7 @@ export default function DashboardPesertaLatihanPage() {
           size="lg"
         >
           <form onSubmit={handleSubmitGroupEdit} className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="rounded-2xl border border-slate-200/90 bg-slate-50/70 px-4 py-3 text-sm leading-relaxed text-slate-600">
               Perubahan ini akan berlaku untuk <strong>semua peserta</strong>{" "}
               dalam pelatihan{" "}
               <strong>
@@ -2113,18 +2194,18 @@ export default function DashboardPesertaLatihanPage() {
                 required
               />
             </div>
-            <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+            <div className="flex justify-end gap-3 border-t border-slate-100 pt-3">
               <button
                 type="button"
                 onClick={closeGroupEditModal}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+                className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
               >
                 Batal
               </button>
               <button
                 type="submit"
                 disabled={groupEditSaving}
-                className="px-4 py-2 text-white bg-primary rounded-lg hover:brightness-95 transition disabled:opacity-50"
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:brightness-95 disabled:opacity-50"
               >
                 {groupEditSaving ? "Menyimpan…" : "Simpan perubahan"}
               </button>
@@ -2141,7 +2222,7 @@ export default function DashboardPesertaLatihanPage() {
           size="md"
         >
           <form onSubmit={handleSubmitBlacklist} className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="rounded-2xl border border-red-100 bg-red-50/70 px-4 py-3 text-sm leading-relaxed text-red-900/80">
               Pencaker akan di-blacklist selama <strong>1 bulan</strong> dan
               tidak dapat mengikuti pelatihan.
             </p>
@@ -2151,18 +2232,18 @@ export default function DashboardPesertaLatihanPage() {
               onChange={(e) => setBlacklistReason(e.target.value)}
               required
             />
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex justify-end gap-3 border-t border-slate-100 pt-3">
               <button
                 type="button"
                 onClick={() => setBlacklistModalOpen(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+                className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
               >
                 Batal
               </button>
               <button
                 type="submit"
                 disabled={blacklistSubmitting}
-                className="px-4 py-2 text-white bg-gray-900 rounded-lg hover:bg-black transition disabled:opacity-50"
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:opacity-50"
               >
                 {blacklistSubmitting ? "Memproses…" : "Blacklist pencaker"}
               </button>
