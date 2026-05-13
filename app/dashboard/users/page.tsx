@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Input, SearchableSelect } from "../../../components/ui/field";
 import Modal from "../../../components/ui/Modal";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
+import StatCard from "../../../components/ui/StatCard";
 import {
   listUsers,
   updateUser,
@@ -16,8 +17,8 @@ import {
   assignUserRole,
 } from "../../../services/rbac";
 import { useRouter } from "next/navigation";
-import Pagination from "../../../components/ui/Pagination";
 import Card from "../../../components/ui/Card";
+import Pagination from "../../../components/ui/Pagination";
 import {
   Table,
   TableHead,
@@ -171,6 +172,7 @@ export default function UsersPage() {
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
+      (user.nama || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user.telepon || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
@@ -367,29 +369,62 @@ export default function UsersPage() {
   const getRoleColor = (role: string) => {
     switch (role) {
       case "Superadmin":
-        return "bg-red-100 text-red-800";
+        return "bg-red-50 text-red-700 ring-1 ring-red-200";
       case "Perusahaan":
-        return "bg-purple-100 text-purple-800";
+        return "bg-violet-50 text-violet-700 ring-1 ring-violet-200";
       case "Admin Layanan":
-        return "bg-blue-100 text-blue-800";
+        return "bg-sky-50 text-sky-700 ring-1 ring-sky-200";
       case "Admin Pelatihan":
-        return "bg-green-100 text-green-800";
+        return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200";
       case "Admin Info":
-        return "bg-orange-100 text-orange-800";
+        return "bg-amber-50 text-amber-700 ring-1 ring-amber-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700 ring-1 ring-slate-200";
     }
   };
 
   const getStatusColor = (status: string) =>
     status === "Aktif"
-      ? "bg-green-100 text-green-800"
-      : "bg-gray-100 text-gray-800";
+      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+      : "bg-slate-100 text-slate-700 ring-1 ring-slate-200";
+
+  const canCreate = permissionCodes.includes("users.create");
+  const canUpdate = permissionCodes.includes("users.update");
+  const canDelete = permissionCodes.includes("users.delete");
+  const activeUsersCount = useMemo(
+    () => users.filter((user) => user.status === "Aktif").length,
+    [users],
+  );
+  const inactiveUsersCount = useMemo(
+    () => users.filter((user) => user.status !== "Aktif").length,
+    [users],
+  );
+  const uniqueRolesCount = useMemo(
+    () => new Set(users.map((user) => user.role).filter(Boolean)).size,
+    [users],
+  );
+  const roleSelectOptions = useMemo(
+    () => [
+      { value: "all", label: "Semua Role" },
+      ...(roleOptions.length > 0
+        ? roleOptions.map((r) => ({ value: r, label: r }))
+        : ["Superadmin", "Perusahaan", "Pencaker"].map((r) => ({
+            value: r,
+            label: r,
+          }))),
+    ],
+    [roleOptions],
+  );
+  const statusSelectOptions = [
+    { value: "all", label: "Semua Status" },
+    { value: "Aktif", label: "Aktif" },
+    { value: "Nonaktif", label: "Nonaktif" },
+  ];
 
   if (loading) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
           <FullPageLoading isSection />
         </div>
       </main>
@@ -398,218 +433,274 @@ export default function UsersPage() {
 
   return (
     <>
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
-          <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">
-              Manajemen Pengguna & Hak Akses
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Kelola admin, atur role, dan kontrol akses sistem
-            </p>
-          </div>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full space-y-8">
+          <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+            <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+            <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  User management
+                </p>
+                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                  Manajemen pengguna dan hak akses
+                </h1>
+                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                  Kelola admin, atur role, dan kontrol akses sistem dari satu
+                  halaman yang rapi untuk desktop maupun mobile.
+                </p>
+              </div>
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                <i className="ri-shield-user-line" aria-hidden />
+                {filteredUsers.length} pengguna tampil
+              </span>
+            </div>
+          </header>
 
-          <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+          <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+            <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5">
+              <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                Ringkasan pengguna
+              </h2>
+              <p className="text-sm text-slate-500">
+                Ikhtisar jumlah akun, status aktif, dan sebaran role pada
+                halaman saat ini.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard
+                title="Total pengguna"
+                value={users.length}
+                change="Data pada halaman ini"
+                color="var(--color-primary)"
+                icon="ri-group-line"
+              />
+              <StatCard
+                title="Pengguna aktif"
+                value={activeUsersCount}
+                change="Akun siap digunakan"
+                color="#059669"
+                icon="ri-user-follow-line"
+              />
+              <StatCard
+                title="Nonaktif"
+                value={inactiveUsersCount}
+                change="Perlu ditinjau"
+                color="#64748b"
+                icon="ri-user-unfollow-line"
+              />
+              <StatCard
+                title="Role terpakai"
+                value={uniqueRolesCount}
+                change="Jenis hak akses"
+                color="var(--color-secondary)"
+                icon="ri-shield-keyhole-line"
+              />
+            </div>
+          </section>
+
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-950/[0.02] sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
               <div className="flex-1">
                 <Input
                   icon="ri-search-line"
                   type="text"
-                  placeholder="Cari nama atau email..."
+                  placeholder="Cari email atau nomor handphone..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full py-3"
+                  className="w-full py-2.5"
                 />
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 items-stretch">
-                <SearchableSelect
-                  value={roleFilter}
-                  onChange={(v) => setRoleFilter(v)}
-                  options={[
-                    { value: "all", label: "Semua Role" },
-                    ...(roleOptions.length > 0
-                      ? roleOptions.map((r) => ({ value: r, label: r }))
-                      : ["Superadmin", "Perusahaan", "Pencaker"].map((r) => ({
-                          value: r,
-                          label: r,
-                        }))),
-                  ]}
-                />
-                <SearchableSelect
-                  value={statusFilter}
-                  onChange={(v) => setStatusFilter(v)}
-                  options={[
-                    { value: "all", label: "Semua Status" },
-                    { value: "Aktif", label: "Aktif" },
-                    { value: "Nonaktif", label: "Nonaktif" },
-                  ]}
-                />
-                {permissionCodes.includes("users.create") && (
-                  <button
-                    onClick={handleAdd}
-                    className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center gap-2"
-                  >
-                    <i className="ri-add-line"></i>
-                    Tambah
-                  </button>
-                )}
-              </div>
+              <SearchableSelect
+                value={roleFilter}
+                onChange={(v) => setRoleFilter(v)}
+                options={roleSelectOptions}
+                className="w-full sm:w-[12rem]"
+              />
+              <SearchableSelect
+                value={statusFilter}
+                onChange={(v) => setStatusFilter(v)}
+                options={statusSelectOptions}
+                className="w-full sm:w-[11rem]"
+              />
+              {canCreate && (
+                <button
+                  type="button"
+                  onClick={handleAdd}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95 sm:w-auto sm:min-w-[10rem]"
+                >
+                  <i className="ri-add-line" aria-hidden />
+                  Tambah pengguna
+                </button>
+              )}
             </div>
           </div>
 
-          <Card className="overflow-hidden mb-8">
-            <Table className="hidden sm:block">
-              <TableHead>
-                <tr>
-                  <TH className="font-medium">Email</TH>
-                  <TH className="font-medium">Telepon</TH>
-                  <TH className="font-medium">Role</TH>
-                  <TH className="font-medium">Status</TH>
-                  <TH className="font-medium">Login Terakhir</TH>
-                  <TH className="font-medium">Aksi</TH>
-                </tr>
-              </TableHead>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id} className="">
-                    <TD>
-                      <div className="flex items-center gap-2 text-sm text-gray-900 font-medium">
-                        <i className="ri-mail-line text-gray-400"></i>
-                        <span>{user.email}</span>
-                      </div>
-                    </TD>
-                    <TD>
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <i className="ri-phone-line text-gray-400"></i>
-                        <span>{user.telepon}</span>
-                      </div>
-                    </TD>
-                    <TD>
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}
-                      >
-                        {user.role}
-                      </span>
-                    </TD>
-                    <TD>
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.status)}`}
-                      >
-                        {user.status}
-                      </span>
-                    </TD>
-                    <TD className="text-gray-500 text-sm">
-                      {user.terakhirLogin}
-                    </TD>
-                    <TD>
-                      <div className="flex gap-2">
-                        {permissionCodes.includes("users.update") && (
-                          <button
-                            onClick={() => handleEdit(user)}
-                            className="px-3 py-1 text-xs bg-secondary text-white rounded hover:brightness-95 transition flex items-center gap-1"
+          {filteredUsers.length > 0 ? (
+            <>
+              <Card className="overflow-hidden !rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02] [&>div]:!p-0">
+                <Table className="hidden sm:block">
+                  <TableHead>
+                    <TableRow>
+                      <TH className="font-medium">Email</TH>
+                      <TH className="font-medium">Telepon</TH>
+                      <TH className="font-medium">Role</TH>
+                      <TH className="font-medium">Status</TH>
+                      <TH className="font-medium">Login terakhir</TH>
+                      <TH className="font-medium">Aksi</TH>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {filteredUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TD>
+                          <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
+                            <i className="ri-mail-line text-slate-400" />
+                            <span>{user.email}</span>
+                          </div>
+                        </TD>
+                        <TD>
+                          <div className="flex items-center gap-2 text-sm text-slate-500">
+                            <i className="ri-phone-line text-slate-400" />
+                            <span>{user.telepon}</span>
+                          </div>
+                        </TD>
+                        <TD>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getRoleColor(user.role)}`}
                           >
-                            <i className="ri-edit-line"></i>
-                            Edit
-                          </button>
-                        )}
-                        {permissionCodes.includes("users.delete") && (
-                          <button
-                            onClick={() => handleDelete(user.id)}
-                            className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition flex items-center gap-1"
+                            {user.role}
+                          </span>
+                        </TD>
+                        <TD>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusColor(user.status)}`}
                           >
-                            <i className="ri-delete-bin-line"></i>
-                            Hapus
-                          </button>
-                        )}
-                      </div>
-                    </TD>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <div className="sm:hidden">
-              <div className="p-3 space-y-3">
-                {filteredUsers.map((user) => (
-                  <div
-                    key={`m-${user.id}`}
-                    className="border border-gray-200 rounded-lg p-3"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="min-w-0 space-y-1">
-                        <p className="font-semibold text-primary truncate">
-                          {user.nama}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate flex items-center gap-1">
-                          <i className="ri-mail-line"></i> {user.email}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate flex items-center gap-1">
-                          <i className="ri-phone-line"></i> {user.telepon}
-                        </p>
-                      </div>
-                      <span
-                        className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getRoleColor(user.role)}`}
-                      >
-                        {user.role}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <span
-                        className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(user.status)}`}
-                      >
-                        {user.status}
-                      </span>
-                      <span className="text-[11px] text-gray-500">
-                        {user.terakhirLogin}
-                      </span>
-                    </div>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      {permissionCodes.includes("users.update") && (
-                        <button
-                          onClick={() => handleEdit(user)}
-                          className="px-3 py-2 text-xs bg-secondary text-white rounded hover:brightness-95 transition"
+                            {user.status}
+                          </span>
+                        </TD>
+                        <TD className="text-sm text-slate-500">
+                          {user.terakhirLogin}
+                        </TD>
+                        <TD>
+                          <div className="flex flex-wrap gap-2">
+                            {canUpdate && (
+                              <button
+                                type="button"
+                                onClick={() => handleEdit(user)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-white transition hover:brightness-95"
+                              >
+                                <i className="ri-edit-line" aria-hidden />
+                                Edit
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(user.id)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-red-700"
+                              >
+                                <i className="ri-delete-bin-line" aria-hidden />
+                                Hapus
+                              </button>
+                            )}
+                          </div>
+                        </TD>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                <div className="space-y-3 p-3 sm:hidden">
+                  {filteredUsers.map((user) => (
+                    <div
+                      key={`m-${user.id}`}
+                      className="rounded-xl border border-slate-200/90 bg-slate-50/40 p-4 ring-1 ring-slate-950/[0.02]"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 space-y-1">
+                          <p className="truncate font-semibold text-slate-900">
+                            {user.nama}
+                          </p>
+                          <p className="flex items-center gap-1.5 truncate text-xs text-slate-500">
+                            <i className="ri-mail-line" aria-hidden />
+                            {user.email}
+                          </p>
+                          <p className="flex items-center gap-1.5 truncate text-xs text-slate-500">
+                            <i className="ri-phone-line" aria-hidden />
+                            {user.telepon}
+                          </p>
+                        </div>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold ${getRoleColor(user.role)}`}
                         >
-                          Edit
-                        </button>
-                      )}
-                      {permissionCodes.includes("users.delete") && (
-                        <button
-                          onClick={() => handleDelete(user.id)}
-                          className="px-3 py-2 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition"
+                          {user.role}
+                        </span>
+                      </div>
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold ${getStatusColor(user.status)}`}
                         >
-                          Hapus
-                        </button>
+                          {user.status}
+                        </span>
+                        <span className="text-[11px] text-slate-500">
+                          {user.terakhirLogin}
+                        </span>
+                      </div>
+                      {(canUpdate || canDelete) && (
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          {canUpdate && (
+                            <button
+                              type="button"
+                              onClick={() => handleEdit(user)}
+                              className="rounded-lg bg-secondary px-3 py-2 text-xs font-medium text-white transition hover:brightness-95"
+                            >
+                              Edit
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(user.id)}
+                              className="rounded-lg bg-red-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-700"
+                            >
+                              Hapus
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              </Card>
+
+              <div className="pt-1">
+                <Pagination
+                  page={page}
+                  pageSize={pageSize}
+                  total={total || filteredUsers.length}
+                  onPageChange={(p) => setPage(p)}
+                  onPageSizeChange={(s) => {
+                    setPageSize(s);
+                    setPage(1);
+                  }}
+                />
               </div>
-            </div>
-            <div className="mt-4">
-              <Pagination
-                page={page}
-                pageSize={pageSize}
-                total={total || filteredUsers.length}
-                onPageChange={(p) => setPage(p)}
-                onPageSizeChange={(s) => {
-                  setPageSize(s);
-                  setPage(1);
+            </>
+          ) : (
+            <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm ring-1 ring-slate-950/[0.02]">
+              <EmptyState
+                icon="ri-user-search-line"
+                title="Tidak ada pengguna ditemukan"
+                description="Coba ubah kata kunci pencarian atau filter untuk melihat data lain."
+                onReset={() => {
+                  setSearchTerm("");
+                  setRoleFilter("all");
+                  setStatusFilter("all");
                 }}
+                resetLabel="Reset pencarian"
               />
             </div>
-          </Card>
-
-          {filteredUsers.length === 0 && (
-            <EmptyState
-              icon="ri-user-search-line"
-              title="Tidak ada pengguna ditemukan"
-              description="Coba ubah kata kunci pencarian atau filter"
-              onReset={() => {
-                setSearchTerm("");
-                setRoleFilter("all");
-                setStatusFilter("all");
-              }}
-              resetLabel="Reset Pencarian"
-            />
           )}
 
           <Modal
@@ -620,60 +711,73 @@ export default function UsersPage() {
             actions={
               <>
                 <button
+                  type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
+                  className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
                 >
                   Batal
                 </button>
                 <button
+                  type="button"
                   onClick={handleSave}
-                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
+                  className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:brightness-95"
                 >
                   Simpan
                 </button>
               </>
             }
           >
-            <div className="grid grid-cols-1 gap-4">
-              <Input
-                type="email"
-                label="Email"
-                placeholder="Masukkan email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                submitted={submitted}
-                error={fieldErrors.email}
-              />
-              <Input
-                type="tel"
-                label="No Handphone"
-                placeholder="Masukkan nomor handphone"
-                value={form.telepon}
-                onChange={(e) => setForm({ ...form, telepon: e.target.value })}
-                submitted={submitted}
-              />
-              <SearchableSelect
-                label="Role"
-                value={form.role}
-                onChange={(v) => setForm({ ...form, role: v })}
-                options={roleOptions.map((r) => ({ value: r, label: r }))}
-                submitted={submitted}
-                error={fieldErrors.role}
-              />
-              <Input
-                type="password"
-                label="Password"
-                placeholder={
-                  editUser
-                    ? "Opsional, isi jika ingin ubah"
-                    : "Masukkan password"
-                }
-                value={form.password || ""}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                required={!editUser}
-                submitted={submitted}
-                error={fieldErrors.password}
-              />
+            <div className="space-y-4">
+              <p className="rounded-2xl border border-slate-200/90 bg-slate-50/70 px-4 py-3 text-sm leading-relaxed text-slate-600">
+                {editUser
+                  ? "Perbarui email, role, nomor handphone, atau password pengguna jika diperlukan."
+                  : "Tambahkan akun pengguna baru dan tetapkan role akses yang sesuai."}
+              </p>
+              <div className="grid grid-cols-1 gap-4">
+                <Input
+                  type="email"
+                  label="Email"
+                  placeholder="Masukkan email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  submitted={submitted}
+                  error={fieldErrors.email}
+                />
+                <Input
+                  type="tel"
+                  label="No Handphone"
+                  placeholder="Masukkan nomor handphone"
+                  value={form.telepon}
+                  onChange={(e) =>
+                    setForm({ ...form, telepon: e.target.value })
+                  }
+                  submitted={submitted}
+                />
+                <SearchableSelect
+                  label="Role"
+                  value={form.role}
+                  onChange={(v) => setForm({ ...form, role: v })}
+                  options={roleOptions.map((r) => ({ value: r, label: r }))}
+                  submitted={submitted}
+                  error={fieldErrors.role}
+                />
+                <Input
+                  type="password"
+                  label="Password"
+                  placeholder={
+                    editUser
+                      ? "Opsional, isi jika ingin ubah"
+                      : "Masukkan password"
+                  }
+                  value={form.password || ""}
+                  onChange={(e) =>
+                    setForm({ ...form, password: e.target.value })
+                  }
+                  required={!editUser}
+                  submitted={submitted}
+                  error={fieldErrors.password}
+                />
+              </div>
             </div>
           </Modal>
         </div>
