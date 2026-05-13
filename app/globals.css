@@ -4,12 +4,12 @@
   --background: #ffffff;
   --foreground: #171717;
   /* ADIKARA Palette */
-  --primary-700: #2E742B;
+  --primary-700: #2e742b;
   --primary-600: #419823;
-  --primary-500: #48A32A;
+  --primary-500: #48a32a;
   --primary: var(--primary-600);
-  --secondary: #F4D348;
-  --accent: #F66338;
+  --secondary: #f4d348;
+  --accent: #f66338;
   --danger: #dc2626;
   --rich: #111827;
 }
@@ -39,6 +39,131 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Landing (beranda): reveal ringan + aksesibilitas motion */
+@keyframes landing-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.landing-reveal {
+  opacity: 0;
+  animation: landing-reveal 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-reveal {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+.landing-reveal-delay-1 {
+  animation-delay: 0.05s;
+}
+.landing-reveal-delay-2 {
+  animation-delay: 0.1s;
+}
+.landing-reveal-delay-3 {
+  animation-delay: 0.15s;
+}
+.landing-reveal-delay-4 {
+  animation-delay: 0.2s;
+}
+.landing-reveal-delay-5 {
+  animation-delay: 0.25s;
+}
+.landing-reveal-delay-6 {
+  animation-delay: 0.3s;
+}
+.landing-reveal-delay-7 {
+  animation-delay: 0.35s;
+}
+.landing-reveal-delay-8 {
+  animation-delay: 0.4s;
+}
+.landing-reveal-delay-9 {
+  animation-delay: 0.45s;
+}
+.landing-reveal-delay-10 {
+  animation-delay: 0.5s;
+}
+.landing-reveal-delay-11 {
+  animation-delay: 0.55s;
+}
+
+/* Landing: aksen mesh sangat halus (di atas warna section, tetap ringan) */
+.landing-mesh-accent {
+  background-image:
+    radial-gradient(
+      ellipse 100% 80% at 0% 0%,
+      rgba(65, 152, 35, 0.07),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 90% 70% at 100% 10%,
+      rgba(244, 211, 72, 0.06),
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse 80% 60% at 50% 100%,
+      rgba(246, 99, 56, 0.04),
+      transparent 45%
+    );
+}
+
+/* Fokus keyboard konsisten di landing (tanpa mengubah layout) */
+.landing-focus:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px color-mix(in srgb, var(--primary) 55%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-blob-pulse {
+    animation: none !important;
+  }
+}
+
+/* Halaman publik (non-dashboard): hero gradasi selaras beranda */
+.public-hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    120deg,
+    #163a14 0%,
+    var(--primary) 42%,
+    #2a7a22 100%
+  );
+  color: #fff;
+}
+.public-hero::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 100% 85% at 100% -15%,
+      rgba(244, 211, 72, 0.18),
+      transparent 46%
+    ),
+    radial-gradient(
+      ellipse 75% 55% at -5% 100%,
+      rgba(255, 255, 255, 0.1),
+      transparent 52%
+    ),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.14), transparent 38%);
+}
+.public-hero > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Custom from jobPortal */

@@ -5,25 +5,39 @@ import EmptyState from "../../components/ui/EmptyState";
 import FullPageLoading from "../../components/ui/FullPageLoading";
 import { getHomeContent } from "../../services/site";
 import Link from "next/link";
-import { Table, TableHead, TableBody, TableRow, TH, TD } from "../../components/ui/Table";
+import {
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TH,
+  TD,
+} from "../../components/ui/Table";
 
-type BkkItem = { id: string; data: { nama?: string; alamat?: string; website?: string } };
+type BkkItem = {
+  id: string;
+  data: { nama?: string; alamat?: string; website?: string };
+};
 
 export default function BkkLandingPage() {
-  const [bkkList, setBkkList] = useState<Array<{ id: string; nama: string; alamat: string; website: string }>>([]);
+  const [bkkList, setBkkList] = useState<
+    Array<{ id: string; nama: string; alamat: string; website: string }>
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
-        const resp = await getHomeContent() as { bkk?: BkkItem[] };
+        const resp = (await getHomeContent()) as { bkk?: BkkItem[] };
         const rows = Array.isArray(resp?.bkk) ? resp.bkk : [];
-        setBkkList(rows.map((r) => ({
-          id: String(r.id),
-          nama: String(r.data?.nama || ""),
-          alamat: String(r.data?.alamat || ""),
-          website: String(r.data?.website || ""),
-        })));
+        setBkkList(
+          rows.map((r) => ({
+            id: String(r.id),
+            nama: String(r.data?.nama || ""),
+            alamat: String(r.data?.alamat || ""),
+            website: String(r.data?.website || ""),
+          })),
+        );
       } catch {
         setBkkList([]);
       } finally {
@@ -35,18 +49,32 @@ export default function BkkLandingPage() {
   if (loading) return <FullPageLoading />;
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <section className="relative bg-primary text-white py-16">
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-gray-50/90 to-slate-50 font-sans antialiased text-slate-800 selection:bg-primary/15 selection:text-emerald-950 [font-feature-settings:'cv02','cv03']">
+      <section className="public-hero relative py-16 ring-1 ring-black/[0.06]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-3">Bursa Kerja Khusus (BKK)</h1>
-          <p className="text-sm sm:text-base opacity-95">Daftar BKK Wilayah Kabupaten Paser</p>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3 text-balance drop-shadow-sm">
+            Bursa Kerja Khusus (BKK)
+          </h1>
+          <p className="text-sm sm:text-base text-white/95">
+            Daftar BKK Wilayah Kabupaten Paser
+          </p>
         </div>
       </section>
       <section className="py-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <Card header={<h2 className="text-lg font-semibold text-primary">Daftar BKK Wilayah Kabupaten Paser</h2>}>
+          <Card
+            header={
+              <h2 className="text-lg font-semibold text-primary">
+                Daftar BKK Wilayah Kabupaten Paser
+              </h2>
+            }
+          >
             {bkkList.length === 0 ? (
-              <EmptyState icon="ri-school-line" title="Belum ada data BKK" description="Silakan kembali lagi nanti." />
+              <EmptyState
+                icon="ri-school-line"
+                title="Belum ada data BKK"
+                description="Silakan kembali lagi nanti."
+              />
             ) : (
               <Table>
                 <TableHead>
@@ -61,15 +89,24 @@ export default function BkkLandingPage() {
                   {bkkList.map((b, idx) => (
                     <TableRow key={b.id}>
                       <TD className="text-gray-700">{idx + 1}</TD>
-                      <TD className="font-medium text-primary">{b.nama || "-"}</TD>
+                      <TD className="font-medium text-primary">
+                        {b.nama || "-"}
+                      </TD>
                       <TD className="text-gray-700">{b.alamat || "-"}</TD>
                       <TD>
                         {b.website && /^https?:\/\//i.test(b.website) ? (
-                          <Link href={b.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-words">
+                          <Link
+                            href={b.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="landing-focus text-primary hover:text-[var(--color-primary-dark)] underline-offset-2 hover:underline break-words rounded-sm"
+                          >
                             {b.website}
                           </Link>
                         ) : (
-                          <span className="text-gray-700 break-words">{b.website || "-"}</span>
+                          <span className="text-gray-700 break-words">
+                            {b.website || "-"}
+                          </span>
                         )}
                       </TD>
                     </TableRow>

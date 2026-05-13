@@ -249,14 +249,14 @@ export default function AboutPage() {
   if (loading) return <FullPageLoading />;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white font-sans antialiased text-slate-800 selection:bg-primary/15 selection:text-emerald-950 [font-feature-settings:'cv02','cv03']">
       {/* Hero Section */}
-      <section className="relative bg-primary text-white py-16 px-4 sm:px-6">
+      <section className="public-hero relative py-16 px-4 sm:px-6 ring-1 ring-black/[0.06]">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">
+          <h1 className="text-3xl md:text-4xl font-bold mb-3 text-balance drop-shadow-sm">
             Tentang ADIKARA
           </h1>
-          <p className="text-base md:text-lg opacity-95 leading-relaxed">
+          <p className="text-base md:text-lg text-white/95 leading-relaxed">
             Dinas Ketenagakerjaan Kabupaten Paser - Berkomitmen Mewujudkan
             Tenaga Kerja
             <br />
@@ -266,7 +266,7 @@ export default function AboutPage() {
       </section>
 
       {/* Profile Section */}
-      <section className="py-12 bg-white">
+      <section className="py-12 bg-white landing-mesh-accent">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Profile Text */}
@@ -299,7 +299,7 @@ export default function AboutPage() {
             </div>
 
             {/* Right Column - Focus Areas */}
-            <div className="bg-blue-50 p-6 rounded-lg">
+            <div className="bg-gradient-to-br from-emerald-50/90 to-sky-50/80 p-6 rounded-2xl border border-slate-200/90 ring-1 ring-black/[0.02] shadow-sm">
               <h3 className="text-lg font-bold text-primary mb-4">
                 Fokus Utama Kami
               </h3>
@@ -319,7 +319,7 @@ export default function AboutPage() {
       </section>
 
       {/* Vision & Mission */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-gradient-to-b from-slate-50 via-gray-50/90 to-slate-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-primary mb-2">
@@ -415,7 +415,7 @@ export default function AboutPage() {
       </section>
 
       {/* Statistics - Kabupaten Paser */}
-      <section className="py-12 bg-primary text-white">
+      <section className="public-hero py-12 text-white px-4 sm:px-6 ring-1 ring-black/[0.06]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold mb-2">
@@ -429,7 +429,7 @@ export default function AboutPage() {
             {statistics.map((stat, index) => (
               <div
                 key={index}
-                className="bg-white/10 backdrop-blur-sm p-5 rounded-lg text-center overflow-hidden"
+                className="bg-white/12 backdrop-blur-md p-5 rounded-2xl text-center overflow-hidden border border-white/15 ring-1 ring-white/10 shadow-lg shadow-black/10 motion-safe:transition-transform motion-safe:duration-300 hover:-translate-y-0.5"
               >
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
                   <i className={`${stat.icon} text-2xl text-white`}></i>
@@ -485,7 +485,7 @@ export default function AboutPage() {
       </section>
 
       {/* Contact Information */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-gradient-to-b from-slate-50 via-gray-50/90 to-slate-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-primary mb-2">
@@ -535,7 +535,7 @@ export default function AboutPage() {
                   {contact.facebook ? (
                     <a
                       href={contact.facebook}
-                      className="text-primary hover:text-[var(--color-primary-dark)]"
+                      className="landing-focus inline-flex rounded-lg p-2 text-primary hover:text-[var(--color-primary-dark)] hover:bg-primary/5 motion-safe:transition-colors"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -545,7 +545,7 @@ export default function AboutPage() {
                   {contact.instagram ? (
                     <a
                       href={contact.instagram}
-                      className="text-primary hover:text-[var(--color-primary-dark)]"
+                      className="landing-focus inline-flex rounded-lg p-2 text-primary hover:text-[var(--color-primary-dark)] hover:bg-primary/5 motion-safe:transition-colors"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -555,7 +555,7 @@ export default function AboutPage() {
                   {contact.youtube ? (
                     <a
                       href={contact.youtube}
-                      className="text-primary hover:text-[var(--color-primary-dark)]"
+                      className="landing-focus inline-flex rounded-lg p-2 text-primary hover:text-[var(--color-primary-dark)] hover:bg-primary/5 motion-safe:transition-colors"
                       target="_blank"
                       rel="noopener noreferrer"
                     >

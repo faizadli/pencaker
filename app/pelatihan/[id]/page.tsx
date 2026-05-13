@@ -53,20 +53,20 @@ export default function DetailPelatihanPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white font-sans antialiased text-slate-800 selection:bg-primary/15 selection:text-emerald-950 [font-feature-settings:'cv02','cv03']">
       {/* Hero Section */}
-      <section className="bg-primary text-white py-10">
+      <section className="public-hero py-10 ring-1 ring-black/[0.06]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <Link
             href="/pelatihan"
-            className="inline-flex items-center text-white/80 hover:text-white mb-6 transition-colors text-sm"
+            className="landing-focus inline-flex items-center text-white/85 hover:text-white mb-6 motion-safe:transition-colors text-sm rounded-md"
           >
             <i className="ri-arrow-left-line mr-2"></i>
             Kembali ke Daftar Pelatihan
           </Link>
           <div className="flex flex-col md:flex-row gap-6 items-start">
             <div className="flex-1">
-              <h1 className="text-2xl md:text-3xl font-bold mb-2">
+              <h1 className="text-2xl md:text-3xl font-bold mb-2 text-balance drop-shadow-sm">
                 {training.title}
               </h1>
               <p className="text-white/90 text-lg flex items-center gap-2">
@@ -92,7 +92,7 @@ export default function DetailPelatihanPage() {
       </section>
 
       {/* Content Section */}
-      <section className="py-10 bg-gray-50 min-h-[calc(100vh-300px)]">
+      <section className="py-10 bg-gradient-to-b from-slate-50 via-gray-50/95 to-slate-50 min-h-[calc(100vh-300px)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="space-y-6">
             {/* Stats Grid */}

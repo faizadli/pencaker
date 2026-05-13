@@ -471,8 +471,8 @@ export default function HomePage() {
   if (loadingJobs || loadingContent) return <FullPageLoading />;
 
   return (
-    <div className="min-h-screen bg-white">
-      <section className="relative text-white overflow-hidden">
+    <div className="min-h-screen bg-white font-sans antialiased text-slate-800 selection:bg-primary/15 selection:text-emerald-950 [font-feature-settings:'cv02','cv03']">
+      <section className="relative text-white overflow-hidden landing-reveal landing-reveal-delay-1 ring-1 ring-black/[0.06]">
         <div
           className="relative w-full"
           style={{ aspectRatio: bannerRatio ? String(bannerRatio) : "3 / 1" }}
@@ -493,10 +493,11 @@ export default function HomePage() {
               } catch {}
             }}
           />
-          <div className="absolute inset-0 bg-black/20"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-black/5 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-transparent to-secondary/15 pointer-events-none" />
         </div>
       </section>
-      <section className="bg-gradient-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] relative z-30 border-y border-white/10">
+      <section className="landing-reveal landing-reveal-delay-2 bg-gradient-to-r from-[#1a3f18] via-primary to-[#2f8a28] relative z-30 border-y border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
         <div className="marquee overflow-hidden w-full">
           <div className="marquee-track whitespace-nowrap">
             {(runningTexts.length > 0
@@ -505,13 +506,13 @@ export default function HomePage() {
             ).map((rt, idx) => (
               <div
                 key={`${rt.id}-${idx}`}
-                className="marquee-item flex items-center gap-3 px-6 py-3 text-white text-base font-medium tracking-wide"
+                className="marquee-item flex items-center gap-3 px-6 py-3 text-white text-base font-medium tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
               >
                 <span>{rt.text}</span>
               </div>
             ))}
             {runningTexts.length === 0 && (
-              <div className="marquee-item flex items-center gap-3 px-6 py-3 text-white text-base font-medium tracking-wide">
+              <div className="marquee-item flex items-center gap-3 px-6 py-3 text-white text-base font-medium tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">
                 {/* Empty state or default text could go here if needed, but keeping it empty per dynamic request */}
               </div>
             )}
@@ -569,23 +570,32 @@ export default function HomePage() {
           .marquee-track:hover {
             animation-play-state: paused;
           }
+          @media (prefers-reduced-motion: reduce) {
+            .marquee-track {
+              animation: none;
+              transform: none;
+            }
+          }
         `}</style>
       </section>
 
       {holidayGreetings.length > 0 && (
-        <section className="py-8 bg-white relative z-20">
+        <section className="landing-reveal landing-reveal-delay-3 py-8 bg-gradient-to-b from-white to-slate-50/90 relative z-20 landing-mesh-accent">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div
               className={`grid grid-cols-1 ${holidayGreetings.length > 1 ? "md:grid-cols-2" : ""} gap-6 justify-center`}
             >
               {holidayGreetings.map((h) => (
-                <div key={h.id} className="relative group">
+                <div
+                  key={h.id}
+                  className="relative group rounded-2xl ring-1 ring-slate-200/80 shadow-sm hover:shadow-md motion-safe:transition-shadow motion-safe:duration-300 overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:from-primary/80 before:via-secondary/90 before:to-emerald-600/80 before:z-10"
+                >
                   <div className="p-6 pb-4 text-center">
-                    <h3 className="text-xl md:text-2xl font-bold mb-2 text-primary">
+                    <h3 className="text-xl md:text-2xl font-bold mb-2 tracking-tight text-balance bg-gradient-to-r from-primary to-emerald-700 bg-clip-text text-transparent">
                       {h.title}
                     </h3>
                     {h.description && (
-                      <p className="text-gray-600 text-sm md:text-base line-clamp-3">
+                      <p className="text-slate-600 text-sm md:text-base line-clamp-3 leading-relaxed">
                         {h.description}
                       </p>
                     )}
@@ -608,35 +618,47 @@ export default function HomePage() {
         </section>
       )}
 
-      <section className="py-16 md:py-20 bg-gray-50 relative z-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="text-center">
-            <h1 className="text-2xl md:text-4xl font-bold text-primary">
+      <section className="landing-reveal landing-reveal-delay-4 py-16 md:py-20 relative z-20 overflow-hidden bg-gradient-to-b from-slate-50 via-white to-emerald-50/25 landing-mesh-accent">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 relative">
+          <div
+            className="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-[radial-gradient(ellipse_70%_80%_at_50%_0%,rgba(65,152,35,0.12),transparent)]"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -left-24 top-1/4 h-56 w-56 rounded-full bg-primary/15 blur-3xl motion-safe:animate-[pulse_7s_ease-in-out_infinite] landing-blob-pulse"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -right-20 bottom-0 h-48 w-48 rounded-full bg-secondary/20 blur-3xl motion-safe:animate-[pulse_9s_ease-in-out_infinite] motion-safe:[animation-delay:1s] landing-blob-pulse"
+            aria-hidden
+          />
+          <div className="text-center relative">
+            <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-balance bg-gradient-to-r from-[var(--color-primary-dark)] via-primary to-emerald-600 bg-clip-text text-transparent drop-shadow-sm">
               {banner.title}
             </h1>
-            <p className="text-sm md:text-base text-gray-600 mt-2">
+            <p className="text-sm md:text-base text-slate-600 mt-3 font-medium">
               {banner.subtitle}
             </p>
-            <p className="text-gray-600 mt-4 text-sm md:text-base">
+            <p className="text-slate-600 mt-4 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
               Temukan lowongan kerja terbaru, ikuti pelatihan gratis, dan
               dapatkan dukungan karier dari pemerintah.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 href="/jobs"
-                className="px-6 py-3 bg-primary hover:bg-[var(--color-primary-dark)] text-white font-semibold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 text-sm md:text-base"
+                className="landing-focus px-6 py-3 bg-gradient-to-r from-primary to-primary-dark hover:brightness-110 text-white font-semibold rounded-xl shadow-lg shadow-primary/25 flex items-center justify-center gap-2 text-sm md:text-base motion-safe:transition-all motion-safe:duration-200 active:scale-[0.98]"
               >
                 <i className="ri-search-line"></i> Cari Lowongan
               </Link>
               <a
                 href="/register/candidate"
-                className="px-6 py-3 border-2 border-primary text-primary hover:bg-gray-50 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-sm md:text-base"
+                className="landing-focus px-6 py-3 border-2 border-primary/80 text-primary hover:bg-white/80 hover:border-primary font-semibold rounded-xl shadow-sm flex items-center justify-center gap-2 text-sm md:text-base motion-safe:transition-all motion-safe:duration-200 active:scale-[0.98]"
               >
                 <i className="ri-user-add-line"></i> Daftar Pencaker
               </a>
               <a
                 href="/register/company"
-                className="px-6 py-3 border-2 border-primary text-primary hover:bg-gray-50 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-sm md:text-base"
+                className="landing-focus px-6 py-3 border-2 border-primary/80 text-primary hover:bg-white/80 hover:border-primary font-semibold rounded-xl shadow-sm flex items-center justify-center gap-2 text-sm md:text-base motion-safe:transition-all motion-safe:duration-200 active:scale-[0.98]"
               >
                 <i className="ri-building-line"></i> Daftar Perusahaan
               </a>
@@ -645,49 +667,54 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="cta-register" className="py-16 bg-gray-100">
+      <section
+        id="cta-register"
+        className="landing-reveal landing-reveal-delay-5 py-16 bg-gradient-to-b from-slate-100 via-gray-50 to-slate-100"
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-primary mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-balance bg-gradient-to-r from-[var(--color-primary-dark)] via-primary to-emerald-600 bg-clip-text text-transparent mb-12">
             Statistik Layanan Disnaker
           </h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {homeStats.map((stat, i) => (
               <div
                 key={i}
-                className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 hover:shadow-xl transition-all"
+                className="group/stat bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-md border border-slate-200/90 ring-1 ring-black/[0.02] hover:shadow-xl hover:border-primary/25 hover:-translate-y-0.5 motion-safe:transition-all motion-safe:duration-300"
               >
                 <div
-                  className={`w-16 h-16 ${stat.color} rounded-2xl flex items-center justify-center mx-auto mb-4`}
+                  className={`w-16 h-16 ${stat.color} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-black/15 ring-2 ring-white/30 motion-safe:transition-transform motion-safe:duration-300 group-hover/stat:scale-105 group-hover/stat:shadow-xl`}
                 >
                   <i className={`${stat.icon} text-white text-2xl`}></i>
                 </div>
-                <p className="text-2xl md:text-3xl font-bold text-primary">
+                <p className="text-2xl md:text-3xl font-bold tabular-nums bg-gradient-to-br from-primary to-emerald-700 bg-clip-text text-transparent">
                   {stat.value}
                 </p>
-                <p className="text-sm text-gray-600 mt-2">{stat.label}</p>
+                <p className="text-sm text-slate-600 mt-2 leading-snug">
+                  {stat.label}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-16 bg-gray-50">
+      <section className="landing-reveal landing-reveal-delay-6 py-16 bg-gradient-to-b from-white via-slate-50/50 to-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-primary">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-[var(--color-primary-dark)] to-primary bg-clip-text text-transparent">
                 Lowongan Terbaru
               </h2>
-              <p className="text-gray-600 mt-2">
+              <p className="text-slate-600 mt-2 leading-relaxed">
                 Temukan pekerjaan yang sesuai dengan keahlian Anda
               </p>
             </div>
             <Link
               href="/jobs"
-              className="text-primary hover:text-primary font-medium flex items-center gap-2 transition-colors"
+              className="landing-focus text-primary hover:text-[var(--color-primary-dark)] font-semibold flex items-center gap-2 motion-safe:transition-colors duration-200 group rounded-lg px-1 -mx-1"
             >
               Lihat Semua
-              <i className="ri-arrow-right-line"></i>
+              <i className="ri-arrow-right-line motion-safe:transition-transform group-hover:translate-x-0.5"></i>
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -695,7 +722,7 @@ export default function HomePage() {
               latestJobs.map((job) => (
                 <div
                   key={job.id}
-                  className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl border border-gray-200 transition-all group"
+                  className="bg-white/95 backdrop-blur-sm p-6 rounded-2xl shadow-md hover:shadow-xl border border-slate-200/90 ring-1 ring-black/[0.02] motion-safe:transition-all motion-safe:duration-300 hover:-translate-y-1 group"
                 >
                   <div className="flex items-start gap-4 mb-4">
                     {job.logo ? (
@@ -712,10 +739,12 @@ export default function HomePage() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-primary text-lg group-hover:text-primary transition-colors truncate">
+                      <h3 className="font-bold text-lg bg-gradient-to-r from-primary to-emerald-700 bg-clip-text text-transparent group-hover:from-[var(--color-primary-dark)] group-hover:to-primary motion-safe:transition-all motion-safe:duration-200 truncate">
                         {job.posisi}
                       </h3>
-                      <p className="text-gray-600 truncate">{job.perusahaan}</p>
+                      <p className="text-slate-600 truncate">
+                        {job.perusahaan}
+                      </p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-sm mb-4">
@@ -740,7 +769,7 @@ export default function HomePage() {
                     <span className="text-xs text-gray-500">{job.tanggal}</span>
                     <Link
                       href={`/jobs/${job.id}`}
-                      className="px-4 py-2 bg-primary hover:bg-[var(--color-primary-dark)] text-white text-sm rounded-lg transition-colors flex items-center gap-2"
+                      className="landing-focus px-4 py-2 bg-gradient-to-r from-primary to-primary-dark hover:brightness-110 text-white text-sm rounded-lg shadow-md shadow-primary/20 flex items-center gap-2 motion-safe:transition-all motion-safe:duration-200 active:scale-[0.98]"
                     >
                       Lihat Detail
                       <i className="ri-arrow-right-line"></i>
@@ -757,18 +786,18 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 bg-white">
+      <section className="landing-reveal landing-reveal-delay-7 py-16 bg-gradient-to-b from-slate-50/80 to-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-            <h2 className="text-2xl md:text-3xl font-bold text-primary">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-[var(--color-primary-dark)] to-primary bg-clip-text text-transparent">
               Berita & Informasi
             </h2>
             <Link
               href="/informasi"
-              className="text-primary hover:text-primary font-medium flex items-center gap-2 transition-colors"
+              className="landing-focus text-primary hover:text-[var(--color-primary-dark)] font-semibold flex items-center gap-2 motion-safe:transition-colors duration-200 group rounded-lg px-1 -mx-1"
             >
               Tampilkan Semua
-              <i className="ri-arrow-right-line"></i>
+              <i className="ri-arrow-right-line motion-safe:transition-transform group-hover:translate-x-0.5"></i>
             </Link>
           </div>
           {(() => {
@@ -790,20 +819,26 @@ export default function HomePage() {
                 {latestNews.map((news) => (
                   <div
                     key={news.id}
-                    className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 transform hover:-translate-y-1"
+                    className="group/news bg-white rounded-2xl shadow-md hover:shadow-xl border border-slate-200/90 ring-1 ring-black/[0.02] overflow-hidden motion-safe:transition-all motion-safe:duration-300 hover:-translate-y-1 hover:border-primary/20"
                   >
-                    <Image
-                      src={news.gambar}
-                      alt={news.judul}
-                      width={800}
-                      height={320}
-                      className="w-full h-48 object-cover"
-                    />
+                    <div className="relative overflow-hidden h-48">
+                      <Image
+                        src={news.gambar}
+                        alt={news.judul}
+                        width={800}
+                        height={320}
+                        className="w-full h-48 object-cover motion-safe:transition-transform motion-safe:duration-500 group-hover/news:scale-[1.04]"
+                      />
+                      <div
+                        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover/news:opacity-100 motion-safe:transition-opacity motion-safe:duration-300"
+                        aria-hidden
+                      />
+                    </div>
                     <div className="p-6">
-                      <h3 className="font-bold text-primary text-xl mb-3 hover:text-primary transition-colors">
+                      <h3 className="font-bold text-xl mb-3 bg-gradient-to-r from-primary to-emerald-700 bg-clip-text text-transparent hover:opacity-90 motion-safe:transition-opacity">
                         {news.judul}
                       </h3>
-                      <p className="text-gray-600 mb-4 leading-relaxed">
+                      <p className="text-slate-600 mb-4 leading-relaxed">
                         {news.ringkasan}
                       </p>
                       <div className="flex items-center justify-between">
@@ -813,7 +848,7 @@ export default function HomePage() {
                         </div>
                         <Link
                           href={`/informasi/${encodeURIComponent(news.id)}`}
-                          className="text-primary hover:text-[var(--color-primary-dark)] font-medium flex items-center gap-1 transition-colors"
+                          className="landing-focus text-primary hover:text-[var(--color-primary-dark)] font-medium flex items-center gap-1 transition-colors rounded-md"
                         >
                           Baca Selengkapnya{" "}
                           <i className="ri-arrow-right-line"></i>
@@ -828,13 +863,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      <section className="landing-reveal landing-reveal-delay-8 py-16 relative overflow-hidden bg-gradient-to-br from-[#1a5c18] via-primary to-[#256b3a] text-white">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_100%_0%,rgba(244,211,72,0.12),transparent_50%)]"
+          aria-hidden
+        />
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 relative">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 tracking-tight text-balance drop-shadow-sm">
               Testimoni Pencari Kerja
             </h2>
-            <p className="text-white/90 max-w-2xl mx-auto">
+            <p className="text-white/90 max-w-2xl mx-auto leading-relaxed">
               Dengarkan pengalaman sukses mereka yang telah mendapatkan
               pekerjaan melalui Disnaker
             </p>
@@ -843,7 +882,7 @@ export default function HomePage() {
             {testimonials.map((testi) => (
               <div
                 key={testi.id}
-                className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/10"
+                className="bg-white/12 backdrop-blur-md p-6 rounded-2xl border border-white/20 shadow-lg shadow-black/10 ring-1 ring-white/10 motion-safe:transition-transform motion-safe:duration-300 hover:-translate-y-0.5 hover:bg-white/16"
               >
                 <div className="flex items-center gap-4 mb-4">
                   <Image
@@ -860,20 +899,22 @@ export default function HomePage() {
                     </p>
                   </div>
                 </div>
-                <p className="text-white/90 italic">{testi.testimoni}</p>
+                <p className="text-white/90 italic leading-relaxed relative pl-5 before:absolute before:left-0 before:top-0 before:font-serif before:text-3xl before:leading-none before:text-white/25 before:content-['\201C']">
+                  {testi.testimoni}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-20 bg-gray-50">
+      <section className="landing-reveal landing-reveal-delay-9 py-20 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-primary mb-4">
+            <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-[var(--color-primary-dark)] via-primary to-emerald-600 bg-clip-text text-transparent mb-4">
               Pertanyaan yang Sering Diajukan
             </h2>
-            <p className="text-gray-600 text-lg">
+            <p className="text-slate-600 text-lg leading-relaxed">
               Temukan jawaban untuk pertanyaan umum seputar layanan ADIKARA
             </p>
           </div>
@@ -881,11 +922,12 @@ export default function HomePage() {
             {faqs.map((faq) => (
               <div
                 key={faq.id}
-                className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-300"
+                className="bg-white rounded-2xl shadow-sm border border-slate-200/90 ring-1 ring-black/[0.02] overflow-hidden motion-safe:transition-shadow motion-safe:duration-300 hover:shadow-md hover:border-primary/15"
               >
                 <button
+                  type="button"
                   onClick={() => toggleFaq(faq.id)}
-                  className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  className="landing-focus w-full px-6 py-4 text-left flex items-center justify-between hover:bg-emerald-50/50 motion-safe:transition-colors duration-200 rounded-t-2xl"
                 >
                   <h3 className="font-semibold text-primary text-lg flex items-center gap-3">
                     <i className="ri-question-line text-secondary"></i>
@@ -906,27 +948,27 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 bg-gray-100">
+      <section className="landing-reveal landing-reveal-delay-10 py-16 bg-gradient-to-b from-gray-100 via-slate-50 to-gray-100">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <div className="bg-gradient-to-r from-gray-50 to-white p-8 md:p-12 rounded-3xl border border-gray-200">
-            <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
+          <div className="bg-gradient-to-br from-white via-emerald-50/30 to-slate-50 p-8 md:p-12 rounded-3xl border border-slate-200/90 shadow-lg shadow-primary/5 ring-1 ring-black/[0.03]">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-balance bg-gradient-to-r from-[var(--color-primary-dark)] to-primary bg-clip-text text-transparent mb-4">
               Siap Mendapatkan Pekerjaan Impian?
             </h2>
-            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed">
               Bergabunglah dengan ribuan pencari kerja yang telah menemukan
               pekerjaan melalui platform kami
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="/register/candidate"
-                className="px-8 py-4 bg-primary hover:bg-primary text-white font-semibold rounded-xl transition-all shadow-lg flex items-center justify-center gap-3"
+                className="landing-focus px-8 py-4 bg-gradient-to-r from-primary to-primary-dark hover:brightness-110 text-white font-semibold rounded-xl shadow-lg shadow-primary/25 flex items-center justify-center gap-3 motion-safe:transition-all motion-safe:duration-200 active:scale-[0.98]"
               >
                 <i className="ri-user-add-line"></i>
                 Daftar Pencari Kerja
               </a>
               <a
                 href="/register/company"
-                className="px-8 py-4 border-2 border-primary text-primary font-semibold rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-3"
+                className="landing-focus px-8 py-4 border-2 border-primary/90 text-primary font-semibold rounded-xl hover:bg-white/90 motion-safe:transition-all motion-safe:duration-200 active:scale-[0.98] flex items-center justify-center gap-3 shadow-sm"
               >
                 <i className="ri-building-line"></i>
                 Daftar Perusahaan
@@ -936,7 +978,7 @@ export default function HomePage() {
               Sudah punya akun?{" "}
               <a
                 href="/login"
-                className="text-primary hover:underline font-medium"
+                className="landing-focus text-primary hover:underline font-medium rounded-sm"
               >
                 Masuk di sini
               </a>
@@ -945,10 +987,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 bg-gray-50">
+      <section className="landing-reveal landing-reveal-delay-11 py-16 bg-gradient-to-b from-white to-slate-50/90">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <div className="bg-white/95 backdrop-blur-sm p-6 rounded-2xl shadow-md border border-slate-200/90 ring-1 ring-black/[0.02] motion-safe:transition-all motion-safe:duration-300 hover:shadow-lg hover:-translate-y-0.5">
               <h3 className="text-xl font-bold text-primary mb-4 flex items-center gap-3">
                 <i className="ri-customer-service-2-line text-secondary"></i>
                 Hubungi Kami
@@ -979,7 +1021,7 @@ export default function HomePage() {
                 {instansi.facebook ? (
                   <a
                     href={instansi.facebook}
-                    className="w-10 h-10 bg-gray-100 hover:bg-secondary text-gray-600 hover:text-white rounded-lg flex items-center justify-center transition-colors"
+                    className="landing-focus w-10 h-10 bg-gray-100 hover:bg-secondary text-gray-600 hover:text-white rounded-full flex items-center justify-center motion-safe:transition-all motion-safe:duration-200 hover:scale-105 hover:shadow-md"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -989,7 +1031,7 @@ export default function HomePage() {
                 {instansi.instagram ? (
                   <a
                     href={instansi.instagram}
-                    className="w-10 h-10 bg-gray-100 hover:bg-secondary text-gray-600 hover:text-white rounded-lg flex items-center justify-center transition-colors"
+                    className="landing-focus w-10 h-10 bg-gray-100 hover:bg-secondary text-gray-600 hover:text-white rounded-full flex items-center justify-center motion-safe:transition-all motion-safe:duration-200 hover:scale-105 hover:shadow-md"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -999,7 +1041,7 @@ export default function HomePage() {
                 {instansi.youtube ? (
                   <a
                     href={instansi.youtube}
-                    className="w-10 h-10 bg-gray-100 hover:bg-secondary text-gray-600 hover:text-white rounded-lg flex items-center justify-center transition-colors"
+                    className="landing-focus w-10 h-10 bg-gray-100 hover:bg-secondary text-gray-600 hover:text-white rounded-full flex items-center justify-center motion-safe:transition-all motion-safe:duration-200 hover:scale-105 hover:shadow-md"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -1008,7 +1050,7 @@ export default function HomePage() {
                 ) : null}
               </div>
             </div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <div className="bg-white/95 backdrop-blur-sm p-6 rounded-2xl shadow-md border border-slate-200/90 ring-1 ring-black/[0.02] motion-safe:transition-all motion-safe:duration-300 hover:shadow-lg hover:-translate-y-0.5">
               <h3 className="text-xl font-bold text-primary mb-4 flex items-center gap-3">
                 <i className="ri-customer-service-line text-red-500"></i>
                 Layanan Pengaduan
@@ -1019,7 +1061,7 @@ export default function HomePage() {
               </p>
               <a
                 href="/pengaduan"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors"
+                className="landing-focus inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:brightness-110 text-white rounded-xl shadow-md shadow-red-600/25 motion-safe:transition-all motion-safe:duration-200 active:scale-[0.98]"
               >
                 <i className="ri-customer-service-line"></i>
                 Ajukan Pengaduan

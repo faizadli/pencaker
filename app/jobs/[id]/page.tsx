@@ -260,7 +260,7 @@ export default function JobDetailPage() {
 
   if (error || !job)
     return (
-      <main className="min-h-screen bg-white">
+      <main className="min-h-screen bg-white font-sans antialiased text-slate-800 selection:bg-primary/15 selection:text-emerald-950 [font-feature-settings:'cv02','cv03']">
         <div className="px-4 sm:px-6 max-w-4xl mx-auto">
           <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl">
             {error || "Lowongan tidak ditemukan"}
@@ -268,7 +268,7 @@ export default function JobDetailPage() {
           <div className="mt-4">
             <Link
               href="/jobs"
-              className="px-4 py-2 bg-primary text-white rounded-lg"
+              className="landing-focus inline-flex px-4 py-2 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl shadow-md shadow-primary/20 hover:brightness-110"
             >
               Kembali ke Lowongan
             </Link>
@@ -280,8 +280,8 @@ export default function JobDetailPage() {
   const company = job.company_name || job.company_id;
 
   return (
-    <main className="min-h-screen bg-white">
-      <section className="bg-primary text-white py-10">
+    <main className="min-h-screen bg-white font-sans antialiased text-slate-800 selection:bg-primary/15 selection:text-emerald-950 [font-feature-settings:'cv02','cv03']">
+      <section className="public-hero py-10 ring-1 ring-black/[0.06]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-start gap-4">
             <Image
@@ -295,10 +295,10 @@ export default function JobDetailPage() {
               className="w-18 h-18 rounded-xl object-cover"
             />
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl md:text-3xl font-bold">
+              <h1 className="text-2xl md:text-3xl font-bold text-balance drop-shadow-sm">
                 {job.job_title}
               </h1>
-              <p className="text-sm opacity-90">
+              <p className="text-sm text-white/90">
                 {company} • {job.work_setup || "Lokasi tidak tersedia"}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -329,7 +329,7 @@ export default function JobDetailPage() {
         </div>
       </section>
 
-      <section className="py-10 bg-gray-50">
+      <section className="py-10 bg-gradient-to-b from-slate-50 via-gray-50/95 to-slate-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -420,7 +420,7 @@ export default function JobDetailPage() {
                   setConfirmOpen(true);
                 }}
                 disabled={hasApplied}
-                className={`mt-3 w-full px-4 py-2 text-white rounded-lg ${hasApplied ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-[var(--color-primary-dark)]"}`}
+                className={`landing-focus mt-3 w-full px-4 py-2 text-white rounded-xl ${hasApplied ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-primary to-primary-dark hover:brightness-110 shadow-md shadow-primary/20"}`}
               >
                 {hasApplied ? "Sudah Melamar" : "Lamar Sekarang"}
               </button>
@@ -445,7 +445,7 @@ export default function JobDetailPage() {
                   <div className="pt-2">
                     <Link
                       href={`/companies/${encodeURIComponent(String(job.company_id))}`}
-                      className="mt-3 w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary text-center block"
+                      className="landing-focus mt-3 w-full px-4 py-2 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl hover:brightness-110 text-center block shadow-md shadow-primary/20"
                     >
                       Lihat Profil Perusahaan
                     </Link>
@@ -526,7 +526,7 @@ export default function JobDetailPage() {
                 }
               }}
               disabled={applying}
-              className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
+              className="landing-focus px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white hover:brightness-110 shadow-md shadow-primary/20"
             >
               {applying ? "Mengirim..." : "Ya, Lamar"}
             </button>
@@ -556,7 +556,7 @@ export default function JobDetailPage() {
                 setLoginOpen(false);
                 router.push("/login/candidate");
               }}
-              className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
+              className="landing-focus px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white hover:brightness-110 shadow-md shadow-primary/20"
             >
               Login Kandidat
             </button>
@@ -583,7 +583,7 @@ export default function JobDetailPage() {
             </button>
             <button
               onClick={() => router.push("/dashboard/lamaran")}
-              className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
+              className="landing-focus px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white hover:brightness-110 shadow-md shadow-primary/20"
             >
               Lihat Status Lamaran
             </button>

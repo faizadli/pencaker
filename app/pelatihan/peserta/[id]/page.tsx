@@ -51,14 +51,15 @@ export default function DetailPesertaPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-20">
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-gray-50/90 pb-20 font-sans antialiased text-slate-800 selection:bg-primary/15 selection:text-emerald-950 [font-feature-settings:'cv02','cv03']">
       {/* Header Background */}
-      <div className="bg-primary h-48 relative overflow-hidden">
+      <div className="public-hero h-48 ring-1 ring-black/[0.06] relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 pattern-dots"></div>
         <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 relative z-10">
           <button
+            type="button"
             onClick={() => router.back()}
-            className="inline-flex items-center text-white/80 hover:text-white transition-colors text-sm mb-4"
+            className="landing-focus inline-flex items-center text-white/85 hover:text-white motion-safe:transition-colors text-sm mb-4 rounded-md"
           >
             <i className="ri-arrow-left-line mr-2"></i>
             Kembali

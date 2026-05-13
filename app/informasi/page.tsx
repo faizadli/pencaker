@@ -69,13 +69,13 @@ export default function InformasiPage() {
   if (loading) return <FullPageLoading />;
 
   return (
-    <div className="min-h-screen bg-white">
-      <section className="relative bg-primary text-white py-12 sm:py-16 px-4 sm:px-6">
+    <div className="min-h-screen bg-white font-sans antialiased text-slate-800 selection:bg-primary/15 selection:text-emerald-950 [font-feature-settings:'cv02','cv03']">
+      <section className="public-hero relative py-12 sm:py-16 px-4 sm:px-6 ring-1 ring-black/[0.06]">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 text-balance drop-shadow-sm">
             Berita & Informasi
           </h1>
-          <p className="text-sm sm:text-base md:text-lg opacity-95 leading-relaxed">
+          <p className="text-sm sm:text-base md:text-lg text-white/95 leading-relaxed">
             Update terbaru seputar layanan dan informasi ketenagakerjaan
           </p>
           <div className="mt-6 max-w-2xl mx-auto flex gap-3">
@@ -88,16 +88,19 @@ export default function InformasiPage() {
               placeholder="Cari judul atau kata kunci..."
               className="flex-1 min-w-0"
             />
-            <button className="px-4 sm:px-5 py-3 bg-white text-primary rounded-xl font-medium hover:bg-blue-50 w-auto">
+            <button
+              type="button"
+              className="landing-focus px-4 sm:px-5 py-3 bg-white text-primary rounded-xl font-medium hover:bg-emerald-50/90 w-auto shadow-md shadow-black/10 motion-safe:transition-colors"
+            >
               Cari
             </button>
           </div>
         </div>
       </section>
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-gradient-to-b from-slate-50 via-gray-50/95 to-slate-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-4 gap-8">
           <aside className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md border border-slate-200/90 ring-1 ring-black/[0.02] p-6">
               <h3 className="text-base font-semibold text-primary mb-4">
                 Filter Informasi
               </h3>
@@ -152,7 +155,7 @@ export default function InformasiPage() {
           <main className="lg:col-span-3">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-bold text-primary">
+                <h2 className="text-lg font-bold bg-gradient-to-r from-[var(--color-primary-dark)] to-primary bg-clip-text text-transparent">
                   Informasi Tersedia
                 </h2>
                 <p className="text-sm text-gray-500">
@@ -164,7 +167,7 @@ export default function InformasiPage() {
               </span>
             </div>
             {filtered.length === 0 ? (
-              <div className="text-center py-8 bg-white rounded-xl shadow-md border border-gray-200">
+              <div className="text-center py-8 bg-white/95 backdrop-blur-sm rounded-2xl shadow-md border border-slate-200/90 ring-1 ring-black/[0.02]">
                 <i className="ri-newspaper-line text-4xl text-gray-300 mb-3"></i>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   Tidak ada informasi ditemukan
@@ -173,12 +176,13 @@ export default function InformasiPage() {
                   Coba ubah kata kunci pencarian atau filter kategori
                 </p>
                 <button
+                  type="button"
                   onClick={() => {
                     setCategory("");
                     setQuery("");
                     setPage(1);
                   }}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition"
+                  className="landing-focus px-4 py-2 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl hover:brightness-110 shadow-md shadow-primary/20 motion-safe:transition-all"
                 >
                   Reset Pencarian
                 </button>
@@ -209,23 +213,29 @@ export default function InformasiPage() {
                     return (
                       <div
                         key={n.id}
-                        className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 transform hover:-translate-y-1"
+                        className="group/news bg-white rounded-2xl shadow-md hover:shadow-xl border border-slate-200/90 ring-1 ring-black/[0.02] overflow-hidden motion-safe:transition-all motion-safe:duration-300 hover:-translate-y-1 hover:border-primary/20"
                       >
                         {thumb ? (
-                          <Image
-                            src={thumb}
-                            alt={title}
-                            width={800}
-                            height={320}
-                            className="w-full h-40 sm:h-48 object-cover"
-                          />
+                          <div className="relative overflow-hidden h-40 sm:h-48">
+                            <Image
+                              src={thumb}
+                              alt={title}
+                              width={800}
+                              height={320}
+                              className="w-full h-40 sm:h-48 object-cover motion-safe:transition-transform motion-safe:duration-500 group-hover/news:scale-[1.04]"
+                            />
+                            <div
+                              className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover/news:opacity-100 motion-safe:transition-opacity motion-safe:duration-300"
+                              aria-hidden
+                            />
+                          </div>
                         ) : (
                           <div className="w-full h-40 sm:h-48 bg-gray-100 flex items-center justify-center text-gray-500">
                             No Image
                           </div>
                         )}
                         <div className="p-6">
-                          <h3 className="font-bold text-primary text-xl mb-3 hover:text-[var(--color-primary-dark)] transition-colors">
+                          <h3 className="font-bold text-xl mb-3 bg-gradient-to-r from-primary to-emerald-700 bg-clip-text text-transparent">
                             {title}
                           </h3>
                           <p className="text-gray-600 mb-4 leading-relaxed">
@@ -244,7 +254,7 @@ export default function InformasiPage() {
                           </div>
                           <Link
                             href={`/informasi/${encodeURIComponent(n.id)}`}
-                            className="mt-2 inline-flex items-center gap-1 text-primary hover:text-[var(--color-primary-dark)] font-medium transition-colors"
+                            className="landing-focus mt-2 inline-flex items-center gap-1 text-primary hover:text-[var(--color-primary-dark)] font-medium transition-colors rounded-md"
                           >
                             Baca Selengkapnya{" "}
                             <i className="ri-arrow-right-line"></i>

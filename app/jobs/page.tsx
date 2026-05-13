@@ -180,13 +180,13 @@ export default function JobsPage() {
   if (loading) return <FullPageLoading />;
 
   return (
-    <div className="min-h-screen bg-white">
-      <section className="relative bg-primary text-white py-12 sm:py-16 px-4 sm:px-6">
+    <div className="min-h-screen bg-white font-sans antialiased text-slate-800 selection:bg-primary/15 selection:text-emerald-950 [font-feature-settings:'cv02','cv03']">
+      <section className="public-hero relative py-12 sm:py-16 px-4 sm:px-6 ring-1 ring-black/[0.06]">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 text-balance drop-shadow-sm">
             Temukan Lowongan Kerja
           </h1>
-          <p className="text-sm sm:text-base md:text-lg opacity-95 leading-relaxed">
+          <p className="text-sm sm:text-base md:text-lg text-white/95 leading-relaxed">
             Jelajahi berbagai peluang karir dari perusahaan terpercaya
           </p>
           <div className="mt-6 max-w-2xl mx-auto flex gap-3">
@@ -196,17 +196,20 @@ export default function JobsPage() {
               placeholder="Cari posisi, perusahaan, atau kata kunci..."
               className="flex-1 min-w-0"
             />
-            <button className="px-4 sm:px-5 py-3 bg-white text-primary rounded-xl font-medium hover:bg-blue-50 w-auto">
+            <button
+              type="button"
+              className="landing-focus px-4 sm:px-5 py-3 bg-white text-primary rounded-xl font-medium hover:bg-emerald-50/90 w-auto shadow-md shadow-black/10 motion-safe:transition-colors"
+            >
               Cari
             </button>
           </div>
         </div>
       </section>
 
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-gradient-to-b from-slate-50 via-gray-50/95 to-slate-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-4 gap-8">
           <aside className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md border border-slate-200/90 ring-1 ring-black/[0.02] p-6">
               <h3 className="text-base font-semibold text-primary mb-4">
                 Filter Lowongan
               </h3>
@@ -248,8 +251,9 @@ export default function JobsPage() {
                   onChange={setEducation}
                 />
                 <button
+                  type="button"
                   onClick={resetFilter}
-                  className="w-full px-4 py-2 bg-gray-100 text-primary rounded-lg hover:bg-gray-200"
+                  className="landing-focus w-full px-4 py-2 bg-slate-100 text-primary rounded-xl hover:bg-slate-200/90 motion-safe:transition-colors font-medium"
                 >
                   Reset Filter
                 </button>
@@ -260,7 +264,7 @@ export default function JobsPage() {
           <main className="lg:col-span-3">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-bold text-primary">
+                <h2 className="text-lg font-bold bg-gradient-to-r from-[var(--color-primary-dark)] to-primary bg-clip-text text-transparent">
                   Lowongan Tersedia
                 </h2>
                 <p className="text-sm text-gray-500">
@@ -277,7 +281,7 @@ export default function JobsPage() {
             ) : (
               <>
                 {filtered.length === 0 && (
-                  <div className="text-center py-8 bg-white rounded-xl shadow-md border border-gray-200">
+                  <div className="text-center py-8 bg-white/95 backdrop-blur-sm rounded-2xl shadow-md border border-slate-200/90 ring-1 ring-black/[0.02]">
                     <i className="ri-briefcase-line text-4xl text-gray-300 mb-3"></i>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       Tidak ada lowongan ditemukan
@@ -286,11 +290,12 @@ export default function JobsPage() {
                       Coba ubah kata kunci pencarian atau filter
                     </p>
                     <button
+                      type="button"
                       onClick={() => {
                         setSearch("");
                         resetFilter();
                       }}
-                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition"
+                      className="landing-focus px-4 py-2 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl hover:brightness-110 shadow-md shadow-primary/20 motion-safe:transition-all"
                     >
                       Reset Pencarian
                     </button>
@@ -402,7 +407,7 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
   const company = job.company_name || job.company_id;
   const href = job.id ? `/jobs/${encodeURIComponent(job.id)}` : undefined;
   const card = (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 hover:shadow-md transition-shadow cursor-pointer overflow-hidden">
+    <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md border border-slate-200/90 ring-1 ring-black/[0.02] p-3 sm:p-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 hover:shadow-lg hover:border-primary/20 motion-safe:transition-all motion-safe:duration-300 cursor-pointer overflow-hidden">
       <div className="flex items-start gap-3 min-w-0 w-full">
         <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
           <Image
@@ -417,7 +422,7 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
           />
         </div>
         <div className="min-w-0">
-          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-primary truncate">
+          <h3 className="text-sm sm:text-base md:text-lg font-semibold bg-gradient-to-r from-primary to-emerald-700 bg-clip-text text-transparent truncate">
             {job.job_title}
           </h3>
           <p className="text-xs sm:text-sm text-gray-500 mt-0.5 break-words">
@@ -497,7 +502,7 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
           }
         } catch {}
       }}
-      className="block"
+      className="block rounded-2xl landing-focus"
     >
       {card}
     </Link>
