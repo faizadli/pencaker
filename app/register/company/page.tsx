@@ -48,7 +48,7 @@ export default function RegisterCompany() {
       setCheckingSession(false);
     })();
   }, [router]);
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(2);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -89,9 +89,6 @@ export default function RegisterCompany() {
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState("");
-  const [nibDoc, setNibDoc] = useState<File | null>(null);
-  const [companyProfileDoc, setCompanyProfileDoc] = useState<File | null>(null);
-  const [npwpDoc, setNpwpDoc] = useState<File | null>(null);
   const [finalized, setFinalized] = useState(false);
   const limitMB = 8;
   const tooLarge = (f: File) => f.size > limitMB * 1024 * 1024;
@@ -183,9 +180,6 @@ export default function RegisterCompany() {
     const dataToValidate = {
       ...company,
       company_logo: logoFile,
-      nib_doc: nibDoc,
-      company_profile_doc: companyProfileDoc,
-      npwp_doc: npwpDoc,
     };
 
     const result = companyProfileSchema.safeParse(dataToValidate);
@@ -345,37 +339,6 @@ export default function RegisterCompany() {
         website: company.website || undefined,
         about_company: company.about_company,
       });
-      // Upload dokumen wajib
-      const uploadRaw = async (
-        folder: string,
-        file: File,
-      ): Promise<string | undefined> => {
-        const pre = await presignCompanyProfileUpload(
-          folder,
-          file.name,
-          file.type || "application/octet-stream",
-        );
-        return await putSigned(
-          pre.url,
-          file,
-          file.type || "application/octet-stream",
-        );
-      };
-      let nibUrl: string | undefined;
-      let profileDocUrl: string | undefined;
-      let npwpUrl: string | undefined;
-      if (nibDoc) {
-        nibUrl = await uploadRaw("company/docs/nib", nibDoc);
-      }
-      if (companyProfileDoc) {
-        profileDocUrl = await uploadRaw(
-          "company/docs/profile",
-          companyProfileDoc,
-        );
-      }
-      if (npwpDoc) {
-        npwpUrl = await uploadRaw("company/docs/npwp", npwpDoc);
-      }
       let logoUrl: string | undefined = undefined;
       if (logoFile) {
         if (logoFile.type && logoFile.type.startsWith("image/")) {
@@ -408,16 +371,13 @@ export default function RegisterCompany() {
           );
         }
       }
-      if (logoUrl || nibUrl || profileDocUrl || npwpUrl) {
+      if (logoUrl) {
         await upsertCompanyProfile({
           user_id: uid,
           company_name: company.company_name,
           company_type: company.company_type || undefined,
           nib: company.nib || undefined,
           company_logo: logoUrl,
-          nib_file_url: nibUrl,
-          company_profile_file_url: profileDocUrl,
-          npwp_file_url: npwpUrl,
           kecamatan: company.kecamatan,
           kelurahan: company.kelurahan,
           address: company.address,
@@ -761,72 +721,6 @@ export default function RegisterCompany() {
                     />
                   </div>
                 </div>
-                <div className="sm:col-span-2">
-                  <p className="text-sm font-medium text-gray-700 mb-2">
-                    Surat Izin Usaha (NIB)
-                  </p>
-                  <Input
-                    type="file"
-                    accept=".pdf, .png, .jpg, .jpeg"
-                    onChange={(e) => {
-                      const f =
-                        (e.target as HTMLInputElement).files?.[0] || null;
-                      setNibDoc(f);
-                      if (f) {
-                        setFieldErrors((prev) => {
-                          const next = { ...prev };
-                          delete next.nib_doc;
-                          return next;
-                        });
-                      }
-                    }}
-                    error={fieldErrors.nib_doc}
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <p className="text-sm font-medium text-gray-700 mb-2">
-                    Company Profile (PDF)
-                  </p>
-                  <Input
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) => {
-                      const f =
-                        (e.target as HTMLInputElement).files?.[0] || null;
-                      setCompanyProfileDoc(f);
-                      if (f) {
-                        setFieldErrors((prev) => {
-                          const next = { ...prev };
-                          delete next.company_profile_doc;
-                          return next;
-                        });
-                      }
-                    }}
-                    error={fieldErrors.company_profile_doc}
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <p className="text-sm font-medium text-gray-700 mb-2">
-                    NPWP Perusahaan
-                  </p>
-                  <Input
-                    type="file"
-                    accept=".pdf, .png, .jpg, .jpeg"
-                    onChange={(e) => {
-                      const f =
-                        (e.target as HTMLInputElement).files?.[0] || null;
-                      setNpwpDoc(f);
-                      if (f) {
-                        setFieldErrors((prev) => {
-                          const next = { ...prev };
-                          delete next.npwp_doc;
-                          return next;
-                        });
-                      }
-                    }}
-                    error={fieldErrors.npwp_doc}
-                  />
-                </div>
                 <Input
                   label="Nama Perusahaan"
                   value={company.company_name}
@@ -863,6 +757,14 @@ export default function RegisterCompany() {
                     setCompany({ ...company, nib: e.target.value })
                   }
                   error={fieldErrors.nib}
+                />
+                <Input
+                  label="Website (Opsional)"
+                  value={company.website}
+                  onChange={(e) =>
+                    setCompany({ ...company, website: e.target.value })
+                  }
+                  error={fieldErrors.website}
                 />
                 <SearchableSelect
                   label="Kecamatan"
@@ -909,16 +811,6 @@ export default function RegisterCompany() {
                 rows={5}
                 error={fieldErrors.about_company}
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Input
-                  label="Website (Opsional)"
-                  value={company.website}
-                  onChange={(e) =>
-                    setCompany({ ...company, website: e.target.value })
-                  }
-                  error={fieldErrors.website}
-                />
-              </div>
               <div className="flex items-center justify-between">
                 <button
                   type="button"

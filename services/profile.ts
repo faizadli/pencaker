@@ -39,9 +39,6 @@ export async function upsertCompanyProfile(payload: {
   company_type?: string;
   nib?: string;
   company_logo?: string;
-  nib_file_url?: string;
-  company_profile_file_url?: string;
-  npwp_file_url?: string;
   no_handphone?: string;
   kecamatan: string;
   kelurahan: string;

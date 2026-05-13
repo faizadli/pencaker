@@ -329,25 +329,6 @@ export const companyProfileSchema = z.object({
     MIN_FILE_SIZE,
     "Logo Perusahaan",
   ),
-  // Dokumen Wajib
-  nib_doc: fileSchema(
-    [...PDF_TYPES, ...IMAGE_TYPES],
-    MAX_PDF_SIZE,
-    MIN_FILE_SIZE,
-    "Surat Izin Usaha (NIB)",
-  ),
-  company_profile_doc: fileSchema(
-    PDF_TYPES,
-    MAX_PDF_SIZE,
-    MIN_FILE_SIZE,
-    "Company Profile",
-  ),
-  npwp_doc: fileSchema(
-    [...PDF_TYPES, ...IMAGE_TYPES],
-    MAX_PDF_SIZE,
-    MIN_FILE_SIZE,
-    "NPWP",
-  ),
 });
 
 // Dashboard Profile Update Schemas
