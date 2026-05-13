@@ -17,6 +17,7 @@ import Pagination from "../../../../../components/ui/Pagination";
 import Modal from "../../../../../components/ui/Modal";
 import FullPageLoading from "../../../../../components/ui/FullPageLoading";
 import ActionMenu from "../../../../../components/ui/ActionMenu";
+import StatCard from "../../../../../components/ui/StatCard";
 import {
   listApplications,
   updateApplication,
@@ -675,6 +676,40 @@ export default function PelamarLowonganPage() {
     ],
     [],
   );
+  const activeTabLabel =
+    activeTab === "admin" ? "Ditambahkan Admin" : "Melamar Sendiri";
+  const totalDisplayed = filteredRows.length;
+  const acceptedCount = filteredRows.filter(
+    (r) => r.status === "accepted",
+  ).length;
+  const processCount = filteredRows.filter(
+    (r) => r.status === "process",
+  ).length;
+  const pendingCount = filteredRows.filter(
+    (r) => r.status === "pending",
+  ).length;
+  const cardSurfaceClass =
+    "!rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02]";
+  const primaryButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600";
+  const secondaryButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600";
+  const neutralButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200";
+  const getApplicationStatusLabel = (status?: string) =>
+    statusOptions.find((o) => o.value === (status || ""))?.label || "-";
+  const getApplicationStatusClass = (status?: AppStatus) => {
+    switch (status) {
+      case "accepted":
+        return "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/80";
+      case "process":
+        return "bg-sky-100 text-sky-900 ring-1 ring-sky-200/80";
+      case "rejected":
+        return "bg-rose-100 text-rose-900 ring-1 ring-rose-200/80";
+      default:
+        return "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80";
+    }
+  };
 
   const openEdit = (row: {
     id: string;
@@ -951,8 +986,8 @@ export default function PelamarLowonganPage() {
 
   if (loading) {
     return (
-      <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-        <div className="px-4 sm:px-6">
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
           <FullPageLoading isSection />
         </div>
       </main>
@@ -960,22 +995,85 @@ export default function PelamarLowonganPage() {
   }
 
   return (
-    <main className="transition-all duration-300 min-h-screen bg-gray-50 pt-5 pb-8 lg:ml-64">
-      <div className="px-4 sm:px-6">
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-primary">
-            Pelamar Lowongan
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {jobTitle ? jobTitle : jobId}
-          </p>
-        </div>
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+      <div className="w-full space-y-8">
+        <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+          <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+          <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8">
+            <div className="min-w-0">
+              <button
+                onClick={() => router.back()}
+                className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"
+              >
+                <i className="ri-arrow-left-line" aria-hidden />
+                Kembali ke lowongan
+              </button>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary">
+                Pelamar lowongan
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                Kelola pelamar untuk lowongan ini
+              </h1>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                {jobTitle || jobId}
+              </p>
+            </div>
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+              <i className="ri-team-line" aria-hidden />
+              {activeTabLabel}
+            </span>
+          </div>
+        </header>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="flex-1 min-w-0">
-            <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6">
-              <div className="flex flex-col sm:flex-row gap-4">
+        <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+          <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5">
+            <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+              Ringkasan pelamar
+            </h2>
+            <p className="text-sm text-slate-500">
+              Angka mengikuti sumber pelamar dan filter yang sedang aktif.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard
+              title="Total pelamar"
+              value={totalDisplayed}
+              change={activeTabLabel}
+              color="var(--color-secondary)"
+              icon="ri-group-line"
+            />
+            <StatCard
+              title="Diterima"
+              value={acceptedCount}
+              change="Siap diproses lanjut"
+              color="var(--color-primary)"
+              icon="ri-checkbox-circle-line"
+            />
+            <StatCard
+              title="Diproses"
+              value={processCount}
+              change="Masih ditinjau"
+              color="var(--color-foreground)"
+              icon="ri-time-line"
+            />
+            <StatCard
+              title="Pending"
+              value={pendingCount}
+              change="Menunggu keputusan"
+              color="var(--color-danger)"
+              icon="ri-time-line"
+            />
+          </div>
+        </section>
+
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="min-w-0 space-y-6">
+            <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-950/[0.02] sm:p-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
                 <div className="flex-1">
+                  <p className="mb-2 text-sm font-medium text-slate-500">
+                    Cari pelamar
+                  </p>
                   <Input
                     placeholder="Cari nama pelamar..."
                     value={searchQuery}
@@ -984,7 +1082,7 @@ export default function PelamarLowonganPage() {
                     icon="ri-search-line"
                   />
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2 items-stretch">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
                   <SearchableSelect
                     options={[
                       { value: "self", label: "Melamar Sendiri" },
@@ -997,17 +1095,17 @@ export default function PelamarLowonganPage() {
                   />
                   <button
                     onClick={handleExportExcel}
-                    className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm transition flex items-center justify-center gap-2"
+                    className={secondaryButtonClass}
                   >
-                    <i className="ri-file-excel-2-line"></i>
+                    <i className="ri-file-excel-2-line" aria-hidden />
                     Export Diterima
                   </button>
                   {permissions.includes("lowongan.applicant.create") && (
                     <button
                       onClick={() => setShowAddModal(true)}
-                      className="px-4 py-3 h-full w-full sm:w-auto sm:min-w-[9rem] bg-primary text-white rounded-lg hover:bg-[var(--color-primary-dark)] text-sm transition flex items-center justify-center gap-2"
+                      className={primaryButtonClass}
                     >
-                      <i className="ri-user-add-line"></i>
+                      <i className="ri-user-add-line" aria-hidden />
                       Tambah
                     </button>
                   )}
@@ -1015,32 +1113,36 @@ export default function PelamarLowonganPage() {
               </div>
             </div>
 
-            <Card>
-              <Table>
+            <Card
+              className={`overflow-hidden ${cardSurfaceClass} [&>div]:!p-0`}
+            >
+              <Table className="hidden sm:block">
                 <TableHead>
-                  <tr>
+                  <TableRow>
                     <TH>Nama</TH>
                     <TH>Usia</TH>
                     <TH>Kecamatan</TH>
                     <TH>Kelurahan</TH>
                     <TH>Status</TH>
                     <TH>Aksi</TH>
-                  </tr>
+                  </TableRow>
                 </TableHead>
                 <TableBody>
                   {paginatedRows.map((r) => (
                     <TableRow key={r.id}>
-                      <TD className="text-primary">{r.name}</TD>
-                      <TD className="text-gray-900">
+                      <TD className="font-medium text-slate-900">{r.name}</TD>
+                      <TD className="text-slate-900">
                         {typeof r.age === "number" ? `${r.age} th` : "-"}
                       </TD>
-                      <TD className="text-gray-500">{r.kecamatan || "-"}</TD>
-                      <TD className="text-gray-500">{r.kelurahan || "-"}</TD>
+                      <TD className="text-slate-500">{r.kecamatan || "-"}</TD>
+                      <TD className="text-slate-500">{r.kelurahan || "-"}</TD>
                       <TD>
-                        <span className="inline-block px-2 py-0.5 text-xs rounded bg-gray-100 text-primary">
-                          {statusOptions.find(
-                            (o) => o.value === (r.status || ""),
-                          )?.label || "-"}
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getApplicationStatusClass(
+                            r.status,
+                          )}`}
+                        >
+                          {getApplicationStatusLabel(r.status)}
                         </span>
                       </TD>
                       <TD>
@@ -1082,7 +1184,10 @@ export default function PelamarLowonganPage() {
                   ))}
                   {filteredRows.length === 0 && (
                     <TableRow>
-                      <TD colSpan={6} className="text-gray-500">
+                      <TD
+                        colSpan={6}
+                        className="py-8 text-center text-slate-500"
+                      >
                         Belum ada pelamar{" "}
                         {activeTab === "admin"
                           ? "yang ditambahkan admin"
@@ -1098,33 +1203,109 @@ export default function PelamarLowonganPage() {
                   )}
                 </TableBody>
               </Table>
-              <div className="border-t border-gray-100">
-                <Pagination
-                  page={page}
-                  pageSize={pageSize}
-                  total={filteredRows.length}
-                  onPageChange={(p) => setPage(p)}
-                  onPageSizeChange={(s) => {
-                    setPageSize(s);
-                    setPage(1);
-                  }}
-                />
+
+              <div className="space-y-3 p-3 sm:hidden">
+                {paginatedRows.map((r) => (
+                  <div
+                    key={`mobile-${r.id}`}
+                    className="rounded-2xl border border-slate-200/90 bg-slate-50/60 p-4 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-slate-900">
+                          {r.name}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {typeof r.age === "number" ? `${r.age} th` : "-"} •{" "}
+                          {r.kecamatan || "-"}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {r.kelurahan || "-"}
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${getApplicationStatusClass(
+                          r.status,
+                        )}`}
+                      >
+                        {getApplicationStatusLabel(r.status)}
+                      </span>
+                    </div>
+                    <div className="mt-3">
+                      <ActionMenu
+                        items={[
+                          {
+                            label: "Detail",
+                            href: `/dashboard/lowongan/${jobId}/pelamar/${r.candidate_id}`,
+                            icon: "ri-file-list-line",
+                          },
+                          ...(r.status === "accepted"
+                            ? [
+                                {
+                                  label: "Penempatan",
+                                  onClick: () => openPlacement(r),
+                                  icon: "ri-map-pin-line",
+                                },
+                                {
+                                  label: "Mulai Kerja",
+                                  onClick: () => openStartWork(r),
+                                  icon: "ri-briefcase-line",
+                                },
+                                {
+                                  label: "Atur Gaji",
+                                  onClick: () => openSalary(r),
+                                  icon: "ri-money-dollar-circle-line",
+                                },
+                              ]
+                            : []),
+                          {
+                            label: "Edit",
+                            onClick: () => openEdit(r),
+                            icon: "ri-edit-line",
+                          },
+                        ]}
+                      />
+                    </div>
+                  </div>
+                ))}
+                {filteredRows.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
+                    Belum ada pelamar pada tampilan ini.
+                  </div>
+                )}
               </div>
             </Card>
+
+            <div className="pt-1">
+              <Pagination
+                page={page}
+                pageSize={pageSize}
+                total={filteredRows.length}
+                onPageChange={(p) => setPage(p)}
+                onPageSizeChange={(s) => {
+                  setPageSize(s);
+                  setPage(1);
+                }}
+              />
+            </div>
           </div>
 
-          {/* Sidebar Filters */}
-          <div className="w-full lg:w-80 flex-shrink-0">
-            <div className="bg-white p-5 rounded-xl shadow-md border border-gray-200 sticky top-4">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <i className="ri-filter-3-line"></i> Filter
-              </h3>
+          <aside className="w-full xl:sticky xl:top-24 xl:self-start">
+            <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm ring-1 ring-slate-950/[0.02]">
+              <div className="mb-5 border-b border-slate-100 pb-4">
+                <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                  <i className="ri-filter-3-line" aria-hidden />
+                  Filter pelamar
+                </h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Gunakan filter untuk mempersempit kandidat sesuai kebutuhan.
+                </p>
+              </div>
 
               <div className="space-y-4">
-                {/* Status Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status Aplikasi
+                  <label className="mb-2 block text-sm font-medium text-slate-600">
+                    Status aplikasi
                   </label>
                   <SearchableSelect
                     options={[
@@ -1138,22 +1319,21 @@ export default function PelamarLowonganPage() {
                   />
                 </div>
 
-                {/* Age Range Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Rentang Umur
+                  <label className="mb-2 block text-sm font-medium text-slate-600">
+                    Rentang umur
                   </label>
                   <div className="space-y-2">
                     <Input
                       type="number"
-                      placeholder="Min Umur"
+                      placeholder="Min umur"
                       value={filterAgeMin}
                       onChange={(e) => setFilterAgeMin(e.target.value)}
                       className="w-full"
                     />
                     <Input
                       type="number"
-                      placeholder="Max Umur"
+                      placeholder="Max umur"
                       value={filterAgeMax}
                       onChange={(e) => setFilterAgeMax(e.target.value)}
                       className="w-full"
@@ -1161,22 +1341,21 @@ export default function PelamarLowonganPage() {
                   </div>
                 </div>
 
-                {/* Reg Date Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tanggal Pendaftaran
+                  <label className="mb-2 block text-sm font-medium text-slate-600">
+                    Tanggal pendaftaran
                   </label>
                   <div className="space-y-2">
                     <Input
                       type="date"
-                      placeholder="Dari Tanggal"
+                      placeholder="Dari tanggal"
                       value={filterRegDateStart}
                       onChange={(e) => setFilterRegDateStart(e.target.value)}
                       className="w-full"
                     />
                     <Input
                       type="date"
-                      placeholder="Sampai Tanggal"
+                      placeholder="Sampai tanggal"
                       value={filterRegDateEnd}
                       onChange={(e) => setFilterRegDateEnd(e.target.value)}
                       className="w-full"
@@ -1184,9 +1363,8 @@ export default function PelamarLowonganPage() {
                   </div>
                 </div>
 
-                {/* Marital Status */}
                 <SearchableSelect
-                  label="Status"
+                  label="Status perkawinan"
                   options={[
                     { value: "", label: "Pilih Status" },
                     { value: "belum kawin", label: "Belum Kawin" },
@@ -1198,9 +1376,8 @@ export default function PelamarLowonganPage() {
                   onChange={(v) => setFilterMaritalStatus(v)}
                 />
 
-                {/* Education Level */}
                 <SearchableSelect
-                  label="Tingkat Pendidikan"
+                  label="Tingkat pendidikan"
                   options={[
                     { value: "", label: "Pilih Pendidikan" },
                     ...educationGroups.map((g) => ({
@@ -1215,9 +1392,8 @@ export default function PelamarLowonganPage() {
                   }}
                 />
 
-                {/* Education Major */}
                 <SearchableSelect
-                  label="Jurusan Pendidikan"
+                  label="Jurusan pendidikan"
                   options={[
                     { value: "", label: "Cari jurusan pendidikan" },
                     ...getMajorOptions(),
@@ -1227,8 +1403,28 @@ export default function PelamarLowonganPage() {
                   disabled={!filterEducationLevel}
                 />
               </div>
+
+              <div className="mt-5 border-t border-slate-100 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilterAgeMin("");
+                    setFilterAgeMax("");
+                    setFilterRegDateStart("");
+                    setFilterRegDateEnd("");
+                    setFilterMaritalStatus("");
+                    setFilterEducationLevel("");
+                    setFilterEducationMajor("");
+                    setFilterStatus("");
+                  }}
+                  className={`${neutralButtonClass} w-full`}
+                >
+                  <i className="ri-restart-line" aria-hidden />
+                  Reset filter
+                </button>
+              </div>
             </div>
-          </div>
+          </aside>
         </div>
 
         <Modal
@@ -1240,14 +1436,14 @@ export default function PelamarLowonganPage() {
             <>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
+                className={neutralButtonClass}
               >
                 Batal
               </button>
               <button
                 onClick={handleAddApplicant}
                 disabled={!selectedCandidateId || !addNote.trim() || !!saving}
-                className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)] disabled:opacity-50"
+                className={primaryButtonClass}
               >
                 {saving === "add-new" ? "Menyimpan..." : "Simpan"}
               </button>
@@ -1255,8 +1451,12 @@ export default function PelamarLowonganPage() {
           }
         >
           <div className="space-y-4">
+            <p className="text-sm leading-relaxed text-slate-500">
+              Tambahkan kandidat secara manual ke lowongan ini, lalu tentukan
+              status awal beserta catatan rekomendasinya.
+            </p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">
                 Cari Kandidat (Nama / NIK)
               </label>
               <SearchableSelect
@@ -1272,7 +1472,7 @@ export default function PelamarLowonganPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">
                 Status Awal
               </label>
               <SearchableSelect
@@ -1310,14 +1510,14 @@ export default function PelamarLowonganPage() {
                   setShowEditModal(false);
                   setSelected(null);
                 }}
-                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
+                className={neutralButtonClass}
               >
                 Batal
               </button>
               <button
                 onClick={saveEdit}
                 disabled={Boolean(saving)}
-                className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
+                className={primaryButtonClass}
               >
                 {saving ? "Menyimpan..." : "Simpan"}
               </button>
@@ -1326,9 +1526,13 @@ export default function PelamarLowonganPage() {
         >
           {selected && (
             <div className="grid grid-cols-1 gap-3">
-              <div className="bg-white rounded-lg p-4 border grid grid-cols-1 gap-4">
+              <p className="text-sm leading-relaxed text-slate-500">
+                Perbarui keputusan untuk pelamar terpilih dan simpan catatan
+                tindak lanjut bila diperlukan.
+              </p>
+              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 grid grid-cols-1 gap-4">
                 <div>
-                  <div className="text-sm text-gray-500 mb-1">Status</div>
+                  <div className="mb-1 text-sm text-slate-500">Status</div>
                   <SearchableSelect
                     options={statusOptions}
                     value={editStatus || "pending"}
@@ -1338,13 +1542,13 @@ export default function PelamarLowonganPage() {
                   />
                 </div>
               </div>
-              <div className="bg-white rounded-lg p-4 border">
-                <div className="text-sm text-gray-500 mb-1">Catatan</div>
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-4">
+                <div className="mb-1 text-sm text-slate-500">Catatan</div>
                 <textarea
                   value={editNote || ""}
                   onChange={(e) => setEditNote(e.target.value)}
                   rows={4}
-                  className="w-full border border-gray-200 rounded px-3 py-2 text-sm resize-y text-gray-900 bg-white placeholder-gray-400"
+                  className="w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                   placeholder="Tambahkan catatan..."
                 />
               </div>
@@ -1368,14 +1572,14 @@ export default function PelamarLowonganPage() {
                   setShowPlacementModal(false);
                   setSelected(null);
                 }}
-                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-primary"
+                className={neutralButtonClass}
               >
                 Batal
               </button>
               <button
                 onClick={savePlacement}
                 disabled={Boolean(saving)}
-                className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-[var(--color-primary-dark)]"
+                className={primaryButtonClass}
               >
                 {saving ? "Menyimpan..." : "Simpan"}
               </button>
@@ -1384,8 +1588,11 @@ export default function PelamarLowonganPage() {
         >
           {selected && (
             <div className="space-y-4">
+              <p className="text-sm leading-relaxed text-slate-500">
+                Tentukan jenis penempatan untuk pelamar yang sudah diterima.
+              </p>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Jenis Penempatan
                 </label>
                 <SearchableSelect
@@ -1404,7 +1611,7 @@ export default function PelamarLowonganPage() {
 
               {placementType === "AKAD" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-600 mb-1">
                     Pilih Kabupaten
                   </label>
                   <SearchableSelect
@@ -1446,14 +1653,14 @@ export default function PelamarLowonganPage() {
             <>
               <button
                 onClick={() => setShowStartWorkModal(false)}
-                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-200 rounded transition"
+                className={neutralButtonClass}
                 disabled={!!saving}
               >
                 Batal
               </button>
               <button
                 onClick={saveStartWork}
-                className="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2"
+                className={primaryButtonClass}
                 disabled={!!saving}
               >
                 {saving === (selected?.id || "") ? (
@@ -1472,21 +1679,25 @@ export default function PelamarLowonganPage() {
           }
         >
           <div className="space-y-4">
+            <p className="text-sm leading-relaxed text-slate-500">
+              Simpan tanggal mulai kerja kandidat agar progres penempatan
+              terdokumentasi dengan rapi.
+            </p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">
                 Nama Kandidat
               </label>
-              <div className="p-2 bg-gray-50 rounded text-gray-700">
+              <div className="rounded-xl bg-slate-100 px-3 py-2 text-slate-700">
                 {selected?.name}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">
                 Tanggal Mulai Kerja
               </label>
               <input
                 type="date"
-                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                 value={startWorkDate}
                 onChange={(e) => setStartWorkDate(e.target.value)}
               />
@@ -1503,14 +1714,14 @@ export default function PelamarLowonganPage() {
             <>
               <button
                 onClick={() => setShowSalaryModal(false)}
-                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-200 rounded transition"
+                className={neutralButtonClass}
                 disabled={!!saving}
               >
                 Batal
               </button>
               <button
                 onClick={saveSalary}
-                className="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-[var(--color-primary-dark)] transition flex items-center gap-2"
+                className={primaryButtonClass}
                 disabled={!!saving}
               >
                 {saving === (selected?.id || "") ? (
@@ -1529,21 +1740,24 @@ export default function PelamarLowonganPage() {
           }
         >
           <div className="space-y-4">
+            <p className="text-sm leading-relaxed text-slate-500">
+              Catat nominal gaji yang disepakati setelah kandidat diterima.
+            </p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">
                 Nama Kandidat
               </label>
-              <div className="p-2 bg-gray-50 rounded text-gray-700">
+              <div className="rounded-xl bg-slate-100 px-3 py-2 text-slate-700">
                 {selected?.name}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">
                 Gaji Disepakati (Fixed)
               </label>
               <input
                 type="number"
-                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                 value={fixedSalary}
                 onChange={(e) => setFixedSalary(Number(e.target.value))}
                 placeholder="0"

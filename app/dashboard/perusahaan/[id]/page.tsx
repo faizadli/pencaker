@@ -12,6 +12,7 @@ import {
 import { listRoles, getRolePermissions } from "../../../../services/rbac";
 import { getDisnakerProfile } from "../../../../services/profile";
 import { useToast } from "../../../../components/ui/Toast";
+import StatCard from "../../../../components/ui/StatCard";
 
 type CompanyStatus = "APPROVED" | "PENDING" | "REJECTED";
 
@@ -207,60 +208,151 @@ export default function DetailPerusahaanPage() {
     }
   };
 
-  if (loading || !permsLoaded) return <FullPageLoading />;
+  if (loading || !permsLoaded)
+    return (
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
   if (!company)
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-          <i className="ri-building-line text-3xl text-gray-400"></i>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-8 text-center shadow-sm ring-1 ring-slate-950/[0.02]">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+              <i className="ri-building-line text-3xl" aria-hidden />
+            </div>
+            <h3 className="text-xl font-semibold text-slate-900">
+              Data perusahaan tidak ditemukan
+            </h3>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-500">
+              Kami tidak dapat menemukan data perusahaan dengan ID tersebut.
+            </p>
+            <div className="mt-3 inline-flex rounded-lg bg-slate-100 px-3 py-1 text-xs font-mono text-slate-600">
+              ID: {id}
+            </div>
+            {error && (
+              <p className="mt-3 text-xs text-rose-600">Error: {error}</p>
+            )}
+            <div className="mt-6">
+              <button
+                onClick={() => router.back()}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
+              >
+                <i className="ri-arrow-left-line" aria-hidden />
+                Kembali ke daftar
+              </button>
+            </div>
+          </div>
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          Data Perusahaan Tidak Ditemukan
-        </h3>
-        <p className="text-gray-500 mb-6 max-w-md mx-auto">
-          Kami tidak dapat menemukan data perusahaan dengan ID tersebut.
-          <br />
-          <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded mt-2 inline-block">
-            ID: {id}
-          </span>
-          {error && (
-            <span className="block text-xs text-red-500 mt-2">
-              Error: {error}
-            </span>
-          )}
-        </p>
-        <button
-          onClick={() => router.back()}
-          className="px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition shadow-sm"
-        >
-          Kembali ke Daftar
-        </button>
-      </div>
+      </main>
     );
 
   const status = getApiStatus(company);
   const uiStatus = apiToUIStatus[status];
+  const cardSurfaceClass =
+    "rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]";
+  const primaryButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600";
+  const dangerButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-rose-700";
+  const getStatusBadgeClass = (value: CompanyStatus) => {
+    switch (value) {
+      case "APPROVED":
+        return "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/80";
+      case "REJECTED":
+        return "bg-rose-100 text-rose-900 ring-1 ring-rose-200/80";
+      default:
+        return "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80";
+    }
+  };
+  const websiteLabel = company.website || "-";
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-20 p-6 lg:ml-64">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6 flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
-          >
-            <i className="ri-arrow-left-line mr-2"></i>
-            Kembali
-          </button>
-          <div className="text-sm text-gray-500">Detail Perusahaan</div>
-        </div>
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+      <div className="w-full space-y-8">
+        <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+          <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+          <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8">
+            <div className="min-w-0">
+              <button
+                onClick={() => router.back()}
+                className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"
+              >
+                <i className="ri-arrow-left-line" aria-hidden />
+                Kembali ke daftar perusahaan
+              </button>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary">
+                Detail perusahaan
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                {company.company_name}
+              </h1>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                Review profil mitra, legalitas usaha, alamat, dan status
+                verifikasi dari satu halaman.
+              </p>
+            </div>
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium ${getStatusBadgeClass(
+                status,
+              )}`}
+            >
+              <i className="ri-shield-check-line" aria-hidden />
+              {uiStatus}
+            </span>
+          </div>
+        </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: Profile Card */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden p-6 text-center">
-              <div className="relative mx-auto w-32 h-32 mb-4">
-                <div className="relative w-32 h-32 rounded-xl overflow-hidden border-4 border-white shadow-md bg-gray-50 mx-auto flex items-center justify-center">
+        <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+          <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5">
+            <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+              Ringkasan perusahaan
+            </h2>
+            <p className="text-sm text-slate-500">
+              Sorotan cepat untuk status verifikasi, legalitas, dan kanal kontak
+              perusahaan.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard
+              title="Status"
+              value={uiStatus}
+              change="Hasil verifikasi saat ini"
+              color="var(--color-secondary)"
+              icon="ri-shield-check-line"
+            />
+            <StatCard
+              title="NIB"
+              value={company.nib || "-"}
+              change="Nomor legalitas usaha"
+              color="var(--color-primary)"
+              icon="ri-file-list-3-line"
+            />
+            <StatCard
+              title="Kontak"
+              value={company.no_handphone || "-"}
+              change="Nomor telepon perusahaan"
+              color="var(--color-foreground)"
+              icon="ri-phone-line"
+            />
+            <StatCard
+              title="Website"
+              value={websiteLabel}
+              change="Kanal profil eksternal"
+              color="var(--color-danger)"
+              icon="ri-global-line"
+            />
+          </div>
+        </section>
+
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[0.38fr_0.62fr]">
+          <div className="space-y-6">
+            <section className={`${cardSurfaceClass} p-6 text-center`}>
+              <div className="relative mx-auto mb-4 h-32 w-32">
+                <div className="relative mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-slate-50 shadow-md">
                   {company.company_logo ? (
                     <Image
                       src={company.company_logo}
@@ -269,95 +361,83 @@ export default function DetailPerusahaanPage() {
                       className="object-cover"
                     />
                   ) : (
-                    <i className="ri-building-line text-4xl text-gray-300"></i>
+                    <i className="ri-building-line text-4xl text-slate-300" />
                   )}
                 </div>
                 {status === "APPROVED" && (
                   <div
-                    className="absolute bottom-1 right-1 w-6 h-6 bg-green-500 border-2 border-white rounded-full flex items-center justify-center"
+                    className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-emerald-500"
                     title="Terverifikasi"
                   >
-                    <i className="ri-check-line text-white text-xs"></i>
+                    <i className="ri-check-line text-xs text-white"></i>
                   </div>
                 )}
               </div>
 
-              <h1 className="text-xl font-bold text-primary mb-1">
+              <h2 className="text-xl font-bold text-slate-900">
                 {company.company_name}
-              </h1>
-              <p className="text-sm text-gray-500 mb-4">
-                {company.website || "-"}
-              </p>
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">{websiteLabel}</p>
 
-              <div className="flex justify-center mb-6">
+              <div className="mt-4 flex justify-center">
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                    status === "APPROVED"
-                      ? "bg-green-50 text-green-700 border-green-100"
-                      : status === "REJECTED"
-                        ? "bg-red-50 text-red-700 border-red-100"
-                        : "bg-yellow-50 text-yellow-700 border-yellow-100"
-                  }`}
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusBadgeClass(
+                    status,
+                  )}`}
                 >
                   {uiStatus}
                 </span>
               </div>
 
-              <div className="border-t border-gray-100 pt-4 text-left space-y-3">
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <i className="ri-phone-line text-gray-400"></i>
+              <div className="mt-6 space-y-3 border-t border-slate-100 pt-4 text-left">
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <i className="ri-phone-line text-slate-400"></i>
                   <span>{company.no_handphone || "-"}</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <i className="ri-map-pin-line text-gray-400"></i>
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <i className="ri-map-pin-line text-slate-400"></i>
                   <span className="truncate">
                     {company.kelurahan || "-"}, {company.kecamatan || "-"}
                   </span>
                 </div>
               </div>
 
-              {/* Action Buttons for Verifier */}
               {status === "PENDING" && canVerify && (
-                <div className="mt-6 pt-6 border-t border-gray-100 grid grid-cols-2 gap-3">
-                  <button
-                    onClick={handleReject}
-                    className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition"
-                  >
+                <div className="mt-6 grid grid-cols-1 gap-3 border-t border-slate-100 pt-5 sm:grid-cols-2">
+                  <button onClick={handleReject} className={dangerButtonClass}>
+                    <i className="ri-close-circle-line" aria-hidden />
                     Tolak
                   </button>
-                  <button
-                    onClick={handleVerify}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition"
-                  >
+                  <button onClick={handleVerify} className={primaryButtonClass}>
+                    <i className="ri-check-line" aria-hidden />
                     Setujui
                   </button>
                 </div>
               )}
-            </div>
+            </section>
           </div>
 
-          {/* Right Column: Details */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="p-6 border-b border-gray-100">
-                <h2 className="text-lg font-bold text-gray-900">
-                  Informasi Perusahaan
+          <div className="space-y-6">
+            <section className={cardSurfaceClass}>
+              <div className="border-b border-slate-100 p-6">
+                <h2 className="text-lg font-bold text-slate-900">
+                  Informasi perusahaan
                 </h2>
               </div>
-              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2">
                 <div>
-                  <label className="text-xs text-gray-500 uppercase tracking-wide font-semibold block mb-1">
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                     NIB
                   </label>
-                  <p className="text-gray-900 font-medium">
+                  <p className="font-medium text-slate-900">
                     {company.nib || "-"}
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 uppercase tracking-wide font-semibold block mb-1">
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Website
                   </label>
-                  <p className="text-gray-900 font-medium">
+                  <p className="font-medium text-slate-900">
                     {company.website ? (
                       <a
                         href={company.website}
@@ -373,38 +453,38 @@ export default function DetailPerusahaanPage() {
                   </p>
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-xs text-gray-500 uppercase tracking-wide font-semibold block mb-1">
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Tentang Perusahaan
                   </label>
-                  <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">
+                  <p className="whitespace-pre-wrap leading-relaxed text-slate-700">
                     {company.about_company || "-"}
                   </p>
                 </div>
               </div>
-            </div>
+            </section>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="p-6 border-b border-gray-100">
-                <h2 className="text-lg font-bold text-gray-900">
-                  Alamat Lengkap
+            <section className={cardSurfaceClass}>
+              <div className="border-b border-slate-100 p-6">
+                <h2 className="text-lg font-bold text-slate-900">
+                  Alamat lengkap
                 </h2>
               </div>
               <div className="p-6">
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <p className="text-gray-900 font-medium mb-2">
+                <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4">
+                  <p className="mb-2 font-medium text-slate-900">
                     {company.address}
                   </p>
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                    <span className="bg-white px-2 py-1 rounded border border-gray-200">
+                  <div className="flex flex-wrap gap-4 text-sm text-slate-600">
+                    <span className="rounded-lg border border-slate-200 bg-white px-2 py-1">
                       Kec. {company.kecamatan}
                     </span>
-                    <span className="bg-white px-2 py-1 rounded border border-gray-200">
+                    <span className="rounded-lg border border-slate-200 bg-white px-2 py-1">
                       Kel. {company.kelurahan}
                     </span>
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
           </div>
         </div>
       </div>

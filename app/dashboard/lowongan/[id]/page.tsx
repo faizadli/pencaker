@@ -11,6 +11,7 @@ import { listRoles, getRolePermissions } from "../../../../services/rbac";
 import { getDisnakerProfile } from "../../../../services/profile";
 import { useToast } from "../../../../components/ui/Toast";
 import { formatDate } from "../../../../utils/format";
+import StatCard from "../../../../components/ui/StatCard";
 
 type JobStatus = "pending" | "approved" | "rejected" | "closed";
 
@@ -187,204 +188,320 @@ export default function DetailLowonganPage() {
     }
   };
 
-  if (loading || !permsLoaded) return <FullPageLoading />;
+  if (loading || !permsLoaded)
+    return (
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
+          <FullPageLoading isSection />
+        </div>
+      </main>
+    );
   if (!job)
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-          <i className="ri-briefcase-line text-3xl text-gray-400"></i>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+        <div className="w-full">
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-8 text-center shadow-sm ring-1 ring-slate-950/[0.02]">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+              <i className="ri-briefcase-line text-3xl" aria-hidden />
+            </div>
+            <h3 className="text-xl font-semibold text-slate-900">
+              Lowongan tidak ditemukan
+            </h3>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-500">
+              Kami tidak dapat menemukan data lowongan dengan ID tersebut.
+            </p>
+            <div className="mt-3 inline-flex rounded-lg bg-slate-100 px-3 py-1 text-xs font-mono text-slate-600">
+              ID: {id}
+            </div>
+            {error && (
+              <p className="mt-3 text-xs text-rose-600">Error: {error}</p>
+            )}
+            <div className="mt-6">
+              <button
+                onClick={() => router.back()}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
+              >
+                <i className="ri-arrow-left-line" aria-hidden />
+                Kembali ke daftar
+              </button>
+            </div>
+          </div>
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          Lowongan Tidak Ditemukan
-        </h3>
-        <p className="text-gray-500 mb-6 max-w-md mx-auto">
-          Kami tidak dapat menemukan data lowongan dengan ID tersebut.
-          <br />
-          <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded mt-2 inline-block">
-            ID: {id}
-          </span>
-          {error && (
-            <span className="block text-xs text-red-500 mt-2">
-              Error: {error}
-            </span>
-          )}
-        </p>
-        <button
-          onClick={() => router.back()}
-          className="px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition shadow-sm"
-        >
-          Kembali ke Daftar
-        </button>
-      </div>
+      </main>
     );
 
   const status = job.status;
   const uiStatus = apiToUIStatus[status] || status;
+  const cardSurfaceClass =
+    "rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]";
+  const primaryButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600";
+  const dangerButtonClass =
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-rose-700";
+  const getStatusBadgeClass = (value: JobStatus) => {
+    switch (value) {
+      case "approved":
+        return "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/80";
+      case "rejected":
+        return "bg-rose-100 text-rose-900 ring-1 ring-rose-200/80";
+      case "closed":
+        return "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80";
+      default:
+        return "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80";
+    }
+  };
+  const salaryLabel =
+    job.min_salary && job.max_salary
+      ? `Rp ${job.min_salary.toLocaleString("id-ID")} - Rp ${job.max_salary.toLocaleString("id-ID")}`
+      : "Gaji tidak ditampilkan";
+  const workModeLabel = `${job.work_setup} - ${job.placement || "Tidak disebutkan"}`;
+  const postingDateLabel = formatDate(job.createdAt || job.created_at || "");
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-20 p-6 lg:ml-64">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6 flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
-          >
-            <i className="ri-arrow-left-line mr-2"></i>
-            Kembali
-          </button>
-          <div className="text-sm text-gray-500">Detail Lowongan</div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: Job Summary Card */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden p-6 text-center">
-              <div className="w-20 h-20 mx-auto bg-primary/10 rounded-xl flex items-center justify-center mb-4 text-primary">
-                <i className="ri-briefcase-line text-4xl"></i>
-              </div>
-
-              <h1 className="text-xl font-bold text-gray-900 mb-1">
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
+      <div className="w-full space-y-8">
+        <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+          <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+          <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8">
+            <div className="min-w-0">
+              <button
+                onClick={() => router.back()}
+                className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"
+              >
+                <i className="ri-arrow-left-line" aria-hidden />
+                Kembali ke daftar lowongan
+              </button>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary">
+                Detail lowongan
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
                 {job.job_title}
               </h1>
-              <p className="text-sm text-gray-500 mb-4">
-                {job.company_name || "-"}
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                Tinjau informasi posisi, kelengkapan persyaratan, dan status
+                verifikasi lowongan dari satu layar.
               </p>
-
-              <div className="flex justify-center flex-wrap gap-2 mb-6">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                    status === "approved"
-                      ? "bg-green-50 text-green-700 border-green-100"
-                      : status === "rejected"
-                        ? "bg-red-50 text-red-700 border-red-100"
-                        : status === "closed"
-                          ? "bg-gray-50 text-gray-700 border-gray-100"
-                          : "bg-yellow-50 text-yellow-700 border-yellow-100"
-                  }`}
-                >
-                  {uiStatus}
-                </span>
-                <span className="px-3 py-1 rounded-full text-xs font-medium border bg-blue-50 text-blue-700 border-blue-100">
-                  {apiToUITipe[job.job_type] || job.job_type}
-                </span>
-              </div>
-
-              <div className="border-t border-gray-100 pt-4 text-left space-y-3">
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <i className="ri-map-pin-line text-gray-400"></i>
-                  <span>
-                    {job.work_setup} - {job.placement || "Tidak disebutkan"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <i className="ri-money-dollar-circle-line text-gray-400"></i>
-                  <span>
-                    {job.min_salary && job.max_salary
-                      ? `Rp ${job.min_salary.toLocaleString()} - Rp ${job.max_salary.toLocaleString()}`
-                      : "Gaji tidak ditampilkan"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <i className="ri-calendar-line text-gray-400"></i>
-                  <span>Deadline: {formatDate(job.application_deadline)}</span>
-                </div>
-              </div>
-
-              {/* Action Buttons for Verifier */}
-              {status === "pending" && canVerify && (
-                <div className="mt-6 pt-6 border-t border-gray-100 grid grid-cols-2 gap-3">
-                  <button
-                    onClick={handleReject}
-                    className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition"
-                  >
-                    Tolak
-                  </button>
-                  <button
-                    onClick={handleVerify}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition"
-                  >
-                    Setujui
-                  </button>
-                </div>
-              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium ${getStatusBadgeClass(
+                  status,
+                )}`}
+              >
+                <i className="ri-flag-line" aria-hidden />
+                {uiStatus}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-900 ring-1 ring-sky-200/80">
+                <i className="ri-briefcase-line" aria-hidden />
+                {apiToUITipe[job.job_type] || job.job_type}
+              </span>
             </div>
           </div>
+        </header>
 
-          {/* Right Column: Job Details */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="p-6 border-b border-gray-100">
-                <h2 className="text-lg font-bold text-gray-900">
-                  Deskripsi Pekerjaan
-                </h2>
+        <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm ring-1 ring-slate-950/[0.02] backdrop-blur-sm sm:p-8">
+          <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5">
+            <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+              Ringkasan lowongan
+            </h2>
+            <p className="text-sm text-slate-500">
+              Gambaran cepat untuk tipe kerja, kompensasi, lokasi, dan masa
+              aktif lowongan.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard
+              title="Perusahaan"
+              value={job.company_name || "-"}
+              change="Pemilik lowongan"
+              color="var(--color-secondary)"
+              icon="ri-building-line"
+            />
+            <StatCard
+              title="Skema kerja"
+              value={job.work_setup || "-"}
+              change={job.placement || "Lokasi belum diisi"}
+              color="var(--color-primary)"
+              icon="ri-map-pin-line"
+            />
+            <StatCard
+              title="Rentang gaji"
+              value={salaryLabel}
+              change="Informasi kompensasi"
+              color="var(--color-foreground)"
+              icon="ri-money-dollar-circle-line"
+            />
+            <StatCard
+              title="Deadline"
+              value={formatDate(job.application_deadline)}
+              change="Batas akhir lamaran"
+              color="var(--color-danger)"
+              icon="ri-calendar-line"
+            />
+          </div>
+        </section>
+
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+          <div className="space-y-6">
+            <section className={`${cardSurfaceClass} p-6 sm:p-8`}>
+              <div className="flex flex-col gap-5">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-2xl text-primary">
+                    <i className="ri-briefcase-line" aria-hidden />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-xl font-semibold text-slate-900">
+                      {job.job_title}
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {job.company_name || "-"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 text-sm text-slate-600">
+                  <div className="flex items-start gap-3">
+                    <i className="ri-map-pin-line mt-0.5 text-slate-400" />
+                    <span>{workModeLabel}</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <i className="ri-money-dollar-circle-line mt-0.5 text-slate-400" />
+                    <span>{salaryLabel}</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <i className="ri-calendar-event-line mt-0.5 text-slate-400" />
+                    <span>
+                      Deadline: {formatDate(job.application_deadline)}
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <i className="ri-time-line mt-0.5 text-slate-400" />
+                    <span>Diposting: {postingDateLabel || "-"}</span>
+                  </div>
+                </div>
+
+                {status === "pending" && canVerify && (
+                  <div className="grid grid-cols-1 gap-3 border-t border-slate-200/80 pt-5 sm:grid-cols-2">
+                    <button
+                      onClick={handleReject}
+                      className={dangerButtonClass}
+                    >
+                      <i className="ri-close-circle-line" aria-hidden />
+                      Tolak
+                    </button>
+                    <button
+                      onClick={handleVerify}
+                      className={primaryButtonClass}
+                    >
+                      <i className="ri-check-line" aria-hidden />
+                      Setujui
+                    </button>
+                  </div>
+                )}
               </div>
-              <div className="p-6">
+            </section>
+
+            <section className={`${cardSurfaceClass} p-6 sm:p-8`}>
+              <div className="mb-5 border-b border-slate-100 pb-4">
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Persyaratan
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Pastikan detail kebutuhan kandidat sudah lengkap dan mudah
+                  ditinjau.
+                </p>
+              </div>
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4">
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    Pendidikan
+                  </h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                    {job.education_required || "-"}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4">
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    Pengalaman
+                  </h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                    {job.experience_required || "-"}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4">
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    Keahlian
+                  </h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                    {job.skills_required || "-"}
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div className="space-y-6">
+            <section className={`${cardSurfaceClass} overflow-hidden`}>
+              <div className="border-b border-slate-100 p-6 sm:p-8">
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Deskripsi pekerjaan
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Konten utama lowongan yang tampil kepada pencari kerja.
+                </p>
+              </div>
+              <div className="p-6 sm:p-8">
                 <div
-                  className="prose max-w-none text-gray-700"
+                  className="prose max-w-none prose-p:text-slate-600 prose-li:text-slate-600 prose-strong:text-slate-900"
                   dangerouslySetInnerHTML={{ __html: job.job_description }}
                 />
               </div>
-            </div>
+            </section>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-100">
-                  <h2 className="text-lg font-bold text-gray-900">
-                    Persyaratan
-                  </h2>
+            <section className={`${cardSurfaceClass} p-6 sm:p-8`}>
+              <div className="mb-5 border-b border-slate-100 pb-4">
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Informasi tambahan
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Metadata posisi yang mendukung proses review dan publikasi.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Kategori
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">
+                    {job.category || "-"}
+                  </p>
                 </div>
-                <div className="p-6 space-y-4">
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-1">
-                      Pendidikan
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      {job.education_required}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-1">
-                      Pengalaman
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      {job.experience_required}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-1">
-                      Keahlian
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      {job.skills_required}
-                    </p>
-                  </div>
+                <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Status saat ini
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">
+                    {uiStatus}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Tipe pekerjaan
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">
+                    {apiToUITipe[job.job_type] || job.job_type}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Tanggal posting
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">
+                    {postingDateLabel || "-"}
+                  </p>
                 </div>
               </div>
-
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-100">
-                  <h2 className="text-lg font-bold text-gray-900">
-                    Informasi Tambahan
-                  </h2>
-                </div>
-                <div className="p-6 space-y-4">
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-1">
-                      Kategori
-                    </h4>
-                    <p className="text-sm text-gray-600">{job.category}</p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-1">
-                      Tanggal Posting
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      {formatDate(job.createdAt || job.created_at || "")}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            </section>
           </div>
         </div>
       </div>
