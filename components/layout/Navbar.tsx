@@ -464,49 +464,66 @@ export default function Navbar() {
       )}
       <Modal
         open={openLogin}
-        title="Masuk"
+        ariaLabel="Pilih cara masuk"
         onClose={() => setOpenLogin(false)}
         size="xl"
       >
         <div className="space-y-6">
           <div className="text-center">
-            <h2 className="text-xl font-bold text-primary mb-2">Masuk</h2>
-            <p className="text-sm text-gray-600">
-              Silakan pilih jenis akun untuk masuk
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Autentikasi
+            </p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-balance text-slate-900 sm:text-[1.65rem]">
+              Pilih cara masuk
+            </h2>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-600">
+              Lanjutkan sebagai pencari kerja atau perusahaan.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Link
               href="/login/candidate"
               onClick={() => setOpenLogin(false)}
-              className="landing-focus group rounded-xl border border-slate-200/90 p-6 shadow-sm ring-1 ring-black/[0.02] transition-all hover:border-primary/40 hover:shadow-md"
+              className="landing-focus group relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-1 shadow-sm ring-1 ring-black/[0.03] motion-safe:transition-all motion-safe:duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-lg hover:shadow-primary/10"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gray-100 text-primary flex items-center justify-center">
-                  <i className="ri-user-line"></i>
+              <div className="absolute inset-x-0 top-0 h-[3px] scale-x-0 bg-gradient-to-r from-primary via-emerald-500 to-secondary opacity-0 motion-safe:transition-transform motion-safe:duration-300 group-hover:scale-x-100 group-hover:opacity-100" />
+              <div className="flex flex-col items-center gap-4 p-5 sm:flex-row sm:items-start sm:p-6 sm:text-left">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-dark text-2xl text-white shadow-lg shadow-primary/30">
+                  <i className="ri-user-line" aria-hidden />
                 </div>
-                <div>
-                  <div className="font-semibold text-gray-800">Pencaker</div>
-                  <div className="text-sm text-gray-500">
-                    Login untuk pencari kerja
+                <div className="min-w-0 flex-1 text-center sm:text-left">
+                  <div className="flex items-center justify-center gap-2 sm:justify-start">
+                    <span className="text-lg font-semibold text-slate-900">
+                      Pencaker
+                    </span>
+                    <i className="ri-arrow-right-line text-lg text-primary opacity-0 motion-safe:transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
                   </div>
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
+                    Melamar lowongan, profil, dan lamaran Anda.
+                  </p>
                 </div>
               </div>
             </Link>
             <Link
               href="/login/company"
               onClick={() => setOpenLogin(false)}
-              className="landing-focus group rounded-xl border border-slate-200/90 p-6 shadow-sm ring-1 ring-black/[0.02] transition-all hover:border-primary/40 hover:shadow-md"
+              className="landing-focus group relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-1 shadow-sm ring-1 ring-black/[0.03] motion-safe:transition-all motion-safe:duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-lg hover:shadow-primary/10"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gray-100 text-primary flex items-center justify-center">
-                  <i className="ri-building-2-line"></i>
+              <div className="absolute inset-x-0 top-0 h-[3px] scale-x-0 bg-gradient-to-r from-primary via-emerald-500 to-secondary opacity-0 motion-safe:transition-transform motion-safe:duration-300 group-hover:scale-x-100 group-hover:opacity-100" />
+              <div className="flex flex-col items-center gap-4 p-5 sm:flex-row sm:items-start sm:p-6 sm:text-left">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 text-2xl text-white shadow-lg shadow-slate-900/25">
+                  <i className="ri-building-2-line" aria-hidden />
                 </div>
-                <div>
-                  <div className="font-semibold text-gray-800">Perusahaan</div>
-                  <div className="text-sm text-gray-500">
-                    Login untuk perusahaan
+                <div className="min-w-0 flex-1 text-center sm:text-left">
+                  <div className="flex items-center justify-center gap-2 sm:justify-start">
+                    <span className="text-lg font-semibold text-slate-900">
+                      Perusahaan
+                    </span>
+                    <i className="ri-arrow-right-line text-lg text-primary opacity-0 motion-safe:transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
                   </div>
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
+                    Kelola lowongan dan pelamar untuk perusahaan Anda.
+                  </p>
                 </div>
               </div>
             </Link>
@@ -515,39 +532,65 @@ export default function Navbar() {
       </Modal>
       <Modal
         open={openRegister}
-        title="Daftar"
+        ariaLabel="Daftar akun baru"
         onClose={() => setOpenRegister(false)}
         size="xl"
       >
         <div className="space-y-6">
           <div className="text-center">
-            <h2 className="text-xl font-bold text-primary mb-2">
-              Siap Mendapatkan Pekerjaan Impian?
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Registrasi
+            </p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-balance text-slate-900 sm:text-[1.65rem]">
+              Siap mendapatkan pekerjaan impian?
             </h2>
-            <p className="text-sm text-gray-600">
-              Bergabunglah dengan ribuan pencari kerja yang telah menemukan
-              pekerjaan melalui platform kami
+            <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-slate-600">
+              Satu langkah lagi — pilih jenis akun yang ingin Anda buat.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Link
               href="/register/candidate"
               onClick={() => setOpenRegister(false)}
-              className="landing-focus flex items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-primary to-primary-dark px-8 py-4 font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:brightness-110"
+              className="landing-focus group relative flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary-dark p-[1px] shadow-lg shadow-primary/25 motion-safe:transition-transform motion-safe:duration-300 hover:-translate-y-0.5 hover:brightness-[1.03]"
             >
-              <i className="ri-user-add-line"></i>
-              Daftar Pencari Kerja
+              <div className="flex flex-1 flex-col rounded-[15px] bg-gradient-to-br from-primary to-primary-dark px-5 py-6 text-white">
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 text-2xl ring-1 ring-white/25">
+                  <i className="ri-user-add-line" aria-hidden />
+                </div>
+                <span className="text-lg font-semibold leading-snug">
+                  Daftar pencari kerja
+                </span>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-white/85">
+                  Buat profil, unggah dokumen, dan mulai melamar.
+                </p>
+                <span className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-white/95">
+                  Lanjutkan
+                  <i className="ri-arrow-right-line motion-safe:transition-transform group-hover:translate-x-1" />
+                </span>
+              </div>
             </Link>
             <Link
               href="/register/company"
               onClick={() => setOpenRegister(false)}
-              className="landing-focus flex items-center justify-center gap-3 rounded-xl border-2 border-primary/90 px-8 py-4 font-semibold text-primary transition-all hover:bg-primary/5"
+              className="landing-focus group flex flex-col rounded-2xl border-2 border-primary/25 bg-white p-6 shadow-md ring-1 ring-slate-200/80 motion-safe:transition-all motion-safe:duration-300 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg"
             >
-              <i className="ri-building-line"></i>
-              Daftar Perusahaan
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-2xl text-primary ring-1 ring-primary/15">
+                <i className="ri-building-line" aria-hidden />
+              </div>
+              <span className="text-lg font-semibold text-slate-900">
+                Daftar perusahaan
+              </span>
+              <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-600">
+                Publikasikan lowongan dan kelola pelamar.
+              </p>
+              <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                Lanjutkan
+                <i className="ri-arrow-right-line motion-safe:transition-transform group-hover:translate-x-1" />
+              </span>
             </Link>
           </div>
-          <p className="mt-2 text-sm text-gray-600 text-center">
+          <p className="border-t border-slate-100 pt-5 text-center text-sm text-slate-600">
             Sudah punya akun?{" "}
             <button
               type="button"
@@ -555,7 +598,7 @@ export default function Navbar() {
                 setOpenRegister(false);
                 setOpenLogin(true);
               }}
-              className="landing-focus font-medium text-primary hover:underline"
+              className="landing-focus font-semibold text-primary underline-offset-2 hover:underline"
             >
               Masuk di sini
             </button>
