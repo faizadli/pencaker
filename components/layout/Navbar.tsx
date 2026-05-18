@@ -294,7 +294,7 @@ export default function Navbar() {
             </div>
 
             {showLoggedIn ? (
-              <div className="hidden lg:flex items-center gap-4">
+              <div className="hidden xl:flex items-center gap-4 shrink-0">
                 <Link
                   href="/dashboard"
                   className="landing-focus flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-dark px-4 py-2.5 text-white shadow-md shadow-primary/25 motion-safe:transition-all motion-safe:duration-200 hover:brightness-110"
