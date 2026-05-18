@@ -225,3 +225,38 @@ body {
 .content-rich span {
   color: var(--rich);
 }
+
+/* Halaman artikel berita: jangan potong gambar di dalam konten HTML */
+.article-body {
+  white-space: normal;
+  overflow: visible;
+}
+
+.article-body img,
+.article-body figure img,
+.article-body p img {
+  display: block;
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  margin: 1.25rem auto;
+  border-radius: 0.5rem;
+}
+
+.article-body figure {
+  margin: 1.5rem 0;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.article-body iframe,
+.article-body video {
+  max-width: 100%;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  border: 0;
+  border-radius: 0.5rem;
+}
