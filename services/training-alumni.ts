@@ -99,6 +99,103 @@ export interface TrainingAlumniDistinctOptions {
   training_years: number[];
 }
 
+export interface PublicTrainingProgram {
+  training_name: string;
+  training_year: number;
+  institution_name: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  participant_count: number;
+  registration_slug: string | null;
+}
+
+export async function getPublicTrainingAlumniPrograms(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}): Promise<{
+  data: PublicTrainingProgram[];
+  pagination: { page: number; limit: number; total: number };
+}> {
+  const q = new URLSearchParams();
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.limit) q.set("limit", String(params.limit));
+  if (params?.search?.trim()) q.set("search", params.search.trim());
+  const qs = q.toString();
+  const resp = await fetch(
+    `${BASE}/api/public/training-alumni/programs${qs ? `?${qs}` : ""}`,
+  );
+  if (!resp.ok) throw new Error("Gagal memuat daftar program pelatihan");
+  return resp.json() as Promise<{
+    data: PublicTrainingProgram[];
+    pagination: { page: number; limit: number; total: number };
+  }>;
+}
+
+export type PublicTrainingAlumniParticipant = {
+  id: string;
+  full_name: string;
+  last_education: string | null;
+  gender: "L" | "P" | null;
+  training_year: number;
+};
+
+export type PublicTrainingAlumniParticipantDetail =
+  PublicTrainingAlumniParticipant & {
+    training_name: string;
+    institution_name: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    birth_place: string | null;
+    birth_date: string | null;
+    address: string | null;
+  };
+
+export async function getPublicTrainingAlumniParticipant(
+  id: string,
+): Promise<{ data: PublicTrainingAlumniParticipantDetail }> {
+  const resp = await fetch(
+    `${BASE}/api/public/training-alumni/participants/${encodeURIComponent(id)}`,
+  );
+  if (!resp.ok) throw new Error("Gagal memuat detail peserta");
+  return resp.json() as Promise<{
+    data: PublicTrainingAlumniParticipantDetail;
+  }>;
+}
+
+export async function getPublicTrainingAlumniProgram(
+  trainingName: string,
+): Promise<{ data: PublicTrainingProgram }> {
+  const encoded = encodeURIComponent(trainingName);
+  const resp = await fetch(
+    `${BASE}/api/public/training-alumni/programs/${encoded}`,
+  );
+  if (!resp.ok) throw new Error("Gagal memuat detail program pelatihan");
+  return resp.json() as Promise<{ data: PublicTrainingProgram }>;
+}
+
+export async function getPublicTrainingAlumniProgramParticipants(
+  trainingName: string,
+  params?: { page?: number; limit?: number },
+): Promise<{
+  data: PublicTrainingAlumniParticipant[];
+  pagination: { page: number; limit: number; total: number };
+}> {
+  const q = new URLSearchParams();
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.limit) q.set("limit", String(params.limit));
+  const encoded = encodeURIComponent(trainingName);
+  const qs = q.toString();
+  const resp = await fetch(
+    `${BASE}/api/public/training-alumni/programs/${encoded}/participants${qs ? `?${qs}` : ""}`,
+  );
+  if (!resp.ok) throw new Error("Gagal memuat peserta program pelatihan");
+  return resp.json() as Promise<{
+    data: PublicTrainingAlumniParticipant[];
+    pagination: { page: number; limit: number; total: number };
+  }>;
+}
+
 export async function getTrainingAlumniDistinctOptions(): Promise<TrainingAlumniDistinctOptions> {
   const resp = await fetch(`${BASE}/api/training-alumni/distinct-options`, {
     headers: { ...authHeader() },

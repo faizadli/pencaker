@@ -1,43 +1,44 @@
 "use client";
 import { useEffect, useState } from "react";
-import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import FullPageLoading from "../../../../components/ui/FullPageLoading";
 import {
-  getPublicParticipantDetail,
-  PublicParticipant,
-} from "../../../../services/training";
+  getPublicTrainingAlumniParticipant,
+  type PublicTrainingAlumniParticipantDetail,
+} from "../../../../services/training-alumni";
+
+const cardSurfaceClass =
+  "rounded-2xl border border-slate-200/90 bg-white/95 shadow-md ring-1 ring-black/[0.02] backdrop-blur-sm";
+const primaryButtonClass =
+  "landing-focus inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-dark px-4 py-2.5 text-sm font-medium text-white shadow-md shadow-primary/20 transition hover:brightness-110";
 
 export default function DetailPesertaPage() {
   const params = useParams();
-  const router = useRouter();
-  const id = params?.id as string;
-  const [participant, setParticipant] = useState<PublicParticipant | null>(
-    null,
-  );
+  const id = String(params?.id || "");
+  const [participant, setParticipant] =
+    useState<PublicTrainingAlumniParticipantDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!id) return;
     (async () => {
+      setLoading(true);
+      setError("");
       try {
-        const resp = await getPublicParticipantDetail(id);
+        const resp = await getPublicTrainingAlumniParticipant(id);
         setParticipant(resp.data);
       } catch (e) {
-        console.error(e);
+        setParticipant(null);
+        setError(e instanceof Error ? e.message : "Gagal memuat data peserta");
       } finally {
         setLoading(false);
       }
     })();
   }, [id]);
 
-  if (loading) return <FullPageLoading />;
-  if (!participant)
-    return (
-      <div className="text-center py-12">Data peserta tidak ditemukan</div>
-    );
-
-  const toDate = (s?: string) => {
+  const toDate = (s?: string | null) => {
     if (!s) return "-";
     try {
       return new Date(s).toLocaleDateString("id-ID", {
@@ -50,228 +51,156 @@ export default function DetailPesertaPage() {
     }
   };
 
+  if (loading) return <FullPageLoading />;
+
+  if (error || !participant)
+    return (
+      <main className="min-h-screen bg-white font-sans antialiased text-slate-800">
+        <section className="py-16 bg-gradient-to-b from-slate-50 via-gray-50/95 to-slate-50">
+          <div className="max-w-lg mx-auto px-4 text-center">
+            <div className={`${cardSurfaceClass} p-8`}>
+              <p className="text-slate-600">
+                {error || "Data peserta tidak ditemukan"}
+              </p>
+              <Link href="/pelatihan" className={`${primaryButtonClass} mt-6`}>
+                <i className="ri-arrow-left-line" aria-hidden />
+                Kembali ke pelatihan
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+
+  const programHref = `/pelatihan/${encodeURIComponent(participant.training_name)}`;
+  const period =
+    participant.start_date && participant.end_date
+      ? `${toDate(participant.start_date)} – ${toDate(participant.end_date)}`
+      : participant.start_date
+        ? `Mulai ${toDate(participant.start_date)}`
+        : "-";
+
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-gray-50/90 pb-20 font-sans antialiased text-slate-800 selection:bg-primary/15 selection:text-emerald-950 [font-feature-settings:'cv02','cv03']">
-      {/* Header Background */}
-      <div className="public-hero h-48 ring-1 ring-black/[0.06] relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 pattern-dots"></div>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 relative z-10">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="landing-focus inline-flex items-center text-white/85 hover:text-white motion-safe:transition-colors text-sm mb-4 rounded-md"
+    <main className="min-h-screen bg-white font-sans antialiased text-slate-800 selection:bg-primary/15 selection:text-emerald-950 [font-feature-settings:'cv02','cv03']">
+      <section className="public-hero relative py-10 sm:py-12 ring-1 ring-black/[0.06]">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <Link
+            href={programHref}
+            className="landing-focus inline-flex items-center gap-2 text-sm font-medium text-white/90 transition hover:text-white"
           >
-            <i className="ri-arrow-left-line mr-2"></i>
-            Kembali
-          </button>
-        </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 -mt-24 relative z-20">
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          {/* Profile Header */}
-          <div className="p-6 sm:p-8 border-b border-gray-100 flex flex-col sm:flex-row items-center sm:items-end gap-6 text-center sm:text-left">
-            <div className="relative">
-              {participant.photo ? (
-                <Image
-                  src={participant.photo}
-                  alt={participant.name}
-                  width={128}
-                  height={128}
-                  className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md bg-white"
-                />
-              ) : (
-                <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-4xl border-4 border-white shadow-md bg-white">
-                  {participant.name.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 border-2 border-white rounded-full"></div>
+            <i className="ri-arrow-left-line" aria-hidden />
+            Kembali ke program pelatihan
+          </Link>
+          <div className="mt-8 flex flex-col items-center gap-4 text-center sm:flex-row sm:items-end sm:text-left">
+            <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-white/15 text-3xl font-bold text-white ring-2 ring-white/25">
+              {participant.full_name.charAt(0).toUpperCase() || "?"}
             </div>
-
-            <div className="flex-1 pb-2">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {participant.name}
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl font-bold drop-shadow-sm sm:text-3xl">
+                {participant.full_name}
               </h1>
-              <div className="flex flex-wrap justify-center sm:justify-start gap-2 items-center text-sm text-gray-600 mb-3">
-                <span className="flex items-center gap-1">
-                  <i className="ri-calendar-line"></i> Bergabung{" "}
-                  {toDate(participant.created_at)}
+              <p className="mt-2 text-sm text-white/90 sm:text-base">
+                Peserta program — {participant.training_name}
+              </p>
+              {participant.training_year > 0 && (
+                <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white ring-1 ring-white/20">
+                  <i className="ri-calendar-line" aria-hidden />
+                  Tahun {participant.training_year}
                 </span>
-                <span className="hidden sm:inline text-gray-300">•</span>
-                <span className="flex items-center gap-1">
-                  <i className="ri-map-pin-line"></i>{" "}
-                  {participant.kelurahan || "-"}, {participant.kecamatan || "-"}
-                </span>
-              </div>
-              <div className="flex flex-wrap justify-center sm:justify-start gap-2">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                    participant.status === "registered"
-                      ? "bg-blue-50 text-blue-700 border-blue-100"
-                      : participant.status === "passed"
-                        ? "bg-green-50 text-green-700 border-green-100"
-                        : participant.status === "failed"
-                          ? "bg-red-50 text-red-700 border-red-100"
-                          : "bg-gray-50 text-gray-700 border-gray-100"
-                  }`}
-                >
-                  {participant.status === "registered"
-                    ? "Terdaftar"
-                    : participant.status}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3">
-            {/* Left Column: Personal Details */}
-            <div className="lg:col-span-2 p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                  <i className="ri-user-smile-line"></i>
-                </span>
-                Informasi Pribadi
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">
-                    Jenis Kelamin
-                  </p>
-                  <p className="font-medium text-gray-900 flex items-center gap-2">
-                    {participant.gender === "L" ? (
-                      <>
-                        <i className="ri-men-line text-blue-500"></i> Laki-laki
-                      </>
-                    ) : participant.gender === "P" ? (
-                      <>
-                        <i className="ri-women-line text-pink-500"></i>{" "}
-                        Perempuan
-                      </>
-                    ) : (
-                      "-"
-                    )}
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">
-                    Tempat, Tanggal Lahir
-                  </p>
-                  <p className="font-medium text-gray-900">
-                    {participant.birth_place
-                      ? `${participant.birth_place}, `
-                      : ""}
-                    {toDate(participant.birth_date)}
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">
-                    Status Perkawinan
-                  </p>
-                  <p className="font-medium text-gray-900">
-                    {participant.marital_status || "-"}
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">
-                    Usia
-                  </p>
-                  <p className="font-medium text-gray-900">
-                    {participant.age ? `${participant.age} Tahun` : "-"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-8 pt-8 border-t border-gray-100">
-                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600">
-                    <i className="ri-graduation-cap-line"></i>
-                  </span>
-                  Pendidikan
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">
-                      Pendidikan Terakhir
-                    </p>
-                    <p className="font-medium text-gray-900">
-                      {participant.education || "-"}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">
-                      Tahun Lulus
-                    </p>
-                    <p className="font-medium text-gray-900">
-                      {participant.graduation_year || "-"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 pt-8 border-t border-gray-100">
-                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
-                    <i className="ri-map-pin-2-line"></i>
-                  </span>
-                  Alamat Domisili
-                </h3>
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <p className="text-gray-900 leading-relaxed">
-                    {participant.address}
-                  </p>
-                  <div className="mt-2 flex gap-4 text-sm text-gray-600">
-                    <span>Kec. {participant.kecamatan}</span>
-                    <span>•</span>
-                    <span>Kel. {participant.kelurahan}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Training Info */}
-            <div className="bg-gray-50/50 p-6 sm:p-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
-                  <i className="ri-book-open-line"></i>
-                </span>
-                Program Pelatihan
-              </h3>
-
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="h-2 bg-primary"></div>
-                <div className="p-5">
-                  <h4 className="font-bold text-gray-900 mb-2 text-lg leading-tight">
-                    {participant.training_title}
-                  </h4>
-                  <div className="flex items-center gap-2 text-gray-600 text-sm mb-4">
-                    <i className="ri-building-line"></i>
-                    <span>{participant.instructor || "Disnaker"}</span>
-                  </div>
-
-                  <div className="space-y-3 pt-4 border-t border-gray-100">
-                    {/* Dates removed */}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 bg-blue-50 border border-blue-100 rounded-xl p-4">
-                <div className="flex gap-3">
-                  <i className="ri-information-line text-blue-600 mt-0.5"></i>
-                  <p className="text-sm text-blue-800 leading-relaxed">
-                    Peserta ini terdaftar secara resmi dalam program pelatihan
-                    di atas. Data ditampilkan sesuai kebijakan privasi publik.
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <section className="py-10 sm:py-12 bg-gradient-to-b from-slate-50 via-gray-50/95 to-slate-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-6">
+              <div className={`${cardSurfaceClass} p-6 sm:p-8`}>
+                <h2 className="text-lg font-bold text-slate-900">
+                  Informasi peserta
+                </h2>
+                <dl className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Jenis kelamin
+                    </dt>
+                    <dd className="mt-1 font-medium text-slate-900">
+                      {participant.gender === "L"
+                        ? "Laki-laki"
+                        : participant.gender === "P"
+                          ? "Perempuan"
+                          : "-"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Pendidikan terakhir
+                    </dt>
+                    <dd className="mt-1 font-medium text-slate-900">
+                      {participant.last_education || "-"}
+                    </dd>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Tempat, tanggal lahir
+                    </dt>
+                    <dd className="mt-1 font-medium text-slate-900">
+                      {[participant.birth_place, toDate(participant.birth_date)]
+                        .filter((v) => v && v !== "-")
+                        .join(", ") || "-"}
+                    </dd>
+                  </div>
+                  {participant.address && (
+                    <div className="sm:col-span-2">
+                      <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                        Alamat
+                      </dt>
+                      <dd className="mt-1 font-medium text-slate-900 leading-relaxed">
+                        {participant.address}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            </div>
+
+            <aside>
+              <div className={`${cardSurfaceClass} overflow-hidden`}>
+                <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+                <div className="p-5 sm:p-6 space-y-4">
+                  <h3 className="font-bold text-slate-900">
+                    Program pelatihan
+                  </h3>
+                  <p className="text-sm font-semibold text-primary leading-snug">
+                    {participant.training_name}
+                  </p>
+                  <p className="flex items-center gap-2 text-sm text-slate-600">
+                    <i className="ri-building-line shrink-0" aria-hidden />
+                    {participant.institution_name || "UPT BLK"}
+                  </p>
+                  <p className="flex items-center gap-2 text-sm text-slate-600">
+                    <i className="ri-time-line shrink-0" aria-hidden />
+                    {period}
+                  </p>
+                  <Link
+                    href={programHref}
+                    className={`${primaryButtonClass} w-full`}
+                  >
+                    <i className="ri-briefcase-line" aria-hidden />
+                    Lihat program
+                  </Link>
+                </div>
+              </div>
+              <p className="mt-4 text-xs leading-relaxed text-slate-500">
+                Data peserta dicatat dalam rekap pelatihan Disnaker. Informasi
+                sensitif tidak ditampilkan di halaman publik.
+              </p>
+            </aside>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

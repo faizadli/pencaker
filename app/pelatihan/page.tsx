@@ -5,6 +5,14 @@ import Link from "next/link";
 import Card from "../../components/ui/Card";
 import FullPageLoading from "../../components/ui/FullPageLoading";
 import { getHomeContent } from "../../services/site";
+import Pagination from "../../components/ui/Pagination";
+import {
+  TrainingProgramCard,
+  mapPublicProgram,
+  type ProgramCardData,
+} from "../../components/pelatihan/TrainingProgramCard";
+import { getPublicTrainingAlumniPrograms } from "../../services/training-alumni";
+
 export default function PelatihanPage() {
   const tugas = [
     "Melaksanakan perumusan kebijakan teknis dan pelaksanaan kebijakan di bidang Pelatihan dan Peningkatan Keterampilan Kerja",
@@ -16,16 +24,11 @@ export default function PelatihanPage() {
     "Pelaporan dan evaluasi pelaksanaan pelatihan kerja",
   ];
 
-  const [upcoming, setUpcoming] = useState<
-    Array<{
-      id: string;
-      title: string;
-      instructor?: string;
-      status?: string;
-      location?: string;
-      quota?: number;
-    }>
-  >([]);
+  const [programs, setPrograms] = useState<ProgramCardData[]>([]);
+  const [programsTotal, setProgramsTotal] = useState(0);
+  const [programsPage, setProgramsPage] = useState(1);
+  const [programsPageSize, setProgramsPageSize] = useState(6);
+  const [programsLoading, setProgramsLoading] = useState(true);
   const [relatedNews, setRelatedNews] = useState<
     Array<{
       id: string;
@@ -75,16 +78,40 @@ export default function PelatihanPage() {
         setRelatedNews(
           mapped.filter((n) => n.kategori.toLowerCase() === "pelatihan"),
         );
-
-        setUpcoming([]);
       } catch {
         setRelatedNews([]);
-        setUpcoming([]);
       } finally {
         setLoading(false);
       }
     })();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setProgramsLoading(true);
+      try {
+        const res = await getPublicTrainingAlumniPrograms({
+          page: programsPage,
+          limit: programsPageSize,
+        });
+        if (!cancelled) {
+          setPrograms((res.data || []).map(mapPublicProgram));
+          setProgramsTotal(res.pagination?.total ?? 0);
+        }
+      } catch {
+        if (!cancelled) {
+          setPrograms([]);
+          setProgramsTotal(0);
+        }
+      } finally {
+        if (!cancelled) setProgramsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [programsPage, programsPageSize]);
 
   const toDate = (s?: string) => {
     if (!s) {
@@ -229,74 +256,54 @@ export default function PelatihanPage() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
               <h2 className="text-2xl md:text-3xl font-bold text-primary">
-                Informasi program pelatihan
+                Program Pelatihan
               </h2>
               <p className="text-gray-600 mt-2">
-                Jadwal pelatihan tidak dipublikasikan sebagai daftar online.
-                Pantau berita dan pengumuman di halaman Informasi.
+                Daftar program pelatihan yang tercatat di sistem Disnaker
+                Kabupaten Paser.
               </p>
             </div>
             <Link
-              href="/informasi"
+              href="/pelatihan/semua"
               className="landing-focus text-primary hover:text-[var(--color-primary-dark)] font-medium flex items-center gap-2 motion-safe:transition-colors rounded-lg px-1 -mx-1"
             >
-              Lihat berita
+              Lihat semua pelatihan
               <i className="ri-arrow-right-line"></i>
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {upcoming.length > 0 ? (
-              upcoming.map((pel) => (
-                <div
-                  key={pel.id}
-                  className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl border border-gray-200 transition-all group"
-                >
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-primary text-lg group-hover:text-primary transition-colors truncate">
-                        {pel.title}
-                      </h3>
-                      <p className="text-gray-600 truncate">
-                        {pel.instructor || "UPT BLK"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <i className="ri-time-line"></i>
-                      <span>{pel.status}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <i className="ri-map-pin-line"></i>
-                      <span>{pel.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <i className="ri-user-line"></i>
-                      <span>Kuota {pel.quota}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                    <span className="text-xs text-gray-500">
-                      Terbuka untuk umum
-                    </span>
-                    <Link
-                      href={`/pelatihan/${pel.id}`}
-                      className="landing-focus px-4 py-2 bg-gradient-to-r from-primary to-primary-dark hover:brightness-110 text-white text-sm rounded-xl shadow-md shadow-primary/20 transition-all flex items-center gap-2"
-                    >
-                      Lihat
-                      <i className="ri-eye-line"></i>
-                    </Link>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full text-center py-10 text-gray-500 max-w-xl mx-auto">
-                Belum ada daftar pelatihan yang ditampilkan di halaman ini.
-                Silakan cek bagian berita di atas atau halaman Informasi untuk
-                pengumuman terbaru.
+          {programsLoading ? (
+            <div className="flex justify-center py-16">
+              <i
+                className="ri-loader-4-line animate-spin text-3xl text-primary"
+                aria-hidden
+              />
+            </div>
+          ) : programsTotal > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {programs.map((pel) => (
+                  <TrainingProgramCard key={pel.id} pel={pel} />
+                ))}
               </div>
-            )}
-          </div>
+              <div className="mt-8">
+                <Pagination
+                  page={programsPage}
+                  pageSize={programsPageSize}
+                  total={programsTotal}
+                  onPageChange={setProgramsPage}
+                  onPageSizeChange={(size) => {
+                    setProgramsPageSize(size);
+                    setProgramsPage(1);
+                  }}
+                  pageSizeOptions={[6, 12, 18]}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-10 text-gray-500 max-w-xl mx-auto">
+              Belum ada program pelatihan yang tercatat di sistem.
+            </div>
+          )}
         </div>
       </section>
     </div>

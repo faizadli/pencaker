@@ -1,45 +1,103 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useParams } from "next/navigation";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
+import Pagination from "../../../components/ui/Pagination";
+import StatCard from "../../../components/ui/StatCard";
 import {
-  getPublicTrainingById,
-  getPublicTrainingParticipants,
-  Training,
-  PublicParticipant,
-} from "../../../services/training";
+  getPublicTrainingAlumniProgram,
+  getPublicTrainingAlumniProgramParticipants,
+  type PublicTrainingProgram,
+  type PublicTrainingAlumniParticipant,
+} from "../../../services/training-alumni";
+
+const cardSurfaceClass =
+  "rounded-2xl border border-slate-200/90 bg-white/95 shadow-md ring-1 ring-black/[0.02] backdrop-blur-sm";
+const primaryButtonClass =
+  "landing-focus inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-dark px-4 py-2.5 text-sm font-medium text-white shadow-md shadow-primary/20 transition hover:brightness-110";
 
 export default function DetailPelatihanPage() {
   const params = useParams();
-  const id = params?.id as string;
-  const [training, setTraining] = useState<Training | null>(null);
-  const [participants, setParticipants] = useState<PublicParticipant[]>([]);
-  const [loading, setLoading] = useState(true);
+  const rawId = String(params?.id || "");
+  const [program, setProgram] = useState<PublicTrainingProgram | null>(null);
+  const [participants, setParticipants] = useState<
+    PublicTrainingAlumniParticipant[]
+  >([]);
+  const [participantsTotal, setParticipantsTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [programLoading, setProgramLoading] = useState(true);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const trainingName = useMemo(() => {
+    if (!rawId) return "";
+    try {
+      return decodeURIComponent(rawId);
+    } catch {
+      return rawId;
+    }
+  }, [rawId]);
 
   useEffect(() => {
-    if (!id) return;
-    (async () => {
-      try {
-        const tResp = await getPublicTrainingById(id);
-        setTraining(tResp.data);
+    setPage(1);
+  }, [rawId]);
 
-        const pResp = await getPublicTrainingParticipants(id);
-        setParticipants(pResp.data || []);
+  useEffect(() => {
+    if (!trainingName) return;
+    let cancelled = false;
+    (async () => {
+      setProgramLoading(true);
+      setError("");
+      try {
+        const prog = await getPublicTrainingAlumniProgram(trainingName);
+        if (!cancelled) setProgram(prog.data);
       } catch (e) {
-        console.error(e);
+        if (!cancelled) {
+          setProgram(null);
+          setError(
+            e instanceof Error ? e.message : "Gagal memuat detail pelatihan",
+          );
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setProgramLoading(false);
       }
     })();
-  }, [id]);
+    return () => {
+      cancelled = true;
+    };
+  }, [trainingName]);
 
-  if (loading) return <FullPageLoading />;
-  if (!training)
-    return <div className="text-center py-12">Pelatihan tidak ditemukan</div>;
+  useEffect(() => {
+    if (!trainingName || programLoading || !program) return;
+    let cancelled = false;
+    (async () => {
+      setParticipantsLoading(true);
+      try {
+        const part = await getPublicTrainingAlumniProgramParticipants(
+          trainingName,
+          { page, limit: pageSize },
+        );
+        if (!cancelled) {
+          setParticipants(part.data || []);
+          setParticipantsTotal(part.pagination?.total ?? 0);
+        }
+      } catch {
+        if (!cancelled) {
+          setParticipants([]);
+          setParticipantsTotal(0);
+        }
+      } finally {
+        if (!cancelled) setParticipantsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [trainingName, program, programLoading, page, pageSize]);
 
-  const toDate = (s?: string) => {
+  const toDate = (s?: string | null) => {
     if (!s) return "-";
     try {
       return new Date(s).toLocaleDateString("id-ID", {
@@ -52,152 +110,210 @@ export default function DetailPelatihanPage() {
     }
   };
 
+  if (programLoading) return <FullPageLoading />;
+
+  if (error || !program)
+    return (
+      <main className="min-h-screen bg-white font-sans antialiased text-slate-800">
+        <section className="py-16 bg-gradient-to-b from-slate-50 via-gray-50/95 to-slate-50">
+          <div className="max-w-lg mx-auto px-4 text-center">
+            <div className={`${cardSurfaceClass} p-8`}>
+              <p className="text-slate-600">
+                {error || "Program pelatihan tidak ditemukan"}
+              </p>
+              <Link href="/pelatihan" className={`${primaryButtonClass} mt-6`}>
+                <i className="ri-arrow-left-line" aria-hidden />
+                Kembali ke daftar pelatihan
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+
+  const period =
+    program.start_date && program.end_date
+      ? `${toDate(program.start_date)} – ${toDate(program.end_date)}`
+      : program.start_date
+        ? `Mulai ${toDate(program.start_date)}`
+        : "-";
+
   return (
     <main className="min-h-screen bg-white font-sans antialiased text-slate-800 selection:bg-primary/15 selection:text-emerald-950 [font-feature-settings:'cv02','cv03']">
-      {/* Hero Section */}
-      <section className="public-hero py-10 ring-1 ring-black/[0.06]">
+      <section className="public-hero relative py-10 sm:py-12 ring-1 ring-black/[0.06]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <Link
             href="/pelatihan"
-            className="landing-focus inline-flex items-center text-white/85 hover:text-white mb-6 motion-safe:transition-colors text-sm rounded-md"
+            className="landing-focus inline-flex items-center gap-2 text-sm font-medium text-white/90 transition hover:text-white"
           >
-            <i className="ri-arrow-left-line mr-2"></i>
-            Kembali ke Daftar Pelatihan
+            <i className="ri-arrow-left-line" aria-hidden />
+            Kembali ke daftar pelatihan
           </Link>
-          <div className="flex flex-col md:flex-row gap-6 items-start">
-            <div className="flex-1">
-              <h1 className="text-2xl md:text-3xl font-bold mb-2 text-balance drop-shadow-sm">
-                {training.title}
-              </h1>
-              <p className="text-white/90 text-lg flex items-center gap-2">
-                <i className="ri-building-line"></i>
-                {training.instructor || "Disnaker"}
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${training.status === "open" ? "bg-green-500/20 text-green-100 border border-green-500/30" : "bg-white/10 text-white/80"}`}
-                >
-                  {training.status === "open"
-                    ? "Pendaftaran Dibuka"
-                    : training.status}
-                </span>
-                <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-white/80 flex items-center gap-1">
-                  <i className="ri-map-pin-line"></i>{" "}
-                  {training.location || "Lokasi tidak tersedia"}
-                </span>
-              </div>
-            </div>
+          <div className="mt-6">
+            <h1 className="text-2xl font-bold text-balance drop-shadow-sm sm:text-3xl md:text-4xl">
+              {program.training_name}
+            </h1>
+            <p className="mt-2 flex items-center gap-2 text-sm text-white/90 sm:text-base">
+              <i className="ri-building-line" aria-hidden />
+              {program.institution_name || "UPT BLK"}
+            </p>
+            {program.training_year > 0 && (
+              <span className="mt-4 inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white ring-1 ring-white/20">
+                <i className="ri-calendar-line" aria-hidden />
+                Tahun {program.training_year}
+              </span>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Content Section */}
-      <section className="py-10 bg-gradient-to-b from-slate-50 via-gray-50/95 to-slate-50 min-h-[calc(100vh-300px)]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="space-y-6">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                <p className="text-xs text-gray-500 mb-1">Kuota Peserta</p>
-                <p className="font-semibold text-gray-900">
-                  {training.quota} Orang
-                </p>
-              </div>
-              <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                <p className="text-xs text-gray-500 mb-1">Terdaftar</p>
-                <p className="font-semibold text-gray-900">
-                  {participants.length} Orang
-                </p>
-              </div>
-            </div>
+      <section className="py-10 sm:py-12 bg-gradient-to-b from-slate-50 via-gray-50/95 to-slate-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-8">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <StatCard
+              title="Peserta tercatat"
+              value={program.participant_count}
+              change="Alumni / peserta program ini"
+              color="var(--color-primary)"
+              icon="ri-user-line"
+            />
+            <StatCard
+              title="Periode"
+              value={period}
+              change="Jadwal pelaksanaan"
+              color="var(--color-secondary)"
+              icon="ri-time-line"
+            />
+            <StatCard
+              title="Lembaga"
+              value={program.institution_name || "-"}
+              change="Penyelenggara pelatihan"
+              color="#0ea5e9"
+              icon="ri-building-line"
+            />
+          </div>
 
-            {/* Description */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">
-                Deskripsi Pelatihan
-              </h2>
-              <div
-                className="prose max-w-none text-gray-600 leading-relaxed"
-                dangerouslySetInnerHTML={{
-                  __html:
-                    training.description || "Tidak ada deskripsi tersedia.",
-                }}
-              ></div>
-            </div>
-
-            {/* Participants */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">
-                Peserta Terdaftar ({participants.length})
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {participants.length > 0 ? (
-                  participants.map((p) => (
-                    <div
-                      key={p.id}
-                      className="flex items-start p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-primary/30 transition-colors"
-                    >
-                      <div className="flex-shrink-0 mr-4">
-                        {p.photo ? (
-                          <Image
-                            src={p.photo}
-                            alt={p.name}
-                            width={48}
-                            height={48}
-                            className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg border-2 border-white shadow-sm">
-                            {p.name.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate">
-                          {p.name}
-                        </h3>
-                        <div className="flex flex-wrap gap-2 mt-1 mb-2">
-                          {p.gender && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
-                              {p.gender === "L"
-                                ? "Laki-laki"
-                                : p.gender === "P"
-                                  ? "Perempuan"
-                                  : p.gender}
-                            </span>
-                          )}
-                          {p.education && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700">
-                              {p.education}
-                            </span>
-                          )}
-                          {p.age && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-50 text-orange-700">
-                              {p.age} Tahun
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <p className="text-xs text-gray-500">
-                            Mendaftar {toDate(p.created_at)}
-                          </p>
-                          <Link
-                            href={`/pelatihan/peserta/${p.id}`}
-                            className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1"
-                          >
-                            Detail <i className="ri-arrow-right-line"></i>
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
-                    Belum ada peserta terdaftar
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="min-w-0 lg:col-span-2">
+              <div className={`${cardSurfaceClass} p-6 sm:p-8`}>
+                <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
+                  Peserta program ({program.participant_count})
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Daftar peserta yang tercatat dalam sistem Disnaker
+                </p>
+                {participantsLoading ? (
+                  <div className="mt-8 flex justify-center py-10">
+                    <i
+                      className="ri-loader-4-line animate-spin text-2xl text-primary"
+                      aria-hidden
+                    />
+                    <span className="sr-only">Memuat peserta...</span>
                   </div>
+                ) : participantsTotal > 0 ? (
+                  <>
+                    <ul className="mt-6 divide-y divide-slate-100">
+                      {participants.map((p) => (
+                        <li key={p.id} className="first:pt-0">
+                          <Link
+                            href={`/pelatihan/peserta/${encodeURIComponent(p.id)}`}
+                            className="landing-focus flex items-start gap-3 py-4 -mx-2 px-2 rounded-xl transition hover:bg-slate-50"
+                          >
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-sm font-bold text-primary ring-1 ring-emerald-100">
+                              {p.full_name.charAt(0).toUpperCase() || "?"}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-slate-900">
+                                {p.full_name}
+                              </p>
+                              <div className="mt-1 flex flex-wrap gap-2">
+                                {p.last_education && (
+                                  <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
+                                    {p.last_education}
+                                  </span>
+                                )}
+                                {p.gender && (
+                                  <span className="inline-flex rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-800">
+                                    {p.gender === "L"
+                                      ? "Laki-laki"
+                                      : "Perempuan"}
+                                  </span>
+                                )}
+                                {p.training_year > 0 && (
+                                  <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-primary">
+                                    {p.training_year}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <i
+                              className="ri-arrow-right-s-line mt-2 shrink-0 text-slate-400"
+                              aria-hidden
+                            />
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-4 min-w-0 border-t border-slate-100 pt-2">
+                      <Pagination
+                        page={page}
+                        pageSize={pageSize}
+                        total={participantsTotal}
+                        onPageChange={setPage}
+                        onPageSizeChange={(size) => {
+                          setPageSize(size);
+                          setPage(1);
+                        }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <p className="mt-6 text-sm text-slate-500">
+                    Belum ada peserta tercatat untuk program ini.
+                  </p>
                 )}
               </div>
             </div>
+
+            <aside className="lg:sticky lg:top-24 lg:self-start">
+              <div className={`${cardSurfaceClass} overflow-hidden`}>
+                <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
+                <div className="p-5 sm:p-6 space-y-4">
+                  <h3 className="font-bold text-slate-900">
+                    Informasi program
+                  </h3>
+                  <dl className="space-y-3 text-sm">
+                    <div className="flex justify-between gap-3 border-b border-slate-100 pb-3">
+                      <dt className="text-slate-500">Lembaga</dt>
+                      <dd className="font-medium text-slate-800 text-right">
+                        {program.institution_name || "-"}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-3 border-b border-slate-100 pb-3">
+                      <dt className="text-slate-500">Tahun</dt>
+                      <dd className="font-medium text-slate-800 text-right">
+                        {program.training_year || "-"}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-slate-500">Periode</dt>
+                      <dd className="font-medium text-slate-800 text-right">
+                        {period}
+                      </dd>
+                    </div>
+                  </dl>
+                  {program.registration_slug && (
+                    <Link
+                      href={`/daftar-pelatihan/${encodeURIComponent(program.registration_slug)}`}
+                      className={`${primaryButtonClass} w-full`}
+                    >
+                      <i className="ri-edit-line" aria-hidden />
+                      Daftar pelatihan
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </aside>
           </div>
         </div>
       </section>
