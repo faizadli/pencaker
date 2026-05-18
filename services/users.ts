@@ -16,12 +16,13 @@ export type UserListItem = {
 };
 
 export async function listUsers(
-  params?: { page?: number; limit?: number },
+  params?: { page?: number; limit?: number; role?: string },
   opts?: { noCache?: boolean },
 ) {
   const q = new URLSearchParams();
   if (params?.page) q.set("page", String(params.page));
   if (params?.limit) q.set("limit", String(params.limit));
+  if (params?.role) q.set("role", params.role);
   const url = `${BASE}/api/users${q.toString() ? `?${q.toString()}` : ""}`;
   const key = `cache:listUsers:${q.toString()}`;
   if (!opts?.noCache && typeof window !== "undefined") {

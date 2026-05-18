@@ -1343,21 +1343,25 @@ export default function KontenPage() {
       ),
     [holidayGreetingsList, page, pageSize],
   );
-  const currentTabTotal =
-    activeTab === "faq"
-      ? faqList.length
-      : activeTab === "partners"
-        ? partnersList.length
-        : activeTab === "testimonials"
-          ? testimonialsList.length
-          : activeTab === "holiday_greetings"
-            ? holidayGreetingsList.length
-            : 0;
-  const showPagination =
-    activeTab === "faq" ||
-    activeTab === "partners" ||
-    activeTab === "testimonials" ||
-    activeTab === "holiday_greetings";
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab, pageSize]);
+
+  const paginationFooter = (total: number) =>
+    total > 0 ? (
+      <div className="border-t border-slate-100 px-4 py-4 sm:px-5">
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
+      </div>
+    ) : null;
 
   if (loading) {
     return (
@@ -1375,32 +1379,17 @@ export default function KontenPage() {
         <div className="w-full space-y-8">
           <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
             <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
-            <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-                  Konten Website
-                </p>
-                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                  Manajemen konten publik
-                </h1>
-                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
-                  Kelola FAQ, mitra, testimoni, ucapan hari raya, dan seluruh
-                  bagian halaman Tentang dari satu tempat yang konsisten.
-                </p>
-              </div>
-              <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                <i className="ri-layout-grid-line" aria-hidden />
-                Tab aktif:{" "}
-                {activeTab === "faq"
-                  ? "FAQ"
-                  : activeTab === "partners"
-                    ? "Mitra"
-                    : activeTab === "testimonials"
-                      ? "Testimoni"
-                      : activeTab === "holiday_greetings"
-                        ? "Ucapan"
-                        : "Tentang"}
-              </span>
+            <div className="p-6 sm:p-8">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Konten Website
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                Manajemen konten publik
+              </h1>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                Kelola FAQ, mitra, testimoni, ucapan hari raya, dan seluruh
+                bagian halaman Tentang dari satu tempat yang konsisten.
+              </p>
             </div>
           </header>
 
@@ -1483,10 +1472,9 @@ export default function KontenPage() {
           </Card>
 
           {activeTab === "holiday_greetings" && (
-            <Card
-              className="overflow-hidden !rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02]"
-              header={
-                <div className="flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+            <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+              <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="text-lg font-bold text-slate-900">
                       Ucapan hari raya
@@ -1496,17 +1484,23 @@ export default function KontenPage() {
                       atau momentum khusus lainnya.
                     </p>
                   </div>
-                  <button
-                    onClick={() => handleAdd("holiday_greetings")}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
-                  >
-                    <i className="ri-add-line" aria-hidden />
-                    Tambah ucapan
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                      <i className="ri-gift-line text-primary" aria-hidden />
+                      {holidayGreetingsList.length} ucapan
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleAdd("holiday_greetings")}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
+                    >
+                      <i className="ri-add-line" aria-hidden />
+                      Tambah ucapan
+                    </button>
+                  </div>
                 </div>
-              }
-            >
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+              </div>
+              <div className="grid grid-cols-1 gap-5 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-3">
                 {paginatedHolidayGreetingsList.map((h) => (
                   <div
                     key={h.id}
@@ -1567,7 +1561,8 @@ export default function KontenPage() {
                   </div>
                 )}
               </div>
-            </Card>
+              {paginationFooter(holidayGreetingsList.length)}
+            </div>
           )}
 
           {activeTab === "about" && (
@@ -2135,23 +2130,33 @@ export default function KontenPage() {
           )}
 
           {activeTab === "partners" && (
-            <div className="space-y-6">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">Mitra</h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Tampilkan logo dan identitas partner yang mendukung program.
-                  </p>
+            <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+              <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">Mitra</h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Tampilkan logo dan identitas partner yang mendukung
+                      program.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                      <i className="ri-team-line text-primary" aria-hidden />
+                      {partnersList.length} mitra
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleAdd("partners")}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
+                    >
+                      <i className="ri-add-line" aria-hidden />
+                      Tambah mitra
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => handleAdd("partners")}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
-                >
-                  <i className="ri-add-line" aria-hidden />
-                  Tambah mitra
-                </button>
               </div>
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-5 p-4 sm:p-5 md:grid-cols-2">
                 {paginatedPartnersList.map((p) => (
                   <div
                     key={p.id}
@@ -2198,30 +2203,40 @@ export default function KontenPage() {
                   </div>
                 )}
               </div>
+              {paginationFooter(partnersList.length)}
             </div>
           )}
 
           {activeTab === "testimonials" && (
-            <div className="space-y-6">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">
-                    Testimoni
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Kelola kutipan pengalaman pengguna agar lebih meyakinkan dan
-                    relevan.
-                  </p>
+            <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+              <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">
+                      Testimoni
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Kelola kutipan pengalaman pengguna agar lebih meyakinkan
+                      dan relevan.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                      <i className="ri-chat-1-line text-primary" aria-hidden />
+                      {testimonialsList.length} testimoni
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleAdd("testimonials")}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
+                    >
+                      <i className="ri-add-line" aria-hidden />
+                      Tambah testimoni
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => handleAdd("testimonials")}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
-                >
-                  <i className="ri-add-line" aria-hidden />
-                  Tambah testimoni
-                </button>
               </div>
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-5 p-4 sm:p-5 md:grid-cols-2">
                 {paginatedTestimonialsList.map((t) => (
                   <div
                     key={t.id}
@@ -2271,6 +2286,7 @@ export default function KontenPage() {
                   </div>
                 )}
               </div>
+              {paginationFooter(testimonialsList.length)}
             </div>
           )}
 
@@ -2596,26 +2612,38 @@ export default function KontenPage() {
           )}
 
           {activeTab === "faq" && (
-            <div className="space-y-6">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">
-                    FAQ (Pertanyaan Umum)
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Pertanyaan populer untuk membantu pengunjung menemukan
-                    jawaban lebih cepat.
-                  </p>
+            <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+              <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">
+                      FAQ (Pertanyaan Umum)
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Pertanyaan populer untuk membantu pengunjung menemukan
+                      jawaban lebih cepat.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                      <i
+                        className="ri-question-line text-primary"
+                        aria-hidden
+                      />
+                      {faqList.length} FAQ
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleAdd("faq")}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
+                    >
+                      <i className="ri-add-line" aria-hidden />
+                      Tambah FAQ
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => handleAdd("faq")}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-95"
-                >
-                  <i className="ri-add-line" aria-hidden />
-                  Tambah FAQ
-                </button>
               </div>
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-5 p-4 sm:p-5 md:grid-cols-2">
                 {paginatedFaqList.map((f) => (
                   <div
                     key={f.id}
@@ -2667,21 +2695,7 @@ export default function KontenPage() {
                   </div>
                 )}
               </div>
-            </div>
-          )}
-
-          {showPagination && currentTabTotal > 0 && (
-            <div className="pt-1">
-              <Pagination
-                page={page}
-                pageSize={pageSize}
-                total={currentTabTotal}
-                onPageChange={(p) => setPage(p)}
-                onPageSizeChange={(s) => {
-                  setPageSize(s);
-                  setPage(1);
-                }}
-              />
+              {paginationFooter(faqList.length)}
             </div>
           )}
         </div>

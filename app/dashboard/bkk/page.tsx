@@ -1,6 +1,6 @@
 "use client";
 import { ZodIssue } from "zod";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Input, SegmentedToggle } from "../../../components/ui/field";
 import Modal from "../../../components/ui/Modal";
 import StatCard from "../../../components/ui/StatCard";
@@ -14,6 +14,7 @@ import {
   TH,
   TD,
 } from "../../../components/ui/Table";
+import Pagination from "../../../components/ui/Pagination";
 import {
   listSiteContents,
   upsertSiteContent,
@@ -48,14 +49,23 @@ export default function BkkPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  const filteredBkk = bkkList.filter((item) => {
+  const filteredBkk = useMemo(() => {
     const term = searchTerm.toLowerCase();
-    return (
-      item.nama.toLowerCase().includes(term) ||
-      item.alamat.toLowerCase().includes(term)
-    );
-  });
+    return bkkList.filter((item) => {
+      return (
+        item.nama.toLowerCase().includes(term) ||
+        item.alamat.toLowerCase().includes(term)
+      );
+    });
+  }, [bkkList, searchTerm]);
+
+  const paginatedBkk = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredBkk.slice(start, start + pageSize);
+  }, [filteredBkk, page, pageSize]);
 
   useEffect(() => {
     (async () => {
@@ -235,6 +245,10 @@ export default function BkkPage() {
     }
   };
 
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, pageSize]);
+
   if (loading) {
     return (
       <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
@@ -335,140 +349,170 @@ export default function BkkPage() {
           </div>
 
           {filteredBkk.length > 0 ? (
-            viewMode === "grid" ? (
-              <CardGrid className="gap-5 xl:grid-cols-3">
-                {filteredBkk.map((item) => (
-                  <div
-                    key={item.id}
-                    className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02] transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none"
-                  >
-                    <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50/95 to-white p-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <h3 className="truncate text-sm font-bold leading-tight text-slate-900">
-                            {item.nama}
-                          </h3>
-                          <p className="truncate text-xs text-slate-500">
-                            {item.website || "-"}
-                          </p>
-                        </div>
-                        <span
-                          className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-semibold sm:py-1 sm:text-xs ${getStatusColor(item.status)}`}
-                        >
-                          {item.status}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3 p-4">
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <i className="ri-map-pin-line shrink-0 text-slate-400" />
-                        <span className="line-clamp-2">
-                          {item.alamat || "-"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <i className="ri-global-line shrink-0 text-slate-400" />
-                        <span className="truncate">
-                          {item.website ? (
-                            <a
-                              href={item.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="hover:text-primary hover:underline"
-                            >
-                              {item.website}
-                            </a>
-                          ) : (
-                            "-"
-                          )}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="border-t border-slate-100 bg-slate-50/50 p-4">
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleEdit(item)}
-                          className="flex flex-1 items-center justify-center rounded-xl bg-primary px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[var(--color-primary-dark)]"
-                        >
-                          <i className="ri-pencil-line mr-1.5" />
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(item.id)}
-                          className="flex items-center justify-center rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-red-600 shadow-sm ring-1 ring-red-200 transition hover:bg-red-50"
-                          title="Hapus"
-                        >
-                          <i className="ri-delete-bin-line" />
-                        </button>
-                      </div>
-                    </div>
+            <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+              <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">
+                      Daftar BKK
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Bursa Kerja Khusus terdaftar beserta status publikasi.
+                    </p>
                   </div>
-                ))}
-              </CardGrid>
-            ) : (
-              <Card className="overflow-hidden !rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02] [&>div]:!p-0">
-                <Table className="hidden sm:block">
-                  <TableHead>
-                    <tr>
-                      <TH>Nama BKK</TH>
-                      <TH>Alamat</TH>
-                      <TH>Status</TH>
-                      <TH>Aksi</TH>
-                    </tr>
-                  </TableHead>
-                  <TableBody>
-                    {filteredBkk.map((item) => (
-                      <TableRow key={item.id}>
-                        <TD>
-                          <div>
-                            <p className="font-medium text-slate-900">
+                  <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                    <i className="ri-building-2-line text-primary" />
+                    {filteredBkk.length} BKK
+                  </span>
+                </div>
+              </div>
+              {viewMode === "grid" ? (
+                <CardGrid className="gap-5 p-4 sm:p-5 xl:grid-cols-3">
+                  {paginatedBkk.map((item) => (
+                    <div
+                      key={item.id}
+                      className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02] transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none"
+                    >
+                      <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50/95 to-white p-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h3 className="truncate text-sm font-bold leading-tight text-slate-900">
                               {item.nama}
-                            </p>
-                            <p className="text-xs text-slate-500">
+                            </h3>
+                            <p className="truncate text-xs text-slate-500">
                               {item.website || "-"}
                             </p>
                           </div>
-                        </TD>
-                        <TD className="max-w-xs truncate text-slate-700">
-                          {item.alamat || "-"}
-                        </TD>
-                        <TD>
                           <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusColor(item.status)}`}
+                            className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-semibold sm:py-1 sm:text-xs ${getStatusColor(item.status)}`}
                           >
                             {item.status}
                           </span>
-                        </TD>
-                        <TD>
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleEdit(item)}
-                              className="landing-focus rounded-lg p-2 text-primary transition hover:bg-primary/10"
-                              title="Edit"
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 p-4">
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <i className="ri-map-pin-line shrink-0 text-slate-400" />
+                          <span className="line-clamp-2">
+                            {item.alamat || "-"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <i className="ri-global-line shrink-0 text-slate-400" />
+                          <span className="truncate">
+                            {item.website ? (
+                              <a
+                                href={item.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-primary hover:underline"
+                              >
+                                {item.website}
+                              </a>
+                            ) : (
+                              "-"
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-slate-100 bg-slate-50/50 p-4">
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(item)}
+                            className="flex flex-1 items-center justify-center rounded-xl bg-primary px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[var(--color-primary-dark)]"
+                          >
+                            <i className="ri-pencil-line mr-1.5" />
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(item.id)}
+                            className="flex items-center justify-center rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-red-600 shadow-sm ring-1 ring-red-200 transition hover:bg-red-50"
+                            title="Hapus"
+                          >
+                            <i className="ri-delete-bin-line" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardGrid>
+              ) : (
+                <Card className="overflow-hidden border-0 !shadow-none ring-0 [&>div]:!p-0">
+                  <Table className="hidden sm:block">
+                    <TableHead>
+                      <tr>
+                        <TH>Nama BKK</TH>
+                        <TH>Alamat</TH>
+                        <TH>Status</TH>
+                        <TH>Aksi</TH>
+                      </tr>
+                    </TableHead>
+                    <TableBody>
+                      {paginatedBkk.map((item) => (
+                        <TableRow key={item.id}>
+                          <TD>
+                            <div>
+                              <p className="font-medium text-slate-900">
+                                {item.nama}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {item.website || "-"}
+                              </p>
+                            </div>
+                          </TD>
+                          <TD className="max-w-xs truncate text-slate-700">
+                            {item.alamat || "-"}
+                          </TD>
+                          <TD>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusColor(item.status)}`}
                             >
-                              <i className="ri-pencil-line" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDelete(item.id)}
-                              className="landing-focus rounded-lg p-2 text-red-600 transition hover:bg-red-50"
-                              title="Hapus"
-                            >
-                              <i className="ri-delete-bin-line" />
-                            </button>
-                          </div>
-                        </TD>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
-            )
+                              {item.status}
+                            </span>
+                          </TD>
+                          <TD>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleEdit(item)}
+                                className="landing-focus rounded-lg p-2 text-primary transition hover:bg-primary/10"
+                                title="Edit"
+                              >
+                                <i className="ri-pencil-line" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(item.id)}
+                                className="landing-focus rounded-lg p-2 text-red-600 transition hover:bg-red-50"
+                                title="Hapus"
+                              >
+                                <i className="ri-delete-bin-line" />
+                              </button>
+                            </div>
+                          </TD>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Card>
+              )}
+              <div className="border-t border-slate-100 px-4 py-4 sm:px-5">
+                <Pagination
+                  page={page}
+                  pageSize={pageSize}
+                  total={filteredBkk.length}
+                  onPageChange={setPage}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setPage(1);
+                  }}
+                />
+              </div>
+            </div>
           ) : (
             <div className="rounded-2xl border border-slate-200/90 bg-white py-12 text-center shadow-sm ring-1 ring-slate-950/[0.02]">
               <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">

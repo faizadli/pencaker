@@ -48,6 +48,7 @@ import {
   TH,
   TD,
 } from "../../../components/ui/Table";
+import Pagination from "../../../components/ui/Pagination";
 import { z } from "zod";
 
 function readDashboardPermissions(): string[] {
@@ -274,6 +275,8 @@ export default function DashboardPesertaLatihanPage() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<TrainingAlumniRow[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [listLoading, setListLoading] = useState(false);
   const [exportingExcel, setExportingExcel] = useState(false);
   const [distinctOptions, setDistinctOptions] =
@@ -402,8 +405,8 @@ export default function DashboardPesertaLatihanPage() {
       const res = await listTrainingAlumni({
         training_name: name,
         training_year: y,
-        limit: 100,
-        page: 1,
+        limit: pageSize,
+        page,
       });
       setRows(res.data);
       setTotal(res.pagination?.total ?? 0);
@@ -414,7 +417,11 @@ export default function DashboardPesertaLatihanPage() {
       setListLoading(false);
       setLoading(false);
     }
-  }, [filterTrainingName, filterTrainingYear, showError]);
+  }, [filterTrainingName, filterTrainingYear, page, pageSize, showError]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filterTrainingName, filterTrainingYear]);
 
   const handleExportExcel = useCallback(async () => {
     if (!canRead) return;
@@ -492,6 +499,8 @@ export default function DashboardPesertaLatihanPage() {
     distinctOptions,
     filterTrainingName,
     filterTrainingYear,
+    page,
+    pageSize,
     fetchRows,
   ]);
 
@@ -1314,6 +1323,20 @@ export default function DashboardPesertaLatihanPage() {
                 </Table>
               )}
             </div>
+            {hasActiveFilter && total > 0 && !listLoading && (
+              <div className="border-t border-slate-100 px-4 py-4 sm:px-5">
+                <Pagination
+                  page={page}
+                  pageSize={pageSize}
+                  total={total}
+                  onPageChange={setPage}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setPage(1);
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </main>

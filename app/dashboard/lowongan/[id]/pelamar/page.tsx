@@ -237,6 +237,22 @@ export default function PelamarLowonganPage() {
     return filteredRows.slice(start, start + pageSize);
   }, [filteredRows, page, pageSize]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [
+    searchQuery,
+    activeTab,
+    filterStatus,
+    filterAgeMin,
+    filterAgeMax,
+    filterRegDateStart,
+    filterRegDateEnd,
+    filterMaritalStatus,
+    filterEducationLevel,
+    filterEducationMajor,
+    pageSize,
+  ]);
+
   // Helper to get education major options
   const getMajorOptions = () => {
     if (!filterEducationLevel) return [];
@@ -1113,39 +1129,142 @@ export default function PelamarLowonganPage() {
               </div>
             </div>
 
-            <Card
-              className={`overflow-hidden ${cardSurfaceClass} [&>div]:!p-0`}
-            >
-              <Table className="hidden sm:block">
-                <TableHead>
-                  <TableRow>
-                    <TH>Nama</TH>
-                    <TH>Usia</TH>
-                    <TH>Kecamatan</TH>
-                    <TH>Kelurahan</TH>
-                    <TH>Status</TH>
-                    <TH>Aksi</TH>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
+            <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+              <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">
+                      Daftar pelamar
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {activeTabLabel} · kelola status dan tindakan lanjutan.
+                    </p>
+                  </div>
+                  <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                    <i className="ri-team-line text-primary" />
+                    {totalDisplayed} pelamar
+                  </span>
+                </div>
+              </div>
+              <Card
+                className={`overflow-hidden border-0 shadow-none ring-0 ${cardSurfaceClass} [&>div]:!p-0`}
+              >
+                <Table className="hidden sm:block">
+                  <TableHead>
+                    <TableRow>
+                      <TH>Nama</TH>
+                      <TH>Usia</TH>
+                      <TH>Kecamatan</TH>
+                      <TH>Kelurahan</TH>
+                      <TH>Status</TH>
+                      <TH>Aksi</TH>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {paginatedRows.map((r) => (
+                      <TableRow key={r.id}>
+                        <TD className="font-medium text-slate-900">{r.name}</TD>
+                        <TD className="text-slate-900">
+                          {typeof r.age === "number" ? `${r.age} th` : "-"}
+                        </TD>
+                        <TD className="text-slate-500">{r.kecamatan || "-"}</TD>
+                        <TD className="text-slate-500">{r.kelurahan || "-"}</TD>
+                        <TD>
+                          <span
+                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getApplicationStatusClass(
+                              r.status,
+                            )}`}
+                          >
+                            {getApplicationStatusLabel(r.status)}
+                          </span>
+                        </TD>
+                        <TD>
+                          <ActionMenu
+                            items={[
+                              {
+                                label: "Detail",
+                                href: `/dashboard/lowongan/${jobId}/pelamar/${r.candidate_id}`,
+                                icon: "ri-file-list-line",
+                              },
+                              ...(r.status === "accepted"
+                                ? [
+                                    {
+                                      label: "Penempatan",
+                                      onClick: () => openPlacement(r),
+                                      icon: "ri-map-pin-line",
+                                    },
+                                    {
+                                      label: "Mulai Kerja",
+                                      onClick: () => openStartWork(r),
+                                      icon: "ri-briefcase-line",
+                                    },
+                                    {
+                                      label: "Atur Gaji",
+                                      onClick: () => openSalary(r),
+                                      icon: "ri-money-dollar-circle-line",
+                                    },
+                                  ]
+                                : []),
+                              {
+                                label: "Edit",
+                                onClick: () => openEdit(r),
+                                icon: "ri-edit-line",
+                              },
+                            ]}
+                          />
+                        </TD>
+                      </TableRow>
+                    ))}
+                    {filteredRows.length === 0 && (
+                      <TableRow>
+                        <TD
+                          colSpan={6}
+                          className="py-8 text-center text-slate-500"
+                        >
+                          Belum ada pelamar{" "}
+                          {activeTab === "admin"
+                            ? "yang ditambahkan admin"
+                            : "yang melamar sendiri"}
+                          {(filterStatus ||
+                            filterAgeMin ||
+                            filterAgeMax ||
+                            filterRegDateStart ||
+                            filterEducationLevel) &&
+                            " yang sesuai filter"}
+                        </TD>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+
+                <div className="space-y-3 p-3 sm:hidden">
                   {paginatedRows.map((r) => (
-                    <TableRow key={r.id}>
-                      <TD className="font-medium text-slate-900">{r.name}</TD>
-                      <TD className="text-slate-900">
-                        {typeof r.age === "number" ? `${r.age} th` : "-"}
-                      </TD>
-                      <TD className="text-slate-500">{r.kecamatan || "-"}</TD>
-                      <TD className="text-slate-500">{r.kelurahan || "-"}</TD>
-                      <TD>
+                    <div
+                      key={`mobile-${r.id}`}
+                      className="rounded-2xl border border-slate-200/90 bg-slate-50/60 p-4 shadow-sm"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold text-slate-900">
+                            {r.name}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {typeof r.age === "number" ? `${r.age} th` : "-"} •{" "}
+                            {r.kecamatan || "-"}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {r.kelurahan || "-"}
+                          </p>
+                        </div>
                         <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getApplicationStatusClass(
+                          className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${getApplicationStatusClass(
                             r.status,
                           )}`}
                         >
                           {getApplicationStatusLabel(r.status)}
                         </span>
-                      </TD>
-                      <TD>
+                      </div>
+                      <div className="mt-3">
                         <ActionMenu
                           items={[
                             {
@@ -1179,114 +1298,31 @@ export default function PelamarLowonganPage() {
                             },
                           ]}
                         />
-                      </TD>
-                    </TableRow>
+                      </div>
+                    </div>
                   ))}
                   {filteredRows.length === 0 && (
-                    <TableRow>
-                      <TD
-                        colSpan={6}
-                        className="py-8 text-center text-slate-500"
-                      >
-                        Belum ada pelamar{" "}
-                        {activeTab === "admin"
-                          ? "yang ditambahkan admin"
-                          : "yang melamar sendiri"}
-                        {(filterStatus ||
-                          filterAgeMin ||
-                          filterAgeMax ||
-                          filterRegDateStart ||
-                          filterEducationLevel) &&
-                          " yang sesuai filter"}
-                      </TD>
-                    </TableRow>
+                    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
+                      Belum ada pelamar pada tampilan ini.
+                    </div>
                   )}
-                </TableBody>
-              </Table>
+                </div>
+              </Card>
 
-              <div className="space-y-3 p-3 sm:hidden">
-                {paginatedRows.map((r) => (
-                  <div
-                    key={`mobile-${r.id}`}
-                    className="rounded-2xl border border-slate-200/90 bg-slate-50/60 p-4 shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate font-semibold text-slate-900">
-                          {r.name}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {typeof r.age === "number" ? `${r.age} th` : "-"} •{" "}
-                          {r.kecamatan || "-"}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {r.kelurahan || "-"}
-                        </p>
-                      </div>
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${getApplicationStatusClass(
-                          r.status,
-                        )}`}
-                      >
-                        {getApplicationStatusLabel(r.status)}
-                      </span>
-                    </div>
-                    <div className="mt-3">
-                      <ActionMenu
-                        items={[
-                          {
-                            label: "Detail",
-                            href: `/dashboard/lowongan/${jobId}/pelamar/${r.candidate_id}`,
-                            icon: "ri-file-list-line",
-                          },
-                          ...(r.status === "accepted"
-                            ? [
-                                {
-                                  label: "Penempatan",
-                                  onClick: () => openPlacement(r),
-                                  icon: "ri-map-pin-line",
-                                },
-                                {
-                                  label: "Mulai Kerja",
-                                  onClick: () => openStartWork(r),
-                                  icon: "ri-briefcase-line",
-                                },
-                                {
-                                  label: "Atur Gaji",
-                                  onClick: () => openSalary(r),
-                                  icon: "ri-money-dollar-circle-line",
-                                },
-                              ]
-                            : []),
-                          {
-                            label: "Edit",
-                            onClick: () => openEdit(r),
-                            icon: "ri-edit-line",
-                          },
-                        ]}
-                      />
-                    </div>
-                  </div>
-                ))}
-                {filteredRows.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
-                    Belum ada pelamar pada tampilan ini.
-                  </div>
-                )}
-              </div>
-            </Card>
-
-            <div className="pt-1">
-              <Pagination
-                page={page}
-                pageSize={pageSize}
-                total={filteredRows.length}
-                onPageChange={(p) => setPage(p)}
-                onPageSizeChange={(s) => {
-                  setPageSize(s);
-                  setPage(1);
-                }}
-              />
+              {filteredRows.length > 0 && (
+                <div className="border-t border-slate-100 px-4 py-4 sm:px-5">
+                  <Pagination
+                    page={page}
+                    pageSize={pageSize}
+                    total={filteredRows.length}
+                    onPageChange={setPage}
+                    onPageSizeChange={(size) => {
+                      setPageSize(size);
+                      setPage(1);
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
 

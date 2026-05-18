@@ -484,6 +484,10 @@ export default function LowonganPage() {
     loadJobs();
   }, [loadJobs]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, statusFilter, pageSize]);
+
   const filteredLowongan: ViewJob[] = useMemo(() => {
     const toView: ViewJob[] = lowonganList.map((j) => ({
       id: j.id,
@@ -1048,9 +1052,25 @@ export default function LowonganPage() {
           </Modal>
 
           {filteredLowongan.length > 0 ? (
-            <>
+            <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+              <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">
+                      Daftar lowongan
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Posisi yang dipublikasikan beserta ringkasan pelamar.
+                    </p>
+                  </div>
+                  <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                    <i className="ri-briefcase-line text-primary" />
+                    {filteredLowongan.length} lowongan
+                  </span>
+                </div>
+              </div>
               {viewMode === "grid" ? (
-                <CardGrid className="gap-5 xl:grid-cols-3">
+                <CardGrid className="gap-5 p-4 sm:p-5 xl:grid-cols-3">
                   {paginatedLowongan.map((job, idx) => (
                     <div
                       key={`${job.id || `${job.companyId}-${job.posisi}-${job.quota}`}-${job.status}-${idx}`}
@@ -1263,7 +1283,7 @@ export default function LowonganPage() {
                   ))}
                 </CardGrid>
               ) : (
-                <Card className="overflow-hidden !rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02] [&>div]:!p-0">
+                <Card className="overflow-hidden border-0 !shadow-none ring-0 [&>div]:!p-0">
                   <Table className="hidden sm:block">
                     <TableHead>
                       <tr>
@@ -1483,19 +1503,19 @@ export default function LowonganPage() {
                 </Card>
               )}
 
-              <div className="pt-1">
+              <div className="border-t border-slate-100 px-4 py-4 sm:px-5">
                 <Pagination
                   page={page}
                   pageSize={pageSize}
                   total={filteredLowongan.length}
-                  onPageChange={(p) => setPage(p)}
-                  onPageSizeChange={(s) => {
-                    setPageSize(s);
+                  onPageChange={setPage}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
                     setPage(1);
                   }}
                 />
               </div>
-            </>
+            </div>
           ) : (
             <div className="rounded-2xl border border-slate-200/90 bg-white py-12 text-center shadow-sm ring-1 ring-slate-950/[0.02]">
               <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">

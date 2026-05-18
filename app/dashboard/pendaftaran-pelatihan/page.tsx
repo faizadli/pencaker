@@ -27,6 +27,7 @@ import {
   type TrainingRegistrationCampaign,
 } from "../../../services/training-registration";
 import { ActionMenu } from "../../../components/ui/ActionMenu";
+import Pagination from "../../../components/ui/Pagination";
 
 function readDashboardPermissions(): string[] {
   if (typeof window === "undefined") return [];
@@ -140,6 +141,8 @@ export default function PendaftaranPelatihanPage() {
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
   const [savingEdit, setSavingEdit] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [dashboardPerms, setDashboardPerms] = useState<string[]>(
     readDashboardPermissions,
   );
@@ -162,6 +165,16 @@ export default function PendaftaranPelatihanPage() {
       );
     });
   }, [rows, searchTerm]);
+
+  const paginatedRows = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredRows.slice(start, start + pageSize);
+  }, [filteredRows, page, pageSize]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, pageSize]);
+
   const rowsWithPeriod = useMemo(
     () =>
       rows.filter((r) => {
@@ -502,7 +515,7 @@ export default function PendaftaranPelatihanPage() {
                       </TD>
                     </TableRow>
                   ) : (
-                    filteredRows.map((r) => (
+                    paginatedRows.map((r) => (
                       <TableRow key={r.id}>
                         <TD className="font-medium text-slate-900">
                           {r.training_name}
@@ -568,6 +581,20 @@ export default function PendaftaranPelatihanPage() {
                 </TableBody>
               </Table>
             </div>
+            {filteredRows.length > 0 && (
+              <div className="border-t border-slate-100 px-4 py-4 sm:px-5">
+                <Pagination
+                  page={page}
+                  pageSize={pageSize}
+                  total={filteredRows.length}
+                  onPageChange={setPage}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setPage(1);
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </main>

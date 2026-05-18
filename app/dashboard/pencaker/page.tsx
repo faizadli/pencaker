@@ -404,6 +404,20 @@ export default function PencakerPage() {
     load();
   }, [searchTerm, permsLoaded]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [
+    searchTerm,
+    pageSize,
+    filterAgeMin,
+    filterAgeMax,
+    filterRegDateStart,
+    filterRegDateEnd,
+    filterMaritalStatus,
+    filterEducationLevel,
+    filterEducationMajor,
+  ]);
+
   if (loading || !permsLoaded) {
     return (
       <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
@@ -646,6 +660,22 @@ export default function PencakerPage() {
               {filteredPencakers.length > 0 ? (
                 <>
                   <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+                    <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <h2 className="text-lg font-bold text-slate-900">
+                            Daftar pencaker
+                          </h2>
+                          <p className="mt-1 text-sm text-slate-500">
+                            Profil pencari kerja terdaftar beserta status AK1.
+                          </p>
+                        </div>
+                        <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                          <i className="ri-team-line text-primary" />
+                          {filteredPencakers.length} pencaker
+                        </span>
+                      </div>
+                    </div>
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHead>
@@ -828,19 +858,18 @@ export default function PencakerPage() {
                         </TableBody>
                       </Table>
                     </div>
-                  </div>
-
-                  <div className="mt-2">
-                    <Pagination
-                      page={page}
-                      pageSize={pageSize}
-                      total={filteredPencakers.length}
-                      onPageChange={setPage}
-                      onPageSizeChange={(s) => {
-                        setPageSize(s);
-                        setPage(1);
-                      }}
-                    />
+                    <div className="border-t border-slate-100 px-4 py-4 sm:px-5">
+                      <Pagination
+                        page={page}
+                        pageSize={pageSize}
+                        total={filteredPencakers.length}
+                        onPageChange={setPage}
+                        onPageSizeChange={(size) => {
+                          setPageSize(size);
+                          setPage(1);
+                        }}
+                      />
+                    </div>
                   </div>
                 </>
               ) : (

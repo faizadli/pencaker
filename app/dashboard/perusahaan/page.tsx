@@ -257,6 +257,10 @@ export default function PerusahaanPage() {
     loadCompanies();
   }, [statusFilter, searchTerm, permsLoaded, uiToApiStatus, page, pageSize]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, statusFilter, pageSize]);
+
   const filteredPerusahaan = perusahaanList.filter((p: Company) => {
     const nama = String(p.company_name || "");
     const sektor = String(p.kelurahan || p.kecamatan || "");
@@ -436,9 +440,28 @@ export default function PerusahaanPage() {
           </div>
 
           {filteredPerusahaan.length > 0 ? (
-            <>
+            <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+              <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">
+                      Daftar perusahaan
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Mitra terdaftar beserta status verifikasi dan ringkasan
+                      lowongan.
+                    </p>
+                  </div>
+                  <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                    <i className="ri-building-line text-primary" />
+                    {total > 0
+                      ? `${filteredPerusahaan.length} / ${total} perusahaan`
+                      : `${filteredPerusahaan.length} perusahaan`}
+                  </span>
+                </div>
+              </div>
               {viewMode === "grid" ? (
-                <CardGrid className="gap-5 xl:grid-cols-3">
+                <CardGrid className="gap-5 p-4 sm:p-5 xl:grid-cols-3">
                   {filteredPerusahaan.map((p) => (
                     <div
                       key={p.id}
@@ -537,7 +560,7 @@ export default function PerusahaanPage() {
                   ))}
                 </CardGrid>
               ) : (
-                <Card className="overflow-hidden !rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02] [&>div]:!p-0">
+                <Card className="overflow-hidden border-0 !shadow-none ring-0 [&>div]:!p-0">
                   <Table className="hidden sm:block">
                     <TableHead>
                       <tr>
@@ -723,19 +746,19 @@ export default function PerusahaanPage() {
                 </Card>
               )}
 
-              <div className="pt-1">
+              <div className="border-t border-slate-100 px-4 py-4 sm:px-5">
                 <Pagination
                   page={page}
                   pageSize={pageSize}
                   total={total || filteredPerusahaan.length}
-                  onPageChange={(p) => setPage(p)}
-                  onPageSizeChange={(s) => {
-                    setPageSize(s);
+                  onPageChange={setPage}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
                     setPage(1);
                   }}
                 />
               </div>
-            </>
+            </div>
           ) : (
             <div className="rounded-2xl border border-slate-200/90 bg-white py-12 text-center shadow-sm ring-1 ring-slate-950/[0.02]">
               <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">

@@ -141,7 +141,11 @@ export default function UsersPage() {
           }
         }
         const resp = await listUsers(
-          { page, limit: pageSize },
+          {
+            page,
+            limit: pageSize,
+            ...(roleFilter !== "all" ? { role: roleFilter } : {}),
+          },
           { noCache: true },
         );
         const rows = resp.data as UserListItem[];
@@ -168,18 +172,7 @@ export default function UsersPage() {
       }
     }
     load();
-  }, [router, page, pageSize]);
-
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      (user.nama || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.telepon || "").toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    const matchesStatus =
-      statusFilter === "all" || user.status === statusFilter;
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+  }, [router, page, pageSize, roleFilter]);
 
   const handleAdd = () => {
     setForm({
@@ -305,7 +298,11 @@ export default function UsersPage() {
         }
       }
       const resp = await listUsers(
-        { page, limit: pageSize },
+        {
+          page,
+          limit: pageSize,
+          ...(roleFilter !== "all" ? { role: roleFilter } : {}),
+        },
         { noCache: true },
       );
       const rows = resp.data as UserListItem[];
@@ -323,6 +320,8 @@ export default function UsersPage() {
       }));
       setUsers(mapped);
       window.__usersIds = rows.map((u) => u.id);
+      const p = resp.pagination;
+      if (p) setTotal(p.total);
       setIsModalOpen(false);
       setEditUser(null);
       setSubmitted(false);
@@ -341,7 +340,11 @@ export default function UsersPage() {
         if (!idStr) throw new Error("id not found");
         await deleteUser(idStr);
         const resp = await listUsers(
-          { page, limit: pageSize },
+          {
+            page,
+            limit: pageSize,
+            ...(roleFilter !== "all" ? { role: roleFilter } : {}),
+          },
           { noCache: true },
         );
         const rows = resp.data as UserListItem[];
@@ -359,6 +362,8 @@ export default function UsersPage() {
         }));
         setUsers(mapped);
         window.__usersIds = rows.map((u) => u.id);
+        const p = resp.pagination;
+        if (p) setTotal(p.total);
         showSuccess("Pengguna dihapus");
       } catch {
         showError("Gagal menghapus user");
@@ -421,6 +426,24 @@ export default function UsersPage() {
     { value: "Nonaktif", label: "Nonaktif" },
   ];
 
+  const filteredUsers = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+    return users.filter((user) => {
+      const matchesSearch =
+        (user.nama || "").toLowerCase().includes(term) ||
+        (user.email || "").toLowerCase().includes(term) ||
+        (user.telepon || "").toLowerCase().includes(term);
+      const matchesRole = roleFilter === "all" || user.role === roleFilter;
+      const matchesStatus =
+        statusFilter === "all" || user.status === statusFilter;
+      return matchesSearch && matchesRole && matchesStatus;
+    });
+  }, [users, searchTerm, roleFilter, statusFilter]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, roleFilter, statusFilter, pageSize]);
+
   if (loading) {
     return (
       <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
@@ -437,23 +460,17 @@ export default function UsersPage() {
         <div className="w-full space-y-8">
           <header className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
             <div className="h-1 bg-gradient-to-r from-primary via-primary-light to-secondary" />
-            <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-                  User management
-                </p>
-                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                  Manajemen pengguna dan hak akses
-                </h1>
-                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
-                  Kelola admin, atur role, dan kontrol akses sistem dari satu
-                  halaman yang rapi untuk desktop maupun mobile.
-                </p>
-              </div>
-              <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                <i className="ri-shield-user-line" aria-hidden />
-                {filteredUsers.length} pengguna tampil
-              </span>
+            <div className="p-6 sm:p-8">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                User management
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                Manajemen pengguna dan hak akses
+              </h1>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                Kelola admin, atur role, dan kontrol akses sistem dari satu
+                halaman yang rapi untuk desktop maupun mobile.
+              </p>
             </div>
           </header>
 
@@ -537,8 +554,27 @@ export default function UsersPage() {
           </div>
 
           {filteredUsers.length > 0 ? (
-            <>
-              <Card className="overflow-hidden !rounded-2xl !border-slate-200/90 !shadow-sm ring-1 ring-slate-950/[0.02] [&>div]:!p-0">
+            <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+              <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">
+                      Daftar pengguna
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Akun terdaftar beserta role, status, dan riwayat login
+                      terakhir.
+                    </p>
+                  </div>
+                  <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                    <i className="ri-group-line text-primary" aria-hidden />
+                    {total > 0
+                      ? `${filteredUsers.length} / ${total} pengguna`
+                      : `${filteredUsers.length} pengguna`}
+                  </span>
+                </div>
+              </div>
+              <Card className="overflow-hidden border-0 !shadow-none ring-0 [&>div]:!p-0">
                 <Table className="hidden sm:block">
                   <TableHead>
                     <TableRow>
@@ -674,19 +710,19 @@ export default function UsersPage() {
                 </div>
               </Card>
 
-              <div className="pt-1">
+              <div className="border-t border-slate-100 px-4 py-4 sm:px-5">
                 <Pagination
                   page={page}
                   pageSize={pageSize}
                   total={total || filteredUsers.length}
-                  onPageChange={(p) => setPage(p)}
-                  onPageSizeChange={(s) => {
-                    setPageSize(s);
+                  onPageChange={setPage}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
                     setPage(1);
                   }}
                 />
               </div>
-            </>
+            </div>
           ) : (
             <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm ring-1 ring-slate-950/[0.02]">
               <EmptyState

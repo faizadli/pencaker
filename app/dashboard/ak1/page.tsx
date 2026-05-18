@@ -1971,6 +1971,10 @@ export default function Ak1Page() {
   );
 
   useEffect(() => {
+    setPage(1);
+  }, [searchTerm, statusFilter, pageSize]);
+
+  useEffect(() => {
     async function bootPerms() {
       try {
         const rolesResp = await listRoles();
@@ -2715,506 +2719,27 @@ export default function Ak1Page() {
                   </div>
                 </div>
               </div>
-              <Card
-                className={`overflow-hidden ${cardSurfaceClass} [&>div]:!p-0`}
-              >
-                {viewMode === "grid" ? (
-                  <CardGrid>
-                    {paginatedAk1.map((r) => (
-                      <div
-                        key={`ak1-${r.candidate_id}-${r.nik}`}
-                        className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                      >
-                        <div className="border-b border-slate-200/80 bg-gradient-to-r from-slate-50 to-slate-100/80 p-4">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-bold leading-tight text-slate-900">
-                                {r.full_name || "-"}
-                              </p>
-                              <p className="truncate text-xs text-slate-500">
-                                {r.nik || "-"}
-                              </p>
-                            </div>
-                            {(() => {
-                              const ui =
-                                apiToUIStatusAk1[
-                                  String(r.status || "").toUpperCase()
-                                ] || "Menunggu Pembuatan";
-                              return (
-                                <span
-                                  className={`px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0 ${getStatusColor(ui)}`}
-                                >
-                                  {ui}
-                                </span>
-                              );
-                            })()}
-                          </div>
-                        </div>
-                        <div className="p-4">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="text-xs text-gray-600">
-                              {r.file ? (
-                                <button
-                                  className={documentLinkClass}
-                                  onClick={async () => {
-                                    const d = await presignDownload(
-                                      r.file as string,
-                                    );
-                                    window.open(d.url, "_blank");
-                                  }}
-                                >
-                                  Unduh Kartu
-                                </button>
-                              ) : (
-                                <span>-</span>
-                              )}
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                className={secondaryButtonClass}
-                                onClick={async () => {
-                                  const d = await getAk1Document(
-                                    undefined,
-                                    r.candidate_id,
-                                  );
-                                  const cand: CandidateProfileLite = {
-                                    full_name: r.full_name,
-                                    nik: r.nik,
-                                    place_of_birth: r.place_of_birth,
-                                    birthdate: r.birthdate,
-                                  };
-                                  setDetailData({
-                                    candidate: cand,
-                                    document: d.data || null,
-                                  });
-                                  setShowDetailModal(true);
-                                }}
-                              >
-                                <i className="ri-eye-line" aria-hidden />
-                                Detail
-                              </button>
-                              {permissions.includes("ak1.verify") &&
-                                r.file &&
-                                (apiToUIStatusAk1[
-                                  String(r.status || "").toUpperCase()
-                                ] || "Menunggu Pembuatan") ===
-                                  "Menunggu Pembuatan" && (
-                                  <button
-                                    className={primaryButtonClass}
-                                    onClick={async () => {
-                                      const d = await getAk1Document(
-                                        undefined,
-                                        r.candidate_id,
-                                      );
-                                      const cand: CandidateProfileLite = {
-                                        full_name: r.full_name,
-                                        nik: r.nik,
-                                        place_of_birth: r.place_of_birth,
-                                        birthdate: r.birthdate,
-                                      };
-                                      setDetailData({
-                                        candidate: cand,
-                                        document: d.data || null,
-                                      });
-                                      setVerifyPayload({
-                                        ak1_document_id:
-                                          r.ak1_document_id || "",
-                                        status: "APPROVED",
-                                      });
-                                      setShowVerifyModal(true);
-                                    }}
-                                  >
-                                    <i
-                                      className="ri-shield-check-line"
-                                      aria-hidden
-                                    />
-                                    Verifikasi
-                                  </button>
-                                )}
-                              {permissions.includes("ak1.verify") &&
-                                r.file &&
-                                (apiToUIStatusAk1[
-                                  String(r.status || "").toUpperCase()
-                                ] || "") === "Menunggu Perpanjangan" && (
-                                  <button
-                                    className={warningButtonClass}
-                                    onClick={async () => {
-                                      setGenerating(true);
-                                      try {
-                                        // Prepare renewal data
-                                        setGenMeta({
-                                          ak1_document_id: r.ak1_document_id,
-                                          candidate_id: r.candidate_id,
-                                          no_urut_pendaftaran: "", // Will be filled from doc if exists
-                                          card_created_at: "",
-                                        });
-                                        setGenCandidate({
-                                          full_name: r.full_name,
-                                          nik: r.nik,
-                                          place_of_birth: r.place_of_birth,
-                                          birthdate: r.birthdate,
-                                        } as CandidateProfileLite);
-
-                                        // Fetch templates
-                                        try {
-                                          const tList =
-                                            await listAk1Templates();
-                                          const allTemplates = tList.data || [];
-                                          setTemplates(allTemplates);
-                                          const layoutMap: Record<
-                                            string,
-                                            Ak1Layout
-                                          > = {};
-                                          await Promise.all(
-                                            allTemplates.map(
-                                              async (t: Ak1Template) => {
-                                                if (t.id) {
-                                                  try {
-                                                    const lResp =
-                                                      await getAk1Layout(t.id);
-                                                    if (lResp.data)
-                                                      layoutMap[t.id] =
-                                                        lResp.data;
-                                                  } catch {}
-                                                }
-                                              },
-                                            ),
-                                          );
-                                          setLayouts(layoutMap);
-                                        } catch {}
-
-                                        // Fetch details
-                                        const prof =
-                                          await getCandidateProfileById(
-                                            r.candidate_id,
-                                          );
-                                        const cand =
-                                          (
-                                            prof as {
-                                              data?: CandidateProfileLite | null;
-                                            }
-                                          ).data || null;
-                                        setGenCandidate(cand);
-
-                                        const d = await getAk1Document(
-                                          undefined,
-                                          r.candidate_id,
-                                        );
-                                        const doc = d.data || null;
-                                        setGenDocDetail(doc);
-
-                                        // Set existing no_urut if available
-                                        if (doc?.no_urut_pendaftaran) {
-                                          setGenMeta((prev) => ({
-                                            ...prev,
-                                            no_urut_pendaftaran:
-                                              doc.no_urut_pendaftaran,
-                                          }));
-                                        }
-                                        if (doc?.card_created_at) {
-                                          setGenMeta((prev) => ({
-                                            ...prev,
-                                            card_created_at: String(
-                                              doc.card_created_at,
-                                            ),
-                                          }));
-                                        }
-
-                                        // Prepare preview with new renewal NIP
-                                        if (doc && currentDisnaker?.nip) {
-                                          const previewDoc = { ...doc };
-                                          // Determine which slot
-                                          if (!doc.nip_renew_1) {
-                                            previewDoc.nip_renew_1 =
-                                              currentDisnaker.nip;
-                                            previewDoc.date_renew_1 =
-                                              new Date().toISOString();
-                                            // Clear future
-                                            previewDoc.nip_renew_2 = null;
-                                            previewDoc.date_renew_2 = null;
-                                            previewDoc.nip_renew_3 = null;
-                                            previewDoc.date_renew_3 = null;
-                                          } else if (!doc.nip_renew_2) {
-                                            previewDoc.nip_renew_2 =
-                                              currentDisnaker.nip;
-                                            previewDoc.date_renew_2 =
-                                              new Date().toISOString();
-                                            // Clear future
-                                            previewDoc.nip_renew_3 = null;
-                                            previewDoc.date_renew_3 = null;
-                                          } else if (!doc.nip_renew_3) {
-                                            previewDoc.nip_renew_3 =
-                                              currentDisnaker.nip;
-                                            previewDoc.date_renew_3 =
-                                              new Date().toISOString();
-                                          }
-                                          setGenDocDetail(doc);
-                                          setRenewPreviewDoc(previewDoc);
-                                        }
-
-                                        // Photo
-                                        try {
-                                          const rawPhoto = String(
-                                            doc?.pas_photo_file || "",
-                                          );
-                                          if (rawPhoto) {
-                                            const pre =
-                                              await presignDownload(rawPhoto);
-                                            setGenPasPhotoUrl(pre.url);
-                                          } else setGenPasPhotoUrl(null);
-                                        } catch {
-                                          setGenPasPhotoUrl(null);
-                                        }
-
-                                        // User data
-                                        try {
-                                          if (cand?.user_id) {
-                                            const u = await getUserById(
-                                              String(cand.user_id),
-                                            );
-                                            const env = u as {
-                                              data?: Record<string, unknown>;
-                                            };
-                                            setGenUser(
-                                              (env.data || u) as Record<
-                                                string,
-                                                unknown
-                                              >,
-                                            );
-                                          }
-                                        } catch {}
-
-                                        setShowRenewModal(true);
-                                      } catch {
-                                        showError(
-                                          "Gagal memuat data untuk perpanjangan",
-                                        );
-                                      } finally {
-                                        setGenerating(false);
-                                      }
-                                    }}
-                                  >
-                                    <i
-                                      className="ri-refresh-line"
-                                      aria-hidden
-                                    />
-                                    Perpanjangan
-                                  </button>
-                                )}
-                              {permissions.includes("ak1.generate") &&
-                                !r.file && (
-                                  <button
-                                    className={secondaryButtonClass}
-                                    disabled={generating}
-                                    onClick={async () => {
-                                      setGenerating(true);
-                                      try {
-                                        setGenMeta({
-                                          ak1_document_id: r.ak1_document_id,
-                                          candidate_id: r.candidate_id,
-                                          no_urut_pendaftaran: "",
-                                          card_created_at: "",
-                                        });
-                                        setGenCandidate({
-                                          full_name: r.full_name,
-                                          nik: r.nik,
-                                          place_of_birth: r.place_of_birth,
-                                          birthdate: r.birthdate,
-                                        } as CandidateProfileLite);
-                                        setGenDocDetail(null);
-                                        try {
-                                          const tList =
-                                            await listAk1Templates();
-                                          const allTemplates = tList.data || [];
-                                          setTemplates(allTemplates);
-
-                                          const layoutMap: Record<
-                                            string,
-                                            Ak1Layout
-                                          > = {};
-                                          await Promise.all(
-                                            allTemplates.map(
-                                              async (t: Ak1Template) => {
-                                                if (t.id) {
-                                                  try {
-                                                    const lResp =
-                                                      await getAk1Layout(t.id);
-                                                    if (lResp.data) {
-                                                      layoutMap[t.id] =
-                                                        lResp.data;
-                                                    }
-                                                  } catch {}
-                                                }
-                                              },
-                                            ),
-                                          );
-                                          setLayouts(layoutMap);
-                                        } catch (e) {
-                                          console.error(
-                                            "Error fetching templates:",
-                                            e,
-                                          );
-                                        }
-
-                                        try {
-                                          const prof =
-                                            await getCandidateProfileById(
-                                              r.candidate_id,
-                                            );
-                                          const cand =
-                                            (
-                                              prof as {
-                                                data?: CandidateProfileLite | null;
-                                              }
-                                            ).data || null;
-                                          setGenCandidate(cand);
-                                          try {
-                                            const cid = String(
-                                              cand?.user_id || "",
-                                            );
-                                            if (cid) {
-                                              const u = await getUserById(cid);
-                                              const env = u as {
-                                                data?: Record<string, unknown>;
-                                              };
-                                              const ud: Record<
-                                                string,
-                                                unknown
-                                              > =
-                                                env && env.data !== undefined
-                                                  ? (env.data as Record<
-                                                      string,
-                                                      unknown
-                                                    >)
-                                                  : (u as unknown as Record<
-                                                      string,
-                                                      unknown
-                                                    >);
-                                              setGenUser(ud || null);
-                                            }
-                                          } catch {}
-                                          const d = await getAk1Document(
-                                            undefined,
-                                            r.candidate_id,
-                                          );
-                                          setGenDocDetail(d.data || null);
-                                          await ensureGenNoUrut(
-                                            (d.data as Ak1Document | null) ??
-                                              null,
-                                          );
-                                          try {
-                                            const rawPhoto = (() => {
-                                              const env = d as {
-                                                data?: {
-                                                  pas_photo_file?: string;
-                                                };
-                                              };
-                                              return String(
-                                                env?.data?.pas_photo_file || "",
-                                              );
-                                            })();
-                                            if (rawPhoto) {
-                                              const pre =
-                                                await presignDownload(rawPhoto);
-                                              setGenPasPhotoUrl(pre.url);
-                                            } else {
-                                              setGenPasPhotoUrl(null);
-                                            }
-                                          } catch {
-                                            setGenPasPhotoUrl(null);
-                                          }
-                                          try {
-                                            const candUserId = (() => {
-                                              try {
-                                                return String(
-                                                  (
-                                                    (cand as unknown as {
-                                                      user_id?: string;
-                                                    }) || {}
-                                                  )?.user_id || "",
-                                                );
-                                              } catch {
-                                                return "";
-                                              }
-                                            })();
-                                            const docUserId = (() => {
-                                              try {
-                                                return String(
-                                                  (
-                                                    (d?.data as unknown as {
-                                                      user_id?: string;
-                                                    }) || {}
-                                                  )?.user_id || "",
-                                                );
-                                              } catch {
-                                                return "";
-                                              }
-                                            })();
-                                            const userId =
-                                              candUserId || docUserId;
-                                            if (userId) {
-                                              const u =
-                                                await getUserById(userId);
-                                              const env = u as {
-                                                data?: Record<string, unknown>;
-                                              };
-                                              const ud: Record<
-                                                string,
-                                                unknown
-                                              > =
-                                                env && env.data !== undefined
-                                                  ? (env.data as Record<
-                                                      string,
-                                                      unknown
-                                                    >)
-                                                  : (u as unknown as Record<
-                                                      string,
-                                                      unknown
-                                                    >);
-                                              setGenUser(ud || null);
-                                            }
-                                          } catch {}
-                                        } catch {}
-                                      } catch {
-                                      } finally {
-                                        setGenerating(false);
-                                      }
-                                      setShowGenerateModal(true);
-                                    }}
-                                  >
-                                    <i
-                                      className="ri-file-pdf-line"
-                                      aria-hidden
-                                    />
-                                    {generating ? "Loading..." : "Generate"}
-                                  </button>
-                                )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </CardGrid>
-                ) : (
-                  <>
-                    <Table className="hidden sm:block">
-                      <TableHead>
-                        <TableRow>
-                          <TH>Nama</TH>
-                          <TH>NIK</TH>
-                          <TH>Status</TH>
-                          <TH>File</TH>
-                          <TH>Aksi</TH>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {paginatedAk1.map((r, i) => (
-                          <TableRow key={`${r.candidate_id}-${r.nik}-${i}`}>
-                            <TD className="text-slate-900">
-                              {r.full_name || "-"}
-                            </TD>
-                            <TD className="text-slate-900">{r.nik || "-"}</TD>
-                            <TD>
+              <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+                <Card
+                  className={`overflow-hidden border-0 shadow-none ring-0 ${cardSurfaceClass} [&>div]:!p-0`}
+                >
+                  {viewMode === "grid" ? (
+                    <CardGrid>
+                      {paginatedAk1.map((r) => (
+                        <div
+                          key={`ak1-${r.candidate_id}-${r.nik}`}
+                          className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                        >
+                          <div className="border-b border-slate-200/80 bg-gradient-to-r from-slate-50 to-slate-100/80 p-4">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-bold leading-tight text-slate-900">
+                                  {r.full_name || "-"}
+                                </p>
+                                <p className="truncate text-xs text-slate-500">
+                                  {r.nik || "-"}
+                                </p>
+                              </div>
                               {(() => {
                                 const ui =
                                   apiToUIStatusAk1[
@@ -3222,32 +2747,34 @@ export default function Ak1Page() {
                                   ] || "Menunggu Pembuatan";
                                 return (
                                   <span
-                                    className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ui)}`}
+                                    className={`px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0 ${getStatusColor(ui)}`}
                                   >
                                     {ui}
                                   </span>
                                 );
                               })()}
-                            </TD>
-                            <TD>
-                              {r.file ? (
-                                <button
-                                  className={documentLinkClass}
-                                  onClick={async () => {
-                                    const d = await presignDownload(
-                                      r.file as string,
-                                    );
-                                    window.open(d.url, "_blank");
-                                  }}
-                                >
-                                  Unduh
-                                </button>
-                              ) : (
-                                "-"
-                              )}
-                            </TD>
-                            <TD>
-                              <div className="flex flex-wrap gap-2">
+                            </div>
+                          </div>
+                          <div className="p-4">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="text-xs text-gray-600">
+                                {r.file ? (
+                                  <button
+                                    className={documentLinkClass}
+                                    onClick={async () => {
+                                      const d = await presignDownload(
+                                        r.file as string,
+                                      );
+                                      window.open(d.url, "_blank");
+                                    }}
+                                  >
+                                    Unduh Kartu
+                                  </button>
+                                ) : (
+                                  <span>-</span>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
                                 <button
                                   className={secondaryButtonClass}
                                   onClick={async () => {
@@ -3323,7 +2850,7 @@ export default function Ak1Page() {
                                           setGenMeta({
                                             ak1_document_id: r.ak1_document_id,
                                             candidate_id: r.candidate_id,
-                                            no_urut_pendaftaran: "",
+                                            no_urut_pendaftaran: "", // Will be filled from doc if exists
                                             card_created_at: "",
                                           });
                                           setGenCandidate({
@@ -3384,6 +2911,7 @@ export default function Ak1Page() {
                                           const doc = d.data || null;
                                           setGenDocDetail(doc);
 
+                                          // Set existing no_urut if available
                                           if (doc?.no_urut_pendaftaran) {
                                             setGenMeta((prev) => ({
                                               ...prev,
@@ -3403,6 +2931,7 @@ export default function Ak1Page() {
                                           // Prepare preview with new renewal NIP
                                           if (doc && currentDisnaker?.nip) {
                                             const previewDoc = { ...doc };
+                                            // Determine which slot
                                             if (!doc.nip_renew_1) {
                                               previewDoc.nip_renew_1 =
                                                 currentDisnaker.nip;
@@ -3501,43 +3030,43 @@ export default function Ak1Page() {
                                             birthdate: r.birthdate,
                                           } as CandidateProfileLite);
                                           setGenDocDetail(null);
+                                          try {
+                                            const tList =
+                                              await listAk1Templates();
+                                            const allTemplates =
+                                              tList.data || [];
+                                            setTemplates(allTemplates);
 
-                                          // 1. Fetch all templates
-                                          const tpListResp =
-                                            await listAk1Templates();
-                                          const allTps = (tpListResp.data ||
-                                            []) as Ak1Template[];
-                                          setTemplates(allTps);
-
-                                          // 2. Fetch all layouts
-                                          const layoutMap: Record<
-                                            string,
-                                            Ak1Layout
-                                          > = {};
-                                          await Promise.all(
-                                            allTps.map(async (t) => {
-                                              if (t.id) {
-                                                try {
-                                                  const resp =
-                                                    await getAk1Layout(t.id);
-                                                  const ly = (
-                                                    resp as {
-                                                      data?: Ak1Layout | null;
-                                                    }
-                                                  ).data;
-                                                  if (ly) {
-                                                    layoutMap[t.id] = ly;
+                                            const layoutMap: Record<
+                                              string,
+                                              Ak1Layout
+                                            > = {};
+                                            await Promise.all(
+                                              allTemplates.map(
+                                                async (t: Ak1Template) => {
+                                                  if (t.id) {
+                                                    try {
+                                                      const lResp =
+                                                        await getAk1Layout(
+                                                          t.id,
+                                                        );
+                                                      if (lResp.data) {
+                                                        layoutMap[t.id] =
+                                                          lResp.data;
+                                                      }
+                                                    } catch {}
                                                   }
-                                                } catch (e) {
-                                                  console.error(
-                                                    `Failed to fetch layout for template ${t.id}`,
-                                                    e,
-                                                  );
-                                                }
-                                              }
-                                            }),
-                                          );
-                                          setLayouts(layoutMap);
+                                                },
+                                              ),
+                                            );
+                                            setLayouts(layoutMap);
+                                          } catch (e) {
+                                            console.error(
+                                              "Error fetching templates:",
+                                              e,
+                                            );
+                                          }
+
                                           try {
                                             const prof =
                                               await getCandidateProfileById(
@@ -3682,314 +3211,652 @@ export default function Ak1Page() {
                                     </button>
                                   )}
                               </div>
-                            </TD>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                    <div className="space-y-3 p-3 sm:hidden">
-                      {paginatedAk1.map((r, idx) => (
-                        <div
-                          key={`m-${r.candidate_id}-${r.nik}-${idx}`}
-                          className="rounded-2xl border border-slate-200/90 bg-slate-50/70 p-4 shadow-sm"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="min-w-0">
-                              <p className="truncate font-semibold text-slate-900">
-                                {r.full_name || "-"}
-                              </p>
-                              <p className="truncate text-xs text-slate-500">
-                                {r.nik || "-"}
-                              </p>
                             </div>
-                            {(() => {
-                              const ui =
-                                apiToUIStatusAk1[
-                                  String(r.status || "").toUpperCase()
-                                ] || "Menunggu Pembuatan";
-                              return (
-                                <span
-                                  className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(ui)}`}
-                                >
-                                  {ui}
-                                </span>
-                              );
-                            })()}
                           </div>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            <button
-                              className={secondaryButtonClass}
-                              onClick={async () => {
-                                const d = await getAk1Document(
-                                  undefined,
-                                  r.candidate_id,
-                                );
-                                const cand: CandidateProfileLite = {
-                                  full_name: r.full_name,
-                                  nik: r.nik,
-                                  place_of_birth: r.place_of_birth,
-                                  birthdate: r.birthdate,
-                                };
-                                setDetailData({
-                                  candidate: cand,
-                                  document: d.data || null,
-                                });
-                                setShowDetailModal(true);
-                              }}
-                            >
-                              <i className="ri-eye-line" aria-hidden />
-                              Detail
-                            </button>
-                            {permissions.includes("ak1.verify") &&
-                              r.file &&
-                              (apiToUIStatusAk1[
-                                String(r.status || "").toUpperCase()
-                              ] || "Menunggu Pembuatan") ===
-                                "Menunggu Pembuatan" && (
-                                <button
-                                  className={primaryButtonClass}
-                                  onClick={async () => {
-                                    const d = await getAk1Document(
-                                      undefined,
-                                      r.candidate_id,
-                                    );
-                                    const cand: CandidateProfileLite = {
-                                      full_name: r.full_name,
-                                      nik: r.nik,
-                                      place_of_birth: r.place_of_birth,
-                                      birthdate: r.birthdate,
-                                    };
-                                    setDetailData({
-                                      candidate: cand,
-                                      document: d.data || null,
-                                    });
-                                    setVerifyPayload({
-                                      ak1_document_id: r.ak1_document_id || "",
-                                      status: "APPROVED",
-                                    });
-                                    setShowVerifyModal(true);
-                                  }}
-                                >
-                                  <i
-                                    className="ri-shield-check-line"
-                                    aria-hidden
-                                  />
-                                  Verifikasi
-                                </button>
-                              )}
-                            {permissions.includes("ak1.verify") &&
-                              r.file &&
-                              (apiToUIStatusAk1[
-                                String(r.status || "").toUpperCase()
-                              ] || "") === "Menunggu Perpanjangan" && (
-                                <button
-                                  className={warningButtonClass}
-                                  onClick={async () => {
-                                    setGenerating(true);
-                                    try {
-                                      setGenMeta({
-                                        ak1_document_id: r.ak1_document_id,
-                                        candidate_id: r.candidate_id,
-                                        no_urut_pendaftaran: "",
-                                        card_created_at: "",
-                                      });
-                                      setGenCandidate({
-                                        full_name: r.full_name,
-                                        nik: r.nik,
-                                        place_of_birth: r.place_of_birth,
-                                        birthdate: r.birthdate,
-                                      } as CandidateProfileLite);
-                                      try {
-                                        const tList = await listAk1Templates();
-                                        const allTemplates = tList.data || [];
-                                        setTemplates(allTemplates);
-                                        const layoutMap: Record<
-                                          string,
-                                          Ak1Layout
-                                        > = {};
-                                        await Promise.all(
-                                          allTemplates.map(
-                                            async (t: Ak1Template) => {
-                                              if (t.id) {
-                                                try {
-                                                  const lResp =
-                                                    await getAk1Layout(t.id);
-                                                  if (lResp.data)
-                                                    layoutMap[t.id] =
-                                                      lResp.data;
-                                                } catch {}
-                                              }
-                                            },
-                                          ),
-                                        );
-                                        setLayouts(layoutMap);
-                                      } catch {}
-
-                                      const prof =
-                                        await getCandidateProfileById(
-                                          r.candidate_id,
-                                        );
-                                      const cand =
-                                        (
-                                          prof as {
-                                            data?: CandidateProfileLite | null;
-                                          }
-                                        ).data || null;
-                                      setGenCandidate(cand);
-
+                        </div>
+                      ))}
+                    </CardGrid>
+                  ) : (
+                    <>
+                      <Table className="hidden sm:block">
+                        <TableHead>
+                          <TableRow>
+                            <TH>Nama</TH>
+                            <TH>NIK</TH>
+                            <TH>Status</TH>
+                            <TH>File</TH>
+                            <TH>Aksi</TH>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {paginatedAk1.map((r, i) => (
+                            <TableRow key={`${r.candidate_id}-${r.nik}-${i}`}>
+                              <TD className="text-slate-900">
+                                {r.full_name || "-"}
+                              </TD>
+                              <TD className="text-slate-900">{r.nik || "-"}</TD>
+                              <TD>
+                                {(() => {
+                                  const ui =
+                                    apiToUIStatusAk1[
+                                      String(r.status || "").toUpperCase()
+                                    ] || "Menunggu Pembuatan";
+                                  return (
+                                    <span
+                                      className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ui)}`}
+                                    >
+                                      {ui}
+                                    </span>
+                                  );
+                                })()}
+                              </TD>
+                              <TD>
+                                {r.file ? (
+                                  <button
+                                    className={documentLinkClass}
+                                    onClick={async () => {
+                                      const d = await presignDownload(
+                                        r.file as string,
+                                      );
+                                      window.open(d.url, "_blank");
+                                    }}
+                                  >
+                                    Unduh
+                                  </button>
+                                ) : (
+                                  "-"
+                                )}
+                              </TD>
+                              <TD>
+                                <div className="flex flex-wrap gap-2">
+                                  <button
+                                    className={secondaryButtonClass}
+                                    onClick={async () => {
                                       const d = await getAk1Document(
                                         undefined,
                                         r.candidate_id,
                                       );
-                                      const doc = d.data || null;
-                                      setGenDocDetail(doc);
-
-                                      if (doc?.no_urut_pendaftaran) {
-                                        setGenMeta((prev) => ({
-                                          ...prev,
-                                          no_urut_pendaftaran:
-                                            doc.no_urut_pendaftaran,
-                                        }));
-                                      }
-                                      if (doc?.card_created_at) {
-                                        setGenMeta((prev) => ({
-                                          ...prev,
-                                          card_created_at: String(
-                                            doc.card_created_at,
-                                          ),
-                                        }));
-                                      }
-
-                                      if (doc && currentDisnaker?.nip) {
-                                        const previewDoc = { ...doc };
-                                        if (!doc.nip_renew_1) {
-                                          previewDoc.nip_renew_1 =
-                                            currentDisnaker.nip;
-                                          previewDoc.date_renew_1 =
-                                            new Date().toISOString();
-                                          // Clear future
-                                          previewDoc.nip_renew_2 = null;
-                                          previewDoc.date_renew_2 = null;
-                                          previewDoc.nip_renew_3 = null;
-                                          previewDoc.date_renew_3 = null;
-                                        } else if (!doc.nip_renew_2) {
-                                          previewDoc.nip_renew_2 =
-                                            currentDisnaker.nip;
-                                          previewDoc.date_renew_2 =
-                                            new Date().toISOString();
-                                          // Clear future
-                                          previewDoc.nip_renew_3 = null;
-                                          previewDoc.date_renew_3 = null;
-                                        } else if (!doc.nip_renew_3) {
-                                          previewDoc.nip_renew_3 =
-                                            currentDisnaker.nip;
-                                          previewDoc.date_renew_3 =
-                                            new Date().toISOString();
-                                        }
-                                        setGenDocDetail(doc);
-                                        setRenewPreviewDoc(previewDoc);
-                                      }
-
-                                      try {
-                                        const rawPhoto = String(
-                                          doc?.pas_photo_file || "",
-                                        );
-                                        if (rawPhoto) {
-                                          const pre =
-                                            await presignDownload(rawPhoto);
-                                          setGenPasPhotoUrl(pre.url);
-                                        } else setGenPasPhotoUrl(null);
-                                      } catch {
-                                        setGenPasPhotoUrl(null);
-                                      }
-
-                                      try {
-                                        if (cand?.user_id) {
-                                          const u = await getUserById(
-                                            String(cand.user_id),
-                                          );
-                                          const env = u as {
-                                            data?: Record<string, unknown>;
-                                          };
-                                          setGenUser(
-                                            (env.data || u) as Record<
-                                              string,
-                                              unknown
-                                            >,
-                                          );
-                                        }
-                                      } catch {}
-
-                                      setShowRenewModal(true);
-                                    } catch {
-                                      showError(
-                                        "Gagal memuat data untuk perpanjangan",
-                                      );
-                                    } finally {
-                                      setGenerating(false);
-                                    }
-                                  }}
-                                >
-                                  <i className="ri-refresh-line" aria-hidden />
-                                  Perpanjangan
-                                </button>
-                              )}
-                            {permissions.includes("ak1.generate") &&
-                              !r.file && (
-                                <button
-                                  className={secondaryButtonClass}
-                                  disabled={generating}
-                                  onClick={async () => {
-                                    setGenerating(true);
-                                    try {
-                                      setGenMeta({
-                                        ak1_document_id: r.ak1_document_id,
-                                        candidate_id: r.candidate_id,
-                                        no_urut_pendaftaran: "",
-                                        card_created_at: "",
-                                      });
-                                      setGenCandidate({
+                                      const cand: CandidateProfileLite = {
                                         full_name: r.full_name,
                                         nik: r.nik,
                                         place_of_birth: r.place_of_birth,
                                         birthdate: r.birthdate,
-                                      } as CandidateProfileLite);
-                                      setGenDocDetail(null);
+                                      };
+                                      setDetailData({
+                                        candidate: cand,
+                                        document: d.data || null,
+                                      });
+                                      setShowDetailModal(true);
+                                    }}
+                                  >
+                                    <i className="ri-eye-line" aria-hidden />
+                                    Detail
+                                  </button>
+                                  {permissions.includes("ak1.verify") &&
+                                    r.file &&
+                                    (apiToUIStatusAk1[
+                                      String(r.status || "").toUpperCase()
+                                    ] || "Menunggu Pembuatan") ===
+                                      "Menunggu Pembuatan" && (
+                                      <button
+                                        className={primaryButtonClass}
+                                        onClick={async () => {
+                                          const d = await getAk1Document(
+                                            undefined,
+                                            r.candidate_id,
+                                          );
+                                          const cand: CandidateProfileLite = {
+                                            full_name: r.full_name,
+                                            nik: r.nik,
+                                            place_of_birth: r.place_of_birth,
+                                            birthdate: r.birthdate,
+                                          };
+                                          setDetailData({
+                                            candidate: cand,
+                                            document: d.data || null,
+                                          });
+                                          setVerifyPayload({
+                                            ak1_document_id:
+                                              r.ak1_document_id || "",
+                                            status: "APPROVED",
+                                          });
+                                          setShowVerifyModal(true);
+                                        }}
+                                      >
+                                        <i
+                                          className="ri-shield-check-line"
+                                          aria-hidden
+                                        />
+                                        Verifikasi
+                                      </button>
+                                    )}
+                                  {permissions.includes("ak1.verify") &&
+                                    r.file &&
+                                    (apiToUIStatusAk1[
+                                      String(r.status || "").toUpperCase()
+                                    ] || "") === "Menunggu Perpanjangan" && (
+                                      <button
+                                        className={warningButtonClass}
+                                        onClick={async () => {
+                                          setGenerating(true);
+                                          try {
+                                            // Prepare renewal data
+                                            setGenMeta({
+                                              ak1_document_id:
+                                                r.ak1_document_id,
+                                              candidate_id: r.candidate_id,
+                                              no_urut_pendaftaran: "",
+                                              card_created_at: "",
+                                            });
+                                            setGenCandidate({
+                                              full_name: r.full_name,
+                                              nik: r.nik,
+                                              place_of_birth: r.place_of_birth,
+                                              birthdate: r.birthdate,
+                                            } as CandidateProfileLite);
 
-                                      try {
-                                        const tList = await listAk1Templates();
-                                        const allTemplates = tList.data || [];
-                                        setTemplates(allTemplates);
+                                            // Fetch templates
+                                            try {
+                                              const tList =
+                                                await listAk1Templates();
+                                              const allTemplates =
+                                                tList.data || [];
+                                              setTemplates(allTemplates);
+                                              const layoutMap: Record<
+                                                string,
+                                                Ak1Layout
+                                              > = {};
+                                              await Promise.all(
+                                                allTemplates.map(
+                                                  async (t: Ak1Template) => {
+                                                    if (t.id) {
+                                                      try {
+                                                        const lResp =
+                                                          await getAk1Layout(
+                                                            t.id,
+                                                          );
+                                                        if (lResp.data)
+                                                          layoutMap[t.id] =
+                                                            lResp.data;
+                                                      } catch {}
+                                                    }
+                                                  },
+                                                ),
+                                              );
+                                              setLayouts(layoutMap);
+                                            } catch {}
 
-                                        const layoutMap: Record<
-                                          string,
-                                          Ak1Layout
-                                        > = {};
-                                        await Promise.all(
-                                          allTemplates.map(
-                                            async (t: Ak1Template) => {
-                                              if (t.id) {
-                                                try {
-                                                  const lResp =
-                                                    await getAk1Layout(t.id);
-                                                  if (lResp.data) {
-                                                    layoutMap[t.id] =
-                                                      lResp.data;
-                                                  }
-                                                } catch {}
+                                            // Fetch details
+                                            const prof =
+                                              await getCandidateProfileById(
+                                                r.candidate_id,
+                                              );
+                                            const cand =
+                                              (
+                                                prof as {
+                                                  data?: CandidateProfileLite | null;
+                                                }
+                                              ).data || null;
+                                            setGenCandidate(cand);
+
+                                            const d = await getAk1Document(
+                                              undefined,
+                                              r.candidate_id,
+                                            );
+                                            const doc = d.data || null;
+                                            setGenDocDetail(doc);
+
+                                            if (doc?.no_urut_pendaftaran) {
+                                              setGenMeta((prev) => ({
+                                                ...prev,
+                                                no_urut_pendaftaran:
+                                                  doc.no_urut_pendaftaran,
+                                              }));
+                                            }
+                                            if (doc?.card_created_at) {
+                                              setGenMeta((prev) => ({
+                                                ...prev,
+                                                card_created_at: String(
+                                                  doc.card_created_at,
+                                                ),
+                                              }));
+                                            }
+
+                                            // Prepare preview with new renewal NIP
+                                            if (doc && currentDisnaker?.nip) {
+                                              const previewDoc = { ...doc };
+                                              if (!doc.nip_renew_1) {
+                                                previewDoc.nip_renew_1 =
+                                                  currentDisnaker.nip;
+                                                previewDoc.date_renew_1 =
+                                                  new Date().toISOString();
+                                                // Clear future
+                                                previewDoc.nip_renew_2 = null;
+                                                previewDoc.date_renew_2 = null;
+                                                previewDoc.nip_renew_3 = null;
+                                                previewDoc.date_renew_3 = null;
+                                              } else if (!doc.nip_renew_2) {
+                                                previewDoc.nip_renew_2 =
+                                                  currentDisnaker.nip;
+                                                previewDoc.date_renew_2 =
+                                                  new Date().toISOString();
+                                                // Clear future
+                                                previewDoc.nip_renew_3 = null;
+                                                previewDoc.date_renew_3 = null;
+                                              } else if (!doc.nip_renew_3) {
+                                                previewDoc.nip_renew_3 =
+                                                  currentDisnaker.nip;
+                                                previewDoc.date_renew_3 =
+                                                  new Date().toISOString();
                                               }
-                                            },
-                                          ),
-                                        );
-                                        setLayouts(layoutMap);
-                                      } catch (e) {
-                                        console.error(
-                                          "Error fetching templates:",
-                                          e,
-                                        );
-                                      }
+                                              setGenDocDetail(doc);
+                                              setRenewPreviewDoc(previewDoc);
+                                            }
 
+                                            // Photo
+                                            try {
+                                              const rawPhoto = String(
+                                                doc?.pas_photo_file || "",
+                                              );
+                                              if (rawPhoto) {
+                                                const pre =
+                                                  await presignDownload(
+                                                    rawPhoto,
+                                                  );
+                                                setGenPasPhotoUrl(pre.url);
+                                              } else setGenPasPhotoUrl(null);
+                                            } catch {
+                                              setGenPasPhotoUrl(null);
+                                            }
+
+                                            // User data
+                                            try {
+                                              if (cand?.user_id) {
+                                                const u = await getUserById(
+                                                  String(cand.user_id),
+                                                );
+                                                const env = u as {
+                                                  data?: Record<
+                                                    string,
+                                                    unknown
+                                                  >;
+                                                };
+                                                setGenUser(
+                                                  (env.data || u) as Record<
+                                                    string,
+                                                    unknown
+                                                  >,
+                                                );
+                                              }
+                                            } catch {}
+
+                                            setShowRenewModal(true);
+                                          } catch {
+                                            showError(
+                                              "Gagal memuat data untuk perpanjangan",
+                                            );
+                                          } finally {
+                                            setGenerating(false);
+                                          }
+                                        }}
+                                      >
+                                        <i
+                                          className="ri-refresh-line"
+                                          aria-hidden
+                                        />
+                                        Perpanjangan
+                                      </button>
+                                    )}
+                                  {permissions.includes("ak1.generate") &&
+                                    !r.file && (
+                                      <button
+                                        className={secondaryButtonClass}
+                                        disabled={generating}
+                                        onClick={async () => {
+                                          setGenerating(true);
+                                          try {
+                                            setGenMeta({
+                                              ak1_document_id:
+                                                r.ak1_document_id,
+                                              candidate_id: r.candidate_id,
+                                              no_urut_pendaftaran: "",
+                                              card_created_at: "",
+                                            });
+                                            setGenCandidate({
+                                              full_name: r.full_name,
+                                              nik: r.nik,
+                                              place_of_birth: r.place_of_birth,
+                                              birthdate: r.birthdate,
+                                            } as CandidateProfileLite);
+                                            setGenDocDetail(null);
+
+                                            // 1. Fetch all templates
+                                            const tpListResp =
+                                              await listAk1Templates();
+                                            const allTps = (tpListResp.data ||
+                                              []) as Ak1Template[];
+                                            setTemplates(allTps);
+
+                                            // 2. Fetch all layouts
+                                            const layoutMap: Record<
+                                              string,
+                                              Ak1Layout
+                                            > = {};
+                                            await Promise.all(
+                                              allTps.map(async (t) => {
+                                                if (t.id) {
+                                                  try {
+                                                    const resp =
+                                                      await getAk1Layout(t.id);
+                                                    const ly = (
+                                                      resp as {
+                                                        data?: Ak1Layout | null;
+                                                      }
+                                                    ).data;
+                                                    if (ly) {
+                                                      layoutMap[t.id] = ly;
+                                                    }
+                                                  } catch (e) {
+                                                    console.error(
+                                                      `Failed to fetch layout for template ${t.id}`,
+                                                      e,
+                                                    );
+                                                  }
+                                                }
+                                              }),
+                                            );
+                                            setLayouts(layoutMap);
+                                            try {
+                                              const prof =
+                                                await getCandidateProfileById(
+                                                  r.candidate_id,
+                                                );
+                                              const cand =
+                                                (
+                                                  prof as {
+                                                    data?: CandidateProfileLite | null;
+                                                  }
+                                                ).data || null;
+                                              setGenCandidate(cand);
+                                              try {
+                                                const cid = String(
+                                                  cand?.user_id || "",
+                                                );
+                                                if (cid) {
+                                                  const u =
+                                                    await getUserById(cid);
+                                                  const env = u as {
+                                                    data?: Record<
+                                                      string,
+                                                      unknown
+                                                    >;
+                                                  };
+                                                  const ud: Record<
+                                                    string,
+                                                    unknown
+                                                  > =
+                                                    env &&
+                                                    env.data !== undefined
+                                                      ? (env.data as Record<
+                                                          string,
+                                                          unknown
+                                                        >)
+                                                      : (u as unknown as Record<
+                                                          string,
+                                                          unknown
+                                                        >);
+                                                  setGenUser(ud || null);
+                                                }
+                                              } catch {}
+                                              const d = await getAk1Document(
+                                                undefined,
+                                                r.candidate_id,
+                                              );
+                                              setGenDocDetail(d.data || null);
+                                              await ensureGenNoUrut(
+                                                (d.data as Ak1Document | null) ??
+                                                  null,
+                                              );
+                                              try {
+                                                const rawPhoto = (() => {
+                                                  const env = d as {
+                                                    data?: {
+                                                      pas_photo_file?: string;
+                                                    };
+                                                  };
+                                                  return String(
+                                                    env?.data?.pas_photo_file ||
+                                                      "",
+                                                  );
+                                                })();
+                                                if (rawPhoto) {
+                                                  const pre =
+                                                    await presignDownload(
+                                                      rawPhoto,
+                                                    );
+                                                  setGenPasPhotoUrl(pre.url);
+                                                } else {
+                                                  setGenPasPhotoUrl(null);
+                                                }
+                                              } catch {
+                                                setGenPasPhotoUrl(null);
+                                              }
+                                              try {
+                                                const candUserId = (() => {
+                                                  try {
+                                                    return String(
+                                                      (
+                                                        (cand as unknown as {
+                                                          user_id?: string;
+                                                        }) || {}
+                                                      )?.user_id || "",
+                                                    );
+                                                  } catch {
+                                                    return "";
+                                                  }
+                                                })();
+                                                const docUserId = (() => {
+                                                  try {
+                                                    return String(
+                                                      (
+                                                        (d?.data as unknown as {
+                                                          user_id?: string;
+                                                        }) || {}
+                                                      )?.user_id || "",
+                                                    );
+                                                  } catch {
+                                                    return "";
+                                                  }
+                                                })();
+                                                const userId =
+                                                  candUserId || docUserId;
+                                                if (userId) {
+                                                  const u =
+                                                    await getUserById(userId);
+                                                  const env = u as {
+                                                    data?: Record<
+                                                      string,
+                                                      unknown
+                                                    >;
+                                                  };
+                                                  const ud: Record<
+                                                    string,
+                                                    unknown
+                                                  > =
+                                                    env &&
+                                                    env.data !== undefined
+                                                      ? (env.data as Record<
+                                                          string,
+                                                          unknown
+                                                        >)
+                                                      : (u as unknown as Record<
+                                                          string,
+                                                          unknown
+                                                        >);
+                                                  setGenUser(ud || null);
+                                                }
+                                              } catch {}
+                                            } catch {}
+                                          } catch {
+                                          } finally {
+                                            setGenerating(false);
+                                          }
+                                          setShowGenerateModal(true);
+                                        }}
+                                      >
+                                        <i
+                                          className="ri-file-pdf-line"
+                                          aria-hidden
+                                        />
+                                        {generating ? "Loading..." : "Generate"}
+                                      </button>
+                                    )}
+                                </div>
+                              </TD>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                      <div className="space-y-3 p-3 sm:hidden">
+                        {paginatedAk1.map((r, idx) => (
+                          <div
+                            key={`m-${r.candidate_id}-${r.nik}-${idx}`}
+                            className="rounded-2xl border border-slate-200/90 bg-slate-50/70 p-4 shadow-sm"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="min-w-0">
+                                <p className="truncate font-semibold text-slate-900">
+                                  {r.full_name || "-"}
+                                </p>
+                                <p className="truncate text-xs text-slate-500">
+                                  {r.nik || "-"}
+                                </p>
+                              </div>
+                              {(() => {
+                                const ui =
+                                  apiToUIStatusAk1[
+                                    String(r.status || "").toUpperCase()
+                                  ] || "Menunggu Pembuatan";
+                                return (
+                                  <span
+                                    className={`px-2 py-1 text-[10px] font-semibold rounded-full ${getStatusColor(ui)}`}
+                                  >
+                                    {ui}
+                                  </span>
+                                );
+                              })()}
+                            </div>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <button
+                                className={secondaryButtonClass}
+                                onClick={async () => {
+                                  const d = await getAk1Document(
+                                    undefined,
+                                    r.candidate_id,
+                                  );
+                                  const cand: CandidateProfileLite = {
+                                    full_name: r.full_name,
+                                    nik: r.nik,
+                                    place_of_birth: r.place_of_birth,
+                                    birthdate: r.birthdate,
+                                  };
+                                  setDetailData({
+                                    candidate: cand,
+                                    document: d.data || null,
+                                  });
+                                  setShowDetailModal(true);
+                                }}
+                              >
+                                <i className="ri-eye-line" aria-hidden />
+                                Detail
+                              </button>
+                              {permissions.includes("ak1.verify") &&
+                                r.file &&
+                                (apiToUIStatusAk1[
+                                  String(r.status || "").toUpperCase()
+                                ] || "Menunggu Pembuatan") ===
+                                  "Menunggu Pembuatan" && (
+                                  <button
+                                    className={primaryButtonClass}
+                                    onClick={async () => {
+                                      const d = await getAk1Document(
+                                        undefined,
+                                        r.candidate_id,
+                                      );
+                                      const cand: CandidateProfileLite = {
+                                        full_name: r.full_name,
+                                        nik: r.nik,
+                                        place_of_birth: r.place_of_birth,
+                                        birthdate: r.birthdate,
+                                      };
+                                      setDetailData({
+                                        candidate: cand,
+                                        document: d.data || null,
+                                      });
+                                      setVerifyPayload({
+                                        ak1_document_id:
+                                          r.ak1_document_id || "",
+                                        status: "APPROVED",
+                                      });
+                                      setShowVerifyModal(true);
+                                    }}
+                                  >
+                                    <i
+                                      className="ri-shield-check-line"
+                                      aria-hidden
+                                    />
+                                    Verifikasi
+                                  </button>
+                                )}
+                              {permissions.includes("ak1.verify") &&
+                                r.file &&
+                                (apiToUIStatusAk1[
+                                  String(r.status || "").toUpperCase()
+                                ] || "") === "Menunggu Perpanjangan" && (
+                                  <button
+                                    className={warningButtonClass}
+                                    onClick={async () => {
+                                      setGenerating(true);
                                       try {
+                                        setGenMeta({
+                                          ak1_document_id: r.ak1_document_id,
+                                          candidate_id: r.candidate_id,
+                                          no_urut_pendaftaran: "",
+                                          card_created_at: "",
+                                        });
+                                        setGenCandidate({
+                                          full_name: r.full_name,
+                                          nik: r.nik,
+                                          place_of_birth: r.place_of_birth,
+                                          birthdate: r.birthdate,
+                                        } as CandidateProfileLite);
+                                        try {
+                                          const tList =
+                                            await listAk1Templates();
+                                          const allTemplates = tList.data || [];
+                                          setTemplates(allTemplates);
+                                          const layoutMap: Record<
+                                            string,
+                                            Ak1Layout
+                                          > = {};
+                                          await Promise.all(
+                                            allTemplates.map(
+                                              async (t: Ak1Template) => {
+                                                if (t.id) {
+                                                  try {
+                                                    const lResp =
+                                                      await getAk1Layout(t.id);
+                                                    if (lResp.data)
+                                                      layoutMap[t.id] =
+                                                        lResp.data;
+                                                  } catch {}
+                                                }
+                                              },
+                                            ),
+                                          );
+                                          setLayouts(layoutMap);
+                                        } catch {}
+
                                         const prof =
                                           await getCandidateProfileById(
                                             r.candidate_id,
@@ -4001,45 +3868,220 @@ export default function Ak1Page() {
                                             }
                                           ).data || null;
                                         setGenCandidate(cand);
+
                                         const d = await getAk1Document(
                                           undefined,
                                           r.candidate_id,
                                         );
-                                        setGenDocDetail(d.data || null);
-                                        await ensureGenNoUrut(
-                                          (d.data as Ak1Document | null) ??
-                                            null,
+                                        const doc = d.data || null;
+                                        setGenDocDetail(doc);
+
+                                        if (doc?.no_urut_pendaftaran) {
+                                          setGenMeta((prev) => ({
+                                            ...prev,
+                                            no_urut_pendaftaran:
+                                              doc.no_urut_pendaftaran,
+                                          }));
+                                        }
+                                        if (doc?.card_created_at) {
+                                          setGenMeta((prev) => ({
+                                            ...prev,
+                                            card_created_at: String(
+                                              doc.card_created_at,
+                                            ),
+                                          }));
+                                        }
+
+                                        if (doc && currentDisnaker?.nip) {
+                                          const previewDoc = { ...doc };
+                                          if (!doc.nip_renew_1) {
+                                            previewDoc.nip_renew_1 =
+                                              currentDisnaker.nip;
+                                            previewDoc.date_renew_1 =
+                                              new Date().toISOString();
+                                            // Clear future
+                                            previewDoc.nip_renew_2 = null;
+                                            previewDoc.date_renew_2 = null;
+                                            previewDoc.nip_renew_3 = null;
+                                            previewDoc.date_renew_3 = null;
+                                          } else if (!doc.nip_renew_2) {
+                                            previewDoc.nip_renew_2 =
+                                              currentDisnaker.nip;
+                                            previewDoc.date_renew_2 =
+                                              new Date().toISOString();
+                                            // Clear future
+                                            previewDoc.nip_renew_3 = null;
+                                            previewDoc.date_renew_3 = null;
+                                          } else if (!doc.nip_renew_3) {
+                                            previewDoc.nip_renew_3 =
+                                              currentDisnaker.nip;
+                                            previewDoc.date_renew_3 =
+                                              new Date().toISOString();
+                                          }
+                                          setGenDocDetail(doc);
+                                          setRenewPreviewDoc(previewDoc);
+                                        }
+
+                                        try {
+                                          const rawPhoto = String(
+                                            doc?.pas_photo_file || "",
+                                          );
+                                          if (rawPhoto) {
+                                            const pre =
+                                              await presignDownload(rawPhoto);
+                                            setGenPasPhotoUrl(pre.url);
+                                          } else setGenPasPhotoUrl(null);
+                                        } catch {
+                                          setGenPasPhotoUrl(null);
+                                        }
+
+                                        try {
+                                          if (cand?.user_id) {
+                                            const u = await getUserById(
+                                              String(cand.user_id),
+                                            );
+                                            const env = u as {
+                                              data?: Record<string, unknown>;
+                                            };
+                                            setGenUser(
+                                              (env.data || u) as Record<
+                                                string,
+                                                unknown
+                                              >,
+                                            );
+                                          }
+                                        } catch {}
+
+                                        setShowRenewModal(true);
+                                      } catch {
+                                        showError(
+                                          "Gagal memuat data untuk perpanjangan",
                                         );
-                                      } catch {}
-                                    } catch {
-                                    } finally {
-                                      setGenerating(false);
-                                    }
-                                    setShowGenerateModal(true);
-                                  }}
-                                >
-                                  <i className="ri-file-pdf-line" aria-hidden />
-                                  {generating ? "Loading..." : "Generate"}
-                                </button>
-                              )}
+                                      } finally {
+                                        setGenerating(false);
+                                      }
+                                    }}
+                                  >
+                                    <i
+                                      className="ri-refresh-line"
+                                      aria-hidden
+                                    />
+                                    Perpanjangan
+                                  </button>
+                                )}
+                              {permissions.includes("ak1.generate") &&
+                                !r.file && (
+                                  <button
+                                    className={secondaryButtonClass}
+                                    disabled={generating}
+                                    onClick={async () => {
+                                      setGenerating(true);
+                                      try {
+                                        setGenMeta({
+                                          ak1_document_id: r.ak1_document_id,
+                                          candidate_id: r.candidate_id,
+                                          no_urut_pendaftaran: "",
+                                          card_created_at: "",
+                                        });
+                                        setGenCandidate({
+                                          full_name: r.full_name,
+                                          nik: r.nik,
+                                          place_of_birth: r.place_of_birth,
+                                          birthdate: r.birthdate,
+                                        } as CandidateProfileLite);
+                                        setGenDocDetail(null);
+
+                                        try {
+                                          const tList =
+                                            await listAk1Templates();
+                                          const allTemplates = tList.data || [];
+                                          setTemplates(allTemplates);
+
+                                          const layoutMap: Record<
+                                            string,
+                                            Ak1Layout
+                                          > = {};
+                                          await Promise.all(
+                                            allTemplates.map(
+                                              async (t: Ak1Template) => {
+                                                if (t.id) {
+                                                  try {
+                                                    const lResp =
+                                                      await getAk1Layout(t.id);
+                                                    if (lResp.data) {
+                                                      layoutMap[t.id] =
+                                                        lResp.data;
+                                                    }
+                                                  } catch {}
+                                                }
+                                              },
+                                            ),
+                                          );
+                                          setLayouts(layoutMap);
+                                        } catch (e) {
+                                          console.error(
+                                            "Error fetching templates:",
+                                            e,
+                                          );
+                                        }
+
+                                        try {
+                                          const prof =
+                                            await getCandidateProfileById(
+                                              r.candidate_id,
+                                            );
+                                          const cand =
+                                            (
+                                              prof as {
+                                                data?: CandidateProfileLite | null;
+                                              }
+                                            ).data || null;
+                                          setGenCandidate(cand);
+                                          const d = await getAk1Document(
+                                            undefined,
+                                            r.candidate_id,
+                                          );
+                                          setGenDocDetail(d.data || null);
+                                          await ensureGenNoUrut(
+                                            (d.data as Ak1Document | null) ??
+                                              null,
+                                          );
+                                        } catch {}
+                                      } catch {
+                                      } finally {
+                                        setGenerating(false);
+                                      }
+                                      setShowGenerateModal(true);
+                                    }}
+                                  >
+                                    <i
+                                      className="ri-file-pdf-line"
+                                      aria-hidden
+                                    />
+                                    {generating ? "Loading..." : "Generate"}
+                                  </button>
+                                )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </Card>
+                {filteredAk1.length > 0 && (
+                  <div className="border-t border-slate-100 px-4 py-4 sm:px-5">
+                    <Pagination
+                      page={page}
+                      pageSize={pageSize}
+                      total={filteredAk1.length}
+                      onPageChange={setPage}
+                      onPageSizeChange={(size) => {
+                        setPageSize(size);
+                        setPage(1);
+                      }}
+                    />
+                  </div>
                 )}
-              </Card>
-              <div className="pt-1">
-                <Pagination
-                  page={page}
-                  pageSize={pageSize}
-                  total={filteredAk1.length}
-                  onPageChange={(p) => setPage(p)}
-                  onPageSizeChange={(s) => {
-                    setPageSize(s);
-                    setPage(1);
-                  }}
-                />
               </div>
             </>
           )}

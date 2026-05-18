@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import {
   Input,
@@ -243,6 +243,20 @@ export default function BeritaPage() {
     })();
   }, []);
 
+  const filteredBerita = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+    return beritaList.filter((b) => {
+      const matchSearch = b.judul.toLowerCase().includes(term);
+      const matchStatus = statusFilter === "all" || b.status === statusFilter;
+      return matchSearch && matchStatus;
+    });
+  }, [beritaList, searchTerm, statusFilter]);
+
+  const paginatedBerita = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredBerita.slice(start, start + pageSize);
+  }, [filteredBerita, page, pageSize]);
+
   useEffect(() => {
     setPage(1);
   }, [searchTerm, statusFilter, pageSize]);
@@ -408,19 +422,6 @@ export default function BeritaPage() {
     }
   };
 
-  const filteredBerita = beritaList.filter((b) => {
-    const matchSearch = b.judul
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchStatus = statusFilter === "all" || b.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
-
-  const total = filteredBerita.length;
-  const startIndex = (page - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, total);
-  const pagedBerita = filteredBerita.slice(startIndex, endIndex);
-
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
       <div className="w-full space-y-8">
@@ -511,10 +512,27 @@ export default function BeritaPage() {
           </div>
         </div>
 
-        {total > 0 ? (
-          <>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {pagedBerita.map((berita) => (
+        {filteredBerita.length > 0 ? (
+          <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02]">
+            <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    Daftar berita
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Berita dan informasi ketenagakerjaan beserta status
+                    publikasinya.
+                  </p>
+                </div>
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
+                  <i className="ri-article-line text-primary" />
+                  {filteredBerita.length} berita
+                </span>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-6 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-3">
+              {paginatedBerita.map((berita) => (
                 <NewsCard
                   key={berita.id}
                   berita={berita}
@@ -523,20 +541,19 @@ export default function BeritaPage() {
                 />
               ))}
             </div>
-
-            <div className="pt-1">
+            <div className="border-t border-slate-100 px-4 py-4 sm:px-5">
               <Pagination
                 page={page}
                 pageSize={pageSize}
-                total={total}
+                total={filteredBerita.length}
                 onPageChange={setPage}
-                onPageSizeChange={(s) => {
-                  setPageSize(s);
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
                   setPage(1);
                 }}
               />
             </div>
-          </>
+          </div>
         ) : (
           <div className="rounded-2xl border border-slate-200/90 bg-white py-12 text-center shadow-sm ring-1 ring-slate-950/[0.02]">
             <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
