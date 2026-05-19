@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Input, SearchableSelect } from "../../components/ui/field";
+import { KelurahanSelect } from "../../components/ui/KelurahanSelect";
 import Pagination from "../../components/ui/Pagination";
 import RemoteImage from "../../components/RemoteImage";
 import { resolveImageSrc } from "../../services/storage";
@@ -227,12 +228,10 @@ export default function JobsPage() {
                     setKelurahan("");
                   }}
                 />
-                <SearchableSelect
-                  label="Kelurahan"
-                  options={[
-                    { value: "", label: "Semua Kelurahan" },
-                    ...kelurahanOptions,
-                  ]}
+                <KelurahanSelect
+                  kecamatan={kecamatan}
+                  villageOptions={kelurahanOptions}
+                  emptyOptionLabel="Semua Kelurahan"
                   value={kelurahan}
                   onChange={setKelurahan}
                 />

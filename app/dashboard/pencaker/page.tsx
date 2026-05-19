@@ -9,6 +9,7 @@ import {
   SearchableSelectOption,
   Textarea,
 } from "../../../components/ui/field";
+import { KelurahanSelect } from "../../../components/ui/KelurahanSelect";
 import Pagination from "../../../components/ui/Pagination";
 import {
   ActionMenu,
@@ -1356,9 +1357,9 @@ export default function PencakerPage() {
                 }
                 error={fieldErrors.kecamatan}
               />
-              <SearchableSelect
-                label="Kelurahan"
-                options={[{ value: "", label: "Pilih..." }, ...villageOptions]}
+              <KelurahanSelect
+                kecamatan={formCandidate.kecamatan}
+                villageOptions={villageOptions}
                 value={formCandidate.kelurahan}
                 onChange={(v) =>
                   setFormCandidate({ ...formCandidate, kelurahan: v })

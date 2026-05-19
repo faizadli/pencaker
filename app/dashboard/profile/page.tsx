@@ -7,6 +7,7 @@ import {
   SearchableSelectOption,
   Textarea,
 } from "../../../components/ui/field";
+import { KelurahanSelect } from "../../../components/ui/KelurahanSelect";
 import Card from "../../../components/ui/Card";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
 import {
@@ -926,18 +927,13 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-2">
-                        Kelurahan
-                      </label>
-                      <SearchableSelect
+                      <KelurahanSelect
+                        kecamatan={companyForm.kecamatan}
+                        villageOptions={villageOptionsCompany}
                         value={companyForm.kelurahan}
                         onChange={(v) =>
                           setCompanyForm({ ...companyForm, kelurahan: v })
                         }
-                        options={[
-                          { value: "", label: "Pilih..." },
-                          ...villageOptionsCompany,
-                        ]}
                         className="w-full"
                         error={fieldErrors["kelurahan"]}
                       />
@@ -1068,18 +1064,13 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-2">
-                        Kelurahan
-                      </label>
-                      <SearchableSelect
+                      <KelurahanSelect
+                        kecamatan={candidateForm.kecamatan}
+                        villageOptions={villageOptionsCandidate}
                         value={candidateForm.kelurahan}
                         onChange={(v) =>
                           setCandidateForm({ ...candidateForm, kelurahan: v })
                         }
-                        options={[
-                          { value: "", label: "Pilih..." },
-                          ...villageOptionsCandidate,
-                        ]}
                         className="w-full"
                         error={fieldErrors["kelurahan"]}
                       />

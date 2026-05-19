@@ -8,6 +8,7 @@ import {
   SegmentedToggle,
   Textarea,
 } from "../../../components/ui/field";
+import { KelurahanSelect } from "../../../components/ui/KelurahanSelect";
 import Pagination from "../../../components/ui/Pagination";
 import {
   ActionMenu,
@@ -988,13 +989,13 @@ export default function PerusahaanPage() {
                 options={[{ value: "", label: "Pilih..." }, ...districtOptions]}
                 submitted={submittedCompany}
               />
-              <SearchableSelect
-                label="Kelurahan"
+              <KelurahanSelect
+                kecamatan={formCompany.kecamatan}
+                villageOptions={villageOptions}
                 value={formCompany.kelurahan}
                 onChange={(v) =>
                   setFormCompany({ ...formCompany, kelurahan: v })
                 }
-                options={[{ value: "", label: "Pilih..." }, ...villageOptions]}
                 submitted={submittedCompany}
               />
               <Input

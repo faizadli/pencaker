@@ -10,6 +10,7 @@ import {
   SegmentedToggle,
   Textarea,
 } from "../../../components/ui/field";
+import { KelurahanSelect } from "../../../components/ui/KelurahanSelect";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
 import RegisterPageShell from "../../../components/auth/RegisterPageShell";
 import {
@@ -1101,9 +1102,9 @@ export default function RegisterCandidate() {
                 }
                 error={fieldErrors.kecamatan}
               />
-              <SearchableSelect
-                label="Kelurahan"
-                options={[{ value: "", label: "Pilih..." }, ...villageOptions]}
+              <KelurahanSelect
+                kecamatan={profile.kecamatan}
+                villageOptions={villageOptions}
                 value={profile.kelurahan}
                 onChange={(v) => setProfile({ ...profile, kelurahan: v })}
                 error={fieldErrors.kelurahan}
