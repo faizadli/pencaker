@@ -15,6 +15,7 @@ import {
   TD,
 } from "../../../components/ui/Table";
 import Pagination from "../../../components/ui/Pagination";
+import { ActionMenu } from "../../../components/ui/ActionMenu";
 import {
   listSiteContents,
   upsertSiteContent,
@@ -430,10 +431,10 @@ export default function BkkPage() {
                           <button
                             type="button"
                             onClick={() => handleDelete(item.id)}
-                            className="flex items-center justify-center rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-red-600 shadow-sm ring-1 ring-red-200 transition hover:bg-red-50"
-                            title="Hapus"
+                            className="flex flex-1 items-center justify-center rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-red-600 shadow-sm ring-1 ring-red-200 transition hover:bg-red-50"
                           >
-                            <i className="ri-delete-bin-line" />
+                            <i className="ri-delete-bin-line mr-1.5" />
+                            Hapus
                           </button>
                         </div>
                       </div>
@@ -475,24 +476,25 @@ export default function BkkPage() {
                             </span>
                           </TD>
                           <TD>
-                            <div className="flex gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleEdit(item)}
-                                className="landing-focus rounded-lg p-2 text-primary transition hover:bg-primary/10"
-                                title="Edit"
-                              >
-                                <i className="ri-pencil-line" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(item.id)}
-                                className="landing-focus rounded-lg p-2 text-red-600 transition hover:bg-red-50"
-                                title="Hapus"
-                              >
-                                <i className="ri-delete-bin-line" />
-                              </button>
-                            </div>
+                            <ActionMenu
+                              ariaLabel={`Aksi untuk ${item.nama}`}
+                              items={[
+                                {
+                                  id: "edit",
+                                  label: "Edit",
+                                  icon: "ri-pencil-line",
+                                  onClick: () => handleEdit(item),
+                                },
+                                { type: "divider" },
+                                {
+                                  id: "delete",
+                                  label: "Hapus",
+                                  icon: "ri-delete-bin-line",
+                                  danger: true,
+                                  onClick: () => handleDelete(item.id),
+                                },
+                              ]}
+                            />
                           </TD>
                         </TableRow>
                       ))}

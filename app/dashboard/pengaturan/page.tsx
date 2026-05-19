@@ -15,6 +15,7 @@ import {
   TD,
 } from "../../../components/ui/Table";
 import Modal from "../../../components/ui/Modal";
+import { ActionMenu } from "../../../components/ui/ActionMenu";
 import {
   presignUpload,
   upsertAk1Template,
@@ -1923,38 +1924,44 @@ export default function PengaturanPage() {
                               </span>
                             </TD>
                             <TD>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => {
-                                    setEditingGroup({
-                                      idx,
-                                      code: g.code || "",
-                                      name: g.name,
-                                    });
-                                    setNewGroupData({
-                                      id: g.id,
-                                      code: g.code || "",
-                                      name: g.name,
-                                      items: g.items.map((it) => ({
-                                        id: it.id,
-                                        code: it.code || "",
-                                        name: it.name,
-                                      })),
-                                    });
-                                    setModalErrors({});
-                                    setIsGroupModalOpen(true);
-                                  }}
-                                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:border-primary/20 hover:text-primary"
-                                >
-                                  <i className="ri-edit-line" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteCategoryGroup(idx)}
-                                  className="inline-flex items-center justify-center rounded-lg border border-rose-200 p-2 text-rose-700 transition hover:bg-rose-50"
-                                >
-                                  <i className="ri-delete-bin-line" />
-                                </button>
-                              </div>
+                              <ActionMenu
+                                ariaLabel={`Aksi untuk ${g.name}`}
+                                items={[
+                                  {
+                                    id: "edit",
+                                    label: "Edit",
+                                    icon: "ri-edit-line",
+                                    onClick: () => {
+                                      setEditingGroup({
+                                        idx,
+                                        code: g.code || "",
+                                        name: g.name,
+                                      });
+                                      setNewGroupData({
+                                        id: g.id,
+                                        code: g.code || "",
+                                        name: g.name,
+                                        items: g.items.map((it) => ({
+                                          id: it.id,
+                                          code: it.code || "",
+                                          name: it.name,
+                                        })),
+                                      });
+                                      setModalErrors({});
+                                      setIsGroupModalOpen(true);
+                                    },
+                                  },
+                                  { type: "divider" },
+                                  {
+                                    id: "delete",
+                                    label: "Hapus",
+                                    icon: "ri-delete-bin-line",
+                                    danger: true,
+                                    onClick: () =>
+                                      handleDeleteCategoryGroup(idx),
+                                  },
+                                ]}
+                              />
                             </TD>
                           </TableRow>
                         ))
@@ -2272,39 +2279,43 @@ export default function PengaturanPage() {
                               </span>
                             </TD>
                             <TD>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => {
-                                    setEditingEduGroup({
-                                      idx,
-                                      code: g.code || "",
-                                      name: g.name,
-                                    });
-                                    setNewEduGroupData({
-                                      id: g.id,
-                                      code: g.code || "",
-                                      name: g.name,
-                                      items: g.items.map((it) => ({
-                                        id: it.id,
-                                        code: it.code || "",
-                                        name: it.name,
-                                      })),
-                                    });
-                                    setIsEduGroupModalOpen(true);
-                                  }}
-                                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:border-primary/20 hover:text-primary"
-                                >
-                                  <i className="ri-edit-line" />
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleDeleteEducationGroup(idx)
-                                  }
-                                  className="inline-flex items-center justify-center rounded-lg border border-rose-200 p-2 text-rose-700 transition hover:bg-rose-50"
-                                >
-                                  <i className="ri-delete-bin-line" />
-                                </button>
-                              </div>
+                              <ActionMenu
+                                ariaLabel={`Aksi untuk ${g.name}`}
+                                items={[
+                                  {
+                                    id: "edit",
+                                    label: "Edit",
+                                    icon: "ri-edit-line",
+                                    onClick: () => {
+                                      setEditingEduGroup({
+                                        idx,
+                                        code: g.code || "",
+                                        name: g.name,
+                                      });
+                                      setNewEduGroupData({
+                                        id: g.id,
+                                        code: g.code || "",
+                                        name: g.name,
+                                        items: g.items.map((it) => ({
+                                          id: it.id,
+                                          code: it.code || "",
+                                          name: it.name,
+                                        })),
+                                      });
+                                      setIsEduGroupModalOpen(true);
+                                    },
+                                  },
+                                  { type: "divider" },
+                                  {
+                                    id: "delete",
+                                    label: "Hapus",
+                                    icon: "ri-delete-bin-line",
+                                    danger: true,
+                                    onClick: () =>
+                                      handleDeleteEducationGroup(idx),
+                                  },
+                                ]}
+                              />
                             </TD>
                           </TableRow>
                         ))
@@ -2635,37 +2646,42 @@ export default function PengaturanPage() {
                               </span>
                             </TD>
                             <TD>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => {
-                                    setEditingPosGroup({
-                                      idx,
-                                      code: g.code || "",
-                                      name: g.name,
-                                    });
-                                    setNewPosGroupData({
-                                      id: g.id,
-                                      code: g.code || "",
-                                      name: g.name,
-                                      items: g.items.map((it) => ({
-                                        id: it.id,
-                                        code: it.code || "",
-                                        name: it.name,
-                                      })),
-                                    });
-                                    setIsPosGroupModalOpen(true);
-                                  }}
-                                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:border-primary/20 hover:text-primary"
-                                >
-                                  <i className="ri-edit-line" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeletePosGroup(idx)}
-                                  className="inline-flex items-center justify-center rounded-lg border border-rose-200 p-2 text-rose-700 transition hover:bg-rose-50"
-                                >
-                                  <i className="ri-delete-bin-line" />
-                                </button>
-                              </div>
+                              <ActionMenu
+                                ariaLabel={`Aksi untuk ${g.name}`}
+                                items={[
+                                  {
+                                    id: "edit",
+                                    label: "Edit",
+                                    icon: "ri-edit-line",
+                                    onClick: () => {
+                                      setEditingPosGroup({
+                                        idx,
+                                        code: g.code || "",
+                                        name: g.name,
+                                      });
+                                      setNewPosGroupData({
+                                        id: g.id,
+                                        code: g.code || "",
+                                        name: g.name,
+                                        items: g.items.map((it) => ({
+                                          id: it.id,
+                                          code: it.code || "",
+                                          name: it.name,
+                                        })),
+                                      });
+                                      setIsPosGroupModalOpen(true);
+                                    },
+                                  },
+                                  { type: "divider" },
+                                  {
+                                    id: "delete",
+                                    label: "Hapus",
+                                    icon: "ri-delete-bin-line",
+                                    danger: true,
+                                    onClick: () => handleDeletePosGroup(idx),
+                                  },
+                                ]}
+                              />
                             </TD>
                           </TableRow>
                         ))
@@ -3453,25 +3469,28 @@ function Ak1LayoutEditor() {
                           )}
                         </TD>
                         <TD>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => {
-                                setEditingTemplateName(t.name);
-                                setIsTemplateModalOpen(true);
-                              }}
-                              className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:border-primary/20 hover:text-primary"
-                              title="Edit Template"
-                            >
-                              <i className="ri-edit-line" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteTemplate(t)}
-                              className="inline-flex items-center justify-center rounded-lg border border-rose-200 p-2 text-rose-700 transition hover:bg-rose-50"
-                              title="Hapus Template"
-                            >
-                              <i className="ri-delete-bin-line" />
-                            </button>
-                          </div>
+                          <ActionMenu
+                            ariaLabel={`Aksi untuk template ${t.name}`}
+                            items={[
+                              {
+                                id: "edit",
+                                label: "Edit",
+                                icon: "ri-edit-line",
+                                onClick: () => {
+                                  setEditingTemplateName(t.name);
+                                  setIsTemplateModalOpen(true);
+                                },
+                              },
+                              { type: "divider" },
+                              {
+                                id: "delete",
+                                label: "Hapus",
+                                icon: "ri-delete-bin-line",
+                                danger: true,
+                                onClick: () => handleDeleteTemplate(t),
+                              },
+                            ]}
+                          />
                         </TD>
                       </TableRow>
                     ))

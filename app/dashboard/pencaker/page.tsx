@@ -3,7 +3,6 @@ import { ZodIssue } from "zod";
 import { useEffect, useState, useCallback } from "react";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
 import Image from "next/image";
-import Link from "next/link";
 import {
   Input,
   SearchableSelect,
@@ -11,6 +10,10 @@ import {
   Textarea,
 } from "../../../components/ui/field";
 import Pagination from "../../../components/ui/Pagination";
+import {
+  ActionMenu,
+  type ActionMenuItem,
+} from "../../../components/ui/ActionMenu";
 import Modal from "../../../components/ui/Modal";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
 import {
@@ -548,6 +551,73 @@ export default function PencakerPage() {
     return (group.items || []).map((i) => ({ value: i.name, label: i.name }));
   };
 
+  const openEditPencaker = (p: Pencaker) => {
+    setEditingCandidateId(p.id);
+    const src = rawCandidates.find((c) => c.id === p.id);
+    if (src) {
+      let matchedEdu = src.last_education || "";
+      const foundEdu = educationOptions.find(
+        (o) =>
+          o.value === matchedEdu ||
+          o.label === matchedEdu ||
+          o.value.toLowerCase() === String(matchedEdu).toLowerCase() ||
+          o.label.toLowerCase() === String(matchedEdu).toLowerCase(),
+      );
+      if (foundEdu) matchedEdu = foundEdu.value;
+
+      setFormCandidate({
+        user_id: src.user_id,
+        full_name: src.full_name || "",
+        birthdate: src.birthdate || "",
+        place_of_birth: src.place_of_birth || "",
+        nik: src.nik || "",
+        kecamatan: src.kecamatan || "",
+        kelurahan: src.kelurahan || "",
+        address: src.address || "",
+        postal_code: src.postal_code || "",
+        gender: src.gender || "",
+        no_handphone: src.no_handphone || "",
+        photo_profile: src.photo_profile || "",
+        last_education: matchedEdu,
+        graduation_year: Number(src.graduation_year || 0),
+        status_perkawinan: src.status_perkawinan || "",
+        cv_file: src.cv_file || undefined,
+        resume_text: src.resume_text || "",
+        dis_kondisi: src.dis_kondisi || "",
+        agama: src.agama || "",
+      });
+      if (src.resume_text && src.resume_text.trim().length > 0) {
+        setResumeType("text");
+      } else {
+        setResumeType("file");
+      }
+    }
+    setShowFormModal(true);
+  };
+
+  const getPencakerActionItems = (p: Pencaker): ActionMenuItem[] => {
+    const items: ActionMenuItem[] = [
+      {
+        id: "detail",
+        label: "Detail",
+        icon: "ri-eye-line",
+        href: `/dashboard/pencaker/${p.id}`,
+      },
+    ];
+    if (permissions.includes("pencaker.update")) {
+      items.push(
+        { type: "divider" },
+        {
+          id: "edit",
+          label: "Edit",
+          icon: "ri-pencil-line",
+          onClick: () => openEditPencaker(p),
+        },
+      );
+    }
+    return items;
+  };
+
   return (
     <>
       <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/90 pt-20 pb-12 transition-[margin] duration-300 motion-reduce:transition-none lg:ml-64">
@@ -764,92 +834,11 @@ export default function PencakerPage() {
                                   </span>
                                 </TD>
                                 <TD className="text-right">
-                                  <div className="flex justify-end gap-2">
-                                    <Link
-                                      href={`/dashboard/pencaker/${p.id}`}
-                                      className="landing-focus flex items-center justify-center rounded-lg p-2 text-primary transition hover:bg-primary/10"
-                                      title="Detail"
-                                    >
-                                      <i className="ri-eye-line" />
-                                    </Link>
-                                    {permissions.includes(
-                                      "pencaker.update",
-                                    ) && (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setEditingCandidateId(p.id);
-                                          const src = rawCandidates.find(
-                                            (c) => c.id === p.id,
-                                          );
-                                          if (src) {
-                                            // Find matching education
-                                            let matchedEdu =
-                                              src.last_education || "";
-                                            const foundEdu =
-                                              educationOptions.find(
-                                                (o) =>
-                                                  o.value === matchedEdu ||
-                                                  o.label === matchedEdu ||
-                                                  o.value.toLowerCase() ===
-                                                    String(
-                                                      matchedEdu,
-                                                    ).toLowerCase() ||
-                                                  o.label.toLowerCase() ===
-                                                    String(
-                                                      matchedEdu,
-                                                    ).toLowerCase(),
-                                              );
-                                            if (foundEdu)
-                                              matchedEdu = foundEdu.value;
-
-                                            setFormCandidate({
-                                              user_id: src.user_id,
-                                              full_name: src.full_name || "",
-                                              birthdate: src.birthdate || "",
-                                              place_of_birth:
-                                                src.place_of_birth || "",
-                                              nik: src.nik || "",
-                                              kecamatan: src.kecamatan || "",
-                                              kelurahan: src.kelurahan || "",
-                                              address: src.address || "",
-                                              postal_code:
-                                                src.postal_code || "",
-                                              gender: src.gender || "",
-                                              no_handphone:
-                                                src.no_handphone || "",
-                                              photo_profile:
-                                                src.photo_profile || "",
-                                              last_education: matchedEdu,
-                                              graduation_year: Number(
-                                                src.graduation_year || 0,
-                                              ),
-                                              status_perkawinan:
-                                                src.status_perkawinan || "",
-                                              cv_file: src.cv_file || undefined,
-                                              resume_text:
-                                                src.resume_text || "",
-                                              dis_kondisi:
-                                                src.dis_kondisi || "",
-                                              agama: src.agama || "",
-                                            });
-                                            if (
-                                              src.resume_text &&
-                                              src.resume_text.trim().length > 0
-                                            ) {
-                                              setResumeType("text");
-                                            } else {
-                                              setResumeType("file");
-                                            }
-                                          }
-                                          setShowFormModal(true);
-                                        }}
-                                        className="landing-focus flex items-center justify-center rounded-lg p-2 text-slate-600 transition hover:bg-primary/10 hover:text-primary"
-                                        title="Edit"
-                                      >
-                                        <i className="ri-pencil-line" />
-                                      </button>
-                                    )}
+                                  <div className="flex justify-end">
+                                    <ActionMenu
+                                      ariaLabel={`Aksi untuk ${p.nama || p.nik}`}
+                                      items={getPencakerActionItems(p)}
+                                    />
                                   </div>
                                 </TD>
                               </TableRow>

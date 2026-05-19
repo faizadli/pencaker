@@ -28,6 +28,7 @@ import {
   TD,
 } from "../../../components/ui/Table";
 import EmptyState from "../../../components/ui/EmptyState";
+import { ActionMenu } from "../../../components/ui/ActionMenu";
 import { useToast } from "../../../components/ui/Toast";
 import { createUserSchema, updateUserSchema } from "../../../utils/zod-schemas";
 import { ZodIssue } from "zod";
@@ -619,28 +620,37 @@ export default function UsersPage() {
                           {user.terakhirLogin}
                         </TD>
                         <TD>
-                          <div className="flex flex-wrap gap-2">
-                            {canUpdate && (
-                              <button
-                                type="button"
-                                onClick={() => handleEdit(user)}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-white transition hover:brightness-95"
-                              >
-                                <i className="ri-edit-line" aria-hidden />
-                                Edit
-                              </button>
-                            )}
-                            {canDelete && (
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(user.id)}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-red-700"
-                              >
-                                <i className="ri-delete-bin-line" aria-hidden />
-                                Hapus
-                              </button>
-                            )}
-                          </div>
+                          {(canUpdate || canDelete) && (
+                            <ActionMenu
+                              ariaLabel={`Aksi untuk ${user.email}`}
+                              items={[
+                                ...(canUpdate
+                                  ? [
+                                      {
+                                        id: "edit",
+                                        label: "Edit",
+                                        icon: "ri-edit-line",
+                                        onClick: () => handleEdit(user),
+                                      },
+                                    ]
+                                  : []),
+                                ...(canUpdate && canDelete
+                                  ? [{ type: "divider" as const }]
+                                  : []),
+                                ...(canDelete
+                                  ? [
+                                      {
+                                        id: "delete",
+                                        label: "Hapus",
+                                        icon: "ri-delete-bin-line",
+                                        danger: true,
+                                        onClick: () => handleDelete(user.id),
+                                      },
+                                    ]
+                                  : []),
+                              ]}
+                            />
+                          )}
                         </TD>
                       </TableRow>
                     ))}
@@ -684,25 +694,36 @@ export default function UsersPage() {
                         </span>
                       </div>
                       {(canUpdate || canDelete) && (
-                        <div className="mt-3 grid grid-cols-2 gap-2">
-                          {canUpdate && (
-                            <button
-                              type="button"
-                              onClick={() => handleEdit(user)}
-                              className="rounded-lg bg-secondary px-3 py-2 text-xs font-medium text-white transition hover:brightness-95"
-                            >
-                              Edit
-                            </button>
-                          )}
-                          {canDelete && (
-                            <button
-                              type="button"
-                              onClick={() => handleDelete(user.id)}
-                              className="rounded-lg bg-red-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-700"
-                            >
-                              Hapus
-                            </button>
-                          )}
+                        <div className="mt-3 flex justify-end">
+                          <ActionMenu
+                            ariaLabel={`Aksi untuk ${user.email}`}
+                            items={[
+                              ...(canUpdate
+                                ? [
+                                    {
+                                      id: "edit",
+                                      label: "Edit",
+                                      icon: "ri-edit-line",
+                                      onClick: () => handleEdit(user),
+                                    },
+                                  ]
+                                : []),
+                              ...(canUpdate && canDelete
+                                ? [{ type: "divider" as const }]
+                                : []),
+                              ...(canDelete
+                                ? [
+                                    {
+                                      id: "delete",
+                                      label: "Hapus",
+                                      icon: "ri-delete-bin-line",
+                                      danger: true,
+                                      onClick: () => handleDelete(user.id),
+                                    },
+                                  ]
+                                : []),
+                            ]}
+                          />
                         </div>
                       )}
                     </div>

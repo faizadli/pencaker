@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { createPortal } from "react-dom";
 import {
   Input,
   SearchableSelect,
@@ -49,6 +48,7 @@ import {
   TD,
 } from "../../../components/ui/Table";
 import Pagination from "../../../components/ui/Pagination";
+import { ActionMenu } from "../../../components/ui/ActionMenu";
 import { z } from "zod";
 
 function readDashboardPermissions(): string[] {
@@ -284,12 +284,6 @@ export default function DashboardPesertaLatihanPage() {
   const [filterTrainingName, setFilterTrainingName] = useState("");
   const [filterTrainingYear, setFilterTrainingYear] = useState("");
   const [importModalOpen, setImportModalOpen] = useState(false);
-  /** Menu di-portal ke body agar tidak terpotong overflow-x pada tabel */
-  const [actionsMenu, setActionsMenu] = useState<{
-    row: TrainingAlumniRow;
-    top: number;
-    left: number;
-  } | null>(null);
   const [importing, setImporting] = useState(false);
   const [blacklistModalOpen, setBlacklistModalOpen] = useState(false);
   const [blacklistRowId, setBlacklistRowId] = useState<string | null>(null);
@@ -341,26 +335,6 @@ export default function DashboardPesertaLatihanPage() {
   useEffect(() => {
     setDashboardPerms(readDashboardPermissions());
   }, []);
-
-  useEffect(() => {
-    if (actionsMenu == null) return;
-    const close = (e: MouseEvent) => {
-      const t = e.target as HTMLElement;
-      if (
-        !t.closest("[data-peserta-latihan-row-actions]") &&
-        !t.closest("[data-peserta-latihan-actions-menu]")
-      ) {
-        setActionsMenu(null);
-      }
-    };
-    const onScroll = () => setActionsMenu(null);
-    document.addEventListener("mousedown", close);
-    window.addEventListener("scroll", onScroll, true);
-    return () => {
-      document.removeEventListener("mousedown", close);
-      window.removeEventListener("scroll", onScroll, true);
-    };
-  }, [actionsMenu]);
 
   const canRead = dashboardPerms.includes("training_alumni.read");
   const canCreate = dashboardPerms.includes("training_alumni.create");
@@ -770,7 +744,6 @@ export default function DashboardPesertaLatihanPage() {
   };
 
   const handleOpenEdit = (row: TrainingAlumniRow) => {
-    setActionsMenu(null);
     setEditRowId(row.id);
     setEditForm(buildEditFormFromRow(row));
     setEditFormErrors({});
@@ -1281,39 +1254,35 @@ export default function DashboardPesertaLatihanPage() {
                           </TD>
                           {canCreate && (
                             <TD className="align-middle text-center">
-                              <div
-                                data-peserta-latihan-row-actions
-                                className="relative inline-flex justify-center"
-                              >
-                                <button
-                                  type="button"
-                                  aria-label="Menu aksi"
-                                  aria-haspopup="menu"
-                                  aria-expanded={actionsMenu?.row.id === row.id}
-                                  onClick={(e) => {
-                                    const btn = e.currentTarget;
-                                    const rect = btn.getBoundingClientRect();
-                                    const MENU_W = 176;
-                                    setActionsMenu((cur) => {
-                                      if (cur?.row.id === row.id) return null;
-                                      return {
-                                        row,
-                                        top: rect.bottom + 4,
-                                        left: Math.min(
-                                          Math.max(8, rect.right - MENU_W),
-                                          window.innerWidth - MENU_W - 8,
-                                        ),
-                                      };
-                                    });
-                                  }}
-                                  className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
-                                >
-                                  <i
-                                    className="ri-more-2-fill text-xl leading-none"
-                                    aria-hidden
-                                  />
-                                </button>
-                              </div>
+                              <ActionMenu
+                                ariaLabel={`Aksi untuk ${row.full_name || row.nik || "peserta"}`}
+                                items={[
+                                  {
+                                    id: "edit",
+                                    label: "Ubah",
+                                    icon: "ri-pencil-line",
+                                    onClick: () => handleOpenEdit(row),
+                                  },
+                                  { type: "divider" },
+                                  {
+                                    id: "delete",
+                                    label: "Hapus",
+                                    icon: "ri-delete-bin-line",
+                                    danger: true,
+                                    onClick: () => handleDeleteRow(row),
+                                  },
+                                  {
+                                    id: "blacklist",
+                                    label: "Blacklist",
+                                    icon: "ri-forbid-line",
+                                    disabled:
+                                      !row.candidate_id &&
+                                      (row.nik ?? "").replace(/\D/g, "")
+                                        .length === 0,
+                                    onClick: () => handleOpenBlacklist(row),
+                                  },
+                                ]}
+                              />
                             </TD>
                           )}
                         </TableRow>
@@ -1340,86 +1309,6 @@ export default function DashboardPesertaLatihanPage() {
           </div>
         </div>
       </main>
-
-      {canCreate &&
-        actionsMenu &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <ul
-            data-peserta-latihan-actions-menu
-            role="menu"
-            className="fixed z-[80] min-w-[11rem] rounded-xl border border-slate-200/90 bg-white p-1.5 text-left shadow-xl ring-1 ring-slate-950/[0.03]"
-            style={{
-              top: actionsMenu.top,
-              left: actionsMenu.left,
-            }}
-          >
-            <li role="none">
-              <button
-                type="button"
-                role="menuitem"
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-50"
-                onClick={() => {
-                  const r = actionsMenu.row;
-                  handleOpenEdit(r);
-                }}
-              >
-                <i className="ri-pencil-line text-base" aria-hidden />
-                Ubah
-              </button>
-            </li>
-            <li role="none">
-              <button
-                type="button"
-                role="menuitem"
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50"
-                onClick={() => {
-                  const r = actionsMenu.row;
-                  setActionsMenu(null);
-                  handleDeleteRow(r);
-                }}
-              >
-                <i className="ri-delete-bin-line text-base" aria-hidden />
-                Hapus
-              </button>
-            </li>
-            <li role="none">
-              <button
-                type="button"
-                role="menuitem"
-                disabled={
-                  !actionsMenu.row.candidate_id &&
-                  (actionsMenu.row.nik ?? "").replace(/\D/g, "").length === 0
-                }
-                title={
-                  actionsMenu.row.candidate_id ||
-                  (actionsMenu.row.nik ?? "").replace(/\D/g, "").length > 0
-                    ? "Blacklist NIK ini selama 1 bulan"
-                    : "Isi NIK pada baris ini, atau gunakan data dari pendaftaran pencaker"
-                }
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
-                onClick={() => {
-                  const r = actionsMenu.row;
-                  if (
-                    !r.candidate_id &&
-                    (r.nik ?? "").replace(/\D/g, "").length === 0
-                  ) {
-                    return;
-                  }
-                  setActionsMenu(null);
-                  handleOpenBlacklist(r);
-                }}
-              >
-                <i
-                  className="ri-forbid-line text-base text-gray-800"
-                  aria-hidden
-                />
-                Blacklist
-              </button>
-            </li>
-          </ul>,
-          document.body,
-        )}
 
       {canCreate && (
         <Modal

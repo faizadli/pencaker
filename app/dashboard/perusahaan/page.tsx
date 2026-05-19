@@ -9,6 +9,10 @@ import {
   Textarea,
 } from "../../../components/ui/field";
 import Pagination from "../../../components/ui/Pagination";
+import {
+  ActionMenu,
+  type ActionMenuItem,
+} from "../../../components/ui/ActionMenu";
 import Modal from "../../../components/ui/Modal";
 import StatCard from "../../../components/ui/StatCard";
 import CardGrid from "../../../components/ui/CardGrid";
@@ -283,6 +287,51 @@ export default function PerusahaanPage() {
       default:
         return "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80";
     }
+  };
+
+  const openEditCompany = (p: Company) => {
+    setEditingCompanyId(p.id);
+    setEditingCompanyUserId(p.user_id);
+    setFormCompany({
+      company_name: p.company_name || "",
+      company_type: p.company_type || "",
+      nib: p.nib || "",
+      company_logo: p.company_logo || "",
+      no_handphone: p.no_handphone || "",
+      kecamatan: p.kecamatan || "",
+      kelurahan: p.kelurahan || "",
+      address: p.address || "",
+      website: p.website || "",
+      about_company: p.about_company || "",
+    });
+    setShowFormModal(true);
+    setSubmittedCompany(false);
+    setFieldErrors({});
+  };
+
+  const getCompanyActionItems = (p: Company): ActionMenuItem[] => {
+    const detailLabel =
+      getApiStatus(p) === "PENDING" ? "Review & Konfirmasi" : "Detail";
+    const items: ActionMenuItem[] = [
+      {
+        id: "detail",
+        label: detailLabel,
+        icon: "ri-eye-line",
+        href: `/dashboard/perusahaan/${p.id}`,
+      },
+    ];
+    if (canUpdate) {
+      items.push(
+        { type: "divider" },
+        {
+          id: "edit",
+          label: "Edit",
+          icon: "ri-pencil-line",
+          onClick: () => openEditCompany(p),
+        },
+      );
+    }
+    return items;
   };
 
   if (loading) {
@@ -621,45 +670,10 @@ export default function PerusahaanPage() {
                             </div>
                           </TD>
                           <TD>
-                            <div className="flex flex-wrap gap-2">
-                              <Link
-                                href={`/dashboard/perusahaan/${p.id}`}
-                                className={`landing-focus inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
-                                  getApiStatus(p) === "PENDING"
-                                    ? "bg-amber-500 hover:bg-amber-600"
-                                    : "bg-primary hover:bg-[var(--color-primary-dark)]"
-                                }`}
-                              >
-                                {getApiStatus(p) === "PENDING"
-                                  ? "Review & Konfirmasi"
-                                  : "Detail"}
-                              </Link>
-                              {canUpdate && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingCompanyId(p.id);
-                                    setEditingCompanyUserId(p.user_id);
-                                    setFormCompany({
-                                      company_name: p.company_name || "",
-                                      company_type: p.company_type || "",
-                                      nib: p.nib || "",
-                                      company_logo: p.company_logo || "",
-                                      no_handphone: p.no_handphone || "",
-                                      kecamatan: p.kecamatan || "",
-                                      kelurahan: p.kelurahan || "",
-                                      address: p.address || "",
-                                      website: p.website || "",
-                                      about_company: p.about_company || "",
-                                    });
-                                    setShowFormModal(true);
-                                  }}
-                                  className="inline-flex items-center justify-center rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
-                                >
-                                  Edit
-                                </button>
-                              )}
-                            </div>
+                            <ActionMenu
+                              ariaLabel={`Aksi untuk ${p.company_name}`}
+                              items={getCompanyActionItems(p)}
+                            />
                           </TD>
                         </TableRow>
                       ))}
@@ -701,44 +715,11 @@ export default function PerusahaanPage() {
                           <i className="ri-map-pin-line shrink-0" />
                           <span className="truncate">{p.address}</span>
                         </div>
-                        <div className="mt-3 grid grid-cols-2 gap-2">
-                          <Link
-                            href={`/dashboard/perusahaan/${p.id}`}
-                            className={`landing-focus flex items-center justify-center rounded-lg px-3 py-2 text-xs font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
-                              getApiStatus(p) === "PENDING"
-                                ? "bg-amber-500"
-                                : "bg-primary"
-                            }`}
-                          >
-                            {getApiStatus(p) === "PENDING"
-                              ? "Review & Konfirmasi"
-                              : "Detail"}
-                          </Link>
-                          {canUpdate && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingCompanyId(p.id);
-                                setEditingCompanyUserId(p.user_id);
-                                setFormCompany({
-                                  company_name: p.company_name || "",
-                                  company_type: p.company_type || "",
-                                  nib: p.nib || "",
-                                  company_logo: p.company_logo || "",
-                                  no_handphone: p.no_handphone || "",
-                                  kecamatan: p.kecamatan || "",
-                                  kelurahan: p.kelurahan || "",
-                                  address: p.address || "",
-                                  website: p.website || "",
-                                  about_company: p.about_company || "",
-                                });
-                                setShowFormModal(true);
-                              }}
-                              className="rounded-lg bg-white px-3 py-2 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
-                            >
-                              Edit
-                            </button>
-                          )}
+                        <div className="mt-3 flex justify-end">
+                          <ActionMenu
+                            ariaLabel={`Aksi untuk ${p.company_name}`}
+                            items={getCompanyActionItems(p)}
+                          />
                         </div>
                       </div>
                     ))}

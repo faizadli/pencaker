@@ -10,6 +10,10 @@ import {
   SearchableSelectOption,
 } from "../../../components/ui/field";
 import Pagination from "../../../components/ui/Pagination";
+import {
+  ActionMenu,
+  type ActionMenuItem,
+} from "../../../components/ui/ActionMenu";
 import Modal from "../../../components/ui/Modal";
 import StatCard from "../../../components/ui/StatCard";
 import CardGrid from "../../../components/ui/CardGrid";
@@ -87,7 +91,6 @@ export default function LowonganPage() {
   const [educationOptions, setEducationOptions] = useState<
     SearchableSelectOption[]
   >([]);
-  const [educationGroups, setEducationGroups] = useState<GroupData[]>([]);
 
   type Job = {
     id: string;
@@ -302,7 +305,6 @@ export default function LowonganPage() {
 
         const eduRaw = eduResp.data || eduResp;
         const eduData = Array.isArray(eduRaw) ? eduRaw : eduRaw.groups || [];
-        setEducationGroups(eduData);
         setEducationOptions(transformGroupsToOptions(eduData, "name"));
       } catch (e) {
         console.error("Failed to load dropdown options", e);
@@ -721,6 +723,93 @@ export default function LowonganPage() {
 
   const canCreate = permissions.includes("lowongan.create");
   const canEdit = permissions.includes("lowongan.update");
+
+  const openEditLowongan = (job: ViewJob) => {
+    setEditingId(String(job.id));
+    const raw = lowonganList.find((j) => String(j.id) === String(job.id));
+    let matchedCategory = raw?.category || job.sektor;
+    const foundCat = categoryOptions.find(
+      (o) =>
+        o.value === matchedCategory ||
+        o.label === matchedCategory ||
+        o.value.toLowerCase() === String(matchedCategory).toLowerCase() ||
+        o.label.toLowerCase() === String(matchedCategory).toLowerCase(),
+    );
+    if (foundCat) matchedCategory = foundCat.value;
+
+    let matchedEdu = raw?.education_required || job.education_required;
+    const foundEdu = educationOptions.find(
+      (o) =>
+        o.value === matchedEdu ||
+        o.label === matchedEdu ||
+        o.value.toLowerCase() === String(matchedEdu).toLowerCase() ||
+        o.label.toLowerCase() === String(matchedEdu).toLowerCase(),
+    );
+    if (foundEdu) {
+      matchedEdu = foundEdu.value;
+    } else if (matchedEdu) {
+      const exists = educationOptions.some(
+        (o) => o.value === String(matchedEdu),
+      );
+      if (!exists) {
+        setEducationOptions((prev) => [
+          ...prev,
+          { value: String(matchedEdu), label: String(matchedEdu) },
+        ]);
+      }
+    }
+
+    setNewJob({
+      posisi: raw?.job_title || job.posisi,
+      position_id: raw?.position_id || "",
+      company_id: raw?.company_id || job.companyId || "",
+      sektor: matchedCategory,
+      tipe: job.tipe as UITipe,
+      gender: raw?.gender || "L/P",
+      quota: raw?.quota || 1,
+      deskripsi: raw?.job_description || job.deskripsi,
+      experience_required: raw?.experience_required || job.experience_required,
+      education_required: matchedEdu,
+      skills_required: raw?.skills_required || job.skills_required,
+      min_salary: typeof raw?.min_salary === "number" ? raw!.min_salary : 0,
+      max_salary: typeof raw?.max_salary === "number" ? raw!.max_salary : 0,
+      work_setup: raw?.work_setup || job.lokasi,
+    });
+    setShowForm(true);
+  };
+
+  const getLowonganActionItems = (job: ViewJob): ActionMenuItem[] => {
+    const detailLabel =
+      job.status === "Menunggu Verifikasi" ? "Review & Konfirmasi" : "Detail";
+    const items: ActionMenuItem[] = [
+      {
+        id: "detail",
+        label: detailLabel,
+        icon: "ri-eye-line",
+        href: `/dashboard/lowongan/${job.id}`,
+      },
+    ];
+    if (job.status !== "Menunggu Verifikasi") {
+      items.push({
+        id: "pelamar",
+        label: "Pelamar",
+        icon: "ri-user-search-line",
+        href: `/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`,
+      });
+    }
+    if (canEdit) {
+      items.push(
+        { type: "divider" },
+        {
+          id: "edit",
+          label: "Edit",
+          icon: "ri-edit-line",
+          onClick: () => openEditLowongan(job),
+        },
+      );
+    }
+    return items;
+  };
 
   if (!permsLoaded || loading) {
     return (
@@ -1162,7 +1251,7 @@ export default function LowonganPage() {
                           {job.status !== "Menunggu Verifikasi" && (
                             <Link
                               href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`}
-                              className="landing-focus flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
+                              className="landing-focus flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-900 shadow-sm ring-1 ring-amber-200/80 transition hover:bg-amber-100"
                               title="Pelamar"
                             >
                               <i className="ri-user-search-line" />
@@ -1172,105 +1261,8 @@ export default function LowonganPage() {
                           {canEdit && (
                             <button
                               type="button"
-                              onClick={() => {
-                                setEditingId(String(job.id));
-                                const raw = lowonganList.find(
-                                  (j) => String(j.id) === String(job.id),
-                                );
-
-                                // Find matching category
-                                let matchedCategory =
-                                  raw?.category || job.sektor;
-                                if (matchedCategory)
-                                  matchedCategory = String(matchedCategory);
-
-                                const foundCat = categoryOptions.find(
-                                  (o) =>
-                                    o.value === matchedCategory ||
-                                    o.label === matchedCategory ||
-                                    o.value.toLowerCase() ===
-                                      matchedCategory.toLowerCase() ||
-                                    o.label.toLowerCase() ===
-                                      matchedCategory.toLowerCase(),
-                                );
-                                if (foundCat) matchedCategory = foundCat.value;
-
-                                // Find matching education
-                                let matchedEdu =
-                                  raw?.education_required ||
-                                  job.education_required;
-                                if (matchedEdu) matchedEdu = String(matchedEdu);
-
-                                let foundEdu = educationOptions.find(
-                                  (o) =>
-                                    o.value === matchedEdu ||
-                                    o.label === matchedEdu ||
-                                    o.value.toLowerCase() ===
-                                      matchedEdu.toLowerCase() ||
-                                    o.label.toLowerCase() ===
-                                      matchedEdu.toLowerCase(),
-                                );
-
-                                if (
-                                  !foundEdu &&
-                                  matchedEdu &&
-                                  educationGroups.length > 0
-                                ) {
-                                  for (const g of educationGroups) {
-                                    if (g.items) {
-                                      const item = g.items.find(
-                                        (i) => String(i.id) === matchedEdu,
-                                      );
-                                      if (item) {
-                                        const name = item.name;
-                                        foundEdu = educationOptions.find(
-                                          (o) => o.value === name,
-                                        );
-                                        break;
-                                      }
-                                    }
-                                  }
-                                }
-
-                                if (foundEdu) {
-                                  matchedEdu = foundEdu.value;
-                                }
-
-                                setNewJob({
-                                  posisi: raw?.job_title || job.posisi,
-                                  position_id: raw?.position_id
-                                    ? String(raw.position_id)
-                                    : "",
-                                  company_id: raw?.company_id
-                                    ? String(raw.company_id)
-                                    : job.companyId
-                                      ? String(job.companyId)
-                                      : "",
-                                  sektor: matchedCategory,
-                                  tipe: job.tipe as UITipe,
-                                  gender: raw?.gender || "L/P",
-                                  quota: raw?.quota || 1,
-                                  deskripsi:
-                                    raw?.job_description || job.deskripsi,
-                                  experience_required:
-                                    raw?.experience_required ||
-                                    job.experience_required,
-                                  education_required: matchedEdu,
-                                  skills_required:
-                                    raw?.skills_required || job.skills_required,
-                                  min_salary:
-                                    typeof raw?.min_salary === "number"
-                                      ? raw!.min_salary
-                                      : 0,
-                                  max_salary:
-                                    typeof raw?.max_salary === "number"
-                                      ? raw!.max_salary
-                                      : 0,
-                                  work_setup: raw?.work_setup || job.lokasi,
-                                });
-                                setShowForm(true);
-                              }}
-                              className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
+                              onClick={() => openEditLowongan(job)}
+                              className="landing-focus flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-200/90 transition hover:bg-slate-100 hover:ring-slate-300/90"
                               title="Edit"
                             >
                               <i className="ri-edit-line" />
@@ -1331,28 +1323,10 @@ export default function LowonganPage() {
                             </div>
                           </TD>
                           <TD>
-                            <div className="flex flex-wrap gap-2">
-                              <Link
-                                href={`/dashboard/lowongan/${job.id}`}
-                                className={`landing-focus inline-flex flex-1 items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium text-white shadow-sm transition motion-safe:hover:brightness-95 ${
-                                  job.status === "Menunggu Verifikasi"
-                                    ? "bg-amber-500 hover:bg-amber-600"
-                                    : "bg-primary hover:bg-[var(--color-primary-dark)]"
-                                }`}
-                              >
-                                {job.status === "Menunggu Verifikasi"
-                                  ? "Review & Konfirmasi"
-                                  : "Detail"}
-                              </Link>
-                              {job.status !== "Menunggu Verifikasi" && (
-                                <Link
-                                  href={`/dashboard/lowongan/${encodeURIComponent(String(job.id))}/pelamar`}
-                                  className="landing-focus inline-flex flex-1 items-center justify-center rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
-                                >
-                                  Pelamar
-                                </Link>
-                              )}
-                            </div>
+                            <ActionMenu
+                              ariaLabel={`Aksi untuk ${job.posisi}`}
+                              items={getLowonganActionItems(job)}
+                            />
                           </TD>
                         </TableRow>
                       ))}
