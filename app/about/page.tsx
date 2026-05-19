@@ -425,31 +425,59 @@ export default function AboutPage() {
               Profil dan potensi wilayah kerja ADIKARA Paser
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {statistics.map((stat, index) => (
-              <div
-                key={index}
-                className="bg-white/12 backdrop-blur-md p-5 rounded-2xl text-center overflow-hidden border border-white/15 ring-1 ring-white/10 shadow-lg shadow-black/10 motion-safe:transition-transform motion-safe:duration-300 hover:-translate-y-0.5"
-              >
-                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <i className={`${stat.icon} text-2xl text-white`}></i>
-                </div>
-                {stat.title && (
-                  <p className="text-xs text-blue-100 mb-1">{stat.title}</p>
-                )}
-                <h3 className="text-base sm:text-lg md:text-xl font-bold mb-1 break-words leading-tight">
-                  {stat.value}
-                </h3>
-                {stat.label && (
-                  <p className="text-xs sm:text-sm text-blue-100 mb-0.5 break-words">
-                    {stat.label}
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {statistics.slice(0, 4).map((stat, index) => (
+                <div
+                  key={index}
+                  className="bg-white/12 backdrop-blur-md p-5 rounded-2xl text-center overflow-hidden border border-white/15 ring-1 ring-white/10 shadow-lg shadow-black/10 motion-safe:transition-transform motion-safe:duration-300 hover:-translate-y-0.5"
+                >
+                  <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <i className={`${stat.icon} text-2xl text-white`}></i>
+                  </div>
+                  {stat.title && (
+                    <p className="text-xs text-blue-100 mb-1">{stat.title}</p>
+                  )}
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold mb-1 break-words leading-tight">
+                    {stat.value}
+                  </h3>
+                  {stat.label && (
+                    <p className="text-xs sm:text-sm text-blue-100 mb-0.5 break-words">
+                      {stat.label}
+                    </p>
+                  )}
+                  <p className="text-[11px] sm:text-xs text-blue-200 break-words">
+                    {stat.sublabel}
                   </p>
-                )}
-                <p className="text-[11px] sm:text-xs text-blue-200 break-words">
-                  {stat.sublabel}
-                </p>
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {statistics.slice(4).map((stat, index) => (
+                <div
+                  key={index + 4}
+                  className="bg-white/12 backdrop-blur-md p-5 rounded-2xl text-center overflow-hidden border border-white/15 ring-1 ring-white/10 shadow-lg shadow-black/10 motion-safe:transition-transform motion-safe:duration-300 hover:-translate-y-0.5"
+                >
+                  <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <i className={`${stat.icon} text-2xl text-white`}></i>
+                  </div>
+                  {stat.title && (
+                    <p className="text-xs text-blue-100 mb-1">{stat.title}</p>
+                  )}
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold mb-1 break-words leading-tight">
+                    {stat.value}
+                  </h3>
+                  {stat.label && (
+                    <p className="text-xs sm:text-sm text-blue-100 mb-0.5 break-words">
+                      {stat.label}
+                    </p>
+                  )}
+                  <p className="text-[11px] sm:text-xs text-blue-200 break-words">
+                    {stat.sublabel}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
