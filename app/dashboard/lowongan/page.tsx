@@ -48,6 +48,13 @@ import { jobSchema } from "../../../utils/zod-schemas";
 
 import FullPageLoading from "../../../components/ui/FullPageLoading";
 
+function parseSkillTags(value: string): string[] {
+  return value
+    .split(/[,;]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 export default function LowonganPage() {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
@@ -57,6 +64,8 @@ export default function LowonganPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [skillDraft, setSkillDraft] = useState("");
+  const [skillTags, setSkillTags] = useState<string[]>([]);
   const [role] = useState<string>(() =>
     typeof window !== "undefined" ? localStorage.getItem("role") || "" : "",
   );
@@ -597,6 +606,30 @@ export default function LowonganPage() {
     loadCounts();
   }, [paginatedLowongan, role, companyId]);
 
+  const resetSkillFields = () => {
+    setSkillDraft("");
+    setSkillTags([]);
+  };
+
+  const addSkillTag = () => {
+    const val = skillDraft.trim();
+    if (!val) return;
+    if (skillTags.some((t) => t.toLowerCase() === val.toLowerCase())) {
+      setSkillDraft("");
+      return;
+    }
+    const next = [...skillTags, val];
+    setSkillTags(next);
+    setNewJob((prev) => ({ ...prev, skills_required: next.join(", ") }));
+    setSkillDraft("");
+  };
+
+  const removeSkillTag = (skill: string) => {
+    const next = skillTags.filter((t) => t !== skill);
+    setSkillTags(next);
+    setNewJob((prev) => ({ ...prev, skills_required: next.join(", ") }));
+  };
+
   const handleAddJob = async () => {
     const effectiveCompanyId =
       role === "company" ? companyId : newJob.company_id;
@@ -607,6 +640,17 @@ export default function LowonganPage() {
     }
     setSubmittedJob(true);
     setFieldErrors({});
+
+    if (skillDraft.trim()) {
+      setFieldErrors({
+        skills_required:
+          "Tekan Enter atau tombol + untuk menambahkan keahlian yang Anda ketik.",
+      });
+      showError("Mohon periksa input Anda");
+      return;
+    }
+
+    const skillsRequired = skillTags.join(", ");
 
     const validationPayload = {
       position_id: newJob.position_id || "",
@@ -620,7 +664,7 @@ export default function LowonganPage() {
       experience_required: newJob.experience_required || "",
       education_required: newJob.education_required || "",
       deskripsi: newJob.deskripsi || "",
-      skills_required: newJob.skills_required || "",
+      skills_required: skillsRequired,
       company_id: effectiveCompanyId,
     };
 
@@ -648,7 +692,7 @@ export default function LowonganPage() {
         max_salary: Number.isFinite(newJob.max_salary) ? newJob.max_salary : 0,
         experience_required: newJob.experience_required || "",
         education_required: newJob.education_required || "",
-        skills_required: newJob.skills_required || "",
+        skills_required: skillsRequired,
         work_setup: newJob.work_setup || "WFO",
         gender: newJob.gender,
         quota: Number(newJob.quota),
@@ -674,6 +718,7 @@ export default function LowonganPage() {
       }
       await loadJobs();
       setNewJob(EMPTY_NEW_JOB);
+      resetSkillFields();
       setShowForm(false);
       setEditingId(null);
       setSubmittedJob(false);
@@ -775,6 +820,10 @@ export default function LowonganPage() {
       max_salary: typeof raw?.max_salary === "number" ? raw!.max_salary : 0,
       work_setup: raw?.work_setup || job.lokasi,
     });
+    setSkillTags(
+      parseSkillTags(raw?.skills_required || job.skills_required || ""),
+    );
+    setSkillDraft("");
     setShowForm(true);
   };
 
@@ -934,6 +983,7 @@ export default function LowonganPage() {
                     onClick={() => {
                       setEditingId(null);
                       setNewJob(EMPTY_NEW_JOB);
+                      resetSkillFields();
                       setShowForm(true);
                       setSubmittedJob(false);
                     }}
@@ -966,6 +1016,7 @@ export default function LowonganPage() {
                     setEditingId(null);
                     setNewJob(EMPTY_NEW_JOB);
                     setFieldErrors({});
+                    resetSkillFields();
                   }}
                   className="rounded-lg bg-gray-100 px-4 py-2 text-primary transition hover:bg-gray-200"
                 >
@@ -1126,16 +1177,58 @@ export default function LowonganPage() {
                 />
               </div>
               <div className="md:col-span-2">
-                <Input
-                  label="Keahlian"
-                  type="text"
-                  placeholder="Contoh: React, Node.js, SQL"
-                  value={newJob.skills_required}
-                  onChange={(e) =>
-                    setNewJob({ ...newJob, skills_required: e.target.value })
-                  }
-                  error={fieldErrors["skills_required"]}
-                />
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Keahlian
+                </label>
+                <p className="mb-2 text-xs text-slate-500">
+                  Tambahkan satu per satu. Setiap keahlian muncul sebagai label
+                  di bawah kolom ini.
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Mis. React — ketik lalu Enter atau +"
+                    value={skillDraft}
+                    onChange={(e) => setSkillDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addSkillTag();
+                      }
+                    }}
+                    className="min-w-0 flex-1"
+                    error={fieldErrors["skills_required"]}
+                  />
+                  <button
+                    type="button"
+                    onClick={addSkillTag}
+                    aria-label="Tambah keahlian"
+                    title="Tambah keahlian"
+                    className="landing-focus flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-primary text-lg font-semibold text-white shadow-sm transition hover:bg-[var(--color-primary-dark)]"
+                  >
+                    <i className="ri-add-line leading-none" aria-hidden />
+                  </button>
+                </div>
+                {skillTags.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {skillTags.map((skill) => (
+                      <span
+                        key={skill}
+                        className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/15"
+                      >
+                        {skill}
+                        <button
+                          type="button"
+                          onClick={() => removeSkillTag(skill)}
+                          className="ml-0.5 text-primary/80 transition hover:text-primary"
+                          aria-label={`Hapus ${skill}`}
+                        >
+                          <i className="ri-close-line" aria-hidden />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </Modal>
@@ -1389,82 +1482,7 @@ export default function LowonganPage() {
                           {canEdit && (
                             <button
                               type="button"
-                              onClick={() => {
-                                setEditingId(String(job.id));
-                                const raw = lowonganList.find(
-                                  (j) => String(j.id) === String(job.id),
-                                );
-                                let matchedCategory =
-                                  raw?.category || job.sektor;
-                                const foundCat = categoryOptions.find(
-                                  (o) =>
-                                    o.value === matchedCategory ||
-                                    o.label === matchedCategory ||
-                                    o.value.toLowerCase() ===
-                                      String(matchedCategory).toLowerCase() ||
-                                    o.label.toLowerCase() ===
-                                      String(matchedCategory).toLowerCase(),
-                                );
-                                if (foundCat) matchedCategory = foundCat.value;
-
-                                let matchedEdu =
-                                  raw?.education_required ||
-                                  job.education_required;
-                                const foundEdu = educationOptions.find(
-                                  (o) =>
-                                    o.value === matchedEdu ||
-                                    o.label === matchedEdu ||
-                                    o.value.toLowerCase() ===
-                                      String(matchedEdu).toLowerCase() ||
-                                    o.label.toLowerCase() ===
-                                      String(matchedEdu).toLowerCase(),
-                                );
-                                if (foundEdu) {
-                                  matchedEdu = foundEdu.value;
-                                } else if (matchedEdu) {
-                                  const exists = educationOptions.some(
-                                    (o) => o.value === String(matchedEdu),
-                                  );
-                                  if (!exists) {
-                                    setEducationOptions((prev) => [
-                                      ...prev,
-                                      {
-                                        value: String(matchedEdu),
-                                        label: String(matchedEdu),
-                                      },
-                                    ]);
-                                  }
-                                }
-
-                                setNewJob({
-                                  posisi: raw?.job_title || job.posisi,
-                                  position_id: raw?.position_id || "",
-                                  company_id:
-                                    raw?.company_id || job.companyId || "",
-                                  sektor: matchedCategory,
-                                  tipe: job.tipe as UITipe,
-                                  gender: raw?.gender || "L/P",
-                                  quota: raw?.quota || 1,
-                                  deskripsi:
-                                    raw?.job_description || job.deskripsi,
-                                  experience_required:
-                                    raw?.experience_required ||
-                                    job.experience_required,
-                                  education_required: matchedEdu,
-                                  skills_required:
-                                    raw?.skills_required || job.skills_required,
-                                  min_salary:
-                                    typeof raw?.min_salary === "number"
-                                      ? raw!.min_salary
-                                      : 0,
-                                  max_salary:
-                                    typeof raw?.max_salary === "number"
-                                      ? raw!.max_salary
-                                      : 0,
-                                  work_setup: raw?.work_setup || job.lokasi,
-                                });
-                                setShowForm(true);
-                              }}
+                              onClick={() => openEditLowongan(job)}
                               className="flex min-w-0 flex-1 items-center justify-center rounded-lg bg-white px-3 py-2 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/25 transition hover:bg-primary/5"
                             >
                               Edit

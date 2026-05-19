@@ -1,5 +1,6 @@
 "use client";
-import React from "react";
+import React, { useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 
 type ModalProps = {
   open: boolean;
@@ -12,6 +13,14 @@ type ModalProps = {
   size?: "sm" | "md" | "lg" | "xl" | "full";
 };
 
+function useIsClient() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+}
+
 export default function Modal({
   open,
   title,
@@ -21,7 +30,9 @@ export default function Modal({
   actions,
   size = "md",
 }: ModalProps) {
-  if (!open) return null;
+  const isClient = useIsClient();
+  if (!open || !isClient) return null;
+
   const maxW =
     size === "sm"
       ? "max-w-md"
@@ -35,10 +46,14 @@ export default function Modal({
   const containerSizing = "max-h-[90vh] sm:max-h-[85vh] overflow-hidden";
   const bodyOverflow = "overflow-y-auto";
   const hasTitle = Boolean(title?.trim());
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4"
+      role="presentation"
+    >
       <div
-        className="absolute inset-0 bg-slate-900/45 backdrop-blur-[2px]"
+        className="absolute inset-0 min-h-[100dvh] w-full bg-slate-900/45 backdrop-blur-[2px]"
         onClick={onClose}
         aria-hidden
       />
@@ -80,6 +95,7 @@ export default function Modal({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
