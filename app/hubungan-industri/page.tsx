@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import RemoteImage from "../../components/RemoteImage";
 import "chart.js/auto";
 import { Bar, Line, Pie } from "react-chartjs-2";
 import Link from "next/link";
@@ -199,7 +199,7 @@ export default function HubunganIndustriPage() {
                                 href={`/informasi/${encodeURIComponent(n.id)}`}
                                 className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 transform hover:-translate-y-1"
                               >
-                                <Image
+                                <RemoteImage
                                   src={thumb}
                                   alt={n.judul || "Thumbnail"}
                                   width={800}

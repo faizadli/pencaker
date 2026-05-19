@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import RemoteImage from "../RemoteImage";
 import { usePathname } from "next/navigation";
 import { logout, adminLogout } from "../../services/auth";
 import {
@@ -275,12 +275,11 @@ export default function Sidebar({
           className="landing-focus flex min-w-0 shrink items-center gap-2 rounded-lg outline-offset-2"
         >
           {brand.logo ? (
-            <Image
+            <RemoteImage
               src={brand.logo}
               alt={brand.name || "Logo"}
               width={240}
               height={72}
-              unoptimized
               priority
               className="h-11 w-auto max-w-[200px] object-contain sm:h-12"
             />
@@ -396,7 +395,7 @@ export default function Sidebar({
             >
               <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary to-primary-dark ring-2 ring-primary/20 ring-offset-2 ring-offset-white">
                 {userAvatar ? (
-                  <Image
+                  <RemoteImage
                     src={userAvatar}
                     alt={userName || "User"}
                     width={36}

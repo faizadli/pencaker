@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import RemoteImage from "../../../components/RemoteImage";
 import {
   Input,
   SearchableSelect,
@@ -32,6 +32,7 @@ import {
   getCandidateProfile,
 } from "../../../services/profile";
 import { presignUpload, upsertAk1Document } from "../../../services/ak1";
+import { uploadViaPresign } from "../../../services/storage";
 import { listDistricts, listVillages } from "../../../services/wilayah";
 import { getPublicEducationGroups } from "../../../services/site";
 
@@ -490,32 +491,21 @@ export default function RegisterCandidate() {
       const limitMB = 8;
       const tooLarge = (f: File) => f.size > limitMB * 1024 * 1024;
       const putSigned = async (
-        url: string,
+        pre: { url: string; key?: string; public_url?: string },
         body: Blob | File,
         contentType: string,
-        publicUrl?: string,
       ) => {
-        const base =
-          publicUrl ||
-          (url.includes("?") ? url.slice(0, url.indexOf("?")) : url);
-        const attempt = async () =>
-          fetch(url, {
-            method: "PUT",
-            headers: { "Content-Type": contentType },
-            body,
-          });
         let tries = 0;
         const delays = [300, 700, 1500];
         while (tries < delays.length) {
           try {
-            const resp = await attempt();
-            if (resp.ok) return base;
+            const key = await uploadViaPresign(pre, body, contentType);
+            if (key) return key;
           } catch {}
           await new Promise((r) => setTimeout(r, delays[tries]));
           tries++;
         }
-        const resp = await attempt();
-        return resp.ok ? base : undefined;
+        return uploadViaPresign(pre, body, contentType);
       };
 
       if (
@@ -539,7 +529,7 @@ export default function RegisterCandidate() {
               filename,
               "image/jpeg",
             );
-            return await putSigned(pre.url, blob, "image/jpeg", pre.public_url);
+            return await putSigned(pre, blob, "image/jpeg");
           })()
         : Promise.resolve(undefined);
       const cvPromise = cvFile
@@ -552,12 +542,7 @@ export default function RegisterCandidate() {
                 filename,
                 "image/jpeg",
               );
-              return await putSigned(
-                pre.url,
-                blob,
-                "image/jpeg",
-                pre.public_url,
-              );
+              return await putSigned(pre, blob, "image/jpeg");
             }
             const pre = await presignCandidateProfileUpload(
               "candidate/cv",
@@ -565,10 +550,9 @@ export default function RegisterCandidate() {
               cvFile.type || "application/octet-stream",
             );
             return await putSigned(
-              pre.url,
+              pre,
               cvFile,
               cvFile.type || "application/octet-stream",
-              pre.public_url,
             );
           })()
         : Promise.resolve(undefined);
@@ -648,12 +632,7 @@ export default function RegisterCandidate() {
         const put = async (folder: string, f: File) => {
           const p = await prepare(f);
           const pre = await presignUpload(folder, p.filename, p.contentType);
-          return await putSigned(
-            pre.url,
-            p.body,
-            p.contentType,
-            pre.public_url,
-          );
+          return await putSigned(pre, p.body, p.contentType);
         };
         const [ktpUrl, ijazahUrl, pasUrl, certUrl] = await Promise.all([
           put(`ak1/${uid}/ktp`, ak1Files.ktp),
@@ -994,7 +973,7 @@ export default function RegisterCandidate() {
               <div className="sm:col-span-2 flex flex-col items-center gap-4 mb-4">
                 <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center group">
                   {photoPreview ? (
-                    <Image
+                    <RemoteImage
                       src={photoPreview}
                       alt="Preview"
                       fill

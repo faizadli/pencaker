@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import RemoteImage from "../../../../../../components/RemoteImage";
 import { useParams, useRouter } from "next/navigation";
 import FullPageLoading from "../../../../../../components/ui/FullPageLoading";
 import { getCandidateProfileById } from "../../../../../../services/profile";
@@ -363,7 +363,7 @@ export default function ApplicantDetailPage() {
               <div className="relative mx-auto w-32 h-32 mb-4">
                 {candidate.photo_profile ? (
                   <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-md bg-gray-100 mx-auto">
-                    <Image
+                    <RemoteImage
                       src={candidate.photo_profile}
                       alt={candidate.full_name}
                       fill

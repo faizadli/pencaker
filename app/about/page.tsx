@@ -1,5 +1,6 @@
 "use client";
-import Image from "next/image";
+import RemoteImage from "../../components/RemoteImage";
+import { resolveImageSrc } from "../../services/storage";
 import { useEffect, useState } from "react";
 import { getAboutContent, getPublicSiteSettings } from "../../services/site";
 import FullPageLoading from "../../components/ui/FullPageLoading";
@@ -220,7 +221,10 @@ export default function AboutPage() {
             name: String(t.data?.name || ""),
             position: String(t.data?.position || ""),
             role: String(t.data?.role || ""),
-            image: String(t.data?.image || "https://picsum.photos/200/200"),
+            image: resolveImageSrc(
+              t.data?.image,
+              "https://picsum.photos/200/200",
+            ),
           })),
         );
         // achievements/statistics: leave default dummy
@@ -391,7 +395,7 @@ export default function AboutPage() {
             {teamMembers.map((member) => (
               <div key={member.id} className="text-center">
                 <div className="relative w-32 h-32 mx-auto mb-4">
-                  <Image
+                  <RemoteImage
                     src={member.image}
                     alt={member.name}
                     width={128}

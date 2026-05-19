@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
+import RemoteImage from "../RemoteImage";
 import { useEffect, useRef, useSyncExternalStore, useState } from "react";
 import { usePathname } from "next/navigation";
 import Modal from "../ui/Modal";
@@ -167,13 +167,12 @@ export default function Navbar() {
                 className="landing-focus flex-shrink-0 flex items-center gap-3 rounded-xl outline-offset-2"
               >
                 {brand.logo ? (
-                  <Image
+                  <RemoteImage
                     src={brand.logo}
                     alt={brand.name || "Logo"}
                     width={200}
                     height={200}
                     className="object-contain h-8 sm:h-10 md:h-12 w-auto"
-                    unoptimized
                     priority
                   />
                 ) : (

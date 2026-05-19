@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import RemoteImage from "../../components/RemoteImage";
 import Link from "next/link";
 import FullPageLoading from "../../components/ui/FullPageLoading";
 import { getHomeContent } from "../../services/site";
@@ -8,6 +8,7 @@ import { useToast } from "../../components/ui/Toast";
 import { Input } from "../../components/ui/field";
 import Pagination from "../../components/ui/Pagination";
 import { stripHtml, formatDate } from "../../utils/format";
+import { resolveImageSrc } from "../../services/storage";
 
 type NewsItem = {
   id: string;
@@ -208,7 +209,7 @@ export default function InformasiPage() {
                       "") as string;
                     const date = formatDate(rawDate);
                     const cat = String(n.data?.kategori || "Informasi");
-                    const thumb = String(n.data?.gambar || "");
+                    const thumb = resolveImageSrc(n.data?.gambar, "");
                     const excerpt = stripHtml(n.data?.isi || "").slice(0, 160);
                     return (
                       <div
@@ -217,7 +218,7 @@ export default function InformasiPage() {
                       >
                         {thumb ? (
                           <div className="relative overflow-hidden h-40 sm:h-48">
-                            <Image
+                            <RemoteImage
                               src={thumb}
                               alt={title}
                               width={800}

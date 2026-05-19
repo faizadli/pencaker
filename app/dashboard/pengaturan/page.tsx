@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
+import RemoteImage from "../../../components/RemoteImage";
 import {
   Input,
   Textarea,
@@ -22,7 +22,6 @@ import {
   listAk1Templates,
   upsertAk1Layout,
   getAk1Layout,
-  presignDownload,
   deleteAk1Template,
 } from "../../../services/ak1";
 import {
@@ -40,6 +39,7 @@ import {
   upsertPositionGroups,
 } from "../../../services/site";
 import { presignDisnakerProfileUpload } from "../../../services/profile";
+import { resolveStorageUrl, uploadViaPresign } from "../../../services/storage";
 import type { Ak1Template } from "../../../services/ak1";
 import Card from "../../../components/ui/Card";
 import StatCard from "../../../components/ui/StatCard";
@@ -346,22 +346,14 @@ export default function PengaturanPage() {
           const logoVal = String(cfg?.instansi_logo || "");
           const bgVal = String(cfg?.banner_background_image || "");
           if (logoVal) {
-            if (logoVal.startsWith("http")) setLogoUrl(logoVal);
-            else {
-              try {
-                const d = await presignDownload(logoVal);
-                setLogoUrl(d.url);
-              } catch {}
-            }
+            try {
+              setLogoUrl(await resolveStorageUrl(logoVal));
+            } catch {}
           }
           if (bgVal) {
-            if (bgVal.startsWith("http")) setBannerUrl(bgVal);
-            else {
-              try {
-                const d = await presignDownload(bgVal);
-                setBannerUrl(d.url);
-              } catch {}
-            }
+            try {
+              setBannerUrl(await resolveStorageUrl(bgVal));
+            } catch {}
           }
         } catch {}
       } catch {
@@ -589,37 +581,29 @@ export default function PengaturanPage() {
       const folder =
         field === "logo" ? "site-settings/logo" : "site-settings/banner";
       try {
-        const { url } = await presignDisnakerProfileUpload(
+        const pre = await presignDisnakerProfileUpload(
           folder,
           file.name,
           file.type,
         );
-        await fetch(url, {
-          method: "PUT",
-          headers: { "Content-Type": file.type },
-          body: file,
-        });
-        const objectUrl = url.includes("?")
-          ? url.slice(0, url.indexOf("?"))
-          : url;
-        setTempValue(objectUrl);
-        if (field === "logo") setLogoUrl(objectUrl);
-        else setBannerUrl(objectUrl);
+        const key = await uploadViaPresign(pre, file, file.type);
+        if (key) {
+          setTempValue(key);
+          const display = await resolveStorageUrl(key);
+          if (field === "logo") setLogoUrl(display);
+          else setBannerUrl(display);
+        }
         return;
       } catch {}
       try {
-        const { url } = await presignUpload(folder, file.name, file.type);
-        await fetch(url, {
-          method: "PUT",
-          headers: { "Content-Type": file.type },
-          body: file,
-        });
-        const objectUrl = url.includes("?")
-          ? url.slice(0, url.indexOf("?"))
-          : url;
-        setTempValue(objectUrl);
-        if (field === "logo") setLogoUrl(objectUrl);
-        else setBannerUrl(objectUrl);
+        const pre = await presignUpload(folder, file.name, file.type);
+        const key = await uploadViaPresign(pre, file, file.type);
+        if (key) {
+          setTempValue(key);
+          const display = await resolveStorageUrl(key);
+          if (field === "logo") setLogoUrl(display);
+          else setBannerUrl(display);
+        }
         return;
       } catch {}
       const buf = await file.arrayBuffer();
@@ -651,11 +635,12 @@ export default function PengaturanPage() {
       if (!resp.ok) return;
       const data = await resp.json();
       const out = (data?.data || {}) as { url?: string; key?: string };
-      const finalUrl = String(out.url || "");
-      setTempValue(finalUrl);
-      if (finalUrl) {
-        if (field === "logo") setLogoUrl(finalUrl);
-        else setBannerUrl(finalUrl);
+      const key = String(out.key || "");
+      if (key) {
+        setTempValue(key);
+        const display = await resolveStorageUrl(key);
+        if (field === "logo") setLogoUrl(display);
+        else setBannerUrl(display);
       }
     } catch {}
   };
@@ -1565,7 +1550,7 @@ export default function PengaturanPage() {
                   ) : (
                     <div className="flex flex-col items-center rounded-2xl border border-slate-200/90 bg-slate-50/70 p-6">
                       {logoUrl ? (
-                        <Image
+                        <RemoteImage
                           src={logoUrl}
                           alt="Logo Instansi"
                           width={128}
@@ -1604,7 +1589,7 @@ export default function PengaturanPage() {
             >
               <div className="mb-6">
                 <div className="relative mb-4 h-56 w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-                  <Image
+                  <RemoteImage
                     src={bannerUrl || banner.backgroundImage}
                     alt="Preview Banner"
                     fill
@@ -3456,14 +3441,18 @@ function Ak1LayoutEditor() {
                         <TD className="text-slate-700">{t.order || 0}</TD>
                         <TD>
                           {t.file_template ? (
-                            <a
-                              href={t.file_template}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const u = await resolveStorageUrl(
+                                  t.file_template!,
+                                );
+                                window.open(u, "_blank", "noopener,noreferrer");
+                              }}
                               className="text-sm font-medium text-primary hover:underline"
                             >
                               <i className="ri-file-image-line mr-1" /> Lihat
-                            </a>
+                            </button>
                           ) : (
                             "-"
                           )}
@@ -5103,19 +5092,13 @@ function UploadTemplateInline({
                   `${name}_front_${Date.now()}${file.name.substring(file.name.lastIndexOf("."))}`,
                   file.type || "application/octet-stream",
                 );
-                const put = await fetch(pre.url, {
-                  method: "PUT",
-                  headers: {
-                    "Content-Type": file.type || "application/octet-stream",
-                  },
-                  body: file,
-                });
-                if (!put.ok) throw new Error("upload failed");
-                url =
-                  pre.public_url ||
-                  (pre.url.includes("?")
-                    ? pre.url.slice(0, pre.url.indexOf("?"))
-                    : pre.url);
+                const uploadedKey = await uploadViaPresign(
+                  pre,
+                  file,
+                  file.type || "application/octet-stream",
+                );
+                if (!uploadedKey) throw new Error("upload failed");
+                url = uploadedKey;
               }
 
               await upsertAk1Template({ name, file_template: url, order });

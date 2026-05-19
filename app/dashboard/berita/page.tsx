@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import RemoteImage from "../../../components/RemoteImage";
 import {
   Input,
   SearchableSelect,
@@ -9,6 +9,7 @@ import {
 import Modal from "../../../components/ui/Modal";
 import StatCard from "../../../components/ui/StatCard";
 import { presignUpload, presignDownload } from "../../../services/ak1";
+import { resolveStorageUrl, uploadViaPresign } from "../../../services/storage";
 import Pagination from "../../../components/ui/Pagination";
 import {
   listSiteContents,
@@ -66,17 +67,14 @@ function NewsCard({
 }) {
   const [asyncUrl, setAsyncUrl] = useState<string | null>(null);
 
-  const displayUrl =
-    berita.gambar && berita.gambar.startsWith("http")
-      ? berita.gambar
-      : asyncUrl || "https://placehold.co/600x400?text=No+Image";
+  const displayUrl = asyncUrl || "https://placehold.co/600x400?text=No+Image";
 
   useEffect(() => {
     let active = true;
-    if (berita.gambar && !berita.gambar.startsWith("http")) {
-      presignDownload(berita.gambar)
-        .then((d) => {
-          if (active) setAsyncUrl(d.url);
+    if (berita.gambar) {
+      resolveStorageUrl(berita.gambar)
+        .then((u) => {
+          if (active) setAsyncUrl(u);
         })
         .catch(() => {});
     }
@@ -88,7 +86,7 @@ function NewsCard({
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-950/[0.02] transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none">
       <div className="relative h-52 w-full bg-slate-100">
-        <Image
+        <RemoteImage
           src={displayUrl}
           alt={berita.judul}
           fill
@@ -403,20 +401,15 @@ export default function BeritaPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const { url, public_url, key } = await presignUpload(
+      const pre = await presignUpload(
         "site-contents/news",
         file.name,
         file.type,
       );
-      await fetch(url, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      const saved = public_url || key;
+      const saved = await uploadViaPresign(pre, file, file.type);
+      if (!saved) throw new Error("upload failed");
       if (editBerita) setEditBerita({ ...editBerita, [field]: saved });
-      const view = await presignDownload(saved);
-      setNewsImagePreview(view.url);
+      setNewsImagePreview(await resolveStorageUrl(saved));
     } catch {
       showError("Gagal upload gambar");
     }
@@ -665,7 +658,7 @@ export default function BeritaPage() {
                   />
                   {newsImagePreview ? (
                     <div className="relative h-48 w-full">
-                      <Image
+                      <RemoteImage
                         src={newsImagePreview}
                         alt="Preview"
                         fill

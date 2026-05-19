@@ -1,7 +1,7 @@
 "use client";
 import { ZodIssue } from "zod";
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import RemoteImage from "../../../components/RemoteImage";
 import {
   Input,
   Textarea,
@@ -10,6 +10,7 @@ import {
 } from "../../../components/ui/field";
 import Modal from "../../../components/ui/Modal";
 import { presignUpload, presignDownload } from "../../../services/ak1";
+import { uploadViaPresign } from "../../../services/storage";
 import StatCard from "../../../components/ui/StatCard";
 import Pagination from "../../../components/ui/Pagination";
 import Card from "../../../components/ui/Card";
@@ -993,21 +994,12 @@ export default function KontenPage() {
             : section === "holiday_greetings"
               ? "site-contents/holiday-greetings"
               : "site-contents/team";
-      const { url, key, public_url } = await presignUpload(
-        folder,
-        file.name,
-        file.type,
-      );
-      if (!url) throw new Error("URL presign tidak ditemukan");
-      const res = await fetch(url, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      if (!res.ok) throw new Error("Gagal upload ke S3: " + res.statusText);
+      const pre = await presignUpload(folder, file.name, file.type);
+      if (!pre.url) throw new Error("URL presign tidak ditemukan");
+      const saved = await uploadViaPresign(pre, file, file.type);
+      if (!saved) throw new Error("Gagal upload file");
 
       if (section === "partners" && editPartner) {
-        const saved = public_url || key;
         setEditPartner({ ...editPartner, logo: saved });
         try {
           const d = await presignDownload(saved);
@@ -1015,7 +1007,6 @@ export default function KontenPage() {
         } catch {}
       }
       if (section === "testimonials" && editTestimonial) {
-        const saved = public_url || key;
         setEditTestimonial({ ...editTestimonial, foto: saved });
         try {
           const d = await presignDownload(saved);
@@ -1023,7 +1014,6 @@ export default function KontenPage() {
         } catch {}
       }
       if (section === "team" && editTeam) {
-        const saved = public_url || key;
         setEditTeam({ ...editTeam, image: saved });
         try {
           const d = await presignDownload(saved);
@@ -1031,7 +1021,6 @@ export default function KontenPage() {
         } catch {}
       }
       if (section === "holiday_greetings" && editHolidayGreeting) {
-        const saved = public_url || key;
         setEditHolidayGreeting({ ...editHolidayGreeting, image: saved });
         try {
           const d = await presignDownload(saved);
@@ -1508,7 +1497,7 @@ export default function KontenPage() {
                   >
                     <div className="relative mb-0 h-40 w-full overflow-hidden bg-slate-100">
                       {h.image ? (
-                        <Image
+                        <RemoteImage
                           src={h.image}
                           alt={h.title}
                           fill
@@ -2101,7 +2090,7 @@ export default function KontenPage() {
                         error={fieldErrors.image}
                       />
                       {teamImagePreview && (
-                        <Image
+                        <RemoteImage
                           src={teamImagePreview}
                           alt="Foto Anggota"
                           width={96}
@@ -2369,7 +2358,7 @@ export default function KontenPage() {
                     error={fieldErrors.logo}
                   />
                   {partnerLogoPreview && (
-                    <Image
+                    <RemoteImage
                       src={partnerLogoPreview}
                       alt="Logo Mitra"
                       width={96}
@@ -2464,7 +2453,7 @@ export default function KontenPage() {
                     error={fieldErrors.foto}
                   />
                   {testimonialPhotoPreview && (
-                    <Image
+                    <RemoteImage
                       src={testimonialPhotoPreview}
                       alt="Foto"
                       width={96}
@@ -2582,7 +2571,7 @@ export default function KontenPage() {
                       error={fieldErrors.image}
                     />
                     {holidayGreetingImagePreview && (
-                      <Image
+                      <RemoteImage
                         src={holidayGreetingImagePreview}
                         alt="Preview"
                         width={96}

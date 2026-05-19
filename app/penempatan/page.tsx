@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import RemoteImage from "../../components/RemoteImage";
 import Link from "next/link";
 import Card from "../../components/ui/Card";
 import FullPageLoading from "../../components/ui/FullPageLoading";
@@ -253,7 +253,7 @@ export default function PenempatanPage() {
                                 href={`/informasi/${encodeURIComponent(n.id)}`}
                                 className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 transform hover:-translate-y-1"
                               >
-                                <Image
+                                <RemoteImage
                                   src={thumb}
                                   alt={n.judul || "Thumbnail"}
                                   width={800}
@@ -329,7 +329,7 @@ export default function PenempatanPage() {
                 >
                   <div className="flex items-start gap-4 mb-4">
                     {job.logo ? (
-                      <Image
+                      <RemoteImage
                         src={job.logo}
                         alt={job.perusahaan}
                         width={56}

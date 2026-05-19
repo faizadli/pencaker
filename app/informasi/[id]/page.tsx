@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import Image from "next/image";
+import RemoteImage from "../../../components/RemoteImage";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getHomeContent } from "../../../services/site";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
 import { formatDate, stripHtml } from "../../../utils/format";
+import { resolveImageSrc, rewriteContentHtml } from "../../../services/storage";
 
 type NewsItem = {
   id: string;
@@ -49,7 +50,7 @@ function RelatedSection({ cat, items }: { cat: string; items: NewsItem[] }) {
           {items.map((n) => {
             const relTitle = String(n.data?.judul || "");
             const relDate = formatDate(n.data?.tanggal);
-            const relThumb = String(n.data?.gambar || "");
+            const relThumb = resolveImageSrc(n.data?.gambar, "");
             const relExcerpt = stripHtml(n.data?.isi || "").slice(0, 120);
             return (
               <li key={n.id}>
@@ -95,7 +96,7 @@ function RelatedSection({ cat, items }: { cat: string; items: NewsItem[] }) {
 function RelatedThumb({ src, alt }: { src: string; alt: string }) {
   return (
     <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
-      <Image
+      <RemoteImage
         src={src}
         alt={alt}
         fill
@@ -170,8 +171,8 @@ export default function NewsDetailPage() {
   const title = String(item.data?.judul || "");
   const date = formatDate(item.data?.tanggal);
   const cat = String(item.data?.kategori || "Informasi");
-  const thumb = String(item.data?.gambar || "");
-  const html = String(item.data?.isi || "");
+  const thumbSrc = resolveImageSrc(item.data?.gambar, "");
+  const html = rewriteContentHtml(String(item.data?.isi || ""));
 
   return (
     <PageShell>
@@ -194,12 +195,13 @@ export default function NewsDetailPage() {
           </div>
         </header>
 
-        {thumb ? (
+        {thumbSrc ? (
           <figure className="mx-auto max-w-3xl px-4 pt-6 sm:px-6">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={thumb}
+            <RemoteImage
+              src={thumbSrc}
               alt={title}
+              width={1200}
+              height={630}
               className="h-auto w-full rounded-lg border border-slate-200/80 bg-slate-50 object-contain shadow-sm"
             />
           </figure>

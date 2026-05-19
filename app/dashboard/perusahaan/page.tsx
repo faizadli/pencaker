@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import RemoteImage from "../../../components/RemoteImage";
 import Link from "next/link";
 import {
   Input,
@@ -519,7 +519,7 @@ export default function PerusahaanPage() {
                       <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50/95 to-white p-4">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex min-w-0 items-center gap-3">
-                            <Image
+                            <RemoteImage
                               src={
                                 p.company_logo || "https://picsum.photos/200"
                               }
@@ -626,7 +626,7 @@ export default function PerusahaanPage() {
                         <TableRow key={p.id}>
                           <TD>
                             <div className="flex items-center gap-3">
-                              <Image
+                              <RemoteImage
                                 src={
                                   p.company_logo || "https://picsum.photos/200"
                                 }
@@ -687,7 +687,7 @@ export default function PerusahaanPage() {
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex min-w-0 items-center gap-2">
-                            <Image
+                            <RemoteImage
                               src={
                                 p.company_logo || "https://picsum.photos/200"
                               }
@@ -871,7 +871,7 @@ export default function PerusahaanPage() {
               <div className="sm:col-span-2 md:col-span-2 flex flex-col items-center gap-4 mb-4">
                 <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center group">
                   {formCompany.company_logo ? (
-                    <Image
+                    <RemoteImage
                       src={formCompany.company_logo}
                       alt="Logo Preview"
                       fill

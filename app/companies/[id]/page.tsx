@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
+import RemoteImage from "../../../components/RemoteImage";
+import { resolveImageSrc } from "../../../services/storage";
 import Link from "next/link";
 import { getPublicCompanyById } from "../../../services/company";
 import { listPublicJobs } from "../../../services/jobs";
@@ -103,7 +104,12 @@ export default function CompanyDetailPage() {
 
   const logoSrc = useMemo(() => {
     const src = (company?.company_logo || "").trim();
-    if (src) return src;
+    if (src) {
+      return resolveImageSrc(
+        src,
+        `https://picsum.photos/96?random=${encodeURIComponent(String(company?.company_name || company?.id || "default"))}`,
+      );
+    }
     const key = company?.company_name || company?.id || "default";
     return `https://picsum.photos/96?random=${encodeURIComponent(String(key))}`;
   }, [company]);
@@ -156,7 +162,7 @@ export default function CompanyDetailPage() {
           </Link>
           <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-start">
             <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white/10 ring-2 ring-white/20 sm:h-20 sm:w-20">
-              <Image
+              <RemoteImage
                 src={logoSrc}
                 alt={company.company_name}
                 width={80}

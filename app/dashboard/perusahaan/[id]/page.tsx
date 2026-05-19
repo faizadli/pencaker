@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
-import Image from "next/image";
+import RemoteImage from "../../../../components/RemoteImage";
 import { useParams, useRouter } from "next/navigation";
 import FullPageLoading from "../../../../components/ui/FullPageLoading";
 import {
@@ -354,7 +354,7 @@ export default function DetailPerusahaanPage() {
               <div className="relative mx-auto mb-4 h-32 w-32">
                 <div className="relative mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-slate-50 shadow-md">
                   {company.company_logo ? (
-                    <Image
+                    <RemoteImage
                       src={company.company_logo}
                       alt={company.company_name}
                       fill

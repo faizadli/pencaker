@@ -2,7 +2,7 @@
 import { ZodIssue } from "zod";
 import { useEffect, useState, useCallback } from "react";
 import FullPageLoading from "../../../components/ui/FullPageLoading";
-import Image from "next/image";
+import RemoteImage from "../../../components/RemoteImage";
 import {
   Input,
   SearchableSelect,
@@ -28,6 +28,8 @@ import {
 } from "../../../utils/zod-schemas";
 import { getEducationGroups } from "../../../services/site";
 import { useRouter } from "next/navigation";
+import StorageImage from "../../../components/StorageImage";
+import { resolveImageSrc, uploadViaPresign } from "../../../services/storage";
 import {
   Table,
   TableHead,
@@ -365,7 +367,7 @@ export default function PencakerPage() {
             email: c.email || "-",
             alamat: c.address || "-",
             status: "-",
-            foto: c.photo_profile || "https://picsum.photos/200",
+            foto: resolveImageSrc(c.photo_profile, "https://picsum.photos/200"),
             ak1Status:
               c.ak1_status === "APPROVED"
                 ? "Aktif"
@@ -781,7 +783,7 @@ export default function PencakerPage() {
                               <TableRow key={p.id}>
                                 <TD>
                                   <div className="flex items-center gap-3">
-                                    <Image
+                                    <RemoteImage
                                       src={p.foto}
                                       alt={p.nama}
                                       width={40}
@@ -1136,7 +1138,10 @@ export default function PencakerPage() {
                         email: c.email || "-",
                         alamat: c.address || "-",
                         status: "-",
-                        foto: c.photo_profile || "https://picsum.photos/200",
+                        foto: resolveImageSrc(
+                          c.photo_profile,
+                          "https://picsum.photos/200",
+                        ),
                         ak1Status:
                           c.ak1_status === "APPROVED"
                             ? "Aktif"
@@ -1173,12 +1178,20 @@ export default function PencakerPage() {
               <div className="sm:col-span-2 flex flex-col items-center gap-4 mb-4">
                 <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center group">
                   {formCandidate.photo_profile ? (
-                    <Image
-                      src={formCandidate.photo_profile}
-                      alt="Preview"
-                      fill
-                      className="object-cover"
-                    />
+                    formCandidate.photo_profile.startsWith("data:") ? (
+                      <RemoteImage
+                        src={formCandidate.photo_profile}
+                        alt="Preview"
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <StorageImage
+                        src={formCandidate.photo_profile}
+                        alt="Preview"
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    )
                   ) : (
                     <i className="ri-user-line text-4xl text-gray-300"></i>
                   )}
@@ -1472,21 +1485,17 @@ export default function PencakerPage() {
                               f.name,
                               f.type,
                             );
-                            const uploadRes = await fetch(presign.url, {
-                              method: "PUT",
-                              body: f,
-                              headers: { "Content-Type": f.type },
-                            });
-                            if (!uploadRes.ok)
+                            const key = await uploadViaPresign(
+                              presign,
+                              f,
+                              f.type,
+                            );
+                            if (!key)
                               throw new Error("Gagal upload ke storage");
-
-                            const objectUrl = presign.url.includes("?")
-                              ? presign.url.slice(0, presign.url.indexOf("?"))
-                              : presign.url;
 
                             setFormCandidate({
                               ...formCandidate,
-                              cv_file: objectUrl,
+                              cv_file: key,
                             });
                             showSuccess("CV berhasil diunggah");
                           } catch {

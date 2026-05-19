@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { getPublicSiteSettings } from "../services/site";
+import { resolveImageSrc } from "../services/storage";
 
 type SiteSettings = {
   instansi_nama: string;
@@ -18,8 +19,20 @@ const SiteContext = createContext<SiteContextType>({
   loading: true,
 });
 
-export function SiteProvider({ children, initialSettings }: { children: React.ReactNode; initialSettings?: SiteSettings }) {
-  const [settings, setSettings] = useState<SiteSettings>(initialSettings || { instansi_nama: "ADIKARA", instansi_logo: "" });
+export function SiteProvider({
+  children,
+  initialSettings,
+}: {
+  children: React.ReactNode;
+  initialSettings?: SiteSettings;
+}) {
+  const normalizeSettings = (s?: SiteSettings): SiteSettings => ({
+    instansi_nama: String(s?.instansi_nama || "ADIKARA"),
+    instansi_logo: resolveImageSrc(s?.instansi_logo, ""),
+  });
+  const [settings, setSettings] = useState<SiteSettings>(
+    normalizeSettings(initialSettings),
+  );
   const [loading, setLoading] = useState(!initialSettings);
 
   useEffect(() => {
@@ -28,12 +41,16 @@ export function SiteProvider({ children, initialSettings }: { children: React.Re
     (async () => {
       try {
         const s = await getPublicSiteSettings();
-        const cfg = (s as { data?: { instansi_nama?: string; instansi_logo?: string } }).data ?? (s as { instansi_nama?: string; instansi_logo?: string });
+        const cfg =
+          (s as { data?: { instansi_nama?: string; instansi_logo?: string } })
+            .data ?? (s as { instansi_nama?: string; instansi_logo?: string });
         if (alive) {
-          setSettings({
-            instansi_nama: String(cfg?.instansi_nama || "ADIKARA"),
-            instansi_logo: String(cfg?.instansi_logo || ""),
-          });
+          setSettings(
+            normalizeSettings({
+              instansi_nama: String(cfg?.instansi_nama || "ADIKARA"),
+              instansi_logo: String(cfg?.instansi_logo || ""),
+            }),
+          );
         }
       } catch {
         // ignore error, keep default
@@ -41,7 +58,9 @@ export function SiteProvider({ children, initialSettings }: { children: React.Re
         if (alive) setLoading(false);
       }
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [initialSettings]);
 
   return (

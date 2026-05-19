@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import RemoteImage from "../components/RemoteImage";
 import Link from "next/link";
 import FullPageLoading from "../components/ui/FullPageLoading";
 import { listPublicJobs } from "../services/jobs";
@@ -11,6 +11,7 @@ import {
 } from "../services/site";
 import { getPublicCompanyById } from "../services/company";
 import { stripHtml, formatDate } from "../utils/format";
+import { resolveImageSrc } from "../services/storage";
 
 export default function HomePage() {
   type SiteContentItem<T> = {
@@ -143,7 +144,9 @@ export default function HomePage() {
               if (companyId) {
                 const cdata = await getPublicCompanyById(companyId);
                 const base = (cdata as { data?: unknown }).data ?? cdata;
-                logo = (base as { company_logo?: string }).company_logo || "";
+                const rawLogo =
+                  (base as { company_logo?: string }).company_logo || "";
+                logo = resolveImageSrc(rawLogo, "");
               }
             } catch {}
             const posisi = String(obj["job_title"] || "-");
@@ -300,14 +303,14 @@ export default function HomePage() {
             cfg?.banner_subjudul ||
               "Aplikasi Data dan Informasi Ketenagakerjaan Area Regional Paser",
           ),
-          backgroundImage: String(
-            cfg?.banner_background_image ||
-              "https://images.unsplash.com/photo-1556761175-b413da4baf72?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80",
+          backgroundImage: resolveImageSrc(
+            cfg?.banner_background_image,
+            "https://images.unsplash.com/photo-1556761175-b413da4baf72?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80",
           ),
         });
         setInstansi({
           nama: String(cfg?.instansi_nama || ""),
-          logo: String(cfg?.instansi_logo || ""),
+          logo: resolveImageSrc(cfg?.instansi_logo, ""),
           alamat: String(cfg?.instansi_alamat || ""),
           telepon: String(cfg?.instansi_telepon || ""),
           email: String(cfg?.instansi_email || ""),
@@ -340,7 +343,10 @@ export default function HomePage() {
                   0,
                   160,
                 ) + "...",
-              gambar: String(n.data?.gambar || "https://picsum.photos/800/320"),
+              gambar: resolveImageSrc(
+                n.data?.gambar,
+                "https://picsum.photos/800/320",
+              ),
             };
           }),
         );
@@ -429,7 +435,7 @@ export default function HomePage() {
             pekerjaan: String(t.data?.pekerjaan || ""),
             perusahaan: String(t.data?.perusahaan || ""),
             testimoni: String(t.data?.testimoni || ""),
-            foto: String(t.data?.foto || "https://picsum.photos/200"),
+            foto: resolveImageSrc(t.data?.foto, "https://picsum.photos/200"),
           })),
         );
         const faqItems = Array.isArray(hc.faqs) ? hc.faqs : [];
@@ -455,7 +461,7 @@ export default function HomePage() {
             id: String(h.id || Math.random()),
             title: String(h.data?.title || ""),
             description: String(h.data?.description || ""),
-            image: String(h.data?.image || ""),
+            image: resolveImageSrc(h.data?.image, ""),
           })),
         );
       } catch {
@@ -477,7 +483,7 @@ export default function HomePage() {
           className="relative w-full"
           style={{ aspectRatio: bannerRatio ? String(bannerRatio) : "3 / 1" }}
         >
-          <Image
+          <RemoteImage
             src={banner.backgroundImage}
             alt=""
             fill
@@ -600,17 +606,19 @@ export default function HomePage() {
                       </p>
                     )}
                   </div>
-                  <div className="relative w-full">
-                    <Image
-                      src={h.image}
-                      alt={h.title}
-                      width={0}
-                      height={0}
-                      sizes="100vw"
-                      style={{ width: "100%", height: "auto" }}
-                      className="transition-transform duration-500 group-hover:scale-105"
-                    />
-                  </div>
+                  {h.image ? (
+                    <div className="relative w-full">
+                      <RemoteImage
+                        src={h.image}
+                        alt={h.title}
+                        width={0}
+                        height={0}
+                        sizes="100vw"
+                        style={{ width: "100%", height: "auto" }}
+                        className="transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -726,7 +734,7 @@ export default function HomePage() {
                 >
                   <div className="flex items-start gap-4 mb-4">
                     {job.logo ? (
-                      <Image
+                      <RemoteImage
                         src={job.logo}
                         alt={job.perusahaan}
                         width={56}
@@ -822,7 +830,7 @@ export default function HomePage() {
                     className="group/news bg-white rounded-2xl shadow-md hover:shadow-xl border border-slate-200/90 ring-1 ring-black/[0.02] overflow-hidden motion-safe:transition-all motion-safe:duration-300 hover:-translate-y-1 hover:border-primary/20"
                   >
                     <div className="relative overflow-hidden h-48">
-                      <Image
+                      <RemoteImage
                         src={news.gambar}
                         alt={news.judul}
                         width={800}
@@ -885,7 +893,7 @@ export default function HomePage() {
                 className="bg-white/12 backdrop-blur-md p-6 rounded-2xl border border-white/20 shadow-lg shadow-black/10 ring-1 ring-white/10 motion-safe:transition-transform motion-safe:duration-300 hover:-translate-y-0.5 hover:bg-white/16"
               >
                 <div className="flex items-center gap-4 mb-4">
-                  <Image
+                  <RemoteImage
                     src={testi.foto}
                     alt={testi.nama}
                     width={64}

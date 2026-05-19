@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import RemoteImage from "../../../../components/RemoteImage";
 import { useParams, useRouter } from "next/navigation";
 import FullPageLoading from "../../../../components/ui/FullPageLoading";
 import { getCandidateProfileById } from "../../../../services/profile";
@@ -213,7 +213,7 @@ export default function DetailPencakerPage() {
               <div className="relative mx-auto mb-4 h-32 w-32">
                 {candidate.photo_profile ? (
                   <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-white bg-gray-100 shadow-md">
-                    <Image
+                    <RemoteImage
                       src={candidate.photo_profile}
                       alt={candidate.full_name}
                       fill

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import RemoteImage from "../../../components/RemoteImage";
 import {
   Input,
   Textarea,
@@ -26,6 +26,7 @@ import {
   upsertCompanyProfile,
   getUserById,
 } from "../../../services/profile";
+import { uploadViaPresign } from "../../../services/storage";
 import { listDistricts, listVillages } from "../../../services/wilayah";
 
 export default function RegisterCompany() {
@@ -269,32 +270,6 @@ export default function RegisterCompany() {
       uid = uid || String(lg.id || "");
       startSession("company", uid, token);
 
-      const putSigned = async (
-        url: string,
-        body: Blob | File,
-        contentType: string,
-      ) => {
-        const base = url.includes("?") ? url.slice(0, url.indexOf("?")) : url;
-        const attempt = async () =>
-          fetch(url, {
-            method: "PUT",
-            headers: { "Content-Type": contentType },
-            body,
-          });
-        let tries = 0;
-        const delays = [300, 700, 1500];
-        while (tries < delays.length) {
-          try {
-            const resp = await attempt();
-            if (resp.ok) return base;
-          } catch {}
-          await new Promise((r) => setTimeout(r, delays[tries]));
-          tries++;
-        }
-        const resp = await attempt();
-        return resp.ok ? base : undefined;
-      };
-
       const compressImage = (file: File) =>
         new Promise<Blob>((resolve, reject) => {
           const img = document.createElement("img");
@@ -351,7 +326,7 @@ export default function RegisterCompany() {
             filename,
             "image/jpeg",
           );
-          logoUrl = await putSigned(pre.url, blob, "image/jpeg");
+          logoUrl = await uploadViaPresign(pre, blob, "image/jpeg");
         } else {
           if (tooLarge(logoFile)) {
             setError(
@@ -366,8 +341,8 @@ export default function RegisterCompany() {
             logoFile.name,
             logoFile.type || "application/octet-stream",
           );
-          logoUrl = await putSigned(
-            pre.url,
+          logoUrl = await uploadViaPresign(
+            pre,
             logoFile,
             logoFile.type || "application/octet-stream",
           );
@@ -669,7 +644,7 @@ export default function RegisterCompany() {
               <div className="sm:col-span-2 md:col-span-2 flex flex-col items-center gap-4 mb-4">
                 <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center group">
                   {logoPreview ? (
-                    <Image
+                    <RemoteImage
                       src={logoPreview}
                       alt="Logo Preview"
                       fill

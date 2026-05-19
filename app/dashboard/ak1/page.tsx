@@ -17,13 +17,17 @@ import {
   getNextAk1NoUrut,
   listAk1Documents,
   presignUpload,
-  presignDownload,
   getAk1Layout,
   listAk1Templates,
   requestAk1Renewal,
   approveAk1Renewal,
   checkAk1Expired,
 } from "../../../services/ak1";
+import {
+  uploadViaPresign,
+  resolveStorageUrl,
+  storageKeyFromPresign,
+} from "../../../services/storage";
 import { getEducationGroups } from "../../../services/site";
 import { useRouter } from "next/navigation";
 import { listRoles, getRolePermissions } from "../../../services/rbac";
@@ -654,14 +658,10 @@ const Ak1PreviewItem = ({
         return;
       }
       const url = String(template.file_template);
-      if (url.startsWith("http") && !url.includes("X-Amz-Signature")) {
-        try {
-          const p = await presignDownload(url);
-          if (active) setBgUrl(p.url);
-        } catch {
-          if (active) setBgUrl(url);
-        }
-      } else {
+      try {
+        const resolved = await resolveStorageUrl(url);
+        if (active) setBgUrl(resolved);
+      } catch {
         if (active) setBgUrl(url);
       }
     };
@@ -939,31 +939,21 @@ export default function Ak1Page() {
     });
 
   const putSigned = async (
-    url: string,
+    pre: { url: string; key?: string; public_url?: string },
     body: Blob | File,
     contentType: string,
-    publicUrl?: string,
   ) => {
-    const base =
-      publicUrl || (url.includes("?") ? url.slice(0, url.indexOf("?")) : url);
-    const attempt = async () =>
-      fetch(url, {
-        method: "PUT",
-        headers: { "Content-Type": contentType },
-        body,
-      });
     let tries = 0;
     const delays = [300, 700, 1500];
     while (tries < delays.length) {
       try {
-        const resp = await attempt();
-        if (resp.ok) return base;
+        const key = await uploadViaPresign(pre, body, contentType);
+        if (key) return key;
       } catch {}
       await new Promise((r) => setTimeout(r, delays[tries]));
       tries++;
     }
-    const resp = await attempt();
-    return resp.ok ? base : undefined;
+    return uploadViaPresign(pre, body, contentType);
   };
 
   const handleSubmitAk1 = async () => {
@@ -1014,12 +1004,7 @@ export default function Ak1Page() {
         const put = async (folder: string, f: File) => {
           const p = await prepare(f);
           const pre = await presignUpload(folder, p.filename, p.contentType);
-          return await putSigned(
-            pre.url,
-            p.body,
-            p.contentType,
-            pre.public_url,
-          );
+          return await putSigned(pre, p.body, p.contentType);
         };
         const [ktpUrl, ijazahUrl, pasUrl, certUrl] = await Promise.all([
           put(`ak1/${uid}/ktp`, ak1Files.ktp),
@@ -1184,10 +1169,12 @@ export default function Ak1Page() {
 
     const toPng = async (url: string, w: number, h: number) => {
       try {
-        let fetchUrl = url;
-        if (url.startsWith("http")) {
-          const u = new URL(url);
-          // Only append cache buster if not S3 presigned url
+        let fetchUrl =
+          url.startsWith("blob:") || url.startsWith("data:")
+            ? url
+            : await resolveStorageUrl(url);
+        if (fetchUrl.startsWith("http")) {
+          const u = new URL(fetchUrl);
           if (
             !u.searchParams.has("X-Amz-Credential") &&
             !u.searchParams.has("x-amz-credential")
@@ -1195,7 +1182,8 @@ export default function Ak1Page() {
             u.searchParams.append("t", new Date().getTime().toString());
           }
           fetchUrl = u.toString();
-        } else if (url.startsWith("blob:")) {
+        }
+        if (url.startsWith("blob:")) {
           return new Promise<string>((resolve, reject) => {
             const img = new Image();
             img.onload = () => {
@@ -1506,13 +1494,8 @@ export default function Ak1Page() {
         genPasPhotoUrl ||
         String((docOverride || genDocDetail)?.pas_photo_file || "");
       if (photoUrl) {
-        let pUrl = photoUrl;
         try {
-          if (pUrl.startsWith("http")) {
-            const pre = await presignDownload(pUrl);
-            // Use presigned URL first
-            pUrl = pre.url;
-          }
+          const pUrl = await resolveStorageUrl(photoUrl);
           const cropped = await cropImageToRatio(pUrl, 300, 400);
           photoBlobUrl = URL.createObjectURL(
             new Blob([cropped as BlobPart], { type: "image/png" }),
@@ -1804,11 +1787,7 @@ export default function Ak1Page() {
       // Front Page (using file_template)
       const bgUrlRaw = t.file_template;
       if (bgUrlRaw) {
-        let bgUrl = bgUrlRaw;
-        if (bgUrl.startsWith("http")) {
-          const p = await presignDownload(bgUrl);
-          bgUrl = p.url;
-        }
+        const bgUrl = await resolveStorageUrl(bgUrlRaw);
 
         // 29.7cm x 11cm in points (1 cm = 28.3465 pt)
         const CM_TO_PT = 28.3465;
@@ -2317,8 +2296,7 @@ export default function Ak1Page() {
       try {
         const rawPhoto = String(doc?.pas_photo_file || "");
         if (rawPhoto) {
-          const pre = await presignDownload(rawPhoto);
-          setGenPasPhotoUrl(pre.url);
+          setGenPasPhotoUrl(await resolveStorageUrl(rawPhoto));
         } else setGenPasPhotoUrl(null);
       } catch {
         setGenPasPhotoUrl(null);
@@ -2398,8 +2376,7 @@ export default function Ak1Page() {
             return String(env?.data?.pas_photo_file || "");
           })();
           if (rawPhoto) {
-            const pre = await presignDownload(rawPhoto);
-            setGenPasPhotoUrl(pre.url);
+            setGenPasPhotoUrl(await resolveStorageUrl(rawPhoto));
           } else {
             setGenPasPhotoUrl(null);
           }
@@ -2883,10 +2860,10 @@ export default function Ak1Page() {
                             </div>
                             <button
                               onClick={async () => {
-                                const signed = await presignDownload(
+                                const signed = await resolveStorageUrl(
                                   d.card_file!,
                                 );
-                                window.open(signed.url, "_blank");
+                                window.open(signed, "_blank");
                               }}
                               className={neutralButtonClass}
                             >
@@ -3032,10 +3009,10 @@ export default function Ak1Page() {
                               <button
                                 className={documentLinkClass}
                                 onClick={async () => {
-                                  const d = await presignDownload(
+                                  const fileUrl = await resolveStorageUrl(
                                     r.file as string,
                                   );
-                                  window.open(d.url, "_blank");
+                                  window.open(fileUrl, "_blank");
                                 }}
                               >
                                 Unduh
@@ -3224,11 +3201,7 @@ export default function Ak1Page() {
                         showError(`Upload gagal (${resp.status}): ${txt}`);
                         return;
                       }
-                      const objectUrl =
-                        pre.public_url ||
-                        (pre.url.includes("?")
-                          ? pre.url.slice(0, pre.url.indexOf("?"))
-                          : pre.url);
+                      const fileKey = storageKeyFromPresign(pre);
 
                       if (!genNoReg) {
                         showError(
@@ -3252,7 +3225,7 @@ export default function Ak1Page() {
                       await verifyAk1({
                         ak1_document_id: String(genMeta.ak1_document_id),
                         status: "APPROVED",
-                        file: objectUrl,
+                        file: fileKey,
                         no_urut_pendaftaran: genMeta.no_urut_pendaftaran,
                         no_pendaftaran_pencari_kerja: genNoReg,
                         card_created_at: baseCreated.toISOString(),
@@ -3426,13 +3399,11 @@ export default function Ak1Page() {
 
                       // Construct public URL (assuming standard S3 structure or usage of pre.key)
                       // Note: pre object might have public_url if backend provides it, or we construct it
-                      const fileUrl =
-                        (pre as Record<string, unknown>).public_url ||
-                        pre.url.split("?")[0];
+                      const fileKey = storageKeyFromPresign(pre);
 
                       await approveAk1Renewal({
                         ak1_document_id: genMeta.ak1_document_id!,
-                        card_file: fileUrl as string,
+                        card_file: fileKey,
                       });
 
                       showSuccess("Perpanjangan berhasil disetujui");

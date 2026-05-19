@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Input, SearchableSelect } from "../../components/ui/field";
 import Pagination from "../../components/ui/Pagination";
-import Image from "next/image";
+import RemoteImage from "../../components/RemoteImage";
+import { resolveImageSrc } from "../../services/storage";
 import FullPageLoading from "../../components/ui/FullPageLoading";
 import { listPublicJobs } from "../../services/jobs";
 import { getPublicCompanyById } from "../../services/company";
@@ -390,7 +391,7 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
           (c as { company_logo?: string });
         const l =
           (cdata && (cdata as { company_logo?: string }).company_logo) || "";
-        if (alive && l) setLogo(l);
+        if (alive && l) setLogo(resolveImageSrc(l, ""));
       } catch {}
     })();
     return () => {
@@ -410,7 +411,7 @@ function JobItem({ job, featured = false }: { job: Job; featured?: boolean }) {
     <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md border border-slate-200/90 ring-1 ring-black/[0.02] p-3 sm:p-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 hover:shadow-lg hover:border-primary/20 motion-safe:transition-all motion-safe:duration-300 cursor-pointer overflow-hidden">
       <div className="flex items-start gap-3 min-w-0 w-full">
         <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-          <Image
+          <RemoteImage
             src={
               logo ||
               `https://picsum.photos/64?random=${encodeURIComponent(job.id || job.job_title || "default")}`

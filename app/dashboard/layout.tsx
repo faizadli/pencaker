@@ -14,6 +14,7 @@ import {
 } from "../../services/profile";
 import { listRoles, getRolePermissions } from "../../services/rbac";
 import { getPublicSiteSettings } from "../../services/site";
+import { resolveImageSrc } from "../../services/storage";
 import { validateAdminSession } from "../../services/auth";
 
 function showCandidateBlacklistToastOnce(endDate: string, reason: string) {
@@ -164,7 +165,7 @@ export default function DashboardLayout({
               (s as { instansi_nama?: string; instansi_logo?: string });
             brandData = {
               name: String(cfg?.instansi_nama || "ADIKARA"),
-              logo: String(cfg?.instansi_logo || ""),
+              logo: resolveImageSrc(cfg?.instansi_logo, ""),
             };
           }
 

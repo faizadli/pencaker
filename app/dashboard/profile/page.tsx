@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useCallback } from "react";
-import Image from "next/image";
+import RemoteImage from "../../../components/RemoteImage";
 import {
   Input,
   SearchableSelect,
@@ -681,7 +681,7 @@ export default function ProfilePage() {
                 <div className="relative group">
                   <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-slate-100 bg-slate-100 shadow-lg">
                     {currentPreviewSrc ? (
-                      <Image
+                      <RemoteImage
                         src={currentPreviewSrc}
                         alt="Profile Preview"
                         width={128}
