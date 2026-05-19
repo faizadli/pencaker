@@ -34,7 +34,11 @@ import {
 } from "../../../services/profile";
 import { presignUpload, upsertAk1Document } from "../../../services/ak1";
 import { uploadViaPresign } from "../../../services/storage";
-import { listDistricts, listVillages } from "../../../services/wilayah";
+import {
+  findDistrictByName,
+  listDistricts,
+  listVillages,
+} from "../../../services/wilayah";
 import { getPublicEducationGroups } from "../../../services/site";
 
 export default function RegisterCandidate() {
@@ -682,7 +686,7 @@ export default function RegisterCandidate() {
   }, []);
 
   useEffect(() => {
-    const d = districts.find((x) => x.name === profile.kecamatan);
+    const d = findDistrictByName(districts, profile.kecamatan);
     const loadVillages = async () => {
       if (!d) {
         setVillageOptions([]);

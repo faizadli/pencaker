@@ -34,7 +34,11 @@ import {
   createCompanyProfile,
   updateCompanyProfile,
 } from "../../../services/company";
-import { listDistricts, listVillages } from "../../../services/wilayah";
+import {
+  findDistrictByName,
+  listDistricts,
+  listVillages,
+} from "../../../services/wilayah";
 import { useToast } from "../../../components/ui/Toast";
 import { z, ZodIssue } from "zod";
 import { companyProfileUpdateSchema } from "../../../utils/zod-schemas";
@@ -206,7 +210,7 @@ export default function PerusahaanPage() {
   }, []);
 
   useEffect(() => {
-    const d = districts.find((x) => x.name === formCompany.kecamatan);
+    const d = findDistrictByName(districts, formCompany.kecamatan);
     const loadVillages = async () => {
       if (!d) {
         setVillageOptions([]);

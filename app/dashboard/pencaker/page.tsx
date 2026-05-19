@@ -41,7 +41,11 @@ import {
 } from "../../../components/ui/Table";
 import EmptyState from "../../../components/ui/EmptyState";
 import { useToast } from "../../../components/ui/Toast";
-import { listDistricts, listVillages } from "../../../services/wilayah";
+import {
+  findDistrictByName,
+  listDistricts,
+  listVillages,
+} from "../../../services/wilayah";
 
 import StatCard from "../../../components/ui/StatCard";
 
@@ -277,7 +281,7 @@ export default function PencakerPage() {
   }, []);
 
   useEffect(() => {
-    const d = districts.find((x) => x.name === formCandidate.kecamatan);
+    const d = findDistrictByName(districts, formCandidate.kecamatan);
     const loadVillages = async () => {
       if (!d) {
         setVillageOptions([]);

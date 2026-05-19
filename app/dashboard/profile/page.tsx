@@ -28,7 +28,11 @@ import {
   candidateProfileUpdateSchema,
   disnakerProfileUpdateSchema,
 } from "../../../utils/zod-schemas";
-import { listDistricts, listVillages } from "../../../services/wilayah";
+import {
+  findDistrictByName,
+  listDistricts,
+  listVillages,
+} from "../../../services/wilayah";
 import { getEducationGroups } from "../../../services/site";
 import { useToast } from "../../../components/ui/Toast";
 
@@ -428,8 +432,7 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
-    const name = companyForm.kecamatan;
-    const d = districts.find((x) => x.name === name);
+    const d = findDistrictByName(districts, companyForm.kecamatan);
     const loadVillages = async () => {
       if (!d) {
         setVillageOptionsCompany([]);
@@ -450,8 +453,7 @@ export default function ProfilePage() {
   }, [companyForm.kecamatan, districts]);
 
   useEffect(() => {
-    const name = candidateForm.kecamatan;
-    const d = districts.find((x) => x.name === name);
+    const d = findDistrictByName(districts, candidateForm.kecamatan);
     const loadVillages = async () => {
       if (!d) {
         setVillageOptionsCandidate([]);

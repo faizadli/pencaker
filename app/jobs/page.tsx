@@ -9,7 +9,11 @@ import { resolveImageSrc } from "../../services/storage";
 import FullPageLoading from "../../components/ui/FullPageLoading";
 import { listPublicJobs } from "../../services/jobs";
 import { getPublicCompanyById } from "../../services/company";
-import { listDistricts, listVillages } from "../../services/wilayah";
+import {
+  findDistrictByName,
+  listDistricts,
+  listVillages,
+} from "../../services/wilayah";
 
 type Job = {
   id?: string;
@@ -99,7 +103,7 @@ export default function JobsPage() {
   }, []);
 
   useEffect(() => {
-    const d = districts.find((x) => x.name === kecamatan);
+    const d = findDistrictByName(districts, kecamatan);
     const loadVillages = async () => {
       if (!d) {
         setKelurahanOptions([]);

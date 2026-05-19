@@ -28,7 +28,11 @@ import {
   getUserById,
 } from "../../../services/profile";
 import { uploadViaPresign } from "../../../services/storage";
-import { listDistricts, listVillages } from "../../../services/wilayah";
+import {
+  findDistrictByName,
+  listDistricts,
+  listVillages,
+} from "../../../services/wilayah";
 
 export default function RegisterCompany() {
   const router = useRouter();
@@ -391,7 +395,7 @@ export default function RegisterCompany() {
   }, []);
 
   useEffect(() => {
-    const d = districts.find((x) => x.name === company.kecamatan);
+    const d = findDistrictByName(districts, company.kecamatan);
     const loadVillages = async () => {
       if (!d) {
         setVillageOptions([]);
